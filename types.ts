@@ -9,6 +9,8 @@ export interface Exercise {
   reps?: string;
   rest?: string;
   load?: string;
+  method?: string; // Novo campo para o método de treino
+  groupId?: string; // ID para agrupar exercícios (Bi-set, Tri-set, etc)
   executionType?: 'Simples' | 'Conjugado' | 'Drop Set' | 'Pirâmide' | 'Rest-Pause' | 'SST';
 }
 

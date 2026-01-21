@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -339,6 +339,63 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
 
 const MUSCLE_GROUPS = Object.keys(EXERCISE_DATABASE);
 
+// Categorized Training Methods for Dropdown
+const TRAINING_METHODS = {
+  "Métodos de Organização de Carga (Pirâmides)": [
+    "Série Estável",
+    "Pirâmide Crescente",
+    "Pirâmide Decrescente",
+    "Ondulatório"
+  ],
+  "Métodos de Densidade (Agrupamento)": [
+    "Bi-Set",
+    "Tri-Set",
+    "Giant Set",
+    "Super-Set Antagonista",
+    "Agonista-Antagonista",
+    "Circuito"
+  ],
+  "Métodos de Extensão (Pós-Falha)": [
+    "Drop-Set",
+    "Strip-Set",
+    "Rest-Pause",
+    "Myo-Reps",
+    "Cluster Sets",
+    "Repetições Forçadas",
+    "Repetições Parciais",
+    "Roubo Consciente"
+  ],
+  "Métodos de Tensão e Tempo": [
+    "Excêntrico (Negativo)",
+    "Isometria",
+    "Ponto Zero",
+    "Método 21",
+    "Super Slow",
+    "TUT (Time Under Tension)"
+  ],
+  "Métodos de Ordem": [
+    "Pré-Exaustão",
+    "Pós-Exaustão"
+  ],
+  "Sistemas Famosos": [
+    "GVT",
+    "FST-7",
+    "Heavy Duty",
+    "SST",
+    "MTI"
+  ]
+};
+
+// Methods that imply grouping multiple exercises
+const GROUPING_METHODS = [
+  "Bi-Set",
+  "Tri-Set",
+  "Giant Set",
+  "Super-Set Antagonista",
+  "Agonista-Antagonista",
+  "Circuito"
+];
+
 export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
   const renewalNotifications = useMemo(() => {
     return students.filter(s => {
@@ -645,6 +702,10 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [imageLoading, setImageLoading] = useState(false);
   const [technicalCue, setTechnicalCue] = useState("");
   const [isGeneratingCue, setIsGeneratingCue] = useState(false);
+  const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
+  
+  // Exercise Config State
+  const [config, setConfig] = useState({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável', load: '' });
 
   const detailSectionRef = useRef<HTMLDivElement>(null);
 
@@ -652,6 +713,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     setSelectedExercise({ name: exerciseName });
     setExerciseImage(null);
     setTechnicalCue("");
+    setConfig({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável', load: '' }); // Reset config on new selection
     
     if (detailSectionRef.current) {
         detailSectionRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -689,17 +751,60 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     setIsGeneratingCue(false);
   };
 
+  const updateExercise = (index: number, field: keyof Exercise, value: string) => {
+    const updated = [...exercises];
+    updated[index] = { ...updated[index], [field]: value };
+    setExercises(updated);
+  };
+
   const handleAddSelectedToWorkout = () => {
     if (!selectedExercise) return;
+
+    // Logic for Auto-Grouping (Bi-sets, Tri-sets, etc)
+    const isGroupingMethod = GROUPING_METHODS.includes(config.method);
+    let groupId = undefined;
+
+    if (isGroupingMethod) {
+       const lastExercise = exercises[exercises.length - 1];
+       // Se o exercício anterior tem o mesmo método de agrupamento, vincula a ele
+       if (lastExercise && lastExercise.method === config.method) {
+         groupId = lastExercise.groupId || Date.now().toString(); // Usa o existente ou cria um novo se faltar
+         
+         // Garante que o anterior tenha ID se não tiver (caso seja o primeiro do grupo)
+         if (!lastExercise.groupId) {
+            const updatedExercises = [...exercises];
+            updatedExercises[updatedExercises.length - 1].groupId = groupId;
+            setExercises(updatedExercises);
+         }
+       } else {
+         // Inicia um novo grupo
+         groupId = Date.now().toString();
+       }
+    }
+
     const newEx: Exercise = { 
       id: Date.now().toString(), 
       name: selectedExercise.name, 
-      sets: '3', 
-      reps: '12', 
-      rest: '60s',
-      thumb: exerciseImage
+      sets: config.sets, 
+      reps: config.reps, 
+      rest: config.rest,
+      method: config.method,
+      load: config.load,
+      thumb: exerciseImage,
+      groupId: groupId,
+      description: selectedExercise.description,
+      benefits: selectedExercise.benefits
     };
-    setExercises([...exercises, newEx]);
+
+    // Se atualizamos o exercício anterior (para setar ID), usamos o estado atualizado, senão o atual
+    setExercises(prev => {
+        const list = [...prev];
+        if (groupId && list.length > 0 && list[list.length - 1].method === config.method && !list[list.length - 1].groupId) {
+            list[list.length - 1].groupId = groupId;
+        }
+        return [...list, newEx];
+    });
+
     setSelectedExercise(null);
     setExerciseImage(null);
     setTechnicalCue("");
@@ -760,12 +865,80 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                 placeholder="NOME DA PLANILHA..."
              />
              <div className="space-y-3">
-                {exercises.map((ex, i) => (
-                  <div key={i} className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group">
-                     <span className="text-[10px] font-black italic uppercase truncate max-w-[150px]">{ex.name}</span>
-                     <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
-                  </div>
-                ))}
+                {exercises.map((ex, i) => {
+                  const isGrouped = !!ex.groupId;
+                  const prevEx = exercises[i-1];
+                  const nextEx = exercises[i+1];
+                  
+                  // Visual logic for brackets
+                  const isGroupStart = isGrouped && (!prevEx || prevEx.groupId !== ex.groupId);
+                  const isGroupEnd = isGrouped && (!nextEx || nextEx.groupId !== ex.groupId);
+                  const isGroupMiddle = isGrouped && !isGroupStart && !isGroupEnd;
+
+                  return (
+                    <div key={i} className="relative pl-6">
+                      {/* Visual Bracket Connector */}
+                      {isGrouped && (
+                        <div className={`absolute left-0 w-3 border-red-600/50
+                            ${isGroupStart ? 'top-1/2 bottom-0 border-l-2 border-t-2 rounded-tl-xl h-[calc(50%+8px)]' : ''}
+                            ${isGroupEnd ? 'top-0 bottom-1/2 border-l-2 border-b-2 rounded-bl-xl h-[calc(50%+8px)]' : ''}
+                            ${isGroupMiddle ? 'top-0 bottom-0 border-l-2 h-full' : ''}
+                        `}>
+                            {/* Optional: Add method badge on the connector */}
+                            {isGroupStart && (
+                                <div className="absolute -top-3 -left-1 bg-zinc-800 text-[6px] font-black uppercase text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 whitespace-nowrap z-10">
+                                    {ex.method}
+                                </div>
+                            )}
+                        </div>
+                      )}
+
+                      <div className={`flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group relative ${isGrouped ? 'border-l-0 rounded-l-md ml-1' : ''}`}>
+                         {isGrouped && isGroupMiddle && <div className="absolute -left-[26px] top-1/2 w-3 h-0.5 bg-zinc-500"></div>}
+                         
+                         <div className="flex items-center gap-3 mr-3">
+                            <span className="text-[10px] font-black text-zinc-600 w-4">{i + 1}º</span>
+                            <button onClick={() => setPreviewExercise(ex)} className="w-10 h-10 bg-zinc-800 rounded-lg overflow-hidden border border-white/10 hover:border-red-600 transition-all shadow-lg shrink-0">
+                                {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" /> : <Activity size={16} className="text-zinc-600 m-auto"/>}
+                            </button>
+                         </div>
+
+                         <div className="flex-1 mr-2">
+                           <div className="flex items-center gap-2 mb-1">
+                               {isGrouped && <LinkIcon size={10} className="text-red-600" />}
+                               <span className="text-[10px] font-black italic uppercase truncate max-w-[150px] block">{ex.name}</span>
+                           </div>
+                           <div className="flex gap-2 items-center">
+                              <input 
+                                value={ex.sets} 
+                                onChange={(e) => updateExercise(i, 'sets', e.target.value)}
+                                className="w-6 bg-transparent border-b border-zinc-700 text-[9px] text-white text-center focus:border-red-600 outline-none p-0"
+                                placeholder="S"
+                              />
+                              <span className="text-[9px] text-zinc-600">x</span>
+                              <input 
+                                value={ex.reps} 
+                                onChange={(e) => updateExercise(i, 'reps', e.target.value)}
+                                className="w-8 bg-transparent border-b border-zinc-700 text-[9px] text-white text-center focus:border-red-600 outline-none p-0"
+                                placeholder="R"
+                              />
+                              <span className="text-[9px] text-zinc-600">•</span>
+                              <input 
+                                value={ex.load || ''} 
+                                onChange={(e) => updateExercise(i, 'load', e.target.value)}
+                                className="w-10 bg-transparent border-b border-zinc-700 text-[9px] text-white text-center focus:border-red-600 outline-none p-0 italic"
+                                placeholder="kg"
+                              />
+                           </div>
+                           <div className="mt-1">
+                             <span className="text-[8px] text-zinc-500 uppercase font-bold">{ex.method}</span>
+                           </div>
+                         </div>
+                         <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
+                      </div>
+                    </div>
+                  );
+                })}
                 {exercises.length === 0 && <p className="text-[9px] text-zinc-600 font-bold uppercase text-center py-4 italic">Nenhum exercício adicionado</p>}
              </div>
           </div>
@@ -830,36 +1003,10 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
             <div ref={detailSectionRef} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="bg-zinc-900/60 rounded-[3.5rem] overflow-hidden border border-white/10 shadow-3xl backdrop-blur-3xl">
                 
-                {/* LIVE BIOMECHANIC FEED WINDOW */}
-                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-white/5">
-                  {imageLoading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20">
-                      <Loader2 className="w-12 h-12 animate-spin text-red-600 mb-6" />
-                      <div className="space-y-1 text-center">
-                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 italic block">ANALYSING ASYMMETRY...</span>
-                        <span className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest">(0.5S SNAP DELAY)</span>
-                      </div>
-                    </div>
-                  ) : exerciseImage ? (
-                    <div className="w-full h-full relative video-motion-engine">
-                      <img src={exerciseImage} alt="Execução" className="w-full h-full object-cover" />
-                      <div className="absolute top-8 left-8 flex items-center gap-3">
-                        <div className="bg-red-600 h-2 w-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,1)]"></div>
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-black/60 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">LIVE BIOMECHANIC FEED</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                       <Loader2 className="animate-spin text-red-600" />
-                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 italic">Estabelecendo Conexão PhD...</span>
-                    </div>
-                  )}
-                </div>
-
                 <div className="p-10 md:p-14">
-                  <div className="flex justify-between items-start mb-12">
-                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white leading-[0.9] max-w-xl">{selectedExercise.name}</h2>
-                    <div className="flex gap-3">
+                  <div className="flex justify-between items-start mb-8">
+                    <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white leading-[0.9] max-w-xl">{selectedExercise.name}</h2>
+                    <div className="flex flex-col gap-3">
                       <button 
                         onClick={generateCue}
                         disabled={isGeneratingCue || !selectedExercise.description}
@@ -868,6 +1015,106 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                         {isGeneratingCue ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <Lightbulb className="w-6 h-6 text-white" />}
                       </button>
                     </div>
+                  </div>
+
+                  {/* PAINEL DE CONFIGURAÇÃO DE SÉRIES E MÉTODO - MOVED TO TOP */}
+                  <div className="mb-8 bg-zinc-950/80 p-6 rounded-[2rem] border border-white/10 shadow-2xl">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 flex items-center gap-2 italic">
+                      <Settings2 size={14} className="text-red-600" /> Prescrição Técnica
+                    </h4>
+                    <div className="grid grid-cols-4 gap-3 mb-4">
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1 whitespace-nowrap">Séries</label>
+                           <input 
+                             type="text" 
+                             value={config.sets} 
+                             onChange={e => setConfig({...config, sets: e.target.value})} 
+                             className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
+                           />
+                        </div>
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1 whitespace-nowrap">Reps</label>
+                           <input 
+                             type="text" 
+                             value={config.reps} 
+                             onChange={e => setConfig({...config, reps: e.target.value})} 
+                             className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
+                           />
+                        </div>
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1 whitespace-nowrap">Carga</label>
+                           <input 
+                             type="text" 
+                             value={config.load} 
+                             onChange={e => setConfig({...config, load: e.target.value})} 
+                             className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
+                             placeholder="-"
+                           />
+                        </div>
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1 whitespace-nowrap">Descanso</label>
+                           <input 
+                             type="text" 
+                             value={config.rest} 
+                             onChange={e => setConfig({...config, rest: e.target.value})} 
+                             className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
+                           />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 items-end">
+                        <div className="flex-1 space-y-1">
+                            <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1">Método de Treino</label>
+                            <div className="relative">
+                              <select 
+                                value={config.method} 
+                                onChange={e => setConfig({...config, method: e.target.value})} 
+                                className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-white font-black italic uppercase focus:border-red-600 outline-none appearance-none cursor-pointer pr-10 text-xs h-[46px]"
+                              >
+                                {Object.entries(TRAINING_METHODS).map(([category, methods]) => (
+                                  <optgroup key={category} label={category} className="bg-zinc-900 text-zinc-400 font-bold not-italic">
+                                    {methods.map(m => (
+                                      <option key={m} value={m} className="bg-black text-white font-medium">{m}</option>
+                                    ))}
+                                  </optgroup>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
+                            </div>
+                        </div>
+                        <button 
+                           onClick={handleAddSelectedToWorkout}
+                           className="w-[46px] h-[46px] bg-red-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:bg-red-700 active:scale-95 transition-all shrink-0"
+                           title="Adicionar Exercício"
+                        >
+                           <Plus size={24} strokeWidth={3} />
+                        </button>
+                    </div>
+                  </div>
+
+                  {/* LIVE BIOMECHANIC FEED WINDOW */}
+                  <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border border-white/5 rounded-[2rem] mb-8 shadow-2xl">
+                    {imageLoading ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20">
+                        <Loader2 className="w-12 h-12 animate-spin text-red-600 mb-6" />
+                        <div className="space-y-1 text-center">
+                          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 italic block">ANALYSING ASYMMETRY...</span>
+                          <span className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest">(0.5S SNAP DELAY)</span>
+                        </div>
+                      </div>
+                    ) : exerciseImage ? (
+                      <div className="w-full h-full relative video-motion-engine">
+                        <img src={exerciseImage} alt="Execução" className="w-full h-full object-cover" />
+                        <div className="absolute top-8 left-8 flex items-center gap-3">
+                          <div className="bg-red-600 h-2 w-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,1)]"></div>
+                          <span className="text-[10px] font-black uppercase tracking-widest bg-black/60 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">LIVE BIOMECHANIC FEED</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                         <Loader2 className="animate-spin text-red-600" />
+                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 italic">Estabelecendo Conexão PhD...</span>
+                      </div>
+                    )}
                   </div>
 
                   {technicalCue && (
@@ -892,20 +1139,35 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       </div>
                     </div>
                   </div>
-
-                  <button 
-                    onClick={handleAddSelectedToWorkout}
-                    disabled={!selectedExercise.description}
-                    className="w-full py-6 bg-white text-black rounded-[2.5rem] font-black uppercase italic tracking-[0.1em] text-sm hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 disabled:opacity-30"
-                  >
-                    <PlusSquareIcon size={20} /> ADICIONAR À PLANILHA ELITE
-                  </button>
                 </div>
               </div>
             </div>
           )}
         </section>
       </div>
+
+      {previewExercise && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="bg-zinc-900 border border-red-600/30 w-full max-w-2xl rounded-[3rem] p-8 relative shadow-2xl overflow-y-auto max-h-full custom-scrollbar">
+                <button onClick={() => setPreviewExercise(null)} className="absolute top-6 right-6 p-3 bg-black rounded-full text-white border border-white/10 hover:bg-red-600 transition-colors z-10"><X size={20}/></button>
+                <h2 className="text-2xl font-black italic uppercase text-white mb-6 pr-12 leading-tight">{previewExercise.name}</h2>
+                <div className="aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 mb-6 relative shadow-2xl">
+                    {previewExercise.thumb && <img src={previewExercise.thumb} className="w-full h-full object-cover" />}
+                    <div className="absolute bottom-4 left-4 bg-red-600/90 backdrop-blur px-3 py-1 rounded-full text-[8px] font-black uppercase text-white shadow-lg">Replay Loop</div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600 mb-2 flex items-center gap-2"><ZapIcon size={12}/> Técnica</h4>
+                        <p className="text-xs text-zinc-400 italic leading-relaxed font-medium">{previewExercise.description || "Sem descrição técnica registrada."}</p>
+                    </div>
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2 flex items-center gap-2"><Activity size={12}/> Fisiologia</h4>
+                        <p className="text-xs text-zinc-400 italic leading-relaxed font-medium">{previewExercise.benefits || "Sem dados fisiológicos."}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
