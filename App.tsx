@@ -6,7 +6,7 @@ import {
   Info, LogOut, Layout, Bell,
   BarChart3, ChevronRight, Activity
 } from 'lucide-react';
-import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge } from './components/Layout';
+import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SuccessToast } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
 import { WorkoutSessionView, StudentAssessmentView, StudentPeriodizationView, AboutView } from './components/StudentFlow';
 import { RunTrackStudentView } from './components/RunTrack';
@@ -79,6 +79,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     signInAnonymously(auth).finally(() => setLoading(false));
@@ -99,7 +101,6 @@ export default function App() {
         const updated = fetched.find(s => s.id === selectedStudent.id || s.email.toLowerCase() === selectedStudent.email.toLowerCase());
         if (updated) {
           setSelectedStudent(prev => {
-            // Só atualiza se for realmente diferente para evitar loops
             if (JSON.stringify(prev) !== JSON.stringify(updated)) {
               return updated;
             }
@@ -131,7 +132,6 @@ export default function App() {
       return; 
     }
     
-    // Busca na lista de alunos (incluindo os fixos)
     const s = allStudentsForCoach.find(x => 
       x.email.toLowerCase() === clean || 
       x.nome.toLowerCase() === clean
@@ -148,18 +148,23 @@ export default function App() {
 
   const handleSaveData = async (sid: string, data: any) => {
     setIsSyncing(true);
-    // 1. ATUALIZAÇÃO LOCAL IMEDIATA (OTIMISTA)
+    
+    // Atualização local imediata
     if (selectedStudent?.id === sid) {
       setSelectedStudent(prev => prev ? { ...prev, ...data } : null);
     }
     
     try {
-      // 2. ENVIO PARA O FIREBASE (COACH -> NUVEM)
+      // Envio para o Firebase
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'students', sid), { ...data, lastUpdate: Date.now() }, { merge: true });
+      
+      // Disparar feedback de sucesso
+      setToastMessage('DADOS ATUALIZADOS NO PERFIL');
+      setShowSuccessToast(true);
     } catch (e) {
       console.error("Erro ao salvar:", e);
     } finally {
-      setIsSyncing(false); // Libera o spinner de sync
+      setIsSyncing(false);
     }
   };
 
@@ -170,6 +175,12 @@ export default function App() {
   return (
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
+      <SuccessToast 
+        message={toastMessage} 
+        visible={showSuccessToast} 
+        onHide={() => setShowSuccessToast(false)} 
+      />
+      
       {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} />}
       {view === 'DASHBOARD' && selectedStudent && (
         <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar flex flex-col items-center">

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, Mail, Phone, Loader2, MapPin, MessageCircle } from 'lucide-react';
+import { CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, Mail, Phone, Loader2, MapPin, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { AppNotification } from '../types';
 
 export function HeaderTitle({ text }: { text: string }) {
@@ -24,6 +24,31 @@ export function Logo({ size = "text-6xl", subSize = "text-[10px]" }: { size?: st
         AB<span className="text-red-600">FIT</span>
       </h1>
       <p className={`${subSize} text-zinc-400 tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80`}>Assessoria em Treinamentos Físicos</p>
+    </div>
+  );
+}
+
+export function SuccessToast({ message, visible, onHide }: { message: string, visible: boolean, onHide: () => void }) {
+  useEffect(() => {
+    if (visible) {
+      const timer = setTimeout(onHide, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, onHide]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-bottom-5 fade-in duration-300 pointer-events-none">
+      <div className="bg-zinc-900/90 backdrop-blur-xl border border-emerald-500/50 px-6 py-4 rounded-[2rem] flex items-center gap-3 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+        <div className="bg-emerald-500 rounded-full p-1">
+          <CheckCircle2 size={16} className="text-black" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase text-white tracking-widest leading-none">Backup Concluído</p>
+          <p className="text-[9px] font-bold text-emerald-500 uppercase mt-1">{message}</p>
+        </div>
+      </div>
     </div>
   );
 }
