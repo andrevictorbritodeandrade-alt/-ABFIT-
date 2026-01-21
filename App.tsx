@@ -17,6 +17,13 @@ import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
 import { Student, Workout, AppNotification } from './types';
 
+// ALUNOS PADRÃO HARDCODED - GARANTIA DE LOGIN IMEDIATO
+const DEFAULT_STUDENTS: Student[] = [
+  { id: 'fixed-liliane', nome: 'Liliane Torres', email: 'lilicatorres@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Feminino', workouts: [], age: 35 },
+  { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
+  { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
+];
+
 function LoginScreen({ onLogin, error }: { onLogin: (val: string) => void, error: string }) {
   const [input, setInput] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -82,6 +89,7 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // AUTH INIT
   useEffect(() => {
     const initAuth = async () => { 
         try { await signInAnonymously(auth); } catch (err: any) { setLoading(false); } 
@@ -93,22 +101,27 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  // DATA LISTENER
   useEffect(() => {
     if (!user) return;
     try {
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'));
         const unsub = onSnapshot(q, (snapshot) => { 
-            const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
-            setStudents(updatedStudents); 
-            // Only update selectedStudent from snapshot if we are NOT syncing (to avoid overwriting optimistic updates)
-            if (selectedStudent && !isSyncing) {
-              const current = updatedStudents.find(s => s.id === selectedStudent.id);
-              if (current) setSelectedStudent(current);
+            const fetchedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+            setStudents(fetchedStudents);
+            
+            // ATUALIZAÇÃO EM TEMPO REAL: Se houver um aluno selecionado, atualiza ele com os dados novos da nuvem
+            if (selectedStudent) {
+              // Tenta achar na lista nova do firebase
+              const fromCloud = fetchedStudents.find(s => s.id === selectedStudent.id);
+              if (fromCloud) {
+                 setSelectedStudent(fromCloud);
+              }
             }
         });
         return () => unsub();
     } catch (e) { console.error(e); }
-  }, [user, selectedStudent?.id, isSyncing]);
+  }, [user, selectedStudent?.id]); // Removido 'isSyncing' para garantir que os dados desçam sempre
 
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
@@ -136,16 +149,21 @@ export default function App() {
     return notifications;
   }, [selectedStudent]);
 
+  // COMBINAÇÃO ROBUSTA DE ALUNOS (DEFAULT + FIREBASE)
   const allStudentsForCoach = useMemo(() => {
-    const defaultStudents: Student[] = [
-        { id: 'fixed-liliane', nome: 'Liliane Torres', email: 'lilicatorres@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Feminino', workouts: [], age: 35 },
-        { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
-        { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
-    ];
-    // Merge: Prefer fetched data over defaults
-    const merged = [...students];
-    defaultStudents.forEach(def => { 
-        if (!merged.find(s => s.id === def.id || (s.email && s.email === def.email))) merged.push(def); 
+    // Começa com uma cópia dos alunos padrão
+    const merged = [...DEFAULT_STUDENTS];
+    
+    // Para cada aluno que veio do banco de dados
+    students.forEach(fetchedStudent => {
+        const index = merged.findIndex(s => s.email === fetchedStudent.email || s.id === fetchedStudent.id);
+        if (index >= 0) {
+            // Se já existe (é um dos padrões), atualiza com os dados do banco
+            merged[index] = { ...merged[index], ...fetchedStudent };
+        } else {
+            // Se é novo, adiciona
+            merged.push(fetchedStudent);
+        }
     });
     return merged;
   }, [students]);
@@ -154,9 +172,13 @@ export default function App() {
     setLoginError('');
     if (!val) return;
     const cleanVal = val.trim().toLowerCase();
-    if (cleanVal === "professor") { setView('PROFESSOR_DASH'); return; }
     
-    // Find in the most up-to-date list
+    if (cleanVal === "professor") { 
+        setView('PROFESSOR_DASH'); 
+        return; 
+    }
+    
+    // Busca na lista combinada (que sempre tem os defaults)
     const student = allStudentsForCoach.find(s => (s.email || "").trim().toLowerCase() === cleanVal);
     
     if (student) { 
@@ -170,34 +192,20 @@ export default function App() {
   const handleSaveData = async (sid: string, data: any) => {
     setIsSyncing(true);
     
-    // 1. ATUALIZAÇÃO OTIMISTA DO ALUNO SELECIONADO (UI Imediata)
+    // 1. UPDATE OTIMISTA (Visual Imediato)
     if (selectedStudent && selectedStudent.id === sid) {
         setSelectedStudent(prev => prev ? { ...prev, ...data } : null);
     }
 
-    // 2. ATUALIZAÇÃO OTIMISTA DA LISTA GERAL (Fundamental para a persistência ao trocar de tela)
-    setStudents(prevStudents => {
-        const index = prevStudents.findIndex(s => s.id === sid);
-        if (index >= 0) {
-            const newStudents = [...prevStudents];
-            newStudents[index] = { ...newStudents[index], ...data };
-            return newStudents;
-        }
-        // Se o aluno não estiver na lista (ex: aluno default que ainda não foi salvo no firebase), adiciona ele
-        if (selectedStudent && selectedStudent.id === sid) {
-             return [...prevStudents, { ...selectedStudent, ...data }];
-        }
-        return prevStudents;
-    });
-
     try { 
+      // 2. ENVIO PARA NUVEM
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
     } catch (e: any) { 
       console.error("Erro ao salvar dados:", e.message); 
     } finally {
-      // Garante que o spinner pare de girar
-      setTimeout(() => setIsSyncing(false), 800);
+      // 3. FINALIZAÇÃO (Sempre roda)
+      setIsSyncing(false);
     }
   };
 
