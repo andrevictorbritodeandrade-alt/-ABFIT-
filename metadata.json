@@ -2,6 +2,7 @@
   "name": "💪ABFIT🎯",
   "description": "A high-performance fitness assessment and workout management system for coaches and athletes, featuring AI-powered workout prescription and biomechanical analysis.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "camera"
   ]
 }
