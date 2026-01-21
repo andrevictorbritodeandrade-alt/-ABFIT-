@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints, TrendingUp,
-  Info, History as HistoryIcon, LogOut, Layout, Bell, AlertCircle
+  Info, History as HistoryIcon, LogOut, Layout, Bell, AlertCircle,
+  BarChart3, ChevronRight, Activity
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -109,7 +110,6 @@ export default function App() {
     } catch (e) { console.error(e); }
   }, [user, selectedStudent?.id]);
 
-  // Lógica de Notificações Baseada em Performance
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
     const notifications: AppNotification[] = [];
@@ -193,48 +193,54 @@ export default function App() {
       {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} />}
       
       {view === 'DASHBOARD' && selectedStudent && (
-        <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar">
-          <div className="flex justify-between items-start mb-8 text-white">
-             <div className="flex gap-4">
-               <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                 <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-2xl relative">
-                    {selectedStudent?.photoUrl ? (
-                      <img src={selectedStudent.photoUrl} className="w-full h-full object-cover" alt="Perfil"/>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon className="text-zinc-600" /></div>
-                    )}
-                    {uploadingPhoto && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <Loader2 size={16} className="animate-spin text-red-600" />
-                      </div>
-                    )}
-                 </div>
-                 <div className="absolute -bottom-1 -right-1 bg-red-600 p-1.5 rounded-full border-2 border-black shadow-lg">
-                    <Camera size={10} className="text-white" />
-                 </div>
-                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-               </div>
-               
-               <NotificationBadge notifications={studentNotifications} onClick={() => setShowNotifications(!showNotifications)} />
-             </div>
+        <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar flex flex-col items-center">
+          
+          {/* 1. LOGO CENTRALIZADO NO TOPO - TAMANHO TEXTO DOBRADO (text-8xl) */}
+          <div className="mb-10 w-full flex justify-center animate-in fade-in slide-in-from-top-4 duration-700">
+            <Logo size="text-8xl" subSize="text-[10px]" />
+          </div>
 
-             <div className="flex items-center gap-4">
-                <WeatherWidget />
-                <button onClick={() => { setUser(null); setView('LOGIN'); }} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
-                  <LogOut size={16} />
-                </button>
+          {/* 2. FOTO DE PERFIL CENTRALIZADA E NOTIFICAÇÕES */}
+          <div className="relative mb-8 animate-in zoom-in duration-1000">
+             <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+               <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">
+                  {selectedStudent?.photoUrl ? (
+                    <img src={selectedStudent.photoUrl} className="w-full h-full object-cover" alt="Perfil"/>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon size={40} className="text-zinc-600" /></div>
+                  )}
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Loader2 size={24} className="animate-spin text-red-600" />
+                    </div>
+                  )}
+               </div>
+               <div className="absolute -bottom-1 -right-1 bg-red-600 p-2.5 rounded-full border-2 border-black shadow-lg shadow-red-600/40">
+                  <Camera size={14} className="text-white" />
+               </div>
+               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+             </div>
+             
+             {/* Notificações Orbitando a Foto */}
+             <div className="absolute -top-3 -right-4">
+               <NotificationBadge notifications={studentNotifications} onClick={() => setShowNotifications(!showNotifications)} />
              </div>
           </div>
 
+          {/* 3. CLIMA CENTRALIZADO (CONTEXTO AMBIENTAL) */}
+          <div className="mb-12 animate-in fade-in slide-in-from-bottom-2 duration-1000">
+            <WeatherWidget />
+          </div>
+
           {showNotifications && (
-            <div className="mb-8 animate-in slide-in-from-top-4 duration-300">
+            <div className="w-full mb-8 animate-in slide-in-from-top-4 duration-300">
               <Card className="p-6 bg-red-600/5 border-red-600/20">
                 <div className="flex items-center gap-2 mb-4 text-red-600">
                   <Bell size={16} />
                   <h4 className="text-[10px] font-black uppercase tracking-widest">Avisos Importantes</h4>
                 </div>
                 {studentNotifications.length === 0 ? (
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase italic">Sem notificações no momento.</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase italic text-center">Sem notificações no momento.</p>
                 ) : (
                   <div className="space-y-4">
                     {studentNotifications.map(n => (
@@ -249,42 +255,129 @@ export default function App() {
             </div>
           )}
 
-          <div className="mb-10 text-center"><Logo size="text-6xl" subSize="text-[9px]" /></div>
-          
-          <div className="mt-12 space-y-4 pb-20 text-left flex flex-col">
-            <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer" onClick={() => setView('FEED')}>
+          {/* FLUXO DE CARDS ERGONÔMICOS COM CORES ÚNICAS */}
+          <div className="w-full space-y-5 pb-20 text-left flex flex-col">
+            
+            {/* 1. FEED DE PERFORMANCE (Vermelho) */}
+            <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('FEED')}>
                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-red-600 rounded-xl shadow-lg shadow-red-600/40">
-                      <Layout className="text-white" size={20} />
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-red-600 rounded-2xl shadow-lg shadow-red-600/40">
+                      <Layout className="text-white" size={22} />
                     </div>
                     <div className="flex flex-col">
-                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest">Feed de Performance</h3>
-                      <p className="text-[8px] text-zinc-500 font-bold uppercase">Veja seus registros e selfie de elite</p>
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Feed de Performance</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Veja seus registros e selfie de elite</p>
                     </div>
                   </div>
-                  <TrendingUp className="text-red-600 group-hover:scale-125 transition-transform" />
+                  <ChevronRight className="text-red-600 group-hover:translate-x-1 transition-transform" size={18} />
                </div>
             </Card>
 
-            <div className="grid grid-cols-1 gap-4">
-              <button onClick={() => setView('STUDENT_PERIODIZATION')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-indigo-600/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-indigo-500 transition-colors">Periodização PhD</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Macrociclo & Planejamento</p></div>
-                  <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-600 transition-colors"><Brain className="text-indigo-500 group-hover:text-white" /></div>
-              </button>
-              <button onClick={() => setView('WORKOUTS')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-red-600/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-red-600 transition-colors">Meus Treinos</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Sessões de Força & Hipertrofia</p></div>
-                  <div className="w-12 h-12 bg-red-600/10 rounded-2xl flex items-center justify-center border border-red-500/20 group-hover:bg-red-600 transition-colors"><Dumbbell className="text-red-600 group-hover:text-white" /></div>
-              </button>
-              <button onClick={() => setView('STUDENT_ASSESSMENT')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-emerald-600/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-emerald-500 transition-colors">Avaliação Física</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Composição Corporal & Medidas</p></div>
-                  <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-600 transition-colors"><Ruler className="text-emerald-500 group-hover:text-white" /></div>
-              </button>
-              <button onClick={() => setView('RUNTRACK_STUDENT')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-orange-600/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-orange-500 transition-colors">RunTrack Elite</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Monitoramento de Corrida & Cardio</p></div>
-                  <div className="w-12 h-12 bg-orange-600/10 rounded-2xl flex items-center justify-center border border-orange-500/20 group-hover:bg-orange-600 transition-colors"><Footprints className="text-orange-500 group-hover:text-white" /></div>
-              </button>
-            </div>
+            {/* 2. MEUS TREINOS (Laranja) */}
+            <Card className="p-6 bg-orange-600/10 border-orange-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('WORKOUTS')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-orange-600 rounded-2xl shadow-lg shadow-orange-600/40">
+                      <Dumbbell className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Meus Treinos</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Sessões de Força & Hipertrofia</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* 3. PERIODIZAÇÃO PHD (Indigo) */}
+            <Card className="p-6 bg-indigo-600/10 border-indigo-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_PERIODIZATION')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/40">
+                      <Brain className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Periodização PhD</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Macrociclo & Planejamento Científico</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* 4. AVALIAÇÃO FÍSICA (Emerald) */}
+            <Card className="p-6 bg-emerald-600/10 border-emerald-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_ASSESSMENT')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-emerald-600 rounded-2xl shadow-lg shadow-emerald-600/40">
+                      <Ruler className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Avaliação Física</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Composição Corporal & Medidas Bio</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* 5. RUNTRACK ELITE (Rose) */}
+            <Card className="p-6 bg-rose-600/10 border-rose-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('RUNTRACK_STUDENT')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-rose-600 rounded-2xl shadow-lg shadow-rose-600/40">
+                      <Footprints className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">RunTrack Elite</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Monitoramento de Corrida & Cardio</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* 6. ANÁLISE DE DADOS (Amber) */}
+            <Card className="p-6 bg-amber-600/10 border-amber-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ANALYTICS')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-amber-600 rounded-2xl shadow-lg shadow-amber-600/40">
+                      <BarChart3 className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Análise de Dados</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Performance & Estatísticas PBE</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-amber-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* 7. SOBRE A ABFIT (Zinc) */}
+            <Card className="p-6 bg-zinc-600/10 border-zinc-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ABOUT_ABFIT')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-zinc-600 rounded-2xl shadow-lg shadow-zinc-600/40">
+                      <Info className="text-white" size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Sobre a ABFIT Elite</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Metodologia PhD & Institucional</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="text-zinc-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+
+            {/* BOTÃO DE SAÍDA NO RODAPÉ ABSOLUTO DO DASHBOARD */}
+            <button 
+              onClick={() => { setUser(null); setView('LOGIN'); }} 
+              className="w-full mt-10 py-6 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] flex items-center justify-center gap-3 text-zinc-600 hover:text-red-600 hover:border-red-600/30 transition-all active:scale-95 shadow-xl group"
+            >
+              <LogOut size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Finalizar Sessão Elite</span>
+            </button>
           </div>
           <EliteFooter />
         </div>

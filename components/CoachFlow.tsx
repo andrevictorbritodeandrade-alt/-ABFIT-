@@ -8,7 +8,7 @@ import {
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock
 } from 'lucide-react';
-import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge } from './Layout';
+import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
 import { analyzeExerciseAndGenerateImage, generatePeriodizationPlan, generateTechnicalCue } from '../services/gemini';
 import { doc, setDoc } from 'firebase/firestore';
@@ -44,9 +44,12 @@ export function ProfessorDashboard({ students, onLogout, onSelect }: { students:
           <div className="h-8 w-px bg-white/10 mx-2"></div>
           <NotificationBadge notifications={renewalNotifications} />
         </div>
-        <button onClick={onLogout} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
-          <LogOut size={20} />
-        </button>
+        <div className="flex items-center gap-4">
+          <WeatherWidget />
+          <button onClick={onLogout} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
       
       <div className="space-y-6">
@@ -245,7 +248,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const handleSave = async () => {
     const startDate = workoutToEdit?.startDate || new Date().toISOString();
     const endDate = new Date();
-    // Estimativa simples: 3 treinos por semana
     endDate.setDate(endDate.getDate() + (parseInt(projectedSessions) / 3) * 7);
 
     const workout: Workout = { 
