@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, LogOut, ChevronRight, Edit3, Plus, 
@@ -7,7 +8,7 @@ import {
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown
 } from 'lucide-react';
-import { Card, EliteFooter, Logo } from './Layout';
+import { Card, EliteFooter, Logo, HeaderTitle } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout } from '../types';
 import { generateExerciseImage, generatePeriodizationPlan, generateTechnicalCue } from '../services/gemini';
 import { doc, setDoc } from 'firebase/firestore';
@@ -64,14 +65,14 @@ export function ProfessorDashboard({ students, onLogout, onSelect }: { students:
         {filtered.map(student => (
           <Card key={student.id} onClick={() => onSelect(student)} className="p-6 hover:border-red-600/50 cursor-pointer group">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 overflow-hidden">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 shadow-lg">
                 <img src={student.photoUrl || "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=200&fit=crop"} className="w-full h-full object-cover" alt={student.nome} />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-black uppercase text-lg truncate">{student.nome}</h3>
                 <p className="text-[10px] text-zinc-500 font-bold uppercase truncate">{student.email}</p>
               </div>
-              <ChevronRight size={20} className="text-zinc-800 group-hover:text-red-600" />
+              <ChevronRight size={20} className="text-zinc-800 group-hover:text-red-600 shrink-0" />
             </div>
           </Card>
         ))}
@@ -88,11 +89,13 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
     <div className="p-6 animate-fadeIn pb-32 text-white h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex items-center gap-4 mb-10">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">Gestão do Aluno</h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Gestão do Aluno" />
+        </h2>
       </header>
 
       <div className="bg-zinc-900 border-2 border-red-600/30 p-8 rounded-[3.5rem] text-center mb-8 relative overflow-hidden shadow-2xl">
-        <div className="w-24 h-24 rounded-full mx-auto border-4 border-red-600 mb-4 overflow-hidden bg-zinc-800">
+        <div className="w-24 h-24 rounded-full mx-auto border-4 border-red-600 mb-4 overflow-hidden bg-zinc-800 shadow-xl">
            <img src={student.photoUrl || "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=200&fit=crop"} className="w-full h-full object-cover" alt="Perfil" />
         </div>
         <h3 className="text-3xl font-black italic uppercase leading-none tracking-tighter">{student.nome}</h3>
@@ -100,7 +103,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
       </div>
 
       <div className="space-y-4">
-        <button onClick={() => onNavigate('PERIODIZATION')} className="w-full bg-zinc-900 border border-zinc-800 p-6 rounded-[2.5rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
+        {/* BOTÃO 1: PERIODIZAÇÃO */}
+        <button onClick={() => onNavigate('PERIODIZATION')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center border border-indigo-500/20"><Brain className="w-6 h-6 text-indigo-500" /></div>
               <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Periodização (IA)</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Criar Macrociclo & Volume</p></div>
@@ -108,12 +112,13 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
            <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
         </button>
 
+        {/* LISTA DE PLANILHAS ATIVAS */}
         <div className="space-y-2">
           <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4 mb-2 block italic text-white/50">Planilhas Ativas</label>
           {existingWorkouts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-2">
               {existingWorkouts.map((w) => (
-                <button key={w.id} onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-zinc-900/50 border border-zinc-800 p-5 rounded-[2rem] flex items-center justify-between group hover:border-red-600/30 transition-all">
+                <button key={w.id} onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-[2.5rem] flex items-center justify-between group hover:border-red-600/30 transition-all">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center border border-red-600/20"><Dumbbell className="w-5 h-5 text-red-600" /></div>
                     <span className="font-black uppercase text-xs italic tracking-tighter">{w.title}</span>
@@ -132,7 +137,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
           )}
         </div>
 
-        <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-red-600 p-6 rounded-[2.5rem] flex items-center justify-between hover:bg-red-700 transition-all shadow-xl group">
+        {/* BOTÃO 2: NOVO TREINO */}
+        <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-red-600 p-7 rounded-[3rem] flex items-center justify-between hover:bg-red-700 transition-all shadow-xl group">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform"><Plus className="w-6 h-6 text-white" /></div>
               <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Novo Treino</span><p className="text-[7px] text-white/50 font-bold uppercase">Metodologia Elite PhD 🦾</p></div>
@@ -140,20 +146,23 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
            <ChevronRight size={20} className="text-white" />
         </button>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full bg-zinc-900 border border-zinc-800 p-6 rounded-[2.5rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center border border-emerald-500/20"><Ruler className="w-5 h-5 text-emerald-500" /></div>
-                <div className="text-left"><span className="font-black uppercase text-[10px] italic tracking-tighter leading-tight">Avaliação<br/>Física</span></div>
-            </div>
-          </button>
-          <button onClick={() => onNavigate('RUNTRACK_ELITE')} className="w-full bg-zinc-900 border border-zinc-800 p-6 rounded-[2.5rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-orange-600/10 rounded-xl flex items-center justify-center border border-orange-500/20"><Footprints className="w-5 h-5 text-orange-500" /></div>
-                <div className="text-left"><span className="font-black uppercase text-[10px] italic tracking-tighter leading-tight">RunTrack<br/>Elite</span></div>
-            </div>
-          </button>
-        </div>
+        {/* BOTÃO 3: AVALIAÇÃO FÍSICA */}
+        <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
+          <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center border border-emerald-500/20"><Ruler className="w-6 h-6 text-emerald-500" /></div>
+              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Avaliação Física</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Composição & Medidas</p></div>
+          </div>
+          <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
+        </button>
+
+        {/* BOTÃO 4: RUNTRACK ELITE */}
+        <button onClick={() => onNavigate('RUNTRACK_ELITE')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
+          <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-orange-600/10 rounded-2xl flex items-center justify-center border border-orange-500/20"><Footprints className="w-6 h-6 text-orange-500" /></div>
+              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">RunTrack Elite</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Gestão de Performance Aeróbica</p></div>
+          </div>
+          <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
+        </button>
       </div>
       <EliteFooter />
     </div>
@@ -215,7 +224,9 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
     <div className="p-6 h-screen overflow-y-auto pb-48 text-white bg-black text-left custom-scrollbar">
       <header className="flex items-center gap-4 mb-10">
          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full"><ArrowLeft size={20}/></button>
-         <h2 className="text-xl font-black italic uppercase tracking-tighter">Ciência<span className="text-red-600">Força</span></h2>
+         <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Ciência Força" />
+         </h2>
       </header>
 
       {step === 'form' && (
@@ -282,7 +293,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
                    <h4 className="text-[11px] font-black text-white uppercase mb-4 leading-tight">SEMANA {m.semana}:<br/><span className="text-red-600">{m.tipo} ({m.foco})</span></h4>
                    <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                       <div className="flex justify-between items-center"><span className="text-[9px] text-zinc-500 font-bold uppercase">RPE:</span><span className="text-[10px] font-black text-white">{m.pse_alvo}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-[9px] text-zinc-500 font-bold uppercase">VOLUME:</span><span className="text-[10px] font-black text-white">{m.faixa_repeticoes}</span></div>
+                      <div className="flex justify-between items-center"><span className="text-[10px] font-black text-white">{m.faixa_repeticoes}</span></div>
                    </div>
                 </Card>
               ))}
@@ -313,12 +324,10 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
   );
 }
 
-// --- REDESIGNED WORKOUT EDITOR (STRICT FIGURE 2 MATCH) ---
 export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (id: string, data: any) => void }) {
-  // Se for novo treino, não dizemos que é Treino A obrigatoriamente, deixamos vazio ou como placeholder
   const [currentWorkout, setCurrentWorkout] = useState<Workout>(workoutToEdit || { 
     id: Date.now().toString(), 
-    title: '', // Começa vazio conforme solicitado para não "já estar dizendo que é o treino A"
+    title: '', 
     exercises: [],
     startDate: new Date().toLocaleDateString('pt-BR'),
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
@@ -360,21 +369,21 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
   return (
     <div className="p-4 md:p-6 h-screen overflow-y-auto pb-48 text-white custom-scrollbar bg-black text-left">
-      {/* HEADER TIPO FIGURA 2 */}
       <header className="flex items-center justify-between mb-8 py-4 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors shadow-lg">
           <ArrowLeft size={20} />
         </button>
         <div className="flex flex-col items-center">
-            <h1 className="text-xl font-black italic tracking-tighter uppercase">PRESCREVE<span className="text-red-600">AI</span></h1>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{currentWorkout.title || 'Novo Treino'}</p>
+            <h1 className="text-xl font-black italic tracking-tighter uppercase">
+              <HeaderTitle text="Novo Treino" />
+            </h1>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{currentWorkout.title || 'Personalizado'}</p>
         </div>
         <button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700 px-8 py-2.5 rounded-xl font-black text-xs uppercase shadow-xl transition-all active:scale-95">
           Salvar
         </button>
       </header>
 
-      {/* IDENTIFICAÇÃO DO TREINO (FIGURA 2) */}
       <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
          <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6">
             <h4 className="text-orange-500 font-black uppercase text-[9px] tracking-[0.3em] mb-4 flex items-center gap-2 italic">
@@ -423,7 +432,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* COLUNA ESQUERDA: INVENTÁRIO (FIGURA 2) */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-[2.5rem] p-6 shadow-2xl min-h-[500px] flex flex-col">
              <h4 className="text-zinc-500 font-black uppercase text-[10px] tracking-widest mb-6 italic border-b border-white/5 pb-4">
@@ -460,7 +468,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           </div>
         </div>
 
-        {/* COLUNA DIREITA: PREVIEW E SEQUÊNCIA (FIGURA 2) */}
         <div className="lg:col-span-8 space-y-8">
            <div className="relative">
               <h4 className="text-[10px] font-black uppercase text-zinc-600 mb-4 flex items-center gap-2 italic tracking-widest ml-4">
@@ -480,7 +487,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       </div>
                   ) : (
                       <div className="w-full space-y-6">
-                         {/* ÁREA DE PREVIEW BIOMECÂNICO (SELEÇÃO ATUAL) */}
                          <div className="aspect-video bg-black rounded-[2.5rem] border border-white/5 overflow-hidden relative shadow-2xl">
                             {previewEx?.thumb ? (
                                 <img src={previewEx.thumb} className="w-full h-full object-cover animate-in fade-in duration-1000" alt="Preview" />
@@ -498,7 +504,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                             )}
                          </div>
 
-                         {/* LISTA HORIZONTAL/GRID DE EXERCÍCIOS ADICIONADOS */}
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {currentWorkout.exercises.map((ex, i) => (
                                 <div key={ex.id} onClick={() => setPreviewEx(ex)} className={`p-5 rounded-[2rem] flex items-center gap-4 border-2 transition-all cursor-pointer group/item ${previewEx?.id === ex.id ? 'border-red-600/50 bg-zinc-800/50 shadow-lg' : 'border-white/5 bg-black/40 hover:border-white/20'}`}>
@@ -532,28 +537,151 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
   const [formData, setFormData] = useState<Partial<PhysicalAssessment>>({
     data: new Date().toISOString().split('T')[0],
-    peso: '', altura: ''
+    peso: '', altura: '',
+    dc_peitoral: '', dc_abdominal: '', dc_coxa: '', dc_tricipital: '', dc_suprailiaca: '',
+    bio_percentual_gordura: '', bio_massa_magra: '', bio_musculo_esqueletico: '', bio_gordura_visceral: '',
+    bio_idade_metabolica: '', bio_tmb: '',
+    p_peitoral: '', p_cintura: '', p_abdominal: '', p_quadril: '',
+    p_coxa_proximal_dir: '', p_coxa_proximal_esq: '',
+    p_coxa_distal_dir: '', p_coxa_distal_esq: '',
+    p_panturrilha_dir: '', p_panturrilha_esq: '',
+    p_braco_dir: '', p_braco_esq: '',
+    p_antebraco_dir: '', p_antebraco_esq: ''
   });
+
   const handleSave = () => {
     const assessment = { id: Date.now().toString(), ...formData } as PhysicalAssessment;
     onSave(student.id, { physicalAssessments: [assessment, ...(student.physicalAssessments || [])] });
     onBack();
   };
+
+  const InputField = ({ label, id, unit }: { label: string, id: keyof PhysicalAssessment, unit?: string }) => (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black text-zinc-500 uppercase italic tracking-widest block ml-1">
+        {label} {unit && <span className="text-[8px] opacity-40">({unit})</span>}
+      </label>
+      <input 
+        type="number" 
+        value={formData[id] as string || ''} 
+        onChange={e => setFormData({...formData, [id]: e.target.value})} 
+        className="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none focus:border-red-600 font-black text-sm text-white shadow-inner transition-all"
+        placeholder="0.0"
+      />
+    </div>
+  );
+
   return (
     <div className="p-6 h-screen overflow-y-auto pb-48 text-white bg-black text-left custom-scrollbar">
-      <header className="flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">Ficha PhD: <span className="text-red-600">{student.nome}</span></h2>
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Ficha Técnica" />: <span className="text-red-600">{student.nome}</span>
+        </h2>
       </header>
-      <div className="space-y-6 max-w-lg mx-auto">
-        <Card className="p-6 bg-zinc-900">
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><label className="text-[10px] font-bold text-zinc-500 uppercase italic">Peso (kg)</label><input type="number" value={formData.peso} onChange={e => setFormData({...formData, peso: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none focus:border-red-600 font-bold"/></div>
-              <div className="space-y-2"><label className="text-[10px] font-bold text-zinc-500 uppercase italic">Altura (cm)</label><input type="number" value={formData.altura} onChange={e => setFormData({...formData, altura: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none focus:border-red-600 font-bold"/></div>
-           </div>
-        </Card>
-        <button onClick={handleSave} className="w-full py-5 bg-red-600 rounded-[2rem] font-black uppercase text-sm shadow-xl shadow-red-900/20 active:scale-95 transition-all">Finalizar Registro</button>
+
+      <div className="space-y-10 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        
+        {/* ANTROPOMETRIA BÁSICA */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 ml-2">
+             <Scale className="text-red-600" size={18} />
+             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Antropometria Básica</h3>
+          </div>
+          <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-4">
+            <InputField label="Peso" id="peso" unit="kg" />
+            <InputField label="Altura" id="altura" unit="cm" />
+          </Card>
+        </section>
+
+        {/* DOBRAS CUTÂNEAS */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 ml-2">
+             <Ruler className="text-red-600" size={18} />
+             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Dobras Cutâneas</h3>
+          </div>
+          <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <InputField label="Peitoral" id="dc_peitoral" unit="mm" />
+              <InputField label="Abdominal" id="dc_abdominal" unit="mm" />
+              <InputField label="Coxa" id="dc_coxa" unit="mm" />
+              <InputField label="Tricipital" id="dc_tricipital" unit="mm" />
+              <div className="col-span-2">
+                <InputField label="Supra-ilíaca" id="dc_suprailiaca" unit="mm" />
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* BIOIMPEDÂNCIA */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 ml-2">
+             <Activity className="text-red-600" size={18} />
+             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Bioimpedância</h3>
+          </div>
+          <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-6">
+            <InputField label="% Gordura" id="bio_percentual_gordura" unit="%" />
+            <InputField label="Massa Magra" id="bio_massa_magra" unit="kg" />
+            <InputField label="Músculo Esq." id="bio_musculo_esqueletico" unit="kg" />
+            <InputField label="Gord. Visceral" id="bio_gordura_visceral" />
+            <InputField label="Idade Metab." id="bio_idade_metabolica" />
+            <InputField label="TMB" id="bio_tmb" unit="kcal" />
+          </Card>
+        </section>
+
+        {/* PERÍMETROS */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 ml-2">
+             <TrendingUp className="text-red-600" size={18} />
+             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Perímetros</h3>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="ml-2 border-l-2 border-red-600/30 pl-3">
+              <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest italic">Tronco</h4>
+            </div>
+            <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-4">
+              <InputField label="Peitoral" id="p_peitoral" unit="cm" />
+              <InputField label="Cintura" id="p_cintura" unit="cm" />
+              <InputField label="Abdominal" id="p_abdominal" unit="cm" />
+              <InputField label="Quadril" id="p_quadril" unit="cm" />
+            </Card>
+
+            <div className="ml-2 border-l-2 border-red-600/30 pl-3">
+              <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest italic">Membros (D / E)</h4>
+            </div>
+            <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-6">
+               <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Coxa Prox. Dir" id="p_coxa_proximal_dir" unit="cm" />
+                  <InputField label="Coxa Prox. Esq" id="p_coxa_proximal_esq" unit="cm" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Coxa Distal Dir" id="p_coxa_distal_dir" unit="cm" />
+                  <InputField label="Coxa Distal Esq" id="p_coxa_distal_esq" unit="cm" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Panturrilha Dir" id="p_panturrilha_dir" unit="cm" />
+                  <InputField label="Panturrilha Esq" id="p_panturrilha_esq" unit="cm" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Braço Dir" id="p_braco_dir" unit="cm" />
+                  <InputField label="Braço Esq" id="p_braco_esq" unit="cm" />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Antebraço Dir" id="p_antebraco_dir" unit="cm" />
+                  <InputField label="Antebraço Esq" id="p_antebraco_esq" unit="cm" />
+               </div>
+            </Card>
+          </div>
+        </section>
+
+        <button 
+          onClick={handleSave} 
+          className="w-full py-6 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-3"
+        >
+          <Save size={18} /> Validar & Salvar Avaliação
+        </button>
       </div>
+      <EliteFooter />
     </div>
   );
 }

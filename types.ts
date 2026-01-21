@@ -72,9 +72,22 @@ export interface PhysicalAssessment {
   bio_gordura_visceral?: string | number;
   bio_idade_metabolica?: string | number;
   bio_tmb?: string | number;
-  // Perimeters
+  // Perimeters - Trunk
+  p_peitoral?: string | number;
   p_cintura?: string | number;
+  p_abdominal?: string | number;
   p_quadril?: string | number;
+  // Perimeters - Members (Right/Left)
+  p_coxa_proximal_dir?: string | number;
+  p_coxa_proximal_esq?: string | number;
+  p_coxa_distal_dir?: string | number;
+  p_coxa_distal_esq?: string | number;
+  p_panturrilha_dir?: string | number;
+  p_panturrilha_esq?: string | number;
+  p_braco_dir?: string | number;
+  p_braco_esq?: string | number;
+  p_antebraco_dir?: string | number;
+  p_antebraco_esq?: string | number;
   
   aiAnalysis?: string;
   [key: string]: any;

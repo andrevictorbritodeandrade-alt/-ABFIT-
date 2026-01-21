@@ -1,21 +1,28 @@
+
 import React, { useState, useEffect } from 'react';
-import { CloudRain, Sun, Droplets, RefreshCw, Bell, MapPin, Navigation, Info, Dumbbell } from 'lucide-react';
+import { CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff } from 'lucide-react';
 import { AppNotification } from '../types';
+
+export function HeaderTitle({ text }: { text: string }) {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= 1) return <>{text}</>;
+  
+  return (
+    <>
+      {words[0]} <span className="text-red-600">{words.slice(1).join(' ')}</span>
+    </>
+  );
+}
 
 export function Logo({ size = "text-6xl", subSize = "text-[10px]" }: { size?: string, subSize?: string }) {
   return (
     <div className="text-center group select-none flex flex-col items-center justify-center">
-      {/* Ícone posicionado acima */}
       <div className="p-3 bg-zinc-900 rounded-[2rem] border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-4">
         <Dumbbell className="text-red-600 w-10 h-10 md:w-12 md:h-12 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]" />
       </div>
-      
-      {/* Texto da Marca */}
       <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase leading-none`}>
-        <span className="text-red-600">AB</span>FIT
+        AB<span className="text-red-600">FIT</span>
       </h1>
-      
-      {/* Subtítulo */}
       <p className={`${subSize} text-zinc-400 tracking-[0.2em] uppercase font-bold leading-none mt-3`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
@@ -40,7 +47,7 @@ export function EliteFooter() {
     <footer className="mt-20 pb-12 text-center opacity-30 animate-in fade-in duration-1000">
       <div className="max-w-[150px] mx-auto h-px bg-zinc-800 mb-6"></div>
       <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 text-center">
-        ABFIT Elite v1.8 (GPS Active)
+        ABFIT Elite v2.0 (Cloud Sync Enabled)
       </p>
       <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 mt-2 text-center">
         Criador: André Brito
@@ -49,22 +56,45 @@ export function EliteFooter() {
   );
 }
 
-export function SyncStatus() {
-  const [synced, setSynced] = useState(true);
+export function GlobalSyncIndicator({ isSyncing = false }: { isSyncing?: boolean }) {
+  const [online, setOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all bg-black/40 border-white/5`}>
-       {synced ? (
-         <>
-           <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
-           <span className="text-[8px] font-black uppercase text-zinc-400">Online</span>
-         </>
-       ) : (
-         <>
-           <RefreshCw size={10} className="text-amber-500 animate-spin" />
-           <span className="text-[8px] font-black uppercase text-zinc-400">Sync...</span>
-         </>
-       )}
+    <div className="fixed top-4 right-4 z-[100] flex items-center gap-2 pointer-events-none">
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-xl transition-all duration-500 shadow-lg ${
+        !online ? 'bg-red-950/40 border-red-500/30' : 
+        isSyncing ? 'bg-orange-950/60 border-orange-500/50 shadow-orange-500/40 scale-105' : 
+        'bg-green-950/40 border-green-500/50 shadow-green-500/20'
+      }`}>
+        <div className="relative">
+          <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+            !online ? 'bg-red-500' : 
+            isSyncing ? 'bg-orange-500 animate-pulse' : 
+            'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.9)]'
+          }`}></div>
+        </div>
+        <span className="text-[9px] font-black uppercase tracking-widest text-white">
+          {!online ? 'OFFLINE' : isSyncing ? 'SUBINDO...' : 'ATIVO'}
+        </span>
+        {isSyncing ? (
+          <RefreshCw size={11} className="text-orange-500 animate-spin" />
+        ) : online ? (
+          <Wifi size={11} className="text-green-400" />
+        ) : (
+          <WifiOff size={11} className="text-red-500" />
+        )}
+      </div>
     </div>
   );
 }
@@ -119,13 +149,11 @@ export function WeatherWidget() {
             });
             setLoading(false);
           } catch (e) {
-            console.error("Weather Error", e);
             setError(true);
             setLoading(false);
           }
         },
-        (err) => {
-          console.warn("GPS Denied/Error", err);
+        () => {
           setError(true);
           setLoading(false);
         }
@@ -137,9 +165,7 @@ export function WeatherWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) return <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5"><RefreshCw size={10} className="animate-spin text-zinc-500"/><span className="text-[8px] font-bold uppercase text-zinc-600">Localizando...</span></div>;
-  
-  if (error) return <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5 opacity-50"><MapPin size={10} className="text-red-500"/><span className="text-[8px] font-bold uppercase text-zinc-600">GPS Off</span></div>;
+  if (loading || error) return null;
 
   return (
     <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl px-4 py-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 shadow-lg">

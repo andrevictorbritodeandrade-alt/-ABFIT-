@@ -1,7 +1,8 @@
+
 {
-  "name": "ABFIT Elite",
+  "name": "ABFIT Elite Performance",
   "short_name": "ABFIT",
-  "description": "Sistema de Alta Performance e Biomecânica",
+  "description": "Assessoria PhD em Treinamentos Físicos e Biomecânica",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -9,13 +10,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/dumbbell.png",
-      "type": "image/png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='80' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M60 135 L132 135 M60 120 L60 150 M50 125 L50 145 M132 120 L132 150 M142 125 L142 145' stroke='%23dc2626' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E",
+      "type": "image/svg+xml",
       "sizes": "192x192"
     },
     {
-      "src": "https://img.icons8.com/color/512/dumbbell.png",
-      "type": "image/png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='220' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M150 360 L362 360 M150 320 L150 400 M120 330 L120 390 M362 320 L362 400 M392 330 L392 390' stroke='%23dc2626' stroke-width='20' stroke-linecap='round'/%3E%3C/svg%3E",
+      "type": "image/svg+xml",
       "sizes": "512x512"
     }
   ]

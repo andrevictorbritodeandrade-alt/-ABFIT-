@@ -1,24 +1,12 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
-  ArrowLeft, Dumbbell, CheckCircle2, HeartPulse, Trophy, 
-  ChevronLeft, ChevronRight, Plus, X, SkipForward, Play,
-  TrendingUp, Flame, Activity, Zap, Footprints, Loader2, Maximize2,
-  Timer, RotateCw, Power, FastForward, Calendar, History, Scale, Ruler, Brain,
-  Bell, List, MapPin, Clock, DollarSign, AlertCircle, RefreshCcw, CalendarDays, ExternalLink,
-  Navigation, CheckCircle, Star, Sparkles, Info, Search, Target, Map as MapIcon, BookOpen,
-  GraduationCap, Award, ShieldCheck
+  ArrowLeft, Dumbbell, Activity, Play,
+  Loader2, Clock, Target, Award, ShieldCheck, Brain
 } from 'lucide-react';
-import { Card, EliteFooter, SyncStatus, NotificationBadge } from './Layout';
-import { Student, PhysicalAssessment, WorkoutHistoryEntry, AnalyticsData, PeriodizationPlan, Workout } from '../types';
-import { collection, onSnapshot, doc, setDoc, query, where, getFirestore } from 'firebase/firestore';
-import { onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-import { db, appId, auth } from '../services/firebase';
-import { RunTrackStudentView } from './RunTrack';
-import { generateExerciseImage } from '../services/gemini';
-import { GoogleGenAI } from "@google/genai";
+import { Card, EliteFooter, HeaderTitle } from './Layout';
+import { Student, WorkoutHistoryEntry, Workout, AnalyticsData } from '../types';
 
-// --- ABOUT VIEW (INSTITUTIONAL) ---
 export function AboutView({ onBack }: { onBack: () => void }) {
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
@@ -26,11 +14,12 @@ export function AboutView({ onBack }: { onBack: () => void }) {
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
           <ArrowLeft size={20}/>
         </button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">Sobre a <span className="text-red-600">AB</span>FIT</h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Sobre a ABFIT" />
+        </h2>
       </header>
 
       <div className="space-y-8 max-w-2xl mx-auto">
-        {/* HERO SECTION */}
         <div className="relative rounded-[3rem] overflow-hidden bg-zinc-900 border border-zinc-800 p-8 shadow-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
             <Award size={120} className="text-red-600" />
@@ -44,7 +33,6 @@ export function AboutView({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        {/* MISSION & VISION */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="p-6 bg-zinc-900/50 border-zinc-800">
             <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center border border-red-600/20 mb-4">
@@ -66,46 +54,15 @@ export function AboutView({ onBack }: { onBack: () => void }) {
           </Card>
         </div>
 
-        {/* THE COACH */}
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest pl-2">O Especialista</h3>
-          <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-zinc-900 border border-zinc-800 rounded-[3rem]">
-            <div className="w-32 h-32 rounded-[2rem] bg-zinc-800 border-2 border-red-600 overflow-hidden shrink-0 rotate-3">
-               <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop" className="w-full h-full object-cover" alt="André Brito" />
-            </div>
-            <div className="text-center md:text-left">
-              <h4 className="text-2xl font-black italic uppercase text-white leading-none">André Brito</h4>
-              <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-2 mb-4">PhD Candidate • Especialista em Biomecânica</p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Fisiologia do Exercício</span>
-                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Metodologia PBE</span>
-                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Performance de Elite</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SCIENTIFIC FOUNDATION */}
-        <div className="p-8 bg-black border border-zinc-800 rounded-[2.5rem] relative overflow-hidden group hover:border-red-600/30 transition-all">
-          <GraduationCap className="mb-4 text-zinc-600 group-hover:text-red-600 transition-colors" size={32} />
-          <h3 className="text-sm font-black uppercase italic text-white mb-2">Fundamentação Acadêmica</h3>
-          <p className="text-xs text-zinc-500 leading-relaxed font-medium">
-            Nossa base técnica advém da <strong className="text-zinc-300">Escola de Educação Física e Desportos da UFRJ</strong>, uma das maiores referências em ciência do esporte na América Latina. Aplicamos modelos matemáticos de carga para garantir que cada série tenha um propósito biológico claro.
-          </p>
-        </div>
-
         <button onClick={onBack} className="w-full py-5 border border-white/10 rounded-full text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-zinc-900 transition-all">Voltar ao Dashboard</button>
       </div>
-
       <EliteFooter />
     </div>
   );
 }
 
-// --- PERIODIZATION VIEW FOR STUDENT ---
 export function StudentPeriodizationView({ student, onBack }: { student: Student, onBack: () => void }) {
   const plan = student.periodization;
-
   if (!plan) {
     return (
       <div className="p-6 text-white h-screen flex flex-col items-center justify-center text-center">
@@ -123,40 +80,28 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
     weekStart.setDate(start.getDate() + (weekNum - 1) * 7);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-
     const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     return `${fmt(weekStart)} a ${fmt(weekEnd)}`;
   };
 
   return (
-    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black">
+    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
-          <ArrowLeft size={20}/>
-        </button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">Ciência<span className="text-red-600">Força</span></h2>
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Ciência Força" />
+        </h2>
       </header>
-
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* HEADER DO MESOCICLO */}
+      <div className="space-y-6">
         <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10"><Brain size={80} /></div>
-          <p className="text-[10px] font-black uppercase text-red-600 mb-4 tracking-[0.15em] leading-relaxed max-w-[90%]">
-            {plan.modelo_teorico || "PERIODIZAÇÃO ONDULATÓRIA SEMANAL COM MANIPULAÇÃO NÃO-LINEAR DAS VARIÁVEIS DE CARGA."}
-          </p>
-          <h1 className="text-3xl md:text-4xl font-black italic uppercase text-white mb-4 leading-[0.9] tracking-tighter">
-            {plan.titulo}
-          </h1>
-          <p className="text-xs text-zinc-400 font-medium leading-relaxed italic opacity-80">
-            {plan.objetivo_longo_prazo}
-          </p>
+          <p className="text-[10px] font-black uppercase text-red-600 mb-4 tracking-[0.15em] leading-relaxed">{plan.modelo_teorico || "PERIODIZAÇÃO ONDULATÓRIA SEMANAL"}</p>
+          <h1 className="text-3xl font-black italic uppercase text-white mb-4 tracking-tighter">{plan.titulo}</h1>
+          <p className="text-xs text-zinc-400 font-medium italic opacity-80">{plan.objetivo_longo_prazo}</p>
         </div>
-
-        {/* SEMANAS / MICROCICLOS */}
         <div className="space-y-4">
           <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest pl-2">Cronograma Semanal</h3>
           {plan.microciclos.map((m: any, i: number) => (
-            <Card key={i} className="p-6 bg-zinc-900 border-zinc-800 flex items-center justify-between group">
+            <Card key={i} className="p-6 bg-zinc-900 border-zinc-800 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[11px] font-black text-white uppercase tracking-tighter">SEMANA {m.semana}:</span>
@@ -166,93 +111,245 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
                 <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">{m.foco}</p>
               </div>
               <div className="text-right border-l border-white/5 pl-4">
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] font-black text-zinc-500 uppercase">RPE Alvo</span>
-                  <span className="text-sm font-black text-white italic">{m.pse_alvo}</span>
-                </div>
-                <div className="flex flex-col items-end mt-2">
-                  <span className="text-[8px] font-black text-zinc-500 uppercase">Volume</span>
-                  <span className="text-[10px] font-black text-zinc-300">{m.faixa_repeticoes}</span>
-                </div>
+                <span className="text-[8px] font-black text-zinc-500 uppercase block">RPE Alvo</span>
+                <span className="text-sm font-black text-white italic">{m.pse_alvo}</span>
               </div>
             </Card>
           ))}
         </div>
-
-        {/* NOTAS PHD */}
-        <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] relative overflow-hidden">
-          <h3 className="text-amber-500 font-black uppercase text-xs mb-4 flex items-center gap-3">
-             <BookOpen size={16} /> NOTAS PHD
-          </h3>
-          <p className="text-xs text-zinc-300 leading-relaxed font-medium italic opacity-80">
-             {plan.notas_phd || "Mantenha a cadência controlada e priorize a técnica biomecânica em todas as fases do mesociclo."}
-          </p>
-        </div>
       </div>
-      
       <EliteFooter />
     </div>
   );
 }
 
-// --- REST OF THE FILE (Slightly updated to include transitions) ---
-const animationStyles = `
-  @keyframes biomechanicalVideo {
-    0% { transform: scale(1) translateY(0); filter: brightness(1) contrast(1) saturate(1); }
-    40% { transform: scale(1.06) translateY(-8px); filter: brightness(1.15) contrast(1.1) saturate(1.2); }
-    60% { transform: scale(1.06) translateY(-8px); filter: brightness(1.15) contrast(1.1) saturate(1.2); }
-    100% { transform: scale(1) translateY(0); filter: brightness(1) contrast(1) saturate(1); }
-  }
-  .video-motion-engine { animation: biomechanicalVideo 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-`;
+export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
+  const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const timerRef = useRef<any>(null);
 
-export function WorkoutSessionView({ user, onBack, onSave }: any) {
-  return (
-    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar relative">
-      <style>{animationStyles}</style>
-      <header className="flex items-center justify-between mb-4 text-left sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <div className="flex items-center gap-4">
-            <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
-            <h2 className="text-lg md:text-xl font-black italic uppercase tracking-tighter text-left truncate">Sessão de Treino</h2>
-        </div>
-        <SyncStatus />
-      </header>
-      
-      <div className="space-y-4">
-        {user.workouts && user.workouts.map((w: any) => (
-            <div key={w.id} className="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] shadow-xl">
-                <h3 className="text-xl font-black italic uppercase mb-4">{w.title}</h3>
-                <div className="space-y-4">
-                    {w.exercises.map((ex: any, idx: number) => (
-                        <div key={idx} className="flex gap-4 items-start border-b border-white/5 pb-4 last:border-0">
-                             <div className="w-16 h-16 bg-zinc-800 rounded-xl overflow-hidden shrink-0">
-                                {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" /> : <Activity className="m-auto mt-4 text-zinc-600" />}
-                             </div>
-                             <div>
-                                <h4 className="font-bold text-sm uppercase">{ex.name}</h4>
-                                <p className="text-[10px] text-zinc-400 mt-1">{ex.description}</p>
-                                <div className="flex gap-2 mt-2">
-                                    <span className="text-[9px] bg-red-900/30 text-red-400 px-2 py-1 rounded">S: {ex.sets}</span>
-                                    <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-1 rounded">R: {ex.reps}</span>
-                                </div>
-                             </div>
-                        </div>
-                    ))}
-                </div>
+  useEffect(() => {
+    const savedStart = localStorage.getItem(`workout_start_${user.id}`);
+    const savedId = localStorage.getItem(`active_workout_id_${user.id}`);
+    
+    if (savedStart && savedId) {
+      const start = parseInt(savedStart);
+      setSessionStartTime(start);
+      setElapsedTime(Math.floor((Date.now() - start) / 1000));
+      const workout = user.workouts?.find(w => w.id === savedId);
+      if (workout) setActiveWorkout(workout);
+    }
+  }, [user.id, user.workouts]);
+
+  useEffect(() => {
+    if (sessionStartTime) {
+      timerRef.current = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - sessionStartTime) / 1000));
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [sessionStartTime]);
+
+  const startSession = (workout: Workout) => {
+    const now = Date.now();
+    setSessionStartTime(now);
+    setActiveWorkout(workout);
+    localStorage.setItem(`workout_start_${user.id}`, now.toString());
+    localStorage.setItem(`active_workout_id_${user.id}`, workout.id);
+  };
+
+  const handleUpdateLoad = (workoutId: string, exId: string, value: string) => {
+    const updatedWorkouts = (user.workouts || []).map(w => {
+      if (w.id === workoutId) {
+        return {
+          ...w,
+          exercises: w.exercises.map(ex => ex.id === exId ? { ...ex, load: value } : ex)
+        };
+      }
+      return w;
+    });
+    onSave(user.id, { workouts: updatedWorkouts });
+  };
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const finishSession = async () => {
+    if (!activeWorkout) return;
+    if (!confirm("Deseja realmente finalizar o treino e salvar no histórico?")) return;
+    
+    setIsFinishing(true);
+    const entry: WorkoutHistoryEntry = {
+      id: Date.now().toString(),
+      workoutId: activeWorkout.id,
+      name: activeWorkout.title,
+      duration: formatTime(elapsedTime),
+      date: new Date().toLocaleDateString('pt-BR'), // Formato "DD/MM/YYYY"
+      timestamp: Date.now()
+    };
+    
+    // ATUALIZA ANALYTICS: Incrementa as estatísticas de exercícios
+    const currentAnalytics: AnalyticsData = user.analytics || { exercises: {}, sessionsCompleted: 0, streakDays: 0 };
+    const updatedExercises = { ...currentAnalytics.exercises };
+    
+    activeWorkout.exercises.forEach(ex => {
+      if (!updatedExercises[ex.name]) {
+        updatedExercises[ex.name] = { completed: 0, skipped: 0 };
+      }
+      updatedExercises[ex.name].completed += 1;
+    });
+
+    const newAnalytics: AnalyticsData = {
+      ...currentAnalytics,
+      sessionsCompleted: (currentAnalytics.sessionsCompleted || 0) + 1,
+      streakDays: (currentAnalytics.streakDays || 0) + 1, // Lógica simples de streak
+      exercises: updatedExercises,
+      lastSessionDate: entry.date
+    };
+
+    const updatedHistory = [entry, ...(user.workoutHistory || [])];
+    
+    // Salva tudo de uma vez
+    await onSave(user.id, { 
+      workoutHistory: updatedHistory,
+      analytics: newAnalytics 
+    });
+    
+    localStorage.removeItem(`workout_start_${user.id}`);
+    localStorage.removeItem(`active_workout_id_${user.id}`);
+    setSessionStartTime(null);
+    setActiveWorkout(null);
+    setIsFinishing(false);
+    onBack();
+  };
+
+  if (activeWorkout) {
+    return (
+      <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
+        <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+              <HeaderTitle text={activeWorkout.title} />
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <Clock size={12} className="text-red-600 animate-pulse" />
+              <span className="text-[10px] font-black text-zinc-400 tabular-nums">{formatTime(elapsedTime)}</span>
             </div>
+          </div>
+          <button onClick={finishSession} disabled={isFinishing} className="bg-red-600 px-6 py-2.5 rounded-full font-black text-[10px] uppercase shadow-xl hover:bg-red-700 active:scale-95 transition-all">
+            {isFinishing ? <Loader2 className="animate-spin" size={12}/> : 'Finalizar'}
+          </button>
+        </header>
+
+        <div className="space-y-6">
+          {activeWorkout.exercises.map((ex, idx) => (
+            <Card key={idx} className="p-6 bg-zinc-900 border-zinc-800">
+              <div className="flex gap-4 mb-4">
+                <div className="w-20 h-20 bg-black rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-inner">
+                  {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" /> : <Activity className="m-auto mt-6 text-zinc-800" />}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-black uppercase text-xs italic text-white">{ex.name}</h4>
+                  <div className="flex gap-3 mt-3">
+                    <div className="bg-black/60 px-2 py-1.5 rounded-lg border border-white/5 flex flex-col items-center min-w-[40px]">
+                      <span className="text-[7px] font-black text-zinc-500 uppercase">Séries</span>
+                      <span className="text-[10px] font-black text-white">{ex.sets}</span>
+                    </div>
+                    <div className="bg-black/60 px-2 py-1.5 rounded-lg border border-white/5 flex flex-col items-center min-w-[40px]">
+                      <span className="text-[7px] font-black text-zinc-500 uppercase">Reps</span>
+                      <span className="text-[10px] font-black text-white">{ex.reps}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative group">
+                <label className="text-[8px] font-black text-zinc-500 uppercase ml-1 mb-1 block">Carga / Observação Atual</label>
+                <input 
+                  type="text" 
+                  defaultValue={ex.load || ''}
+                  placeholder="DIGITE A CARGA..."
+                  onBlur={(e) => handleUpdateLoad(activeWorkout.id, ex.id!, e.target.value)}
+                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-xs font-black text-white outline-none focus:border-red-600 transition-all placeholder:text-zinc-800"
+                />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Minhas Planilhas" />
+        </h2>
+      </header>
+      <div className="space-y-4">
+        {user.workouts && user.workouts.map((w: Workout) => (
+          <button key={w.id} onClick={() => startSession(w)} className="w-full bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-800 flex items-center justify-between group hover:border-red-600/50 transition-all text-left">
+            <div>
+              <h3 className="text-xl font-black italic uppercase text-white leading-none">{w.title}</h3>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase mt-2">{w.exercises.length} Exercícios Prescritos</p>
+            </div>
+            <div className="w-12 h-12 bg-red-600/10 rounded-2xl flex items-center justify-center border border-red-500/20 group-hover:bg-red-600 transition-colors">
+              <Play className="text-red-600 group-hover:text-white" size={20} fill="currentColor" />
+            </div>
+          </button>
         ))}
         {(!user.workouts || user.workouts.length === 0) && (
-            <div className="p-8 text-center border-2 border-dashed border-zinc-800 rounded-3xl">
-                <p className="text-zinc-500 italic text-sm">Nenhum treino disponível.</p>
-            </div>
+          <div className="p-10 text-center border-2 border-dashed border-zinc-800 rounded-[3rem]">
+            <p className="text-zinc-600 italic text-xs uppercase font-bold">Aguardando prescrição do professor.</p>
+          </div>
         )}
       </div>
-
-      <EliteFooter />
     </div>
   );
 }
 
-export function WorkoutCounterView({ student, onBack, onSaveHistory }: any) { return <div>Counter</div>; }
-export function StudentAssessmentView({ student, onBack }: any) { return <div>Assessment</div>; }
-export const CorreRJView = ({ onBack }: any) => { return <div>CorreRJ</div>; }
+export function StudentAssessmentView({ student, onBack }: { student: Student, onBack: () => void }) {
+  return (
+    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
+      <header className="flex items-center gap-4 mb-10">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <HeaderTitle text="Avaliação Física" />
+        </h2>
+      </header>
+      <div className="space-y-6">
+        {student.physicalAssessments && student.physicalAssessments.length > 0 ? (
+          student.physicalAssessments.map(pa => (
+            <Card key={pa.id} className="p-6 bg-zinc-900 border-zinc-800">
+               <div className="flex justify-between items-start mb-4">
+                  <h4 className="text-lg font-black italic uppercase text-white">{new Date(pa.data).toLocaleDateString('pt-BR')}</h4>
+                  <div className="bg-red-600 px-3 py-1 rounded-full text-[8px] font-black uppercase text-white">Validada</div>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-black rounded-xl border border-white/5">
+                    <p className="text-[8px] font-black text-zinc-500 uppercase">Peso</p>
+                    <p className="text-xl font-black text-red-600 italic">{pa.peso}kg</p>
+                  </div>
+                  <div className="p-3 bg-black rounded-xl border border-white/5">
+                    <p className="text-[8px] font-black text-zinc-500 uppercase">Gordura</p>
+                    <p className="text-xl font-black text-red-600 italic">{pa.bio_percentual_gordura}%</p>
+                  </div>
+               </div>
+            </Card>
+          ))
+        ) : (
+          <p className="text-center text-zinc-500 italic py-12 border-2 border-dashed border-zinc-800 rounded-3xl uppercase font-black text-[10px] tracking-widest">Nenhuma avaliação registrada</p>
+        )}
+      </div>
+    </div>
+  );
+}
