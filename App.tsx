@@ -100,8 +100,7 @@ export default function App() {
         const unsub = onSnapshot(q, (snapshot) => { 
             const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
             setStudents(updatedStudents); 
-            // Only update selectedStudent if we are NOT in the middle of an edit to prevent overwrites
-            // But checking 'isSyncing' helps prevent race conditions
+            // Only update selectedStudent from snapshot if we are NOT syncing (to avoid overwriting optimistic updates)
             if (selectedStudent && !isSyncing) {
               const current = updatedStudents.find(s => s.id === selectedStudent.id);
               if (current) setSelectedStudent(current);
@@ -143,6 +142,7 @@ export default function App() {
         { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
         { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
     ];
+    // Merge: Prefer fetched data over defaults
     const merged = [...students];
     defaultStudents.forEach(def => { 
         if (!merged.find(s => s.id === def.id || (s.email && s.email === def.email))) merged.push(def); 
@@ -170,14 +170,24 @@ export default function App() {
   const handleSaveData = async (sid: string, data: any) => {
     setIsSyncing(true);
     
-    // 1. UPDATE SELECTED STUDENT LOCALLY (Optimistic)
+    // 1. ATUALIZAÇÃO OTIMISTA DO ALUNO SELECIONADO (UI Imediata)
     if (selectedStudent && selectedStudent.id === sid) {
         setSelectedStudent(prev => prev ? { ...prev, ...data } : null);
     }
 
-    // 2. UPDATE MAIN STUDENT LIST LOCALLY (Optimistic - CRITICAL FOR SYNC)
+    // 2. ATUALIZAÇÃO OTIMISTA DA LISTA GERAL (Fundamental para a persistência ao trocar de tela)
     setStudents(prevStudents => {
-        return prevStudents.map(s => s.id === sid ? { ...s, ...data } : s);
+        const index = prevStudents.findIndex(s => s.id === sid);
+        if (index >= 0) {
+            const newStudents = [...prevStudents];
+            newStudents[index] = { ...newStudents[index], ...data };
+            return newStudents;
+        }
+        // Se o aluno não estiver na lista (ex: aluno default que ainda não foi salvo no firebase), adiciona ele
+        if (selectedStudent && selectedStudent.id === sid) {
+             return [...prevStudents, { ...selectedStudent, ...data }];
+        }
+        return prevStudents;
     });
 
     try { 
@@ -185,9 +195,9 @@ export default function App() {
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
     } catch (e: any) { 
       console.error("Erro ao salvar dados:", e.message); 
-      // Revert optimization on error could be implemented here
     } finally {
-      setTimeout(() => setIsSyncing(false), 500);
+      // Garante que o spinner pare de girar
+      setTimeout(() => setIsSyncing(false), 800);
     }
   };
 

@@ -146,19 +146,15 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       const workout = user.workouts?.find(w => w.id === savedId);
       if (workout) setActiveWorkout(workout);
     } else if (!savedId && user.workouts && user.workouts.length > 0) {
-        // Se não houver treino ativo salvo, seleciona o primeiro para exibir (se não for passado via prop)
-        // Neste caso, vamos assumir que o usuário clica em um treino específico no dashboard anterior.
-        // Se este componente foi montado, espera-se que haja um treino selecionado ou em progresso.
-        // Mas para evitar tela preta, se não tivermos ID, não setamos nada.
+        // Fallback: Se não houver treino ativo, não seleciona nada por enquanto
     }
   }, [user.id, user.workouts]);
 
-  // Se o componente for chamado mas nenhum treino estiver ativo ou passado (ex: via estado global),
-  // Precisamos de uma forma de selecionar. 
-  // CORREÇÃO TELA PRETA: Se activeWorkout for nulo, tenta pegar o primeiro treino disponível do usuário como fallback ou mostra seletor
+  // Se nenhum treino foi selecionado ainda, mas temos treinos, tenta iniciar o primeiro como fallback
+  // CRITICAL FIX: Ensure user.workouts exists before accessing it
   useEffect(() => {
       if (!activeWorkout && user.workouts && user.workouts.length > 0 && !localStorage.getItem(`active_workout_id_${user.id}`)) {
-          startSession(user.workouts[0]); // Auto-start the first workout if none active (Simples Fallback)
+          startSession(user.workouts[0]); 
       }
   }, [user.workouts, activeWorkout]);
 
@@ -298,13 +294,14 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     );
   }
 
-  // GUARD CLAUSE: Se não houver activeWorkout ou exercícios, mostra loading ou vazio em vez de crashar
+  // GUARD CLAUSE CRÍTICA: Previne a tela preta caso o treino ou os exercícios ainda não estejam carregados
   if (!activeWorkout || !activeWorkout.exercises) {
       return (
         <div className="p-6 text-white h-screen flex flex-col items-center justify-center text-center bg-black">
             <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizando Treino...</p>
-            <button onClick={onBack} className="mt-8 text-xs text-zinc-400 hover:text-white underline">Voltar</button>
+            <p className="text-[8px] text-zinc-700 mt-2 font-bold max-w-[200px]">Se demorar, volte e tente novamente ou contate seu treinador.</p>
+            <button onClick={onBack} className="mt-8 text-xs text-zinc-400 hover:text-white underline p-4">Voltar para o Dashboard</button>
         </div>
       );
   }
