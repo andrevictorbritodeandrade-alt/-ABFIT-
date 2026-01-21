@@ -2,7 +2,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Dumbbell, Activity, Play,
-  Loader2, Clock, Target, Award, ShieldCheck, Brain
+  Loader2, Clock, Target, Award, ShieldCheck, Brain,
+  Camera, CheckCircle2, X
 } from 'lucide-react';
 import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData } from '../types';
@@ -128,12 +129,14 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showPhotoStep, setShowPhotoStep] = useState(false);
+  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
   const timerRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const savedStart = localStorage.getItem(`workout_start_${user.id}`);
     const savedId = localStorage.getItem(`active_workout_id_${user.id}`);
-    
     if (savedStart && savedId) {
       const start = parseInt(savedStart);
       setSessionStartTime(start);
@@ -165,10 +168,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const handleUpdateLoad = (workoutId: string, exId: string, value: string) => {
     const updatedWorkouts = (user.workouts || []).map(w => {
       if (w.id === workoutId) {
-        return {
-          ...w,
-          exercises: w.exercises.map(ex => ex.id === exId ? { ...ex, load: value } : ex)
-        };
+        return { ...w, exercises: w.exercises.map(ex => ex.id === exId ? { ...ex, load: value } : ex) };
       }
       return w;
     });
@@ -182,54 +182,104 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const handleFinishRequest = () => {
+    setShowPhotoStep(true);
+  };
+
+  const capturePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setSelfieUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const finishSession = async () => {
     if (!activeWorkout) return;
-    if (!confirm("Deseja realmente finalizar o treino e salvar no histórico?")) return;
-    
     setIsFinishing(true);
+    
     const entry: WorkoutHistoryEntry = {
       id: Date.now().toString(),
       workoutId: activeWorkout.id,
       name: activeWorkout.title,
       duration: formatTime(elapsedTime),
-      date: new Date().toLocaleDateString('pt-BR'), // Formato "DD/MM/YYYY"
-      timestamp: Date.now()
+      date: new Date().toLocaleDateString('pt-BR'),
+      timestamp: Date.now(),
+      photoUrl: selfieUrl || undefined,
+      type: 'STRENGTH'
     };
     
-    // ATUALIZA ANALYTICS: Incrementa as estatísticas de exercícios
     const currentAnalytics: AnalyticsData = user.analytics || { exercises: {}, sessionsCompleted: 0, streakDays: 0 };
     const updatedExercises = { ...currentAnalytics.exercises };
-    
     activeWorkout.exercises.forEach(ex => {
-      if (!updatedExercises[ex.name]) {
-        updatedExercises[ex.name] = { completed: 0, skipped: 0 };
-      }
+      if (!updatedExercises[ex.name]) updatedExercises[ex.name] = { completed: 0, skipped: 0 };
       updatedExercises[ex.name].completed += 1;
     });
 
     const newAnalytics: AnalyticsData = {
       ...currentAnalytics,
       sessionsCompleted: (currentAnalytics.sessionsCompleted || 0) + 1,
-      streakDays: (currentAnalytics.streakDays || 0) + 1, // Lógica simples de streak
+      streakDays: (currentAnalytics.streakDays || 0) + 1,
       exercises: updatedExercises,
       lastSessionDate: entry.date
     };
 
     const updatedHistory = [entry, ...(user.workoutHistory || [])];
-    
-    // Salva tudo de uma vez
-    await onSave(user.id, { 
-      workoutHistory: updatedHistory,
-      analytics: newAnalytics 
-    });
+    await onSave(user.id, { workoutHistory: updatedHistory, analytics: newAnalytics });
     
     localStorage.removeItem(`workout_start_${user.id}`);
     localStorage.removeItem(`active_workout_id_${user.id}`);
     setSessionStartTime(null);
     setActiveWorkout(null);
     setIsFinishing(false);
+    setShowPhotoStep(false);
     onBack();
   };
+
+  if (showPhotoStep) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col p-6 text-white animate-in zoom-in duration-300">
+        <header className="flex justify-between items-center mb-10">
+          <h3 className="text-xl font-black italic uppercase tracking-tighter">Resumo da Missão</h3>
+          <button onClick={() => setShowPhotoStep(false)} className="p-2 bg-zinc-900 rounded-full"><X size={20}/></button>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full max-w-sm aspect-square bg-zinc-900 rounded-[3rem] border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group"
+          >
+            {selfieUrl ? (
+              <img src={selfieUrl} className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <Camera size={48} className="text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Registrar Selfie de Elite</p>
+              </>
+            )}
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="user" onChange={capturePhoto} />
+          </div>
+
+          <div className="text-center">
+            <h4 className="text-2xl font-black italic uppercase text-white">{activeWorkout?.title}</h4>
+            <div className="flex gap-4 justify-center mt-4">
+              <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-500 uppercase">Tempo</span><span className="text-lg font-black text-red-600 italic">{formatTime(elapsedTime)}</span></div>
+              <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-500 uppercase">Status</span><span className="text-lg font-black text-emerald-500 italic">VENCIDO</span></div>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          onClick={finishSession} 
+          disabled={isFinishing}
+          className="w-full py-6 bg-red-600 rounded-[2.5rem] font-black uppercase tracking-widest text-sm shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all flex items-center justify-center gap-3 mb-8"
+        >
+          {isFinishing ? <Loader2 className="animate-spin" /> : <><CheckCircle2 /> SALVAR NO FEED</>}
+        </button>
+      </div>
+    );
+  }
 
   if (activeWorkout) {
     return (
@@ -244,8 +294,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               <span className="text-[10px] font-black text-zinc-400 tabular-nums">{formatTime(elapsedTime)}</span>
             </div>
           </div>
-          <button onClick={finishSession} disabled={isFinishing} className="bg-red-600 px-6 py-2.5 rounded-full font-black text-[10px] uppercase shadow-xl hover:bg-red-700 active:scale-95 transition-all">
-            {isFinishing ? <Loader2 className="animate-spin" size={12}/> : 'Finalizar'}
+          <button onClick={handleFinishRequest} className="bg-red-600 px-6 py-2.5 rounded-full font-black text-[10px] uppercase shadow-xl hover:bg-red-700 active:scale-95 transition-all">
+            Finalizar
           </button>
         </header>
 

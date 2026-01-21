@@ -5,128 +5,78 @@ export interface Exercise {
   description?: string;
   benefits?: string;
   thumb?: string | null;
-  // Prescription Fields
   sets?: string;
   reps?: string;
   rest?: string;
-  load?: string; // User input
+  load?: string;
 }
 
 export interface Workout {
   id: string;
   title: string;
   exercises: Exercise[];
-  // Scheduling Fields
   startDate?: string;
   endDate?: string;
   frequencyWeekly?: number;
-  projectedSessions?: number; // Total calculated sessions (e.g., 10)
+  projectedSessions?: number; // Total de sessões previstas para o ciclo
 }
 
-/**
- * PeriodizationMicrocycle interface updated to include 'tipo' and 'descricao_carga'
- */
-export interface PeriodizationMicrocycle {
-  semana: number;
-  tipo: string;
-  foco: string;
-  faixa_repeticoes: string;
-  pse_alvo: string;
-  descricao_carga?: string;
+export interface RunningStats {
+  distance?: number;
+  avgPace?: string;
+  avgHR?: number;
+  maxHR?: number;
+  cadence?: number; // SPM
+  vo2max?: number;
+  elevation?: number;
+  calories?: number;
+  strideLength?: number; // cm
+  verticalOscillation?: number; // cm
+  groundContactTime?: number; // ms
+  asymmetry?: string; // %
 }
 
-/**
- * PeriodizationPlan interface updated to include technical fields used by AI and StudentFlow
- */
+export interface WorkoutHistoryEntry {
+  id: string;
+  workoutId?: string;
+  name: string;
+  duration: string;
+  date: string;
+  timestamp: number;
+  photoUrl?: string;
+  runningStats?: RunningStats;
+  type: 'STRENGTH' | 'RUNNING';
+}
+
 export interface PeriodizationPlan {
   id: string;
   titulo: string;
-  startDate: string; // ISO String
-  volume_por_grupo?: string;
-  detalhes_treino?: string;
+  startDate: string;
   modelo_teorico?: string;
   objetivo_longo_prazo?: string;
-  distribuicao_volume?: string;
-  microciclos: PeriodizationMicrocycle[];
+  microciclos: any[];
   notas_phd?: string;
   type: 'STRENGTH' | 'RUNNING';
 }
 
 export interface PhysicalAssessment {
   id: string;
-  data: string; // ISO Date string
+  data: string;
   peso: string | number;
   altura: string | number;
-  // Skinfolds
-  dc_peitoral?: string | number;
-  dc_abdominal?: string | number;
-  dc_coxa?: string | number;
-  dc_tricipital?: string | number;
-  dc_suprailiaca?: string | number;
-  // Bioimpedance
   bio_percentual_gordura?: string | number;
-  bio_massa_magra?: string | number;
-  bio_musculo_esqueletico?: string | number;
-  bio_massa_ossea?: string | number;
-  bio_agua_corporal?: string | number;
-  bio_gordura_visceral?: string | number;
-  bio_idade_metabolica?: string | number;
-  bio_tmb?: string | number;
-  // Perimeters - Trunk
-  p_peitoral?: string | number;
-  p_cintura?: string | number;
-  p_abdominal?: string | number;
-  p_quadril?: string | number;
-  // Perimeters - Members (Right/Left)
-  p_coxa_proximal_dir?: string | number;
-  p_coxa_proximal_esq?: string | number;
-  p_coxa_distal_dir?: string | number;
-  p_coxa_distal_esq?: string | number;
-  p_panturrilha_dir?: string | number;
-  p_panturrilha_esq?: string | number;
-  p_braco_dir?: string | number;
-  p_braco_esq?: string | number;
-  p_antebraco_dir?: string | number;
-  p_antebraco_esq?: string | number;
-  
-  aiAnalysis?: string;
   [key: string]: any;
-}
-
-export interface WorkoutHistoryEntry {
-  id: string;
-  workoutId?: string; // Link to specific workout plan
-  name: string;
-  duration: string;
-  date: string;
-  timestamp: number;
 }
 
 export interface AppNotification {
   id: string;
-  type: 'WORKOUT' | 'ASSESSMENT' | 'DIET' | 'GENERAL';
+  title: string;
   message: string;
-  timestamp: number;
+  date: string;
   read: boolean;
+  type: 'RENEWAL' | 'SYSTEM' | 'WORKOUT';
 }
 
-// Analytics Types
-export interface ExerciseStats {
-  completed: number;
-  skipped: number;
-  lastPerformed?: number;
-}
-
-export interface AnalyticsData {
-  exercises: Record<string, ExerciseStats>; // Key is exercise name
-  sessionsCompleted: number;
-  streakDays: number;
-  lastSessionDate?: string;
-}
-
-/**
- * Nutrition related interfaces
- */
 export interface MacroNutrients {
   calories: number;
   protein: number;
@@ -134,13 +84,14 @@ export interface MacroNutrients {
   fat: number;
 }
 
-export interface FoodLog {
+export interface NutritionLog {
   id: string;
   name: string;
   date: string;
   macros: MacroNutrients;
 }
 
+// Added MealPlan interface to fix import error in NutritionView.tsx
 export interface MealPlan {
   id: string;
   date: string;
@@ -154,8 +105,15 @@ export interface NutritionProfile {
   goal: string;
   restrictions: string;
   dailyTargets: MacroNutrients;
-  logs: FoodLog[];
+  logs: NutritionLog[];
   mealPlans: MealPlan[];
+}
+
+export interface AnalyticsData {
+  sessionsCompleted: number;
+  streakDays: number;
+  exercises: Record<string, { completed: number; skipped: number }>;
+  lastSessionDate?: string;
 }
 
 export interface Student {
@@ -167,45 +125,13 @@ export interface Student {
   workouts?: Workout[];
   workoutHistory?: WorkoutHistoryEntry[];
   physicalAssessments?: PhysicalAssessment[];
-  weightHistory?: any[];
-  // New Fields
-  notifications?: AppNotification[];
+  periodization?: PeriodizationPlan;
   analytics?: AnalyticsData;
-  runningWorkouts?: any[];
-  periodization?: PeriodizationPlan; // Strength Periodization
-  runningPeriodization?: PeriodizationPlan; // Running Periodization
-  nutrition?: NutritionProfile; // Student nutrition profile
-  
-  lastUpdateTimestamp?: number;
-
-  // RunTrack / Anamnese Fields
+  nutrition?: NutritionProfile;
+  notifications?: AppNotification[];
   age?: string | number;
   weight?: string | number;
   height?: string | number;
   goal?: string;
-  environment?: string;
-  timeOfDay?: string;
-  usesWatch?: string;
-  limitations?: string;
-  medications?: string;
-  injuryHistory?: string;
-  activeNow?: string;
-  strengthTraining?: string;
-  daysPerWeek?: string | number;
-  otherSports?: string;
   anamneseComplete?: boolean;
-}
-
-export interface WeatherData {
-  temp: number;
-  feels: number;
-  rain: string;
-}
-
-declare global {
-  interface Window {
-    __firebase_config: any;
-    __app_id: string;
-    __initial_auth_token?: string;
-  }
 }

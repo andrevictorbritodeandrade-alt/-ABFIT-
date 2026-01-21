@@ -11,7 +11,6 @@ const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
 /**
  * Gera um plano de periodização científica nível PhD (EEFD/UFRJ)
- * Utiliza o modelo PRO para maior precisão em raciocínio esportivo complexo.
  */
 export async function generatePeriodizationPlan(data: any): Promise<any> {
   const systemInstruction = `Você é um PhD em Fisiologia do Exercício e mestre em Metodologia do Treinamento de Força.
@@ -76,28 +75,73 @@ export async function generatePeriodizationPlan(data: any): Promise<any> {
 }
 
 /**
- * Gera uma imagem para o exercício especificado usando o modelo de imagem nano banana
+ * Gera dados técnicos e uma imagem para o exercício especificado
+ * Usa uma abordagem de duas etapas: 
+ * 1. Analisa o exercício e gera o prompt visual detalhado
+ * 2. Gera a imagem com base no prompt visual
  */
-export async function generateExerciseImage(exerciseName: string): Promise<string | null> {
+export async function analyzeExerciseAndGenerateImage(exerciseName: string): Promise<any> {
   try {
-    const response = await ai.models.generateContent({
+    // 1. O "Cérebro" analisa o exercício
+    const brainPrompt = `Analise o exercício "${exerciseName}". 
+    Instruções obrigatórias:
+    - Se o nome contém "HBC", o equipamento deve ser obrigatoriamente um Haltere (Dumbbell).
+    - Se o nome contém "HBL", use obrigatoriamente Barra Longa.
+    - Se o nome contém "alternado", descreva uma execução onde um membro está em cima e o outro embaixo.
+    - Se o nome contém "sumô", descreva a postura de pernas afastadas.
+    
+    Forneça:
+    1. Descrição técnica da execução perfeita em português.
+    2. 3 Benefícios principais em português.
+    3. Um PROMPT VISUAL DETALHADO em INGLÊS para gerar uma foto 8k cinematográfica de um atleta negro em um ginásio moderno de luxo executando este movimento exato.
+    
+    Responda APENAS em JSON: {"description": "", "benefits": "", "visualPrompt": ""}`;
+
+    const brainResponse = await ai.models.generateContent({
+      model: MODEL_FLASH,
+      contents: brainPrompt,
+      config: {
+        responseMimeType: "application/json",
+        temperature: 0.4,
+      }
+    });
+
+    const brainResult = JSON.parse(brainResponse.text || "{}");
+    
+    // 2. Gerar a imagem
+    const imageResponse = await ai.models.generateContent({
       model: MODEL_IMAGE,
-      contents: { parts: [{ text: `Cinematic high-detail action shot of an athlete performing ${exerciseName} correctly in a professional training facility, dramatic lighting` }] },
+      contents: { parts: [{ text: brainResult.visualPrompt || `Cinematic shot of athlete doing ${exerciseName}` }] },
       config: { imageConfig: { aspectRatio: "16:9" } }
     });
     
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
+    let imageUrl = null;
+    if (imageResponse.candidates?.[0]?.content?.parts) {
+      for (const part of imageResponse.candidates[0].content.parts) {
         if (part.inlineData) {
-          return `data:image/png;base64,${part.inlineData.data}`;
+          imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+          break;
         }
       }
     }
+
+    return {
+      description: brainResult.description,
+      benefits: brainResult.benefits,
+      imageUrl
+    };
+  } catch (e) {
+    console.error("Exercise Analysis Error:", e);
     return null;
-  } catch (e) { 
-    console.error("Image Gen Error:", e);
-    return null; 
   }
+}
+
+/**
+ * Função legado mantida para compatibilidade, agora roteada para a nova lógica se necessário
+ */
+export async function generateExerciseImage(exerciseName: string): Promise<string | null> {
+  const result = await analyzeExerciseAndGenerateImage(exerciseName);
+  return result?.imageUrl || null;
 }
 
 /**
@@ -107,7 +151,7 @@ export async function generateTechnicalCue(exerciseName: string) {
   try {
     const res = await ai.models.generateContent({
       model: MODEL_FLASH,
-      contents: { parts: [{ text: `Forneça uma instrução biomecânica crucial (cue técnico) para o exercício: ${exerciseName}` }] },
+      contents: { parts: [{ text: `Forneça uma instrução biomecânica crucial (cue técnico) curta e potente para o exercício: ${exerciseName}` }] },
       config: { systemInstruction: "Você é um treinador de elite especialista em biomecânica." }
     });
     return res.text || "Mantenha o controle do movimento.";
@@ -115,7 +159,7 @@ export async function generateTechnicalCue(exerciseName: string) {
 }
 
 /**
- * Gera um plano alimentar diário usando IA
+ * Gera um plano alimentar diário
  */
 export async function generateAIMealPlan(profile: any): Promise<any> {
   const systemInstruction = "Você é um nutricionista esportivo de elite. Gere um plano alimentar diário (Café da manhã, Almoço, Jantar, Snacks) baseado no perfil do usuário.";

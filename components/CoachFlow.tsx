@@ -1,169 +1,408 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, LogOut, ChevronRight, Edit3, Plus, 
   Trash2, Loader2, Brain, Activity, Target, TrendingUp, 
   BookOpen, Zap, AlertCircle, Dumbbell,
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
-  ChevronDown
+  ChevronDown, Lightbulb, Bell, CalendarClock
 } from 'lucide-react';
-import { Card, EliteFooter, Logo, HeaderTitle } from './Layout';
-import { Student, Exercise, PhysicalAssessment, Workout } from '../types';
-import { generateExerciseImage, generatePeriodizationPlan, generateTechnicalCue } from '../services/gemini';
+import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge } from './Layout';
+import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
+import { analyzeExerciseAndGenerateImage, generatePeriodizationPlan, generateTechnicalCue } from '../services/gemini';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, appId } from '../services/firebase';
 import { RunTrackCoachView } from './RunTrack';
 
-const EXERCISE_DATABASE: Record<string, string[]> = {
-  "Peito": [
-    "Supino Sentado Aberto na Máquina", 
-    "Supino Sentado Fechado na Máquina", 
-    "Supino Unilateral Deitado Aberto na Máquina", 
-    "Supino Unilateral Deitado Fechado na Máquina", 
-    "Supino Unilateral Inclinado Aberto na Máquina", 
-    "Supino Unilateral Inclinado Fechado na Máquina",
-    "Supino Reto", 
-    "Supino Inclinado", 
-    "Crucifixo", 
-    "Cross Over", 
-    "Peck Deck"
-  ],
-  "Costas": ["Puxada Alta", "Remada Curvada", "Remada Baixa", "Puxada Triângulo", "Pull Down"],
-  "Perna": ["Agachamento", "Leg Press", "Extensora", "Stiff", "Cadeira Flexora", "Elevação Pélvica"],
-  "Ombro": ["Desenvolvimento", "Abdução Lateral", "Remada Alta", "Frontal"],
-  "Braços": ["Rosca Direta", "Tríceps Pulley", "Rosca Martelo", "Tríceps Corda", "Rosca Scott"],
-  "Core": ["Prancha", "Abdominal Supra", "Abdominal Infra", "Oblíquos"]
-};
+export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
 export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
-  const [search, setSearch] = useState('');
-  
-  const filtered = students.filter(s => 
-    (s.nome?.toLowerCase() || "").includes(search.toLowerCase()) || 
-    (s.email?.toLowerCase() || "").includes(search.toLowerCase())
-  );
+  const renewalNotifications = useMemo(() => {
+    return students.filter(s => {
+      const history = s.workoutHistory || [];
+      return s.workouts?.some(w => {
+        if (!w.projectedSessions) return false;
+        const completed = history.filter(h => h.workoutId === w.id).length;
+        return (w.projectedSessions - completed) <= 2;
+      });
+    }).map(s => ({
+      id: s.id,
+      title: 'Renovação Necessária',
+      message: `O atleta ${s.nome} está com treino prestes a vencer.`,
+      date: new Date().toLocaleDateString(),
+      read: false,
+      type: 'RENEWAL' as const
+    }));
+  }, [students]);
 
   return (
-    <div className="p-6 animate-fadeIn pb-32 text-white h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center justify-between mb-10">
-        <Logo size="text-4xl" />
-        <button onClick={onLogout} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
+      <header className="flex justify-between items-center mb-10">
+        <div className="flex items-center gap-4">
+          <Logo size="text-4xl" />
+          <div className="h-8 w-px bg-white/10 mx-2"></div>
+          <NotificationBadge notifications={renewalNotifications} />
+        </div>
+        <button onClick={onLogout} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
           <LogOut size={20} />
         </button>
       </header>
-      <div className="mb-8">
-        <input 
-          type="text" 
-          placeholder="Buscar aluno..." 
-          className="w-full bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] text-white outline-none focus:border-red-600 text-sm font-bold uppercase"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(student => (
-          <Card key={student.id} onClick={() => onSelect(student)} className="p-6 hover:border-red-600/50 cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 shadow-lg">
-                <img src={student.photoUrl || "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=200&fit=crop"} className="w-full h-full object-cover" alt={student.nome} />
+      
+      <div className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+           <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600 rounded-xl shadow-lg shadow-red-600/20">
+                 <Users className="text-white" size={24} />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black uppercase text-lg truncate">{student.nome}</h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase truncate">{student.email}</p>
-              </div>
-              <ChevronRight size={20} className="text-zinc-800 group-hover:text-red-600 shrink-0" />
-            </div>
-          </Card>
-        ))}
+              <h2 className="text-xl font-black italic uppercase tracking-tighter">
+                <HeaderTitle text="Gestão de Atletas" />
+              </h2>
+           </div>
+           {renewalNotifications.length > 0 && (
+             <span className="text-[10px] font-black text-red-600 animate-pulse uppercase bg-red-600/10 px-3 py-1 rounded-full border border-red-600/20">
+               {renewalNotifications.length} Alertas
+             </span>
+           )}
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          {students.map(s => {
+            const needsRenewal = renewalNotifications.some(n => n.id === s.id);
+            return (
+              <button 
+                key={s.id} 
+                onClick={() => onSelect(s)} 
+                className={`w-full bg-zinc-900 p-6 rounded-[2.5rem] border transition-all text-left shadow-xl flex items-center justify-between group ${needsRenewal ? 'border-red-600 bg-red-600/5' : 'border-zinc-800 hover:border-red-600/50'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5 shadow-inner">
+                    {s.photoUrl ? (
+                      <img src={s.photoUrl} className="w-full h-full object-cover" alt={s.nome} />
+                    ) : (
+                      <Activity className="text-zinc-600" size={24} />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-black uppercase italic text-lg text-white leading-none tracking-tight">{s.nome}</p>
+                      {needsRenewal && <AlertCircle size={14} className="text-red-600 animate-bounce" />}
+                    </div>
+                    <p className="text-[10px] text-zinc-500 uppercase font-bold mt-1.5 opacity-60">{s.email}</p>
+                  </div>
+                </div>
+                <ChevronRight className={`transition-all ${needsRenewal ? 'text-red-600 translate-x-1' : 'text-zinc-700 group-hover:text-red-600 group-hover:translate-x-1'}`} />
+              </button>
+            );
+          })}
+        </div>
       </div>
       <EliteFooter />
     </div>
   );
 }
 
-export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout | null) => void }) {
-  const existingWorkouts = student.workouts || [];
+export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout) => void }) {
+  const needsRenewal = useMemo(() => {
+    const history = student.workoutHistory || [];
+    return student.workouts?.some(w => w.projectedSessions && (w.projectedSessions - history.filter(h => h.workoutId === w.id).length) <= 2);
+  }, [student]);
 
   return (
-    <div className="p-6 animate-fadeIn pb-32 text-white h-screen overflow-y-auto custom-scrollbar text-left">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
       <header className="flex items-center gap-4 mb-10">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter">
-          <HeaderTitle text="Gestão do Aluno" />
+          <HeaderTitle text={student.nome} />
         </h2>
       </header>
 
-      <div className="bg-zinc-900 border-2 border-red-600/30 p-8 rounded-[3.5rem] text-center mb-8 relative overflow-hidden shadow-2xl">
-        <div className="w-24 h-24 rounded-full mx-auto border-4 border-red-600 mb-4 overflow-hidden bg-zinc-800 shadow-xl">
-           <img src={student.photoUrl || "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=200&fit=crop"} className="w-full h-full object-cover" alt="Perfil" />
+      {needsRenewal && (
+        <div className="mb-6 animate-in slide-in-from-top-2">
+          <div className="bg-red-600/10 border border-red-600/30 p-4 rounded-3xl flex items-center gap-4">
+            <div className="p-2 bg-red-600 rounded-xl"><AlertCircle className="text-white" size={20} /></div>
+            <div>
+              <p className="text-xs font-black text-white uppercase italic">Ciclo em Expiração</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase">Este atleta precisa de uma nova prescrição nos próximos 2 treinos.</p>
+            </div>
+          </div>
         </div>
-        <h3 className="text-3xl font-black italic uppercase leading-none tracking-tighter">{student.nome}</h3>
-        <p className="text-[10px] text-zinc-500 font-bold uppercase mt-2">{student.email}</p>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-8 cursor-pointer border-l-4 border-l-indigo-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('PERIODIZATION')}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-indigo-500 transition-colors">Periodização PhD</h4>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Macro & Microciclos PBE</p>
+            </div>
+            <Brain className="text-indigo-600 group-hover:scale-110 transition-transform" size={32} />
+          </div>
+        </Card>
+
+        <Card className="p-8 cursor-pointer border-l-4 border-l-red-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('WORKOUT_EDITOR')}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-red-600 transition-colors">Montar Treinos</h4>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Prescrição de Força Elite</p>
+            </div>
+            <Dumbbell className="text-red-600 group-hover:scale-110 transition-transform" size={32} />
+          </div>
+        </Card>
+
+        <Card className="p-8 cursor-pointer border-l-4 border-l-emerald-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('COACH_ASSESSMENT')}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-emerald-500 transition-colors">Avaliação Física</h4>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Composição & Biometria</p>
+            </div>
+            <Ruler className="text-emerald-600 group-hover:scale-110 transition-transform" size={32} />
+          </div>
+        </Card>
+
+        <Card className="p-8 cursor-pointer border-l-4 border-l-orange-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('RUNTRACK_ELITE')}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-orange-500 transition-colors">RunTrack Elite</h4>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Prescrição de Corrida PhD</p>
+            </div>
+            <Footprints className="text-orange-600 group-hover:scale-110 transition-transform" size={32} />
+          </div>
+        </Card>
       </div>
 
-      <div className="space-y-4">
-        {/* BOTÃO 1: PERIODIZAÇÃO */}
-        <button onClick={() => onNavigate('PERIODIZATION')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center border border-indigo-500/20"><Brain className="w-6 h-6 text-indigo-500" /></div>
-              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Periodização (IA)</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Criar Macrociclo & Volume</p></div>
-           </div>
-           <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
-        </button>
+      <div className="mt-12 space-y-4">
+         <div className="flex items-center justify-between px-2">
+            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Planilhas Prescritas</h3>
+            <span className="text-[9px] font-bold text-red-600 uppercase tracking-widest">{student.workouts?.length || 0} Ativas</span>
+         </div>
+         <div className="space-y-3">
+            {student.workouts?.map(w => {
+              const completedCount = (student.workoutHistory || []).filter(h => h.workoutId === w.id).length;
+              const isEnding = w.projectedSessions && (w.projectedSessions - completedCount) <= 2;
+              return (
+                <div key={w.id} className={`p-6 rounded-[2rem] border flex justify-between items-center group transition-all shadow-lg ${isEnding ? 'bg-red-600/10 border-red-600/30' : 'bg-zinc-900/50 border-white/5 hover:border-red-600/30'}`}>
+                   <div>
+                      <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <p className="text-[9px] text-zinc-500 font-bold uppercase">{w.exercises.length} Exercícios</p>
+                        {w.projectedSessions && (
+                          <p className={`text-[9px] font-black uppercase ${isEnding ? 'text-red-500' : 'text-zinc-500'}`}>
+                            {completedCount}/{w.projectedSessions} SESSÕES
+                          </p>
+                        )}
+                      </div>
+                   </div>
+                   <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className={`p-3 rounded-xl transition-all shadow-inner ${isEnding ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600'}`}>
+                      <Edit3 size={18}/>
+                   </button>
+                </div>
+              );
+            })}
+            {(!student.workouts || student.workouts.length === 0) && (
+              <div className="p-10 text-center border-2 border-dashed border-zinc-800 rounded-[2.5rem] bg-zinc-950/20">
+                <p className="text-zinc-600 italic text-[10px] uppercase font-black tracking-widest">Nenhuma planilha vinculada.</p>
+              </div>
+            )}
+         </div>
+      </div>
+      <EliteFooter />
+    </div>
+  );
+}
 
-        {/* LISTA DE PLANILHAS ATIVAS */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4 mb-2 block italic text-white/50">Planilhas Ativas</label>
-          {existingWorkouts.length > 0 ? (
-            <div className="space-y-2">
-              {existingWorkouts.map((w) => (
-                <button key={w.id} onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-[2.5rem] flex items-center justify-between group hover:border-red-600/30 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center border border-red-600/20"><Dumbbell className="w-5 h-5 text-red-600" /></div>
-                    <span className="font-black uppercase text-xs italic tracking-tighter">{w.title}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[8px] text-zinc-500 font-bold uppercase">{w.exercises.length} Exercícios</span>
-                    <Edit3 size={16} className="text-zinc-700 group-hover:text-white" />
-                  </div>
-                </button>
-              ))}
+export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (id: string, data: any) => void }) {
+  const [title, setTitle] = useState(workoutToEdit?.title || '');
+  const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
+  const [projectedSessions, setProjectedSessions] = useState(workoutToEdit?.projectedSessions?.toString() || '12');
+  const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
+
+  const addExercise = () => {
+    setExercises([...exercises, { id: Date.now().toString(), name: '', sets: '3', reps: '10-12', load: '' }]);
+  };
+
+  const removeExercise = (index: number) => {
+    setExercises(exercises.filter((_, i) => i !== index));
+  };
+
+  const handleAISync = async (index: number) => {
+    const exName = exercises[index].name;
+    if (!exName) return;
+    
+    setLoadingMap(prev => ({ ...prev, [index]: true }));
+    try {
+      const res = await analyzeExerciseAndGenerateImage(exName);
+      if (res) {
+        const newExs = [...exercises];
+        newExs[index] = { ...newExs[index], description: res.description, thumb: res.imageUrl };
+        setExercises(newExs);
+      }
+    } finally {
+      setLoadingMap(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
+  const handleSave = async () => {
+    const startDate = workoutToEdit?.startDate || new Date().toISOString();
+    const endDate = new Date();
+    // Estimativa simples: 3 treinos por semana
+    endDate.setDate(endDate.getDate() + (parseInt(projectedSessions) / 3) * 7);
+
+    const workout: Workout = { 
+      id: workoutToEdit?.id || Date.now().toString(), 
+      title, 
+      exercises,
+      projectedSessions: parseInt(projectedSessions),
+      startDate,
+      endDate: endDate.toISOString()
+    };
+
+    const updatedWorkouts = workoutToEdit 
+      ? (student.workouts || []).map(w => w.id === workout.id ? workout : w)
+      : [...(student.workouts || []), workout];
+    
+    await onSave(student.id, { workouts: updatedWorkouts });
+    onBack();
+  };
+
+  return (
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text={workoutToEdit ? "Editar Ciclo" : "Novo Ciclo Elite"} /></h2>
+      </header>
+
+      <div className="space-y-8 pb-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Identificação (Treino A, B...)</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-white italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="EX: TREINO A" />
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Total de Sessões Projetadas</label>
+            <div className="relative">
+              <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-red-600 italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="12" />
+              <CalendarClock size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-700" />
             </div>
-          ) : (
-            <div className="p-8 text-center border-2 border-dashed border-zinc-800 rounded-[2.5rem] text-zinc-600 italic text-[10px] uppercase">
-              Nenhuma planilha prescrita
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* BOTÃO 2: NOVO TREINO */}
-        <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full bg-red-600 p-7 rounded-[3rem] flex items-center justify-between hover:bg-red-700 transition-all shadow-xl group">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform"><Plus className="w-6 h-6 text-white" /></div>
-              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Novo Treino</span><p className="text-[7px] text-white/50 font-bold uppercase">Metodologia Elite PhD 🦾</p></div>
-           </div>
-           <ChevronRight size={20} className="text-white" />
-        </button>
-
-        {/* BOTÃO 3: AVALIAÇÃO FÍSICA */}
-        <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
-          <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center border border-emerald-500/20"><Ruler className="w-6 h-6 text-emerald-500" /></div>
-              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">Avaliação Física</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Composição & Medidas</p></div>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center px-2">
+            <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-[0.2em] italic flex items-center gap-2"><Dumbbell size={14} className="text-red-600" /> Montagem Biomecânica</h3>
+            <button onClick={addExercise} className="p-3 bg-red-600/10 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase"><Plus size={16}/> Inserir</button>
           </div>
-          <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
-        </button>
 
-        {/* BOTÃO 4: RUNTRACK ELITE */}
-        <button onClick={() => onNavigate('RUNTRACK_ELITE')} className="w-full bg-zinc-900 border border-zinc-800 p-7 rounded-[3rem] flex items-center justify-between group hover:bg-zinc-800 transition-all shadow-lg">
-          <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-600/10 rounded-2xl flex items-center justify-center border border-orange-500/20"><Footprints className="w-6 h-6 text-orange-500" /></div>
-              <div className="text-left"><span className="font-black uppercase text-sm italic tracking-tighter">RunTrack Elite</span><p className="text-[7px] text-zinc-500 font-bold uppercase">Gestão de Performance Aeróbica</p></div>
+          <div className="space-y-4">
+            {exercises.map((ex, i) => (
+              <Card key={i} className="p-6 bg-zinc-900/50 border-zinc-800 space-y-4 relative group shadow-2xl">
+                <button onClick={() => removeExercise(i)} className="absolute top-4 right-4 p-2 text-zinc-600 hover:text-red-600 transition-colors"><Trash2 size={16}/></button>
+                
+                <div className="flex gap-4">
+                  <div className="w-20 h-20 bg-black rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-inner flex items-center justify-center">
+                    {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" alt="Ex"/> : <ImageIcon size={24} className="text-zinc-800" />}
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <input type="text" value={ex.name} onChange={e => {
+                      const newExs = [...exercises];
+                      newExs[i].name = e.target.value;
+                      setExercises(newExs);
+                    }} className="w-full bg-black border border-white/10 p-3 rounded-xl text-xs font-black text-white outline-none focus:border-red-600 transition-all uppercase italic" placeholder="NOME DO EXERCÍCIO" />
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[7px] font-black text-zinc-600 uppercase ml-1">Séries</label>
+                        <input type="text" value={ex.sets} onChange={e => {
+                          const newExs = [...exercises];
+                          newExs[i].sets = e.target.value;
+                          setExercises(newExs);
+                        }} className="w-full bg-black border border-white/5 p-2.5 rounded-lg text-[10px] text-center font-black" placeholder="3" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[7px] font-black text-zinc-600 uppercase ml-1">Reps</label>
+                        <input type="text" value={ex.reps} onChange={e => {
+                          const newExs = [...exercises];
+                          newExs[i].reps = e.target.value;
+                          setExercises(newExs);
+                        }} className="w-full bg-black border border-white/5 p-2.5 rounded-lg text-[10px] text-center font-black" placeholder="12" />
+                      </div>
+                      <div className="pt-4 flex items-end">
+                        <button 
+                          onClick={() => handleAISync(i)} 
+                          className="w-full h-[38px] bg-red-600/10 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-inner group/btn"
+                        >
+                          {loadingMap[i] ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover/btn:scale-110 transition-transform" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-          <ChevronRight size={20} className="text-zinc-700 group-hover:text-white" />
+        </div>
+
+        <button onClick={handleSave} className="w-full py-6 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-sm italic flex items-center justify-center gap-3 shadow-2xl shadow-red-900/30 active:scale-95 transition-all">
+          <Save size={20}/> Salvar Ciclo e Notificar Aluno
         </button>
       </div>
+      <EliteFooter />
+    </div>
+  );
+}
+
+export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
+  const [peso, setPeso] = useState(student.weight?.toString() || '');
+  const [gordura, setGordura] = useState('');
+  const [altura, setAltura] = useState(student.height?.toString() || '');
+
+  const handleSave = async () => {
+    const assessment: PhysicalAssessment = { 
+      id: Date.now().toString(), 
+      data: new Date().toISOString(), 
+      peso: parseFloat(peso), 
+      altura: parseFloat(altura),
+      bio_percentual_gordura: parseFloat(gordura) 
+    };
+    const updated = [...(student.physicalAssessments || []), assessment];
+    await onSave(student.id, { physicalAssessments: updated, weight: peso, height: altura });
+    onBack();
+  };
+
+  return (
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
+      <header className="flex items-center gap-4 mb-10">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text="Nova Avaliação" /></h2>
+      </header>
+      
+      <Card className="p-8 bg-zinc-900/80 border-l-4 border-l-emerald-600 space-y-8 shadow-2xl">
+        <div className="flex items-center gap-4">
+           <Scale className="text-emerald-500" size={32} />
+           <div>
+             <h3 className="text-xl font-black italic uppercase text-white">Protocolo Bio</h3>
+             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Dados Antropométricos</p>
+           </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Peso Corporal (kg)</label>
+            <input type="number" value={peso} onChange={e => setPeso(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="00.0" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Altura (cm)</label>
+            <input type="number" value={altura} onChange={e => setAltura(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="000" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">% Gordura Estimado</label>
+            <input type="number" value={gordura} onChange={e => setGordura(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="0.0" />
+          </div>
+          <button onClick={handleSave} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 rounded-[2.5rem] font-black uppercase text-xs flex items-center justify-center gap-3 shadow-xl shadow-emerald-900/20 active:scale-95 transition-all">
+            <Save size={18}/> Salvar Avaliação PhD
+          </button>
+        </div>
+      </Card>
       <EliteFooter />
     </div>
   );
@@ -186,35 +425,17 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
   const handleGenerate = async () => {
     setStep('loading');
     setError(null);
-    
-    const timeout = setTimeout(() => {
-      if (step === 'loading') {
-        setError("Tempo de resposta excedido. Verifique sua conexão.");
-        setStep('form');
-      }
-    }, 30000);
-
     try {
       const plan = await generatePeriodizationPlan(formData);
-      clearTimeout(timeout);
-
       if (plan) {
         setResult(plan);
         setStep('result');
-        
-        try {
-          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', student.id);
-          await setDoc(docRef, { 
-            periodization: { ...plan, startDate: new Date().toISOString() } 
-          }, { merge: true });
-        } catch (e: any) {
-          console.warn("Firestore error (Likely API disabled):", e.message);
-        }
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', student.id);
+        await setDoc(docRef, { periodization: { ...plan, startDate: new Date().toISOString() } }, { merge: true });
       } else {
         throw new Error("IA returned null");
       }
     } catch (e) {
-      clearTimeout(timeout);
       setError("Falha na geração científica. Tente novamente.");
       setStep('form');
     }
@@ -233,13 +454,13 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
         <Card className="p-8 bg-zinc-900 border-l-4 border-l-red-600">
            <div className="flex items-center gap-4 mb-8">
               <Brain className="text-red-600" size={32} />
-              <div><h3 className="text-2xl font-black italic uppercase tracking-tight">Anamnese Avançada</h3><p className="text-[10px] text-zinc-500 font-bold uppercase">Protocolo PBE • EEFD/UFRJ</p></div>
+              <div><h3 className="text-2xl font-black italic uppercase tracking-tight">Anamnese Avançada</h3><p className="text-[10px] text-zinc-500 font-bold uppercase">Protocolo PBE • Elite Performance</p></div>
            </div>
            <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Condição Biológica Atual</label>
+                <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nível Biológico</label>
                 <select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="w-full p-4 bg-black border border-white/10 rounded-2xl text-sm font-bold outline-none focus:border-red-600">
-                   <option value="iniciante">Adaptação Neura</option>
+                   <option value="iniciante">Adaptação Neural</option>
                    <option value="intermediario">Retomada (Sem ritmo)</option>
                    <option value="avancado">Atleta de Performance</option>
                 </select>
@@ -258,7 +479,6 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
                     </select>
                  </div>
               </div>
-              {error && <p className="text-red-500 text-[10px] font-black uppercase text-center">{error}</p>}
               <button onClick={handleGenerate} className="w-full mt-6 bg-red-600 hover:bg-red-700 py-6 rounded-[2.5rem] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-xl">
                 <Brain size={16}/> Gerar Planilha de Carga
               </button>
@@ -267,14 +487,14 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
       )}
 
       {step === 'loading' && (
-        <div className="flex flex-col items-center justify-center py-32 space-y-8 animate-pulse">
+        <div className="flex flex-col items-center justify-center py-32 space-y-8 animate-in fade-in duration-300 text-center">
            <div className="relative">
-              <div className="w-24 h-24 border-4 border-red-600/20 border-t-red-600 rounded-full animate-spin"></div>
-              <Activity size={32} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-600" />
+             <div className="w-24 h-24 border-4 border-red-600/20 rounded-full animate-ping absolute inset-0"></div>
+             <Loader2 className="w-24 h-24 animate-spin text-red-600 relative z-10" />
            </div>
-           <div className="text-center">
-              <p className="text-xl font-black uppercase tracking-widest text-white">Analisando Biomecânica & Carga</p>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase mt-2">Aplicando modelos de Bompa & Tudor...</p>
+           <div className="space-y-2">
+             <p className="text-xl font-black uppercase tracking-widest italic text-white">Analisando Biomecânica</p>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 animate-pulse">Integrando Metodologia PhD...</p>
            </div>
         </div>
       )}
@@ -284,13 +504,12 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
            <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl">
               <p className="text-[9px] font-black uppercase text-red-600 mb-2 tracking-[0.2em]">{result.modelo_teorico}</p>
               <h1 className="text-2xl font-black italic uppercase text-white mb-2 leading-none">{result.titulo}</h1>
-              <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">{result.objetivo_longo_prazo}</p>
+              <p className="text-xs text-zinc-400 font-medium leading-relaxed italic opacity-80">{result.objetivo_longo_prazo}</p>
            </div>
-
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {result.microciclos?.map((m: any, i: number) => (
                 <Card key={i} className="p-6 bg-zinc-900 border-zinc-800">
-                   <h4 className="text-[11px] font-black text-white uppercase mb-4 leading-tight">SEMANA {m.semana}:<br/><span className="text-red-600">{m.tipo} ({m.foco})</span></h4>
+                   <h4 className="text-[11px] font-black text-white uppercase mb-4 leading-tight">SEMANA {m.semana}:<br/><span className="text-red-600">{m.tipo}</span></h4>
                    <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
                       <div className="flex justify-between items-center"><span className="text-[9px] text-zinc-500 font-bold uppercase">RPE:</span><span className="text-[10px] font-black text-white">{m.pse_alvo}</span></div>
                       <div className="flex justify-between items-center"><span className="text-[10px] font-black text-white">{m.faixa_repeticoes}</span></div>
@@ -298,394 +517,16 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
                 </Card>
               ))}
            </div>
-
            <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] relative overflow-hidden">
               <h3 className="text-amber-500 font-black uppercase text-xs mb-4 flex items-center gap-3">
                  <BookOpen size={16} /> NOTAS PHD
               </h3>
-              <p className="text-xs text-zinc-300 leading-relaxed font-medium italic opacity-80">
-                 {result.notas_phd}
-              </p>
+              <p className="text-xs text-zinc-300 leading-relaxed font-medium italic opacity-80">{result.notas_phd}</p>
            </div>
-
-           <div className="flex gap-4 pt-4">
-              <button onClick={() => setStep('form')} className="flex-1 py-6 bg-zinc-800/50 border border-zinc-800 rounded-[2.5rem] font-black uppercase text-[11px] text-zinc-400 hover:text-white transition-all shadow-lg active:scale-95">REFAZER</button>
-              <button 
-                onClick={onProceedToWorkout} 
-                className="flex-[2] py-6 bg-red-600 rounded-[2.5rem] font-black uppercase text-[11px] text-white shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                MONTAR EXERCÍCIOS
-              </button>
-           </div>
+           <button onClick={onProceedToWorkout} className="w-full py-6 bg-red-600 rounded-[2.5rem] font-black uppercase text-[11px] text-white shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all active:scale-95">MONTAR EXERCÍCIOS</button>
         </div>
       )}
       <EliteFooter />
     </div>
   );
-}
-
-export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (id: string, data: any) => void }) {
-  const [currentWorkout, setCurrentWorkout] = useState<Workout>(workoutToEdit || { 
-    id: Date.now().toString(), 
-    title: '', 
-    exercises: [],
-    startDate: new Date().toLocaleDateString('pt-BR'),
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-    frequencyWeekly: 3
-  });
-
-  const [selectedMuscle, setSelectedMuscle] = useState("Peito");
-  const [options, setOptions] = useState<string[]>(EXERCISE_DATABASE["Peito"]);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [previewEx, setPreviewEx] = useState<Exercise | null>(null);
-
-  useEffect(() => {
-    if (selectedMuscle) setOptions(EXERCISE_DATABASE[selectedMuscle] || []);
-  }, [selectedMuscle]);
-
-  const addEx = async (name: string) => {
-    setImageLoading(true);
-    const img = await generateExerciseImage(name);
-    const cue = await generateTechnicalCue(name);
-    const newEx: Exercise = { id: Math.random().toString(), name, thumb: img, description: cue, sets: '3', reps: '10-12', rest: '60s' };
-    setCurrentWorkout({...currentWorkout, exercises: [...currentWorkout.exercises, newEx]});
-    setPreviewEx(newEx);
-    setImageLoading(false);
-  };
-
-  const handleSave = () => {
-    const existingWorkouts = student.workouts || [];
-    const workoutIndex = existingWorkouts.findIndex(w => w.id === currentWorkout.id);
-    let updatedWorkouts;
-    if (workoutIndex >= 0) {
-      updatedWorkouts = [...existingWorkouts];
-      updatedWorkouts[workoutIndex] = currentWorkout;
-    } else {
-      updatedWorkouts = [...existingWorkouts, currentWorkout];
-    }
-    onSave(student.id, { workouts: updatedWorkouts });
-    onBack();
-  };
-
-  return (
-    <div className="p-4 md:p-6 h-screen overflow-y-auto pb-48 text-white custom-scrollbar bg-black text-left">
-      <header className="flex items-center justify-between mb-8 py-4 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors shadow-lg">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex flex-col items-center">
-            <h1 className="text-xl font-black italic tracking-tighter uppercase">
-              <HeaderTitle text="Novo Treino" />
-            </h1>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{currentWorkout.title || 'Personalizado'}</p>
-        </div>
-        <button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700 px-8 py-2.5 rounded-xl font-black text-xs uppercase shadow-xl transition-all active:scale-95">
-          Salvar
-        </button>
-      </header>
-
-      <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
-         <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6">
-            <h4 className="text-orange-500 font-black uppercase text-[9px] tracking-[0.3em] mb-4 flex items-center gap-2 italic">
-               <Folder size={12} /> IDENTIFICAÇÃO DO TREINO
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-               <div className="md:col-span-1 space-y-1.5">
-                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Planilha</label>
-                  <div className="relative">
-                     <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-700" size={14} />
-                     <input 
-                        value={currentWorkout.title} 
-                        onChange={e => setCurrentWorkout({...currentWorkout, title: e.target.value})} 
-                        className="w-full bg-black/60 p-4 pl-12 rounded-xl text-sm font-black uppercase outline-none focus:border-red-600 border border-white/5 shadow-inner" 
-                        placeholder="NOME DA PLANILHA..." 
-                     />
-                  </div>
-               </div>
-               <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1 italic">Início</label>
-                  <input 
-                    value={currentWorkout.startDate} 
-                    onChange={e => setCurrentWorkout({...currentWorkout, startDate: e.target.value})} 
-                    className="w-full bg-black/60 p-4 rounded-xl text-sm font-bold outline-none border border-white/5 text-zinc-400 shadow-inner" 
-                  />
-               </div>
-               <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1 italic">Fim</label>
-                  <input 
-                    value={currentWorkout.endDate} 
-                    onChange={e => setCurrentWorkout({...currentWorkout, endDate: e.target.value})} 
-                    className="w-full bg-black/60 p-4 rounded-xl text-sm font-bold outline-none border border-white/5 text-zinc-400 shadow-inner" 
-                  />
-               </div>
-               <div className="space-y-1.5">
-                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1 italic">Freq.</label>
-                  <input 
-                    type="number" 
-                    value={currentWorkout.frequencyWeekly} 
-                    onChange={e => setCurrentWorkout({...currentWorkout, frequencyWeekly: Number(e.target.value)})} 
-                    className="w-full bg-black/60 p-4 rounded-xl text-sm font-black outline-none border border-white/5 text-white shadow-inner" 
-                  />
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-zinc-900/80 border border-zinc-800 rounded-[2.5rem] p-6 shadow-2xl min-h-[500px] flex flex-col">
-             <h4 className="text-zinc-500 font-black uppercase text-[10px] tracking-widest mb-6 italic border-b border-white/5 pb-4">
-                INVENTÁRIO PRESCRITO
-             </h4>
-             
-             <div className="relative mb-6">
-                <select 
-                   onChange={e => setSelectedMuscle(e.target.value)} 
-                   className="w-full bg-black p-5 rounded-2xl text-xs font-black uppercase border-2 border-red-600/30 outline-none focus:border-red-600 transition-all text-white appearance-none cursor-pointer"
-                >
-                   {Object.keys(EXERCISE_DATABASE).map(m => <option key={m} value={m}>{m}...</option>)}
-                </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={18} />
-             </div>
-             
-             <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                {options.map(ex => (
-                  <button 
-                    key={ex} 
-                    onClick={() => addEx(ex)} 
-                    disabled={imageLoading} 
-                    className="w-full text-left p-4 rounded-xl text-[10px] font-black uppercase bg-black/60 border border-white/5 hover:border-red-600/50 hover:bg-zinc-800/50 transition-all flex items-center justify-between group active:scale-[0.98]"
-                  >
-                    <span className="text-zinc-400 group-hover:text-white truncate max-w-[80%]">{ex}</span>
-                    {imageLoading ? (
-                        <Loader2 size={14} className="animate-spin text-zinc-600" />
-                    ) : (
-                        <ChevronRight size={16} className="text-zinc-700 group-hover:text-red-600" />
-                    )}
-                  </button>
-                ))}
-             </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-8 space-y-8">
-           <div className="relative">
-              <h4 className="text-[10px] font-black uppercase text-zinc-600 mb-4 flex items-center gap-2 italic tracking-widest ml-4">
-                 <LayoutGrid size={14} /> SEQUÊNCIA MONTADA
-              </h4>
-              
-              <div className="bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-[3rem] min-h-[400px] w-full relative flex flex-col items-center justify-center p-8 overflow-hidden group">
-                  {currentWorkout.exercises.length === 0 ? (
-                      <div className="flex flex-col items-center gap-6 animate-pulse">
-                          <div className="w-24 h-24 bg-zinc-800 rounded-full flex items-center justify-center border border-white/5">
-                            <Activity className="text-zinc-700" size={48} />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 italic">SELECIONE EXERCÍCIOS AO LADO PARA</p>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 italic mt-1">COMPOR O TREINO</p>
-                          </div>
-                      </div>
-                  ) : (
-                      <div className="w-full space-y-6">
-                         <div className="aspect-video bg-black rounded-[2.5rem] border border-white/5 overflow-hidden relative shadow-2xl">
-                            {previewEx?.thumb ? (
-                                <img src={previewEx.thumb} className="w-full h-full object-cover animate-in fade-in duration-1000" alt="Preview" />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center opacity-20">
-                                   <Activity size={80} className="text-zinc-600 mb-4 animate-pulse" />
-                                   <span className="text-[9px] font-black uppercase tracking-widest">Análise de Performance</span>
-                                </div>
-                            )}
-                            {previewEx && (
-                                <div className="absolute bottom-6 left-6 right-6 bg-black/60 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-                                   <h4 className="text-xl font-black italic uppercase text-white mb-2">{previewEx.name}</h4>
-                                   <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-2"><Sparkles size={12} className="text-red-600" /> Biomecânica validada via IA</p>
-                                </div>
-                            )}
-                         </div>
-
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {currentWorkout.exercises.map((ex, i) => (
-                                <div key={ex.id} onClick={() => setPreviewEx(ex)} className={`p-5 rounded-[2rem] flex items-center gap-4 border-2 transition-all cursor-pointer group/item ${previewEx?.id === ex.id ? 'border-red-600/50 bg-zinc-800/50 shadow-lg' : 'border-white/5 bg-black/40 hover:border-white/20'}`}>
-                                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-900 shrink-0 border border-white/10">
-                                        {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" /> : <Activity className="m-auto mt-4 text-zinc-800" size={24}/>}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="font-black uppercase text-xs italic truncate text-zinc-200 group-hover/item:text-white transition-colors">{ex.name}</h4>
-                                        <div className="flex gap-2 mt-2">
-                                            <div className="bg-black/80 px-2 py-1 rounded text-[8px] font-black text-zinc-500 uppercase tracking-tighter">S: {ex.sets}</div>
-                                            <div className="bg-black/80 px-2 py-1 rounded text-[8px] font-black text-zinc-500 uppercase tracking-tighter">R: {ex.reps}</div>
-                                        </div>
-                                    </div>
-                                    <button onClick={(e) => { e.stopPropagation(); setCurrentWorkout({...currentWorkout, exercises: currentWorkout.exercises.filter((_, idx) => idx !== i)}); }} className="text-zinc-700 hover:text-red-600 p-2 transition-colors">
-                                       <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            ))}
-                         </div>
-                      </div>
-                  )}
-              </div>
-           </div>
-        </div>
-      </div>
-      <EliteFooter />
-    </div>
-  );
-}
-
-export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
-  const [formData, setFormData] = useState<Partial<PhysicalAssessment>>({
-    data: new Date().toISOString().split('T')[0],
-    peso: '', altura: '',
-    dc_peitoral: '', dc_abdominal: '', dc_coxa: '', dc_tricipital: '', dc_suprailiaca: '',
-    bio_percentual_gordura: '', bio_massa_magra: '', bio_musculo_esqueletico: '', bio_gordura_visceral: '',
-    bio_idade_metabolica: '', bio_tmb: '',
-    p_peitoral: '', p_cintura: '', p_abdominal: '', p_quadril: '',
-    p_coxa_proximal_dir: '', p_coxa_proximal_esq: '',
-    p_coxa_distal_dir: '', p_coxa_distal_esq: '',
-    p_panturrilha_dir: '', p_panturrilha_esq: '',
-    p_braco_dir: '', p_braco_esq: '',
-    p_antebraco_dir: '', p_antebraco_esq: ''
-  });
-
-  const handleSave = () => {
-    const assessment = { id: Date.now().toString(), ...formData } as PhysicalAssessment;
-    onSave(student.id, { physicalAssessments: [assessment, ...(student.physicalAssessments || [])] });
-    onBack();
-  };
-
-  const InputField = ({ label, id, unit }: { label: string, id: keyof PhysicalAssessment, unit?: string }) => (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black text-zinc-500 uppercase italic tracking-widest block ml-1">
-        {label} {unit && <span className="text-[8px] opacity-40">({unit})</span>}
-      </label>
-      <input 
-        type="number" 
-        value={formData[id] as string || ''} 
-        onChange={e => setFormData({...formData, [id]: e.target.value})} 
-        className="w-full bg-black border border-white/10 p-4 rounded-2xl outline-none focus:border-red-600 font-black text-sm text-white shadow-inner transition-all"
-        placeholder="0.0"
-      />
-    </div>
-  );
-
-  return (
-    <div className="p-6 h-screen overflow-y-auto pb-48 text-white bg-black text-left custom-scrollbar">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">
-          <HeaderTitle text="Ficha Técnica" />: <span className="text-red-600">{student.nome}</span>
-        </h2>
-      </header>
-
-      <div className="space-y-10 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        {/* ANTROPOMETRIA BÁSICA */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 ml-2">
-             <Scale className="text-red-600" size={18} />
-             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Antropometria Básica</h3>
-          </div>
-          <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-4">
-            <InputField label="Peso" id="peso" unit="kg" />
-            <InputField label="Altura" id="altura" unit="cm" />
-          </Card>
-        </section>
-
-        {/* DOBRAS CUTÂNEAS */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 ml-2">
-             <Ruler className="text-red-600" size={18} />
-             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Dobras Cutâneas</h3>
-          </div>
-          <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <InputField label="Peitoral" id="dc_peitoral" unit="mm" />
-              <InputField label="Abdominal" id="dc_abdominal" unit="mm" />
-              <InputField label="Coxa" id="dc_coxa" unit="mm" />
-              <InputField label="Tricipital" id="dc_tricipital" unit="mm" />
-              <div className="col-span-2">
-                <InputField label="Supra-ilíaca" id="dc_suprailiaca" unit="mm" />
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        {/* BIOIMPEDÂNCIA */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 ml-2">
-             <Activity className="text-red-600" size={18} />
-             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Bioimpedância</h3>
-          </div>
-          <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-6">
-            <InputField label="% Gordura" id="bio_percentual_gordura" unit="%" />
-            <InputField label="Massa Magra" id="bio_massa_magra" unit="kg" />
-            <InputField label="Músculo Esq." id="bio_musculo_esqueletico" unit="kg" />
-            <InputField label="Gord. Visceral" id="bio_gordura_visceral" />
-            <InputField label="Idade Metab." id="bio_idade_metabolica" />
-            <InputField label="TMB" id="bio_tmb" unit="kcal" />
-          </Card>
-        </section>
-
-        {/* PERÍMETROS */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 ml-2">
-             <TrendingUp className="text-red-600" size={18} />
-             <h3 className="text-[11px] font-black uppercase text-zinc-300 tracking-[0.2em]">Perímetros</h3>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="ml-2 border-l-2 border-red-600/30 pl-3">
-              <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest italic">Tronco</h4>
-            </div>
-            <Card className="p-6 bg-zinc-900 border-zinc-800 grid grid-cols-2 gap-4">
-              <InputField label="Peitoral" id="p_peitoral" unit="cm" />
-              <InputField label="Cintura" id="p_cintura" unit="cm" />
-              <InputField label="Abdominal" id="p_abdominal" unit="cm" />
-              <InputField label="Quadril" id="p_quadril" unit="cm" />
-            </Card>
-
-            <div className="ml-2 border-l-2 border-red-600/30 pl-3">
-              <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest italic">Membros (D / E)</h4>
-            </div>
-            <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-6">
-               <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Coxa Prox. Dir" id="p_coxa_proximal_dir" unit="cm" />
-                  <InputField label="Coxa Prox. Esq" id="p_coxa_proximal_esq" unit="cm" />
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Coxa Distal Dir" id="p_coxa_distal_dir" unit="cm" />
-                  <InputField label="Coxa Distal Esq" id="p_coxa_distal_esq" unit="cm" />
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Panturrilha Dir" id="p_panturrilha_dir" unit="cm" />
-                  <InputField label="Panturrilha Esq" id="p_panturrilha_esq" unit="cm" />
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Braço Dir" id="p_braco_dir" unit="cm" />
-                  <InputField label="Braço Esq" id="p_braco_esq" unit="cm" />
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Antebraço Dir" id="p_antebraco_dir" unit="cm" />
-                  <InputField label="Antebraço Esq" id="p_antebraco_esq" unit="cm" />
-               </div>
-            </Card>
-          </div>
-        </section>
-
-        <button 
-          onClick={handleSave} 
-          className="w-full py-6 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-red-900/40 active:scale-95 transition-all flex items-center justify-center gap-3"
-        >
-          <Save size={18} /> Validar & Salvar Avaliação
-        </button>
-      </div>
-      <EliteFooter />
-    </div>
-  );
-}
-
-export function RunTrackManager({ student, onBack }: { student: Student, onBack: () => void }) {
-  return <div className="h-screen overflow-y-auto bg-black custom-scrollbar"><RunTrackCoachView student={student} onBack={onBack} /></div>;
 }

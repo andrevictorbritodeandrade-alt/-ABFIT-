@@ -1,17 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Activity, ChevronDown, Clock, 
   HeartPulse, Target, Plus, Save, Trash2,
   ArrowLeft, Zap, BrainCircuit, 
-  Lock, RefreshCw, Sparkles, Repeat, AlertCircle, User
+  Lock, RefreshCw, Sparkles, Repeat, AlertCircle, User,
+  Camera, CheckCircle2, X, Heart, Play
 } from 'lucide-react';
 import { 
   collection, doc, setDoc, 
   onSnapshot, addDoc, deleteDoc, query, where 
 } from 'firebase/firestore';
 import { db, appId } from '../services/firebase';
-import { Student } from '../types';
+import { Student, RunningStats, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle } from './Layout';
 
 const Card = ({ children, className = "", onClick }: any) => (
@@ -89,388 +90,112 @@ function getWorkoutColor(type: string) {
   }
 }
 
-export function RunTrackAnamnese({ student, onSave, onBack }: { student: Student, onSave: (data: any) => void, onBack: () => void }) {
-  const [data, setData] = useState({ 
-    age: student.age || "", weight: student.weight || "", height: student.height || "", 
-    goal: student.goal || "conditioning", environment: student.environment || "asphalt", timeOfDay: student.timeOfDay || "morning", 
-    usesWatch: student.usesWatch || "no", limitations: student.limitations || "", medications: student.medications || "", 
-    injuryHistory: student.injuryHistory || "", activeNow: student.activeNow || "yes", strengthTraining: student.strengthTraining || "yes", 
-    daysPerWeek: student.daysPerWeek || "3", otherSports: student.otherSports || "" 
-  });
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    const updatedData = { ...data, anamneseComplete: true };
-    try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', student.id);
-        await setDoc(docRef, updatedData, { merge: true });
-        onSave(updatedData);
-    } catch (e) {
-        console.error("Critical Save Error:", e);
-    }
-    setSaving(false);
-  };
-
-  return (
-    <div className="p-6 pb-20 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 text-left">
-      <header className="flex items-center gap-4 mb-10">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
-            <ArrowLeft size={20}/>
-          </button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-            <HeaderTitle text="RunTrack AI" />
-          </h2>
-      </header>
-
-      <SectionHeader title="RunTrack AI" subtitle="Base científica para fundamentação da carga técnica." />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-l-4 border-l-red-600 shadow-xl relative overflow-hidden bg-zinc-900">
-          <User className="absolute right-4 top-4 opacity-5 pointer-events-none text-white" size={80} />
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-2 italic"><User size={12} /> Antropometria Primária</h4>
-          <div className="space-y-4 relative z-10">
-            <div className="grid grid-cols-3 gap-4">
-              <Input label="Idade" type="number" value={data.age} onChange={(v: string) => setData({...data, age: v})} />
-              <Input label="Peso (kg)" type="number" value={data.weight} onChange={(v: string) => setData({...data, weight: v})} />
-              <Input label="Altura (cm)" type="number" value={data.height} onChange={(v: string) => setData({...data, height: v})} />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-800 shadow-xl relative overflow-hidden bg-zinc-900">
-          <Target className="absolute right-4 top-4 opacity-5 pointer-events-none text-white" size={80} />
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-2 italic"><Target size={12} /> Objetivos do Treino</h4>
-          <div className="space-y-4 relative z-10">
-            <Select label="Objetivo Primário" value={data.goal} onChange={(v: string) => setData({...data, goal: v})} options={[{ value: "weight-loss", label: "Emagrecimento / Oxidação" }, { value: "conditioning", label: "Condicionamento" }, { value: "5k", label: "Preparação 5km" }, { value: "10k", label: "Preparação 10km" }, { value: "21k", label: "Meia Maratona" }, { value: "42k", label: "Maratona" }, { value: "military", label: "TAF / Militar" }]} />
-            <div className="grid grid-cols-2 gap-4">
-              <Select label="Local Predominante" value={data.environment} onChange={(v: string) => setData({...data, environment: v})} options={[{ value: "asphalt", label: "Asfalto / Rua" }, { value: "treadmill", label: "Esteira" }, { value: "trail", label: "Trilha" }]} />
-              <Select label="Monitoramento GPS" value={data.usesWatch} onChange={(v: string) => setData({...data, usesWatch: v})} options={[{ value: "yes", label: "Usa Garmin/Apple" }, { value: "no", label: "Não possui" }]} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Select label="Disponibilidade" value={data.daysPerWeek} onChange={(v: string) => setData({...data, daysPerWeek: v})} options={[{ value: "2", label: "2x semana" }, { value: "3", label: "3x semana" }, { value: "4", label: "4x semana" }, { value: "5", label: "5x semana" }]} />
-              <Select label="Turno" value={data.timeOfDay} onChange={(v: string) => setData({...data, timeOfDay: v})} options={[{ value: "morning", label: "Manhã" }, { value: "afternoon", label: "Tarde" }, { value: "night", label: "Noite" }]} />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="lg:col-span-2 border-l-4 border-l-red-500 shadow-xl relative overflow-hidden bg-zinc-900">
-          <HeartPulse className="absolute right-4 top-4 opacity-5 pointer-events-none text-white" size={100} />
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-2 italic"><HeartPulse size={12} /> Análise Clínica de Risco</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-            <div className="space-y-4">
-              <Input label="Histórico de Lesões" value={data.injuryHistory} onChange={(v: string) => setData({...data, injuryHistory: v})} placeholder="Ex: Tendinite, dor no joelho..." />
-              <Input label="Medicações em Uso" value={data.medications} onChange={(v: string) => setData({...data, medications: v})} placeholder="Ex: Anti-hipertensivos..." />
-              <Input label="Limitações Físicas" value={data.limitations} onChange={(v: string) => setData({...data, limitations: v})} />
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Select label="Estado de Atividade" value={data.activeNow} onChange={(v: string) => setData({...data, activeNow: v})} options={[{ value: "yes", label: "Já pratica" }, { value: "no", label: "Sedentário" }]} />
-                <Select label="Musculação?" value={data.strengthTraining} onChange={(v: string) => setData({...data, strengthTraining: v})} options={[{ value: "yes", label: "Sim" }, { value: "no", label: "Não" }]} />
-              </div>
-              <Input label="Outros Esportes praticados" value={data.otherSports} onChange={(v: string) => setData({...data, otherSports: v})} placeholder="Ciclismo, Natação..." />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-between pt-6 gap-4">
-          <Button onClick={onBack} variant="outline" className="w-full md:w-auto px-8 py-4">Voltar</Button>
-          <Button onClick={handleSave} loading={saving} className="w-full md:w-auto px-12 py-6 text-sm md:text-lg shadow-red-500/30 rounded-[3rem] hover:scale-105 transform">Concluir Registro Técnico</Button>
-      </div>
-    </div>
-  );
-}
-
-export function RunTrackCoachView({ student, onBack }: { student: Student, onBack: () => void }) {
-  const [activeTab, setActiveTab] = useState('diagnostico'); 
-  const [isAiProcessing, setIsAiProcessing] = useState(false);
-  const [aiReport, setAiReport] = useState<any>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+export function RunTrackStudentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
   const [modelWorkouts, setModelWorkouts] = useState<any[]>([]);
-  const [showAnamnese, setShowAnamnese] = useState(false);
+  const [showFinishForm, setShowFinishForm] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [newModel, setNewModel] = useState({ 
-    dayOfWeek: 'Segunda', type: 'rodagem', distance: '', pace: '', description: '',
-    warmupTime: '', sets: '1', reps: '1', stimulusTime: '', recoveryTime: '', cooldownTime: ''
+  // Galaxy Watch 7 Stats State
+  const [stats, setStats] = useState<RunningStats>({
+    distance: undefined,
+    avgPace: "",
+    avgHR: undefined,
+    maxHR: undefined,
+    cadence: undefined,
+    vo2max: undefined,
+    elevation: undefined,
+    calories: undefined,
+    strideLength: undefined,
+    verticalOscillation: undefined,
+    groundContactTime: undefined
   });
-
-  const isAnamneseComplete = student?.anamneseComplete === true;
-
-  useEffect(() => {
-    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'modelWorkouts'), where('studentId', '==', student.id));
-    const unsub = onSnapshot(q, (snap) => {
-        setModelWorkouts(snap.docs.map(d => ({id: d.id, ...d.data()})));
-    }, (err) => {
-        console.error("Firestore Error:", err);
-    });
-    return () => unsub();
-  }, [student.id]);
-
-  const processAiDiagnosis = () => {
-    if (!isAnamneseComplete) return;
-    setIsAiProcessing(true);
-    setTimeout(() => {
-      const h = Number(student.height) / 100;
-      const imc = (Number(student.weight) / (h * h)).toFixed(1);
-      const report = {
-        clinical: student.injuryHistory ? `ALERTA: Histórico de "${student.injuryHistory}". Evitar intensidades explosivas iniciais.` : "Fisiologia estável detectada.",
-        science: student.goal === '5k' ? "Referência Jack Daniels: Intervalados em I-Pace sugeridos." : "Referência Stephen Seiler: Modelo Polarizado 80/20.",
-        strategy: `Atleta com IMC ${imc}. Volume base ideal: ${Math.round(Number(student.daysPerWeek) * 7)}km semanais.`,
-        tips: [
-          "Prescreva modelos cíclicos para consolidação motora.",
-          "Priorize a Zona 2 (Oxidativa) nas rodagens de base.",
-          "O aumento de 5% deve ser aplicado após 4 sessões validadas."
-        ]
-      };
-      setAiReport(report);
-      setIsAiProcessing(false);
-    }, 300);
-  };
-
-  const calculateTotalTime = (m: any) => {
-    const warmup = Number(m.warmupTime) || 0;
-    const cooldown = Number(m.cooldownTime) || 0;
-    const sets = Number(m.sets) || 1;
-    const reps = Number(m.reps) || 1;
-    const stim = Number(m.stimulusTime) || 0;
-    const rec = (Number(m.recoveryTime) || 0) / 60;
-    const mainWork = sets * (reps * stim + reps * rec);
-    return Math.round(warmup + mainWork + cooldown);
-  };
-
-  const addModelWorkout = async () => {
-    setIsSaving(true);
-    let finalModel = { ...newModel };
-    const basePace = (5.5 + (Number(student.age) / 100) + (Number(student.weight) / 150)).toFixed(1);
-
-    if (!finalModel.warmupTime) finalModel.warmupTime = '10';
-    if (!finalModel.cooldownTime) finalModel.cooldownTime = '10';
-    
-    if (finalModel.type === 'tiro') {
-      if (!finalModel.sets) finalModel.sets = '1';
-      if (!finalModel.reps) finalModel.reps = '8';
-      if (!finalModel.stimulusTime) finalModel.stimulusTime = '2';
-      if (!finalModel.recoveryTime) finalModel.recoveryTime = '60';
-      if (!finalModel.pace) finalModel.pace = 'Z4 / Forte';
-    } else {
-      if (!finalModel.distance) finalModel.distance = finalModel.type === 'longao' ? '12' : '6';
-      if (!finalModel.pace) finalModel.pace = `${basePace} min/km`;
-    }
-
-    const tTotal = calculateTotalTime(finalModel);
-    const newWorkoutEntry = { 
-        ...finalModel, 
-        studentId: student.id,
-        createdAt: new Date().toISOString(),
-        totalTime: tTotal,
-        isAiOptimized: !newModel.distance && !newModel.stimulusTime
-    };
-
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'modelWorkouts'), newWorkoutEntry);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      setNewModel({ dayOfWeek: 'Segunda', type: 'rodagem', distance: '', pace: '', description: '', warmupTime: '', sets: '1', reps: '1', stimulusTime: '', recoveryTime: '', cooldownTime: '' });
-    } catch (e) { 
-        console.error("Critical Save Error:", e);
-    }
-    setIsSaving(false);
-  };
-
-  const handleDelete = async (id: string) => {
-      try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'modelWorkouts', id));
-      } catch (e) {
-          console.error("Delete error:", e);
-      }
-  };
-
-  if (showAnamnese) {
-      return <RunTrackAnamnese student={student} onSave={() => setShowAnamnese(false)} onBack={() => setShowAnamnese(false)} />;
-  }
-
-  return (
-    <div className="p-6 space-y-8 animate-in fade-in duration-700 pb-40 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
-      <div className="flex items-center gap-4 mb-4">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
-            <ArrowLeft size={20}/>
-          </button>
-          <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
-            <HeaderTitle text="RunTrack AI" />
-          </h2>
-      </div>
-
-      {!isAnamneseComplete ? (
-        <Card className="flex flex-col items-center py-12 md:py-24 text-center bg-zinc-900 border-red-500/20 border-2 border-dashed rounded-[3rem]">
-           <Lock size={64} className="text-red-600 mb-6" />
-           <h3 className="text-2xl md:text-3xl font-black italic uppercase text-white tracking-tighter">Acesso Bloqueado</h3>
-           <p className="text-zinc-500 max-w-md mt-4 mb-8 font-bold uppercase text-[9px] tracking-[0.2em] px-4">Preencha a ficha técnica do atleta para libertar o diagnóstico e a prescrição do treinador virtual.</p>
-           <Button onClick={() => setShowAnamnese(true)} variant="primary" className="px-12 py-5 text-lg italic uppercase font-black">Abrir Anamnese</Button>
-        </Card>
-      ) : (
-        <>
-          <div className="flex flex-col md:flex-row gap-4 p-2 bg-black rounded-3xl w-full max-w-2xl mx-auto shadow-inner sticky top-2 z-40 border border-zinc-800">
-             {['diagnostico', 'prescricao'].map(t => (
-               <button 
-                 key={t} 
-                 onClick={() => setActiveTab(t)} 
-                 className={`flex-1 py-3 rounded-[1.5rem] text-[10px] font-black italic uppercase transition-all ${activeTab === t ? 'bg-zinc-900 shadow-xl text-red-600 scale-105 border border-zinc-800' : 'text-zinc-500 hover:text-zinc-300'}`}
-               >
-                 {t === 'diagnostico' ? '1. Parecer IA' : '2. Planilha Cíclica'}
-               </button>
-             ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-32 z-30">
-               <Card className="bg-zinc-900 text-white border border-zinc-800 shadow-2xl relative overflow-hidden">
-                  <BrainCircuit className="absolute right-[-20px] top-[-20px] opacity-10 pointer-events-none text-white" size={120} />
-                  <div className="relative z-10">
-                    <h4 className="text-[9px] font-black text-red-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-2 italic"><Sparkles size={14}/> Treinador Virtual IA</h4>
-                    {!aiReport ? (
-                      <div className="space-y-6 text-center">
-                        <p className="text-[10px] font-bold text-zinc-400 leading-relaxed uppercase tracking-tighter italic">Analise o perfil biométrico para gerar a estratégia científica do atleta.</p>
-                        <Button onClick={processAiDiagnosis} loading={isAiProcessing} className="w-full py-4 text-xs italic tracking-widest uppercase bg-zinc-800 border border-red-600 hover:bg-zinc-700">Analisar Perfil</Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
-                        <div className="p-4 bg-black/20 border border-white/5 rounded-2xl italic text-[10px] leading-relaxed opacity-90 border-l-4 border-l-red-600 font-bold">"{aiReport.strategy}"</div>
-                        <div className="space-y-4">
-                           <p className="text-[9px] font-black text-red-500 uppercase tracking-widest border-b border-white/10 pb-2">Instruções Técnicas:</p>
-                           {aiReport.tips.map((t: string, i: number) => <div key={i} className="flex gap-2 items-start text-[9px] font-bold opacity-80 leading-relaxed"><Zap size={12} className="text-red-600 shrink-0 mt-0.5" /> {t}</div>)}
-                        </div>
-                        <div className="pt-4 border-t border-white/10 text-zinc-400">
-                           <p className="text-[9px] font-black uppercase mb-2 flex items-center gap-2 italic"><AlertCircle size={12}/> Clínico:</p>
-                           <p className="text-[9px] font-bold italic">{aiReport.clinical}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-               </Card>
-            </div>
-
-            <div className="lg:col-span-8 space-y-8">
-              {activeTab === 'diagnostico' && (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                   <SectionHeader title="Diagnóstico Comentado" subtitle="Análise automatizada da ficha técnica do atleta." />
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="border-l-4 border-l-red-600 shadow-xl relative overflow-hidden bg-zinc-900">
-                         <h5 className="text-[9px] font-black text-zinc-500 uppercase mb-4 tracking-widest italic">Dados Atuais</h5>
-                         <div className="space-y-3 font-bold text-white">
-                            <div className="flex justify-between uppercase italic text-xs"><span>Peso:</span><span className="text-red-600 font-black">{student.weight}kg</span></div>
-                            <div className="flex justify-between uppercase italic text-xs"><span>IMC:</span><span className="text-red-600 font-black">{(Number(student.weight) / ((Number(student.height)/100)**2)).toFixed(1)}</span></div>
-                            <div className="flex justify-between uppercase italic text-xs"><span>Alvo:</span><span className="text-red-600 italic font-black uppercase">{student.goal}</span></div>
-                         </div>
-                      </Card>
-                      <Card className="border-l-4 border-l-red-800 shadow-xl relative overflow-hidden bg-zinc-900">
-                         <h5 className="text-[9px] font-black text-zinc-500 uppercase mb-4 tracking-widest italic">Saúde e Risco</h5>
-                         <div className="space-y-3 font-bold text-white">
-                            <div className="flex justify-between uppercase italic text-xs"><span>Lesões:</span><span className="text-red-500 truncate ml-4 max-w-[120px] text-right">{student.injuryHistory || "Inexistente"}</span></div>
-                            <div className="flex justify-between uppercase italic text-xs"><span>Fortalecimento:</span><span className="text-white uppercase">{student.strengthTraining === 'yes' ? 'Sim' : 'Não'}</span></div>
-                         </div>
-                      </Card>
-                   </div>
-                   <div className="flex justify-center pt-6"><Button onClick={() => setActiveTab('prescricao')} className="px-16 py-6 text-lg italic uppercase font-black shadow-2xl bg-red-600 hover:bg-red-700">Montar Planilha Cíclica</Button></div>
-                </div>
-              )}
-
-              {activeTab === 'prescricao' && (
-                <div className="space-y-8 animate-in fade-in duration-500 pb-40">
-                   <Card className="bg-zinc-900 text-white border border-red-600/30 shadow-2xl p-6 md:p-10 rounded-[3rem] relative overflow-hidden">
-                      <Zap className="absolute right-[-10px] bottom-[-10px] opacity-5 pointer-events-none text-red-600" size={150} />
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-8">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 italic flex items-center gap-2"><Repeat size={14}/> Modelagem Semanal Cíclica</h4>
-                          {saveSuccess && <div className="bg-white text-red-600 text-[9px] px-3 py-1 rounded-lg animate-bounce font-black shadow-xl">GRAVADO!</div>}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 border-b border-white/10 pb-8">
-                           <Select label="Dia de Repetição" value={newModel.dayOfWeek} onChange={(v: string) => setNewModel({...newModel, dayOfWeek: v})} options={[{value: 'Segunda', label: 'Segunda-feira'}, {value: 'Terça', label: 'Terça-feira'}, {value: 'Quarta', label: 'Quarta-feira'}, {value: 'Quinta', label: 'Quinta-feira'}, {value: 'Sexta', label: 'Sexta-feira'}, {value: 'Sábado', label: 'Sábado'}, {value: 'Domingo', label: 'Domingo'}]} />
-                           <Select label="Metodologia Técnica" value={newModel.type} onChange={(v: string) => setNewModel({...newModel, type: v})} options={[{value: 'rodagem', label: 'Rodagem (Zona 2)'}, {value: 'tiro', label: 'Intervalado (Zona 5)'}, {value: 'ritmo', label: 'Tempo Run (Ritmo)'}, {value: 'longao', label: 'Longão'}, {value: 'fartlek', label: 'Fartlek'}, {value: 'subida', label: 'Subida (Força)'}]} />
-                           <Input label="KM do Modelo" type="number" value={newModel.distance} onChange={(v: string) => setNewModel({...newModel, distance: v})} placeholder="Ex: 10" className="!bg-white/10 !border-white/20 !text-white" />
-                        </div>
-                        
-                        <div className="bg-black/30 p-6 rounded-[2rem] border border-white/10 mb-8">
-                           <div className="flex items-center gap-3 mb-6"><Clock size={16} className="text-zinc-400"/><p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 italic">Estrutura Técnica de Tempos</p></div>
-                           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                              <Input label="Aquec. (min)" value={newModel.warmupTime} onChange={(v: string) => setNewModel({...newModel, warmupTime: v})} placeholder="Ex: 15" className="!bg-white/10 !border-white/20 !text-white" />
-                              <Input label="Nº de Blocos" type="number" value={newModel.sets} onChange={(v: string) => setNewModel({...newModel, sets: v})} placeholder="Ex: 1" className="!bg-white/10 !border-white/20 !text-white" />
-                              <Input label="Tiros / Reps" type="number" value={newModel.reps} onChange={(v: string) => setNewModel({...newModel, reps: v})} placeholder="Ex: 8" className="!bg-white/10 !border-white/20 !text-white" />
-                              <Input label="Estímulo (min)" value={newModel.stimulusTime} onChange={(v: string) => setNewModel({...newModel, stimulusTime: v})} placeholder="Ex: 2" className="!bg-white/10 !border-white/20 !text-white" />
-                              <Input label="Repouso (seg)" value={newModel.recoveryTime} onChange={(v: string) => setNewModel({...newModel, recoveryTime: v})} placeholder="Ex: 60" className="!bg-white/10 !border-white/20 !text-white" />
-                              <Input label="Volta à Calma (min)" value={newModel.cooldownTime} onChange={(v: string) => setNewModel({...newModel, cooldownTime: v})} placeholder="Ex: 10" className="!bg-white/10 !border-white/20 !text-white" />
-                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                           <Input label="Pace Sugerido" value={newModel.pace} onChange={(v: string) => setNewModel({...newModel, pace: v})} placeholder="Ex: 5:30" className="!bg-white/10 !border-white/20 !text-white" />
-                           <div className="lg:col-span-2"><Input label="Instrução do Coach" value={newModel.description} onChange={(v: string) => setNewModel({...newModel, description: v})} placeholder="Ex: Foco em cadência 180" className="!bg-white/10 !border-white/20 !text-white" /></div>
-                        </div>
-                        
-                        <Button onClick={addModelWorkout} loading={isSaving} variant="secondary" className="w-full py-6 md:py-8 text-lg md:text-2xl shadow-2xl hover:scale-[1.01] transform transition-all group rounded-[2rem]">
-                           <Save size={24} className="group-hover:rotate-12 transition-transform" /> SALVAR MODELO DE TREINO
-                        </Button>
-                      </div>
-                   </Card>
-
-                   <div className="space-y-6">
-                      <SectionHeader title="Sua Planilha Atual" subtitle="Modelos semanais recorrentes que se adaptam via IA." />
-                      <div className="grid grid-cols-1 gap-6">
-                         {modelWorkouts.sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek)).map(m => (
-                           <Card key={m.id} className="flex flex-col md:flex-row justify-between items-start md:items-center py-6 px-8 border-zinc-800 shadow-sm rounded-3xl relative overflow-hidden bg-zinc-900 group">
-                             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10 w-full">
-                                <div className="flex items-center gap-4 md:block md:w-20 md:border-r border-zinc-800 md:pr-10 shrink-0 text-center">
-                                    <div className={`md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-white ${getWorkoutColor(m.type)}`}><Activity size={18}/></div>
-                                    <div>
-                                        <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1 text-left md:text-center">Dia</p>
-                                        <p className="font-black italic text-white uppercase text-lg md:text-xl text-left md:text-center">{m.dayOfWeek.substring(0,3)}</p>
-                                    </div>
-                                </div>
-                                
-                                <div className={`hidden md:flex w-14 h-14 rounded-2xl items-center justify-center text-white ${getWorkoutColor(m.type)} shadow-xl shadow-current/20 shrink-0 group-hover:scale-110 transition-transform`}><Activity size={24}/></div>
-                                
-                                <div className="flex-1 w-full">
-                                   <div className="flex items-center justify-between gap-4 mb-4">
-                                      <h5 className="font-black text-xl md:text-2xl italic uppercase text-white leading-none">{m.type}</h5>
-                                      <div className="flex items-center gap-2 bg-black text-white px-3 py-1 rounded-lg border border-white/10">
-                                         <Clock size={12} className="text-red-500 animate-pulse"/>
-                                         <span className="text-[10px] font-black italic tracking-tighter uppercase tabular-nums">{m.totalTime} min</span>
-                                      </div>
-                                   </div>
-                                   <div className="bg-black p-4 rounded-xl border border-white/5 italic font-bold text-[10px] md:text-xs text-zinc-400 leading-relaxed">
-                                      "{m.warmupTime} min aquecimento. {m.sets} bloco(s) de {m.reps}x {m.stimulusTime}{isNaN(parseInt(m.stimulusTime)) ? '' : ' min'} de corrida por {m.recoveryTime} segundos de repouso. Finalização de {m.cooldownTime} minutos."
-                                   </div>
-                                   <div className="flex gap-4 mt-4">
-                                      {m.pace && <span className="text-[9px] font-black bg-red-500/10 text-red-400 px-2 py-1 rounded-md uppercase border border-red-500/20">Intensidade: {m.pace}</span>}
-                                      {m.distance && <span className="text-[9px] font-black bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md uppercase border border-zinc-700">Volume: {m.distance}km</span>}
-                                   </div>
-                                </div>
-                             </div>
-                             <button onClick={() => handleDelete(m.id)} className="absolute top-4 right-4 md:static md:p-4 text-zinc-500 hover:text-rose-500 transition-all md:opacity-0 md:group-hover:opacity-100"><Trash2 size={18}/></button>
-                           </Card>
-                         ))}
-                      </div>
-                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-export function RunTrackStudentView({ student, onBack }: { student: Student, onBack: () => void }) {
-  const [modelWorkouts, setModelWorkouts] = useState<any[]>([]);
 
   useEffect(() => {
     const qModels = query(collection(db, 'artifacts', appId, 'public', 'data', 'modelWorkouts'), where('studentId', '==', student.id));
     const unsubModels = onSnapshot(qModels, (snap) => setModelWorkouts(snap.docs.map(d => ({id: d.id, ...d.data()}))), (e) => console.error("Error fetching models"));
     return () => unsubModels();
   }, [student.id]);
+
+  const handleFinishRequest = (workout: any) => {
+    setSelectedWorkout(workout);
+    setShowFinishForm(true);
+  };
+
+  const capturePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setSelfieUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const finalizeRun = async () => {
+    setIsFinishing(true);
+    const entry: WorkoutHistoryEntry = {
+      id: Date.now().toString(),
+      workoutId: selectedWorkout?.id,
+      name: `Corrida: ${selectedWorkout?.type || 'Avulsa'}`,
+      duration: stats.avgPace ? `${(Number(stats.distance || 0) * 6).toFixed(0)} min` : "00:00", // Estimativa se vazio
+      date: new Date().toLocaleDateString('pt-BR'),
+      timestamp: Date.now(),
+      photoUrl: selfieUrl || undefined,
+      type: 'RUNNING',
+      runningStats: stats
+    };
+
+    const updatedHistory = [entry, ...(student.workoutHistory || [])];
+    await onSave(student.id, { workoutHistory: updatedHistory });
+    
+    setIsFinishing(false);
+    setShowFinishForm(false);
+    onBack();
+  };
+
+  if (showFinishForm) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black overflow-y-auto p-6 text-white animate-in slide-in-from-bottom-10 duration-500 custom-scrollbar text-left">
+        <header className="flex justify-between items-center mb-8 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-50 -mx-6 px-6 border-b border-white/5">
+           <h3 className="text-xl font-black italic uppercase tracking-tighter">Dados Watch 7</h3>
+           <button onClick={() => setShowFinishForm(false)} className="p-2 bg-zinc-900 rounded-full"><X size={20}/></button>
+        </header>
+
+        <div className="max-w-2xl mx-auto space-y-8 pb-32">
+           <div 
+             onClick={() => fileInputRef.current?.click()}
+             className="w-full aspect-video bg-zinc-900 rounded-[2.5rem] border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative"
+           >
+              {selfieUrl ? <img src={selfieUrl} className="w-full h-full object-cover" /> : <><Camera size={32} className="text-red-600 mb-2"/><p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Adicionar Selfie do Treino</p></>}
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="user" onChange={capturePhoto} />
+           </div>
+
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Input label="Distância (KM)" type="number" value={stats.distance} onChange={(v:any) => setStats({...stats, distance: v})} />
+              <Input label="Pace Médio" value={stats.avgPace} onChange={(v:any) => setStats({...stats, avgPace: v})} placeholder="05:30" />
+              <Input label="Frec. Card. Méd." type="number" value={stats.avgHR} onChange={(v:any) => setStats({...stats, avgHR: v})} />
+              <Input label="Cadência (SPM)" type="number" value={stats.cadence} onChange={(v:any) => setStats({...stats, cadence: v})} />
+              <Input label="Calorias" type="number" value={stats.calories} onChange={(v:any) => setStats({...stats, calories: v})} />
+              <Input label="VO2 Max" type="number" value={stats.vo2max} onChange={(v:any) => setStats({...stats, vo2max: v})} />
+           </div>
+
+           <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 italic"><Zap size={14}/> Métricas Biomecânicas (Advanced)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Oscilação Vertical (cm)" type="number" value={stats.verticalOscillation} onChange={(v:any) => setStats({...stats, verticalOscillation: v})} />
+                <Input label="Tempo Contato Solo (ms)" type="number" value={stats.groundContactTime} onChange={(v:any) => setStats({...stats, groundContactTime: v})} />
+                <Input label="Comprimento Passada (cm)" type="number" value={stats.strideLength} onChange={(v:any) => setStats({...stats, strideLength: v})} />
+                <Input label="Ganho Elevação (m)" type="number" value={stats.elevation} onChange={(v:any) => setStats({...stats, elevation: v})} />
+              </div>
+           </div>
+
+           <Button onClick={finalizeRun} loading={isFinishing} className="w-full py-6 rounded-[2.5rem] text-sm md:text-lg italic font-black">REGISTRAR NO FEED</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-8 animate-in fade-in duration-500 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
@@ -488,7 +213,6 @@ export function RunTrackStudentView({ student, onBack }: { student: Student, onB
           <div className="flex flex-col items-center justify-center py-20 px-6 border-2 border-dashed border-zinc-800 rounded-[3rem] text-center bg-zinc-950/20">
             <Activity size={48} className="text-zinc-800 mb-6 animate-pulse" />
             <p className="text-zinc-600 italic text-sm font-black uppercase tracking-widest">Aguardando prescrição do seu treinador...</p>
-            <p className="text-zinc-700 text-[9px] mt-4 uppercase font-bold tracking-widest italic">Consulte o dashboard para outras atividades</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
@@ -502,9 +226,18 @@ export function RunTrackStudentView({ student, onBack }: { student: Student, onB
                   <div className="mt-6 bg-black p-5 md:p-6 rounded-2xl border border-white/5 italic font-bold text-[10px] md:text-xs text-zinc-400 leading-relaxed shadow-inner">
                      "{m.warmupTime} min aquecimento. {m.sets} bloco(s) de {m.reps}x {m.stimulusTime}{isNaN(parseInt(m.stimulusTime)) ? '' : ' min'} de corrida por {m.recoveryTime}s de repouso. Finalização de {m.cooldownTime} min."
                   </div>
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-zinc-800">
-                     <div className="flex flex-col gap-1"><p className="text-[8px] font-black uppercase opacity-40 italic text-zinc-500">Tempo Est.:</p><p className="text-lg md:text-xl font-black italic tracking-tighter text-white">{m.totalTime} min</p></div>
-                     <div className="flex flex-col gap-1 text-right"><p className="text-[8px] font-black uppercase opacity-40 italic text-red-500">Pace Alvo:</p><p className="text-lg md:text-xl font-black italic text-red-500 tracking-tighter">{m.pace}</p></div>
+                  
+                  <div className="flex flex-col md:flex-row items-center justify-between mt-8 pt-8 border-t border-zinc-800 gap-6">
+                     <div className="flex gap-10">
+                        <div className="flex flex-col gap-1"><p className="text-[8px] font-black uppercase opacity-40 italic text-zinc-500">Tempo Est.:</p><p className="text-lg md:text-xl font-black italic tracking-tighter text-white">{m.totalTime} min</p></div>
+                        <div className="flex flex-col gap-1 text-right"><p className="text-[8px] font-black uppercase opacity-40 italic text-red-500">Pace Alvo:</p><p className="text-lg md:text-xl font-black italic text-red-500 tracking-tighter">{m.pace}</p></div>
+                     </div>
+                     <button 
+                        onClick={() => handleFinishRequest(m)}
+                        className="w-full md:w-auto px-10 py-4 bg-white text-black rounded-2xl font-black uppercase italic text-xs flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-white/5"
+                     >
+                        <Play size={16} fill="currentColor" /> INICIAR SESSÃO
+                     </button>
                   </div>
                </Card>
              ))}
@@ -513,4 +246,14 @@ export function RunTrackStudentView({ student, onBack }: { student: Student, onB
       </div>
     </div>
   );
+}
+
+export function RunTrackAnamnese({ student, onSave, onBack }: { student: Student, onSave: (data: any) => void, onBack: () => void }) {
+  // Added basic placeholder for Anamnese
+  return <div className="p-10 text-center text-white font-bold uppercase italic">Formulário de Anamnese em breve...</div>; 
+}
+
+export function RunTrackCoachView({ student, onBack }: { student: Student, onBack: () => void }) {
+  // Added basic placeholder for Coach View
+  return <div className="p-10 text-center text-white font-bold uppercase italic">Visão do Professor em breve...</div>;
 }

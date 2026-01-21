@@ -1,19 +1,21 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints, TrendingUp,
-  Info, History as HistoryIcon, LogOut
+  Info, History as HistoryIcon, LogOut, Layout, Bell, AlertCircle
 } from 'lucide-react';
-import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card } from './components/Layout';
+import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
 import { WorkoutSessionView, StudentAssessmentView, StudentPeriodizationView, AboutView } from './components/StudentFlow';
 import { RunTrackStudentView } from './components/RunTrack';
+import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
-import { Student, Workout } from './types';
+import { Student, Workout, AppNotification } from './types';
 
 function LoginScreen({ onLogin, error }: { onLogin: (val: string) => void, error: string }) {
   const [input, setInput] = useState('');
@@ -77,6 +79,7 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -106,11 +109,38 @@ export default function App() {
     } catch (e) { console.error(e); }
   }, [user, selectedStudent?.id]);
 
+  // Lógica de Notificações Baseada em Performance
+  const studentNotifications = useMemo(() => {
+    if (!selectedStudent) return [];
+    const notifications: AppNotification[] = [];
+    const history = selectedStudent.workoutHistory || [];
+    
+    selectedStudent.workouts?.forEach(w => {
+      if (w.projectedSessions) {
+        const completed = history.filter(h => h.workoutId === w.id).length;
+        const remaining = w.projectedSessions - completed;
+        
+        if (remaining <= 2 && remaining >= 0) {
+          notifications.push({
+            id: `renew-${w.id}`,
+            title: 'Renovação Necessária',
+            message: `Atenção: Faltam apenas ${remaining} treinos para o fim da sua planilha "${w.title}"! Entre em contato com o André Brito para atualizar seu plano.`,
+            date: new Date().toLocaleDateString('pt-BR'),
+            read: false,
+            type: 'RENEWAL'
+          });
+        }
+      }
+    });
+
+    return notifications;
+  }, [selectedStudent]);
+
   const allStudentsForCoach = useMemo(() => {
     const defaultStudents: Student[] = [
-        { id: 'fixed-liliane', nome: 'Liliane Torres', email: 'lilicatorres@gmail.com', physicalAssessments: [], weightHistory: [], workoutHistory: [], sexo: 'Feminino', workouts: [], age: 35 },
-        { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], weightHistory: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
-        { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], weightHistory: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
+        { id: 'fixed-liliane', nome: 'Liliane Torres', email: 'lilicatorres@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Feminino', workouts: [], age: 35 },
+        { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
+        { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
     ];
     const merged = [...students];
     defaultStudents.forEach(def => { 
@@ -137,7 +167,7 @@ export default function App() {
     } catch (e: any) { 
       console.error("Erro ao salvar dados:", e.message); 
     } finally {
-      setTimeout(() => setIsSyncing(false), 800);
+      setTimeout(() => setIsSyncing(false), 300);
     }
   };
 
@@ -165,24 +195,29 @@ export default function App() {
       {view === 'DASHBOARD' && selectedStudent && (
         <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar">
           <div className="flex justify-between items-start mb-8 text-white">
-             <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-               <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-2xl relative">
-                  {selectedStudent?.photoUrl ? (
-                    <img src={selectedStudent.photoUrl} className="w-full h-full object-cover" alt="Perfil"/>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon className="text-zinc-600" /></div>
-                  )}
-                  {uploadingPhoto && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Loader2 size={16} className="animate-spin text-red-600" />
-                    </div>
-                  )}
+             <div className="flex gap-4">
+               <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                 <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-2xl relative">
+                    {selectedStudent?.photoUrl ? (
+                      <img src={selectedStudent.photoUrl} className="w-full h-full object-cover" alt="Perfil"/>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon className="text-zinc-600" /></div>
+                    )}
+                    {uploadingPhoto && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <Loader2 size={16} className="animate-spin text-red-600" />
+                      </div>
+                    )}
+                 </div>
+                 <div className="absolute -bottom-1 -right-1 bg-red-600 p-1.5 rounded-full border-2 border-black shadow-lg">
+                    <Camera size={10} className="text-white" />
+                 </div>
+                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
                </div>
-               <div className="absolute -bottom-1 -right-1 bg-red-600 p-1.5 rounded-full border-2 border-black shadow-lg">
-                  <Camera size={10} className="text-white" />
-               </div>
-               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+               
+               <NotificationBadge notifications={studentNotifications} onClick={() => setShowNotifications(!showNotifications)} />
              </div>
+
              <div className="flex items-center gap-4">
                 <WeatherWidget />
                 <button onClick={() => { setUser(null); setView('LOGIN'); }} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors">
@@ -190,38 +225,45 @@ export default function App() {
                 </button>
              </div>
           </div>
+
+          {showNotifications && (
+            <div className="mb-8 animate-in slide-in-from-top-4 duration-300">
+              <Card className="p-6 bg-red-600/5 border-red-600/20">
+                <div className="flex items-center gap-2 mb-4 text-red-600">
+                  <Bell size={16} />
+                  <h4 className="text-[10px] font-black uppercase tracking-widest">Avisos Importantes</h4>
+                </div>
+                {studentNotifications.length === 0 ? (
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase italic">Sem notificações no momento.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {studentNotifications.map(n => (
+                      <div key={n.id} className="text-left bg-black/40 p-4 rounded-2xl border border-white/5">
+                        <p className="text-xs font-black text-white italic mb-1 uppercase tracking-tight">{n.title}</p>
+                        <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">{n.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
           <div className="mb-10 text-center"><Logo size="text-6xl" subSize="text-[9px]" /></div>
           
           <div className="mt-12 space-y-4 pb-20 text-left flex flex-col">
-            
-            {/* CARD DE HISTÓRICO DE TREINOS - INDIVIDUAL */}
-            <Card className="p-6 bg-zinc-900/50 border-zinc-800">
-               <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-red-600/10 rounded-xl">
-                    <HistoryIcon className="text-red-600" size={18} />
-                  </div>
-                  <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-widest italic">Histórico de Performance</h3>
-               </div>
-               
-               <div className="space-y-3 max-h-[220px] overflow-y-auto custom-scrollbar pr-2">
-                  {selectedStudent.workoutHistory && selectedStudent.workoutHistory.length > 0 ? (
-                    selectedStudent.workoutHistory.map((h: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center p-4 bg-black rounded-2xl border border-white/5 group hover:border-red-600/30 transition-all">
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-white truncate max-w-[140px] italic">{h.name}</p>
-                          <p className="text-[8px] text-zinc-600 font-bold uppercase mt-1">{h.date}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-black text-red-600 italic">{h.duration}</p>
-                          <p className="text-[7px] text-zinc-700 font-black uppercase">Duração</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-8 text-center border-2 border-dashed border-zinc-800 rounded-3xl">
-                      <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest italic">Nenhum treino finalizado ainda</p>
+            <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer" onClick={() => setView('FEED')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-600 rounded-xl shadow-lg shadow-red-600/40">
+                      <Layout className="text-white" size={20} />
                     </div>
-                  )}
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest">Feed de Performance</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase">Veja seus registros e selfie de elite</p>
+                    </div>
+                  </div>
+                  <TrendingUp className="text-red-600 group-hover:scale-125 transition-transform" />
                </div>
             </Card>
 
@@ -242,24 +284,17 @@ export default function App() {
                   <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-orange-500 transition-colors">RunTrack Elite</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Monitoramento de Corrida & Cardio</p></div>
                   <div className="w-12 h-12 bg-orange-600/10 rounded-2xl flex items-center justify-center border border-orange-500/20 group-hover:bg-orange-600 transition-colors"><Footprints className="text-orange-500 group-hover:text-white" /></div>
               </button>
-              <button onClick={() => setView('ANALYTICS')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-amber-600/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-amber-500 transition-colors">Analytics</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Métricas de Performance</p></div>
-                  <div className="w-12 h-12 bg-amber-600/10 rounded-2xl flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-600 transition-colors"><TrendingUp className="text-amber-500 group-hover:text-white" /></div>
-              </button>
-              <button onClick={() => setView('ABOUT_ABFIT')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-zinc-500/30 transition-all shadow-xl active:scale-95">
-                  <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-zinc-300 transition-colors">Sobre a ABFIT</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Metodologia & Expertise</p></div>
-                  <div className="w-12 h-12 bg-zinc-500/10 rounded-2xl flex items-center justify-center border border-zinc-500/20 group-hover:bg-zinc-500 transition-colors"><Info className="text-zinc-500 group-hover:text-white" /></div>
-              </button>
             </div>
           </div>
           <EliteFooter />
         </div>
       )}
 
+      {view === 'FEED' && selectedStudent && <WorkoutFeed history={selectedStudent.workoutHistory || []} onBack={() => setView('DASHBOARD')} />}
       {view === 'STUDENT_PERIODIZATION' && selectedStudent && <StudentPeriodizationView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
       {view === 'WORKOUTS' && selectedStudent && <WorkoutSessionView user={selectedStudent} onBack={() => setView('DASHBOARD')} onSave={handleSaveData} />}
       {view === 'STUDENT_ASSESSMENT' && selectedStudent && <StudentAssessmentView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
-      {view === 'RUNTRACK_STUDENT' && selectedStudent && <RunTrackStudentView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
+      {view === 'RUNTRACK_STUDENT' && selectedStudent && <RunTrackStudentView student={selectedStudent} onBack={() => setView('DASHBOARD')} onSave={handleSaveData} />}
       {view === 'ANALYTICS' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
       {view === 'ABOUT_ABFIT' && <AboutView onBack={() => setView('DASHBOARD')} />}
       

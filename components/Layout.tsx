@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff } from 'lucide-react';
+import { CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, Mail, Phone } from 'lucide-react';
 import { AppNotification } from '../types';
 
 export function HeaderTitle({ text }: { text: string }) {
@@ -34,7 +34,7 @@ export function Card({ children, className = "", onClick }: { children?: React.R
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-black overflow-hidden font-sans text-left">
       <div className="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale scale-110 blur-sm pointer-events-none"></div>
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none"></div>
       <div className="relative z-10 h-full">{children}</div>
@@ -44,14 +44,39 @@ export function BackgroundWrapper({ children }: { children?: React.ReactNode }) 
 
 export function EliteFooter() {
   return (
-    <footer className="mt-20 pb-12 text-center opacity-30 animate-in fade-in duration-1000">
-      <div className="max-w-[150px] mx-auto h-px bg-zinc-800 mb-6"></div>
-      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 text-center">
-        ABFIT Elite v2.0 (Cloud Sync Enabled)
-      </p>
-      <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 mt-2 text-center">
-        Criador: André Brito
-      </p>
+    <footer className="mt-20 pb-20 text-center animate-in fade-in duration-1000 px-6">
+      <div className="max-w-[250px] mx-auto h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent mb-8"></div>
+      
+      <div className="space-y-4 max-w-lg mx-auto">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
+            ABFIT Elite v2.5.0
+          </p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+            Sistema de Alta Performance • Empresa Registrada
+          </p>
+        </div>
+
+        <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-4 rounded-3xl space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-tight text-white italic">
+            Desenvolvido por André Brito
+          </p>
+          <p className="text-[8px] font-bold uppercase text-zinc-400 leading-relaxed">
+            Prof. de Ed. Física • <span className="text-red-500">CREF 039443 G/RJ</span><br/>
+            Especialista em Desportos de Campo e de Quadra (UFRJ)<br/>
+            Mestre em Ciências do Exercício e do Esporte (UERJ)
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <a href="mailto:britodeandrade@gmail.com" className="flex items-center gap-2 text-[8px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">
+            <Mail size={10} className="text-red-600" /> britodeandrade@gmail.com
+          </a>
+          <a href="tel:+5521994527694" className="flex items-center gap-2 text-[8px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">
+            <Phone size={10} className="text-red-600" /> +55 21 99452-7694
+          </a>
+        </div>
+      </div>
     </footer>
   );
 }
@@ -72,20 +97,20 @@ export function GlobalSyncIndicator({ isSyncing = false }: { isSyncing?: boolean
 
   return (
     <div className="fixed top-4 right-4 z-[100] flex items-center gap-2 pointer-events-none">
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-xl transition-all duration-500 shadow-lg ${
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-xl transition-all duration-300 shadow-lg ${
         !online ? 'bg-red-950/40 border-red-500/30' : 
         isSyncing ? 'bg-orange-950/60 border-orange-500/50 shadow-orange-500/40 scale-105' : 
         'bg-green-950/40 border-green-500/50 shadow-green-500/20'
       }`}>
         <div className="relative">
-          <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+          <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${
             !online ? 'bg-red-500' : 
             isSyncing ? 'bg-orange-500 animate-pulse' : 
             'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.9)]'
           }`}></div>
         </div>
         <span className="text-[9px] font-black uppercase tracking-widest text-white">
-          {!online ? 'OFFLINE' : isSyncing ? 'SUBINDO...' : 'ATIVO'}
+          {!online ? 'OFFLINE' : isSyncing ? 'SYNC' : 'ATIVO'}
         </span>
         {isSyncing ? (
           <RefreshCw size={11} className="text-orange-500 animate-spin" />
