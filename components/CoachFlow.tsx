@@ -490,15 +490,28 @@ const DASHBOARD_FEATURES = [
 ];
 
 export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, onSave }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout) => void, onSave: (sid: string, data: any) => void }) {
-  const toggleFeatureVisibility = async (featureId: string) => {
-    const currentDisabled = student.disabledFeatures || [];
-    let newDisabled;
-    if (currentDisabled.includes(featureId)) {
-      newDisabled = currentDisabled.filter(id => id !== featureId);
-    } else {
-      newDisabled = [...currentDisabled, featureId];
-    }
-    await onSave(student.id, { disabledFeatures: newDisabled });
+  // Use local state to manage toggles for instant feedback and prevent "sync freeze"
+  const [localDisabledFeatures, setLocalDisabledFeatures] = useState<string[]>(student.disabledFeatures || []);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  useEffect(() => {
+    setLocalDisabledFeatures(student.disabledFeatures || []);
+  }, [student.disabledFeatures]);
+
+  const toggleFeatureVisibility = (featureId: string) => {
+    setLocalDisabledFeatures(prev => {
+      if (prev.includes(featureId)) {
+        return prev.filter(id => id !== featureId);
+      } else {
+        return [...prev, featureId];
+      }
+    });
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    await onSave(student.id, { disabledFeatures: localDisabledFeatures });
+    setIsSavingSettings(false);
   };
 
   return (
@@ -561,9 +574,9 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
           <p className="text-[9px] text-zinc-500 uppercase font-bold mb-6 italic leading-relaxed">
             Selecione o que o aluno pode visualizar no menu inicial do aplicativo.
           </p>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3 mb-6">
             {DASHBOARD_FEATURES.map((feature) => {
-              const isDisabled = (student.disabledFeatures || []).includes(feature.id);
+              const isDisabled = localDisabledFeatures.includes(feature.id);
               return (
                 <div key={feature.id} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5">
                   <div className="flex items-center gap-3">
@@ -582,6 +595,13 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               );
             })}
           </div>
+          <button 
+            onClick={handleSaveSettings}
+            disabled={isSavingSettings}
+            className="w-full py-4 bg-red-600 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+          >
+            {isSavingSettings ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} SALVAR PREFERÊNCIAS DE VISUALIZAÇÃO
+          </button>
         </Card>
       </div>
 

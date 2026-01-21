@@ -100,14 +100,16 @@ export default function App() {
         const unsub = onSnapshot(q, (snapshot) => { 
             const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
             setStudents(updatedStudents); 
-            if (selectedStudent) {
+            // Only update selectedStudent if we are NOT in the middle of an edit to prevent overwrites
+            // But checking 'isSyncing' helps prevent race conditions
+            if (selectedStudent && !isSyncing) {
               const current = updatedStudents.find(s => s.id === selectedStudent.id);
               if (current) setSelectedStudent(current);
             }
         });
         return () => unsub();
     } catch (e) { console.error(e); }
-  }, [user, selectedStudent?.id]);
+  }, [user, selectedStudent?.id, isSyncing]);
 
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
@@ -153,20 +155,39 @@ export default function App() {
     if (!val) return;
     const cleanVal = val.trim().toLowerCase();
     if (cleanVal === "professor") { setView('PROFESSOR_DASH'); return; }
+    
+    // Find in the most up-to-date list
     const student = allStudentsForCoach.find(s => (s.email || "").trim().toLowerCase() === cleanVal);
-    if (student) { setSelectedStudent(student); setView('DASHBOARD'); } 
-    else { setLoginError('IDENTIFICAÇÃO NÃO RECONHECIDA'); }
+    
+    if (student) { 
+        setSelectedStudent(student); 
+        setView('DASHBOARD'); 
+    } else { 
+        setLoginError('IDENTIFICAÇÃO NÃO RECONHECIDA'); 
+    }
   };
 
   const handleSaveData = async (sid: string, data: any) => {
     setIsSyncing(true);
+    
+    // 1. UPDATE SELECTED STUDENT LOCALLY (Optimistic)
+    if (selectedStudent && selectedStudent.id === sid) {
+        setSelectedStudent(prev => prev ? { ...prev, ...data } : null);
+    }
+
+    // 2. UPDATE MAIN STUDENT LIST LOCALLY (Optimistic - CRITICAL FOR SYNC)
+    setStudents(prevStudents => {
+        return prevStudents.map(s => s.id === sid ? { ...s, ...data } : s);
+    });
+
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
     } catch (e: any) { 
       console.error("Erro ao salvar dados:", e.message); 
+      // Revert optimization on error could be implemented here
     } finally {
-      setTimeout(() => setIsSyncing(false), 300);
+      setTimeout(() => setIsSyncing(false), 500);
     }
   };
 
