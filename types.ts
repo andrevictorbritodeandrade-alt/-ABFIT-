@@ -9,6 +9,7 @@ export interface Exercise {
   reps?: string;
   rest?: string;
   load?: string;
+  executionType?: 'Simples' | 'Conjugado' | 'Drop Set' | 'Pirâmide' | 'Rest-Pause' | 'SST';
 }
 
 export interface Workout {

@@ -6,7 +6,7 @@ import {
   BookOpen, Zap, AlertCircle, Dumbbell,
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
-  ChevronDown, Lightbulb, Bell, CalendarClock
+  ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -16,6 +16,18 @@ import { db, appId } from '../services/firebase';
 import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
+
+const EXERCISE_LIBRARY: Record<string, string[]> = {
+  "Peitorais": ["Supino Reto (HBL)", "Supino Inclinado (HBC)", "Crucifixo Reto", "Crossover Polia Alta", "Peck Deck", "Flexão de Braços", "Supino Declinado", "Pull Over"],
+  "Dorsais": ["Puxada Aberta Pulley", "Remada Curvada (HBL)", "Remada Unilateral (HBC)", "Remada Baixa Triângulo", "Pulldown Corda", "Barra Fixa", "Levantamento Terra"],
+  "Membros Inferiores": ["Agachamento Livre", "Leg Press 45", "Extensora", "Flexora Deitada", "Stiff (HBL)", "Afundo/Passada", "Elevação Pélvica", "Cadeira Abdutora", "Cadeira Adutora", "Panturrilha em Pé"],
+  "Deltoides": ["Desenvolvimento (HBC)", "Elevação Lateral", "Elevação Frontal", "Crucifixo Inverso", "Remada Alta", "Encolhimento"],
+  "Bíceps": ["Rosca Direta (HBL)", "Rosca Alternada (HBC)", "Rosca Martelo", "Rosca Concentrada", "Rosca Scott"],
+  "Tríceps": ["Tríceps Pulley", "Tríceps Corda", "Tríceps Testa (HBL)", "Tríceps Francês", "Mergulho Paralelas"],
+  "Core": ["Abdominal Supra", "Plancha Isométrica", "Abdominal Infra", "Oblíquos", "Roda Abdominal"]
+};
+
+const EXECUTION_METHODS = ["Simples", "Conjugada", "Drop Set", "Pirâmide", "Rest-Pause", "SST"];
 
 export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
   const renewalNotifications = useMemo(() => {
@@ -219,44 +231,51 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [projectedSessions, setProjectedSessions] = useState(workoutToEdit?.projectedSessions?.toString() || '12');
   const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
+  
+  // Library State
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
 
-  const addExercise = () => {
-    setExercises([...exercises, { id: Date.now().toString(), name: '', sets: '3', reps: '10-12', load: '' }]);
+  const addExerciseFromLibrary = async (name: string) => {
+    const newEx: Exercise = { 
+      id: Date.now().toString(), 
+      name, 
+      sets: '3', 
+      reps: '10-12', 
+      rest: '60s',
+      executionType: 'Simples' 
+    };
+    const newIdx = exercises.length;
+    setExercises([...exercises, newEx]);
+    setIsLibraryOpen(false);
+    
+    // Auto-sync AI image for the selected exercise
+    setLoadingMap(prev => ({ ...prev, [newIdx]: true }));
+    try {
+      const res = await analyzeExerciseAndGenerateImage(name);
+      if (res) {
+        setExercises(current => current.map((ex, i) => i === newIdx ? { ...ex, description: res.description, thumb: res.imageUrl } : ex));
+      }
+    } finally {
+      setLoadingMap(prev => ({ ...prev, [newIdx]: false }));
+    }
   };
 
   const removeExercise = (index: number) => {
     setExercises(exercises.filter((_, i) => i !== index));
   };
 
-  const handleAISync = async (index: number) => {
-    const exName = exercises[index].name;
-    if (!exName) return;
-    
-    setLoadingMap(prev => ({ ...prev, [index]: true }));
-    try {
-      const res = await analyzeExerciseAndGenerateImage(exName);
-      if (res) {
-        const newExs = [...exercises];
-        newExs[index] = { ...newExs[index], description: res.description, thumb: res.imageUrl };
-        setExercises(newExs);
-      }
-    } finally {
-      setLoadingMap(prev => ({ ...prev, [index]: false }));
-    }
+  const updateExercise = (index: number, field: keyof Exercise, value: any) => {
+    setExercises(exercises.map((ex, i) => i === index ? { ...ex, [field]: value } : ex));
   };
 
   const handleSave = async () => {
-    const startDate = workoutToEdit?.startDate || new Date().toISOString();
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + (parseInt(projectedSessions) / 3) * 7);
-
     const workout: Workout = { 
       id: workoutToEdit?.id || Date.now().toString(), 
       title, 
       exercises,
       projectedSessions: parseInt(projectedSessions),
-      startDate,
-      endDate: endDate.toISOString()
+      startDate: workoutToEdit?.startDate || new Date().toISOString()
     };
 
     const updatedWorkouts = workoutToEdit 
@@ -271,83 +290,134 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text={workoutToEdit ? "Editar Ciclo" : "Novo Ciclo Elite"} /></h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text={workoutToEdit ? "Editar Ciclo" : "PrescreveAI Elite"} /></h2>
       </header>
 
-      <div className="space-y-8 pb-32">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Identificação (Treino A, B...)</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-white italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="EX: TREINO A" />
-          </div>
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Total de Sessões Projetadas</label>
-            <div className="relative">
-              <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-red-600 italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="12" />
-              <CalendarClock size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-700" />
+      {isLibraryOpen ? (
+        <div className="space-y-6 animate-in fade-in zoom-in duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col">
+              <h3 className="text-sm font-black uppercase text-red-600 italic tracking-tighter">Biblioteca PrescreveAI</h3>
+              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Selecione para prescrever</p>
             </div>
+            <button onClick={() => setIsLibraryOpen(false)} className="text-zinc-500 p-2 bg-zinc-900 rounded-full"><ArrowLeft size={20}/></button>
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="flex justify-between items-center px-2">
-            <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-[0.2em] italic flex items-center gap-2"><Dumbbell size={14} className="text-red-600" /> Montagem Biomecânica</h3>
-            <button onClick={addExercise} className="p-3 bg-red-600/10 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase"><Plus size={16}/> Inserir</button>
-          </div>
-
-          <div className="space-y-4">
-            {exercises.map((ex, i) => (
-              <Card key={i} className="p-6 bg-zinc-900/50 border-zinc-800 space-y-4 relative group shadow-2xl">
-                <button onClick={() => removeExercise(i)} className="absolute top-4 right-4 p-2 text-zinc-600 hover:text-red-600 transition-colors"><Trash2 size={16}/></button>
-                
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-black rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-inner flex items-center justify-center">
-                    {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" alt="Ex"/> : <ImageIcon size={24} className="text-zinc-800" />}
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <input type="text" value={ex.name} onChange={e => {
-                      const newExs = [...exercises];
-                      newExs[i].name = e.target.value;
-                      setExercises(newExs);
-                    }} className="w-full bg-black border border-white/10 p-3 rounded-xl text-xs font-black text-white outline-none focus:border-red-600 transition-all uppercase italic" placeholder="NOME DO EXERCÍCIO" />
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[7px] font-black text-zinc-600 uppercase ml-1">Séries</label>
-                        <input type="text" value={ex.sets} onChange={e => {
-                          const newExs = [...exercises];
-                          newExs[i].sets = e.target.value;
-                          setExercises(newExs);
-                        }} className="w-full bg-black border border-white/5 p-2.5 rounded-lg text-[10px] text-center font-black" placeholder="3" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[7px] font-black text-zinc-600 uppercase ml-1">Reps</label>
-                        <input type="text" value={ex.reps} onChange={e => {
-                          const newExs = [...exercises];
-                          newExs[i].reps = e.target.value;
-                          setExercises(newExs);
-                        }} className="w-full bg-black border border-white/5 p-2.5 rounded-lg text-[10px] text-center font-black" placeholder="12" />
-                      </div>
-                      <div className="pt-4 flex items-end">
-                        <button 
-                          onClick={() => handleAISync(i)} 
-                          className="w-full h-[38px] bg-red-600/10 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-inner group/btn"
-                        >
-                          {loadingMap[i] ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="group-hover/btn:scale-110 transition-transform" />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {Object.keys(EXERCISE_LIBRARY).map(group => (
+              <button 
+                key={group} 
+                onClick={() => setSelectedMuscleGroup(selectedMuscleGroup === group ? null : group)}
+                className={`p-5 rounded-[1.5rem] border font-black uppercase text-[10px] text-center transition-all flex flex-col items-center gap-2 shadow-lg ${selectedMuscleGroup === group ? 'bg-red-600 border-red-600 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-red-600/30'}`}
+              >
+                <Layers size={18} />
+                {group}
+              </button>
             ))}
           </div>
-        </div>
 
-        <button onClick={handleSave} className="w-full py-6 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-sm italic flex items-center justify-center gap-3 shadow-2xl shadow-red-900/30 active:scale-95 transition-all">
-          <Save size={20}/> Salvar Ciclo e Notificar Aluno
-        </button>
-      </div>
+          {selectedMuscleGroup && (
+            <div className="space-y-3 mt-8 animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-2 ml-2">
+                <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></div>
+                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Exercícios para {selectedMuscleGroup}</h4>
+              </div>
+              {EXERCISE_LIBRARY[selectedMuscleGroup].map(ex => (
+                <button 
+                  key={ex} 
+                  onClick={() => addExerciseFromLibrary(ex)}
+                  className="w-full p-5 bg-zinc-900/50 border border-white/5 rounded-[2rem] text-left flex justify-between items-center group hover:border-red-600 hover:bg-red-600/5 transition-all shadow-xl"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black uppercase italic text-white group-hover:text-red-500">{ex}</span>
+                    <span className="text-[8px] font-black text-zinc-600 uppercase mt-0.5">Biomecânica Prescritiva</span>
+                  </div>
+                  <Plus size={18} className="text-red-600 group-hover:scale-125 transition-transform" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-8 pb-32">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Identificação do Treino</label>
+              <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-white italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="EX: TREINO A" />
+            </div>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Volume do Ciclo (Sessões)</label>
+              <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-red-600 italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="12" />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex justify-between items-center px-2">
+              <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-[0.2em] italic flex items-center gap-2"><Dumbbell size={14} className="text-red-600" /> Montagem da Planilha</h3>
+              <button onClick={() => setIsLibraryOpen(true)} className="p-3.5 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Plus size={18}/> Buscar Exercício</button>
+            </div>
+
+            <div className="space-y-6">
+              {exercises.length === 0 ? (
+                <div className="p-16 text-center border-2 border-dashed border-zinc-800 rounded-[3rem] bg-zinc-950/20 flex flex-col items-center gap-4">
+                  <Book size={32} className="text-zinc-800" />
+                  <p className="text-zinc-600 italic text-[10px] uppercase font-black tracking-widest leading-relaxed">Nenhum exercício selecionado.<br/>Use o botão acima para abrir a biblioteca.</p>
+                </div>
+              ) : (
+                exercises.map((ex, i) => (
+                  <Card key={i} className="p-6 bg-zinc-900/50 border-zinc-800 space-y-6 relative group shadow-2xl overflow-visible">
+                    <button onClick={() => removeExercise(i)} className="absolute top-4 right-4 p-2.5 bg-black/40 text-zinc-600 hover:text-red-600 rounded-full transition-colors border border-white/5"><Trash2 size={16}/></button>
+                    
+                    <div className="flex gap-5">
+                      <div className="w-28 h-28 bg-black rounded-[2rem] overflow-hidden shrink-0 border border-white/5 shadow-inner flex items-center justify-center relative group/img">
+                        {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" alt="Ex"/> : <ImageIcon size={32} className="text-zinc-800" />}
+                        {loadingMap[i] && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Loader2 size={18} className="animate-spin text-red-600" /></div>}
+                        <div className="absolute inset-0 bg-red-600/0 group-hover/img:bg-red-600/10 transition-colors pointer-events-none"></div>
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div className="flex flex-col">
+                          <h4 className="text-sm font-black text-white uppercase italic tracking-tighter leading-none">{ex.name}</h4>
+                          <span className="text-[8px] font-black text-zinc-600 uppercase mt-1">PrescreveAI Elite • PhD</span>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black text-zinc-500 uppercase ml-1 flex items-center gap-1"><Zap size={10} className="text-red-600"/> Metodologia de Execução</label>
+                          <select 
+                            value={ex.executionType} 
+                            onChange={e => updateExercise(i, 'executionType', e.target.value)}
+                            className="w-full bg-black border border-white/10 p-4 rounded-xl text-[10px] font-black text-red-500 uppercase italic outline-none focus:border-red-600 transition-all shadow-inner"
+                          >
+                            {EXECUTION_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Séries</label>
+                        <input type="text" value={ex.sets} onChange={e => updateExercise(i, 'sets', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="3" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Reps</label>
+                        <input type="text" value={ex.reps} onChange={e => updateExercise(i, 'reps', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="12" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Descanso</label>
+                        <input type="text" value={ex.rest} onChange={e => updateExercise(i, 'rest', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="60s" />
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          <button onClick={handleSave} className="w-full py-7 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-sm italic flex items-center justify-center gap-4 shadow-2xl shadow-red-900/40 active:scale-95 transition-all mt-10">
+            <Save size={24}/> Liberar Planilha PrescreveAI
+          </button>
+        </div>
+      )}
       <EliteFooter />
     </div>
   );
