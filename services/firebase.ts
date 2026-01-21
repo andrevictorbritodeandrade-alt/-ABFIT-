@@ -3,22 +3,27 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Configuração Exata do Projeto "Chaveunica" fornecida
-const firebaseConfig = {
-  apiKey: "AIzaSyD_C_yn_RyBSopY7Tb9aqLW8akkXJR94Vg",
-  authDomain: "chaveunica-225e0.firebaseapp.com",
-  projectId: "chaveunica-225e0",
-  storageBucket: "chaveunica-225e0.firebasestorage.app",
-  messagingSenderId: "324211037832",
-  appId: "1:324211037832:web:362a46e6446ea37b85b13d",
-  measurementId: "G-MRBDJC3QXZ"
+// Função para obter a configuração do Firebase via variáveis de ambiente ou objeto global
+const getFirebaseConfig = () => {
+  // Use type casting to any to avoid TS errors on window properties
+  const win = window as any;
+  if (typeof win !== 'undefined' && win.__firebase_config && win.__firebase_config.apiKey) {
+    return win.__firebase_config;
+  }
+  
+  // Utiliza as variáveis de ambiente injetadas no processo
+  return {
+      apiKey: process.env.API_KEY || win.process?.env?.API_KEY,
+      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || `${process.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+      messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.VITE_FIREBASE_APP_ID
+  };
 };
 
-// Inicializa o Firebase com a configuração explícita
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(getFirebaseConfig());
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// Mantemos o ID da coleção lógica como 'abfit-elite-production' para organizar os dados dentro do seu projeto
-export const appId = 'abfit-elite-production';
+export const appId = (typeof window !== 'undefined' && (window as any).__app_id) ? (window as any).__app_id : 'abfit-elite-production';
