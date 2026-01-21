@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints, TrendingUp,
   Info, History as HistoryIcon, LogOut, Layout, Bell, AlertCircle,
-  BarChart3, ChevronRight, Activity
+  BarChart3, ChevronRight, Activity, Smartphone
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -81,7 +81,12 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isStandalone = useMemo(() => {
+    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => { 
@@ -189,18 +194,17 @@ export default function App() {
   return (
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
-      <InstallPrompt />
+      {showInstallModal && <InstallPrompt onClose={() => setShowInstallModal(false)} />}
+      
       {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} />}
       
       {view === 'DASHBOARD' && selectedStudent && (
         <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar flex flex-col items-center">
           
-          {/* 1. LOGO CENTRALIZADO NO TOPO - TAMANHO TEXTO DOBRADO (text-8xl) */}
           <div className="mb-10 w-full flex justify-center animate-in fade-in slide-in-from-top-4 duration-700">
             <Logo size="text-8xl" subSize="text-[10px]" />
           </div>
 
-          {/* 2. FOTO DE PERFIL CENTRALIZADA E NOTIFICAÇÕES */}
           <div className="relative mb-8 animate-in zoom-in duration-1000">
              <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">
@@ -221,13 +225,11 @@ export default function App() {
                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
              </div>
              
-             {/* Notificações Orbitando a Foto */}
              <div className="absolute -top-3 -right-4">
                <NotificationBadge notifications={studentNotifications} onClick={() => setShowNotifications(!showNotifications)} />
              </div>
           </div>
 
-          {/* 3. CLIMA CENTRALIZADO (CONTEXTO AMBIENTAL) */}
           <div className="mb-12 animate-in fade-in slide-in-from-bottom-2 duration-1000">
             <WeatherWidget />
           </div>
@@ -255,10 +257,7 @@ export default function App() {
             </div>
           )}
 
-          {/* FLUXO DE CARDS ERGONÔMICOS COM CORES ÚNICAS */}
           <div className="w-full space-y-5 pb-20 text-left flex flex-col">
-            
-            {/* 1. FEED DE PERFORMANCE (Vermelho) */}
             <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('FEED')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -274,7 +273,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 2. MEUS TREINOS (Laranja) */}
             <Card className="p-6 bg-orange-600/10 border-orange-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('WORKOUTS')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -290,7 +288,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 3. PERIODIZAÇÃO PHD (Indigo) */}
             <Card className="p-6 bg-indigo-600/10 border-indigo-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_PERIODIZATION')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -306,7 +303,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 4. AVALIAÇÃO FÍSICA (Emerald) */}
             <Card className="p-6 bg-emerald-600/10 border-emerald-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_ASSESSMENT')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -322,7 +318,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 5. RUNTRACK ELITE (Rose) */}
             <Card className="p-6 bg-rose-600/10 border-rose-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('RUNTRACK_STUDENT')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -338,7 +333,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 6. ANÁLISE DE DADOS (Amber) */}
             <Card className="p-6 bg-amber-600/10 border-amber-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ANALYTICS')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -354,7 +348,6 @@ export default function App() {
                </div>
             </Card>
 
-            {/* 7. SOBRE A ABFIT (Zinc) */}
             <Card className="p-6 bg-zinc-600/10 border-zinc-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ABOUT_ABFIT')}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -370,7 +363,24 @@ export default function App() {
                </div>
             </Card>
 
-            {/* BOTÃO DE SAÍDA NO RODAPÉ ABSOLUTO DO DASHBOARD */}
+            {/* CARD DE INSTALAÇÃO MANUAL - APENAS SE NÃO ESTIVER INSTALADO */}
+            {!isStandalone && (
+              <Card className="p-6 bg-white/5 border-white/10 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setShowInstallModal(true)}>
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 bg-white text-black rounded-2xl shadow-lg">
+                        <Smartphone size={22} />
+                      </div>
+                      <div className="flex flex-col">
+                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Instalar App Elite</h3>
+                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Acesso rápido & Performance máxima</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="text-white group-hover:translate-x-1 transition-transform" size={18} />
+                 </div>
+              </Card>
+            )}
+
             <button 
               onClick={() => { setUser(null); setView('LOGIN'); }} 
               className="w-full mt-10 py-6 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] flex items-center justify-center gap-3 text-zinc-600 hover:text-red-600 hover:border-red-600/30 transition-all active:scale-95 shadow-xl group"
