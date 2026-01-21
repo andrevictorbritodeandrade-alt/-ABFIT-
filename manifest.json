@@ -2,10 +2,11 @@
 {
   "name": "ABFIT Elite Performance",
   "short_name": "ABFIT",
-  "id": "abfit-elite-production",
+  "id": "abfit-elite-production-v1",
   "description": "Assessoria PhD em Treinamentos Físicos e Biomecânica",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
