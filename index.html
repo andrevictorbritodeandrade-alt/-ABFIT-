@@ -28,7 +28,8 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js');
+                // Ajustado para caminho relativo para evitar erro de origin
+                navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW registration skipped in dev'));
             });
         }
 

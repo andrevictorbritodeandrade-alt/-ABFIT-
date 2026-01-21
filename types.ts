@@ -92,7 +92,6 @@ export interface NutritionLog {
   macros: MacroNutrients;
 }
 
-// Added MealPlan interface to fix import error in NutritionView.tsx
 export interface MealPlan {
   id: string;
   date: string;
@@ -130,6 +129,7 @@ export interface Student {
   analytics?: AnalyticsData;
   nutrition?: NutritionProfile;
   notifications?: AppNotification[];
+  disabledFeatures?: string[]; // IDs das funcionalidades desabilitadas para este aluno
   age?: string | number;
   weight?: string | number;
   height?: string | number;

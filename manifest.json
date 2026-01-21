@@ -2,16 +2,10 @@
 {
   "name": "ABFIT Elite Performance",
   "short_name": "ABFIT",
-  "id": "abfit-elite-production-v1",
-  "description": "Assessoria PhD em Treinamentos Físicos e Biomecânica",
   "start_url": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui"],
   "background_color": "#000000",
   "theme_color": "#000000",
-  "orientation": "portrait",
-  "scope": "/",
-  "categories": ["fitness", "sports", "health"],
   "icons": [
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='80' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M60 135 L132 135 M60 120 L60 150 M50 125 L50 145 M132 120 L132 150 M142 125 L142 145' stroke='%23dc2626' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E",
