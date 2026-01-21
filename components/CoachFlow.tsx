@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3
+  BarChart3, ZapIcon
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -301,7 +301,7 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
     "Cadeira flexora unilateral",
     "Cadeira flexora",
     "Elevação de quadril no banco reto with HBM",
-    "Elevação de Quadril no solo with anilha",
+    "Elevação de Quadril no solo com anilha",
     "Extensão de quadril e joelho em pé caneleira",
     "Extensão de quadril e joelho em pé no cross",
     "Extensão de quadril e joelho no cross",
@@ -329,7 +329,7 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   ],
   "Panturrilha": [
     "Cadeira solear",
-    "Flexão plantar com Halteres.",
+    "Flexão plantar with Halteres.",
     "Flexão plantar em pé na Máquina",
     "Flexão plantar em pé Unilateral",
     "Flexão plantar no Leg press inclinado",
@@ -337,7 +337,7 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   ]
 };
 
-const EXECUTION_METHODS = ["Simples", "Conjugada", "Drop Set", "Pirâmide", "Rest-Pause", "SST"];
+const MUSCLE_GROUPS = Object.keys(EXERCISE_DATABASE);
 
 export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
   const renewalNotifications = useMemo(() => {
@@ -467,10 +467,10 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         <Card className="p-8 cursor-pointer border-l-4 border-l-red-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('WORKOUT_EDITOR')}>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-red-600 transition-colors">Montar Treinos</h4>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Prescrição de Força Elite</p>
+              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-red-600 transition-colors">PrescreveAI Elite</h4>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">IA & Biomecânica PhD</p>
             </div>
-            <Dumbbell className="text-red-600 group-hover:scale-110 transition-transform" size={32} />
+            <Video className="text-red-600 group-hover:scale-110 transition-transform" size={32} />
           </div>
         </Card>
 
@@ -637,10 +637,72 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [title, setTitle] = useState(workoutToEdit?.title || '');
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [loading, setLoading] = useState(false);
+  
+  // PrescreveAI States
+  const [selectedMuscle, setSelectedMuscle] = useState("");
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [exerciseImage, setExerciseImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [technicalCue, setTechnicalCue] = useState("");
+  const [isGeneratingCue, setIsGeneratingCue] = useState(false);
 
-  const handleAddExercise = () => {
-    const newEx: Exercise = { id: Date.now().toString(), name: 'Novo Exercício', sets: '3', reps: '12', rest: '60s' };
+  const detailSectionRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectExerciseWithDelay = (exerciseName: string) => {
+    setSelectedExercise({ name: exerciseName });
+    setExerciseImage(null);
+    setTechnicalCue("");
+    
+    if (detailSectionRef.current) {
+        detailSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setTimeout(() => {
+      processExerciseData(exerciseName);
+    }, 500);
+  };
+
+  const processExerciseData = async (exerciseName: string) => {
+    setImageLoading(true);
+    try {
+      const result = await analyzeExerciseAndGenerateImage(exerciseName, student);
+      if (result) {
+        setExerciseImage(result.imageUrl);
+        setSelectedExercise({
+          name: exerciseName,
+          description: result.description,
+          benefits: result.benefits
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const generateCue = async () => {
+    if (!selectedExercise) return;
+    setIsGeneratingCue(true);
+    const cue = await generateTechnicalCue(selectedExercise.name, student);
+    setTechnicalCue(cue);
+    setIsGeneratingCue(false);
+  };
+
+  const handleAddSelectedToWorkout = () => {
+    if (!selectedExercise) return;
+    const newEx: Exercise = { 
+      id: Date.now().toString(), 
+      name: selectedExercise.name, 
+      sets: '3', 
+      reps: '12', 
+      rest: '60s',
+      thumb: exerciseImage
+    };
     setExercises([...exercises, newEx]);
+    setSelectedExercise(null);
+    setExerciseImage(null);
+    setTechnicalCue("");
   };
 
   const handleSave = async () => {
@@ -663,60 +725,174 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
-      <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar flex flex-col">
+      <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/95 backdrop-blur-xl py-4 z-50 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">Editor de Treino</h2>
+          <div className="flex items-center gap-2">
+            <div className="bg-red-600 p-1.5 rounded-lg rotate-3 shadow-lg"><Video size={16} className="text-white" /></div>
+            <h2 className="text-xl font-black italic uppercase tracking-tighter">Prescreve<span className="text-red-600">AI</span></h2>
+          </div>
         </div>
-        <button onClick={handleSave} disabled={loading} className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+        <button onClick={handleSave} disabled={loading} className="bg-red-600 px-6 py-2.5 rounded-full font-black text-[10px] uppercase shadow-2xl flex items-center gap-2">
+          {loading ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Salvar Planilha
         </button>
       </header>
 
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-zinc-500 ml-2 tracking-widest">Nome da Planilha</label>
-          <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-zinc-900 p-5 rounded-3xl border border-zinc-800 text-white font-black italic uppercase outline-none focus:border-red-600" placeholder="EX: CICLO DE FORÇA A" />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 pb-48">
+        
+        {/* LADO ESQUERDO: INVENTÁRIO & PLANILHA ATUAL */}
+        <aside className="lg:col-span-4 space-y-6">
+          
+          <div className="bg-zinc-900/60 p-6 rounded-[2.5rem] border border-white/5 shadow-2xl backdrop-blur-md">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 flex items-center gap-2 italic">
+              <Target className="w-4 h-4 text-red-600" /> Inventário Prescrito
+            </h2>
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-zinc-600 uppercase tracking-widest ml-1">Grupo Muscular</label>
+                <select 
+                  className="w-full bg-black border border-white/10 rounded-2xl px-5 py-4 text-sm font-black italic uppercase focus:border-red-600 outline-none appearance-none cursor-pointer" 
+                  value={selectedMuscle} 
+                  onChange={(e) => setSelectedMuscle(e.target.value)}
+                >
+                  <option value="">Selecione o grupo...</option>
+                  {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center px-2">
-             <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
-             <button onClick={handleAddExercise} className="flex items-center gap-1 text-[10px] font-black uppercase text-red-600 hover:text-red-500"><Plus size={14}/> Adicionar</button>
+              {selectedMuscle && (
+                <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {EXERCISE_DATABASE[selectedMuscle].map((exName, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => handleSelectExerciseWithDelay(exName)} 
+                      className={`text-left px-5 py-4 rounded-2xl text-[11px] transition-all border flex items-center justify-between group ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white font-black' : 'bg-black border-white/5 text-zinc-400 hover:border-red-600/30'}`}
+                    >
+                      <span className="truncate italic font-black uppercase">{exName}</span>
+                      <Play className={`w-3 h-3 ${selectedExercise?.name === exName ? 'fill-white' : 'fill-red-600'}`} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          {exercises.map((ex, idx) => (
-            <Card key={ex.id || idx} className="p-6 bg-zinc-900/50 border-zinc-800">
-               <div className="flex justify-between items-start mb-4">
-                  <input type="text" value={ex.name} onChange={e => {
-                    const newExs = [...exercises];
-                    newExs[idx].name = e.target.value;
-                    setExercises(newExs);
-                  }} className="bg-transparent text-sm font-black uppercase italic text-white outline-none border-b border-transparent focus:border-red-600 w-full" />
-                  <button onClick={() => setExercises(exercises.filter((_, i) => i !== idx))} className="text-zinc-700 hover:text-red-600 ml-2"><Trash2 size={16}/></button>
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase text-zinc-600">Séries</label>
-                    <input type="text" value={ex.sets} onChange={e => {
-                      const newExs = [...exercises];
-                      newExs[idx].sets = e.target.value;
-                      setExercises(newExs);
-                    }} className="w-full bg-black p-2 rounded-lg text-[10px] font-bold text-white border border-white/5 outline-none" />
+
+          <div className="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-white/5 shadow-xl">
+             <div className="flex justify-between items-center mb-6 px-1">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Planilha em Edição</h3>
+                <span className="bg-zinc-800 px-3 py-1 rounded-full text-[8px] font-black text-white">{exercises.length} EXs</span>
+             </div>
+             <input 
+                type="text" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                className="w-full bg-black border border-white/5 p-4 rounded-2xl text-xs font-black italic uppercase text-white mb-4 focus:border-red-600 outline-none" 
+                placeholder="NOME DA PLANILHA..."
+             />
+             <div className="space-y-3">
+                {exercises.map((ex, i) => (
+                  <div key={i} className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group">
+                     <span className="text-[10px] font-black italic uppercase truncate max-w-[150px]">{ex.name}</span>
+                     <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase text-zinc-600">Reps</label>
-                    <input type="text" value={ex.reps} onChange={e => {
-                      const newExs = [...exercises];
-                      newExs[idx].reps = e.target.value;
-                      setExercises(newExs);
-                    }} className="w-full bg-black p-2 rounded-lg text-[10px] font-bold text-white border border-white/5 outline-none" />
+                ))}
+                {exercises.length === 0 && <p className="text-[9px] text-zinc-600 font-bold uppercase text-center py-4 italic">Nenhum exercício adicionado</p>}
+             </div>
+          </div>
+        </aside>
+
+        {/* LADO DIREITO: FEED BIOMECÂNICO & ANÁLISE */}
+        <section className="lg:col-span-8 space-y-6">
+          {!selectedExercise ? (
+            <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-zinc-800 border-2 border-dashed border-white/5 rounded-[3rem] bg-zinc-950/20">
+              <Video className="w-16 h-16 opacity-10 mb-6" />
+              <p className="font-black uppercase tracking-[0.4em] text-[10px] text-red-600 text-center px-8 italic">Selecione um exercício para ver a biomecânica 8K analisada por IA</p>
+            </div>
+          ) : (
+            <div ref={detailSectionRef} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <div className="bg-zinc-900/60 rounded-[3.5rem] overflow-hidden border border-white/10 shadow-3xl backdrop-blur-3xl">
+                
+                {/* LIVE BIOMECHANIC FEED WINDOW */}
+                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-white/5">
+                  {imageLoading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20">
+                      <Loader2 className="w-12 h-12 animate-spin text-red-600 mb-6" />
+                      <div className="space-y-1 text-center">
+                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 italic block">ANALYSING ASYMMETRY...</span>
+                        <span className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest">(0.5S SNAP DELAY)</span>
+                      </div>
+                    </div>
+                  ) : exerciseImage ? (
+                    <div className="w-full h-full relative video-motion-engine">
+                      <img src={exerciseImage} alt="Execução" className="w-full h-full object-cover" />
+                      <div className="absolute top-8 left-8 flex items-center gap-3">
+                        <div className="bg-red-600 h-2 w-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,1)]"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-black/60 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">LIVE BIOMECHANIC FEED</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                       <Loader2 className="animate-spin text-red-600" />
+                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 italic">Estabelecendo Conexão PhD...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-10 md:p-14">
+                  <div className="flex justify-between items-start mb-12">
+                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white leading-[0.9] max-w-xl">{selectedExercise.name}</h2>
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={generateCue}
+                        disabled={isGeneratingCue || !selectedExercise.description}
+                        className="bg-red-600 p-5 rounded-3xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-red-900/40 border border-white/10"
+                      >
+                        {isGeneratingCue ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <Lightbulb className="w-6 h-6 text-white" />}
+                      </button>
+                    </div>
                   </div>
-               </div>
-            </Card>
-          ))}
-        </div>
+
+                  {technicalCue && (
+                    <div className="mb-12 p-8 bg-red-600/5 border border-red-600/30 rounded-[2.5rem] animate-in zoom-in-95 shadow-2xl">
+                      <div className="flex items-center gap-2 mb-4 text-red-600">
+                         <Zap className="w-4 h-4 fill-red-600" />
+                         <span className="text-[10px] font-black uppercase tracking-[0.3em]">Dica IA PhD ✨</span>
+                      </div>
+                      <p className="text-lg text-zinc-200 italic leading-relaxed font-medium">"{technicalCue}"</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+                    <div className="space-y-6">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600 flex items-center gap-2 italic"><ZapIcon className="w-4 h-4 fill-red-600" /> Técnica Aplicada</h4>
+                      <p className="text-zinc-400 text-xl leading-relaxed border-l-2 border-red-600/20 pl-8 font-medium italic">{selectedExercise.description || "Iniciando processamento biomecânico..."}</p>
+                    </div>
+                    <div className="bg-black/40 p-10 rounded-[3rem] border border-white/5 shadow-inner">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-8 italic">Impacto Fisiológico</h4>
+                      <div className="text-zinc-300 text-sm italic font-medium leading-relaxed space-y-4 whitespace-pre-wrap">
+                        {selectedExercise.benefits}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleAddSelectedToWorkout}
+                    disabled={!selectedExercise.description}
+                    className="w-full py-6 bg-white text-black rounded-[2.5rem] font-black uppercase italic tracking-[0.1em] text-sm hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 disabled:opacity-30"
+                  >
+                    <PlusSquareIcon size={20} /> ADICIONAR À PLANILHA ELITE
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
+}
+
+function PlusSquareIcon({size}: {size: number}) {
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>;
 }

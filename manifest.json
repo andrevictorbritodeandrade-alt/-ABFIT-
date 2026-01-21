@@ -2,7 +2,7 @@
 {
   "name": "ABFIT Elite Performance",
   "short_name": "ABFIT",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
