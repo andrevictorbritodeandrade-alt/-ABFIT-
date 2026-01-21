@@ -1,30 +1,338 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   ArrowLeft, LogOut, ChevronRight, Edit3, Plus, 
   Trash2, Loader2, Brain, Activity, Target, TrendingUp, 
   BookOpen, Zap, AlertCircle, Dumbbell,
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
-  ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers
+  ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
-import { analyzeExerciseAndGenerateImage, generatePeriodizationPlan, generateTechnicalCue } from '../services/gemini';
+import { analyzeExerciseAndGenerateImage, generatePeriodizationPlan, generateTechnicalCue, generateBioInsight } from '../services/gemini';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, appId } from '../services/firebase';
 import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-const EXERCISE_LIBRARY: Record<string, string[]> = {
-  "Peitorais": ["Supino Reto (HBL)", "Supino Inclinado (HBC)", "Crucifixo Reto", "Crossover Polia Alta", "Peck Deck", "Flexão de Braços", "Supino Declinado", "Pull Over"],
-  "Dorsais": ["Puxada Aberta Pulley", "Remada Curvada (HBL)", "Remada Unilateral (HBC)", "Remada Baixa Triângulo", "Pulldown Corda", "Barra Fixa", "Levantamento Terra"],
-  "Membros Inferiores": ["Agachamento Livre", "Leg Press 45", "Extensora", "Flexora Deitada", "Stiff (HBL)", "Afundo/Passada", "Elevação Pélvica", "Cadeira Abdutora", "Cadeira Adutora", "Panturrilha em Pé"],
-  "Deltoides": ["Desenvolvimento (HBC)", "Elevação Lateral", "Elevação Frontal", "Crucifixo Inverso", "Remada Alta", "Encolhimento"],
-  "Bíceps": ["Rosca Direta (HBL)", "Rosca Alternada (HBC)", "Rosca Martelo", "Rosca Concentrada", "Rosca Scott"],
-  "Tríceps": ["Tríceps Pulley", "Tríceps Corda", "Tríceps Testa (HBL)", "Tríceps Francês", "Mergulho Paralelas"],
-  "Core": ["Abdominal Supra", "Plancha Isométrica", "Abdominal Infra", "Oblíquos", "Roda Abdominal"]
+const EXERCISE_DATABASE: Record<string, string[]> = {
+  "Peito": [
+    "Crucifixo aberto alternado com HBC no banco declinado",
+    "Crucifixo aberto alternado com HBC no banco inclinado",
+    "Crucifixo aberto alternado com HBC no banco reto",
+    "Crucifixo aberto com HBC no banco declinado",
+    "Crucifixo aberto com HBC no banco inclinado",
+    "Crucifixo aberto com HBC no banco reto",
+    "Crucifixo aberto na máquina",
+    "Crucifixo alternado na máquina",
+    "Crucifixo em pé no cross polia alta",
+    "Crucifixo em pé no cross polia média",
+    "Crucifixo unilateral na máquina",
+    "Extensão de cotovelos no solo (Flexão de Braços)",
+    "PullUp na polia baixa pegada supinada",
+    "Supino aberto banco declinado no smith",
+    "Supino aberto banco inclinado no smith",
+    "Supino aberto no banco reto no smith",
+    "Supino alternado banco 45° fechado no crossover",
+    "Supino alternado banco 45° no crossover",
+    "Supino alternado banco 75° aberto no crossover",
+    "Supino alternado banco 75° fechado no crossover",
+    "Supino alternado banco reto aberto no crossover",
+    "Supino alternado banco reto fechado no crossover",
+    "Supino alternado deitado aberto na máquina",
+    "Supino alternado deitado fechado na máquina",
+    "Supino alternado inclinado aberto na máquina",
+    "Supino alternado inclinado fechado na máquina",
+    "Supino alternado sentado aberto na máquina",
+    "Supino alternado sentado fechado na máquina",
+    "Supino banco 45º aberto no crossover",
+    "Supino banco 45º fechado no crossover",
+    "Supino banco 75º aberto no crossover",
+    "Supino banco 75º fechado no crossover",
+    "Supino banco reto aberto no crossover",
+    "Supino banco reto fechado no crossover",
+    "Supino declinado alternado com HBC",
+    "Supino declinado com HBC",
+    "Supino declinado com HBL",
+    "Supino deitado aberto na máquina",
+    "Supino deitado fechado na máquina",
+    "Supino inclinado aberto na máquina",
+    "Supino inclinado alternado com HBC",
+    "Supino inclinado com HBC",
+    "Supino inclinado com HBL",
+    "Supino inclinado fechado na máquina",
+    "Supino Reto com HBL",
+    "Supino reto alternado com HBC",
+    "Supino reto com HBC",
+    "Supino sentado aberto na máquina",
+    "Supino sentado fechado na máquina",
+    "Supino unilateral deitado aberto na máquina",
+    "Supino unilateral deitado fechado na máquina",
+    "Supino unilateral inclinado aberto na máquina",
+    "Supino unilateral inclinado fechado na máquina",
+    "Supino unilateral sentado aberto na máquina",
+    "Supino unilateral sentado fechado na máquina",
+    "Voador peitoral"
+  ],
+  "Ombro": [
+    "Abdução de ombros banco 75º com HBC pegada neutra",
+    "Abdução de ombros banco 75º com HBC pegada pronada",
+    "Abdução de ombros em pé com HBC pegada neutra",
+    "Abdução de ombros em pé com HBC pegada pronada",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º HBC",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º no cross",
+    "Abdução de ombros unilateral no cross",
+    "Desenvolvimento aberto banco 75º no smith",
+    "Desenvolvimento aberto na máquina",
+    "Desenvolvimento banco 75º aberto com HBC",
+    "Desenvolvimento banco 75º aberto com HBM",
+    "Desenvolvimento banco 75º arnold com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBM",
+    "Desenvolvimento banco 75º fechado supinado com HBC",
+    "Desenvolvimento banco 75º fechado supinado com HBM",
+    "Desenvolvimento em pé aberto com HBC",
+    "Desenvolvimento em pé aberto com HBM",
+    "Desenvolvimento em pé arnold com HBC",
+    "Desenvolvimento em pé fechado pronado com HBC",
+    "Desenvolvimento em pé fechado pronado com HBM",
+    "Desenvolvimento em pé fechado supinado com HBC",
+    "Desenvolvimento em pé fechado supinado com HBM",
+    "Desenvolvimento fechado pronado banco 75º no smith",
+    "Desenvolvimento fechado supinado banco 75º no smith",
+    "Encolhimento de ombros com HBC",
+    "Encolhimento de ombros with HBM",
+    "Encolhimento de ombros no cross",
+    "Flexão de ombro with HBM pegada pronada",
+    "Flexão de ombro simultâneo com HBC pegada neutra",
+    "Flexão de ombro simultâneo com HBC pegada pronada",
+    "Flexão de ombro unilateral com HBC pegada neutra",
+    "Flexão de ombro unilateral com HBC pegada pronada",
+    "Flexão de ombro unilateral no cross",
+    "Remada alta banco 45º cross",
+    "Remada alta com HBM no banco 45º",
+    "Remada alta com Kettlebell",
+    "Remada alta em decúbito dorsal cross",
+    "Remada alta em pé com HBC",
+    "Remada alta em pé com HBL",
+    "Remada alta em pé com HBM",
+    "Remada alta em pé no cross"
+  ],
+  "Triceps": [
+    "Extensão de cotovelos fechados no solo (Flexão de braços)",
+    "Tríceps banco 75º francês com HBC simultâneo",
+    "Tríceps banco 75º francês com HBC unilateral",
+    "Tríceps coice curvado com HBC simultâneo",
+    "Tríceps coice curvado com HBC unilateral",
+    "Tríceps coice curvado no cross",
+    "Tríceps em pé francês com HBC simultâneo",
+    "Tríceps em pé francês com HBC unilateral",
+    "Tríceps francês no cross simultâneo",
+    "Tríceps francês no cross unilateral",
+    "Tríceps mergulho no banco reto",
+    "Tríceps no cross com barra reta",
+    "Tríceps no cross com barra reta inverso",
+    "Tríceps no cross com barra V",
+    "Tríceps no cross com barra W",
+    "Tríceps no cross com corda",
+    "Tríceps no cross inverso unilateral",
+    "Tríceps superman no cross segurando nos cabos",
+    "Tríceps supinado com HBM banco reto",
+    "Tríceps supinado no smith banco reto",
+    "Tríceps supinado pegada neutra com HBC",
+    "Tríceps testa HBM banco reto",
+    "Tríceps testa simultâneo HBC banco reto",
+    "Tríceps testa simultâneo no cross",
+    "Tríceps testa unilateral HBC banco reto",
+    "Tríceps testa unilateral no cross"
+  ],
+  "Costas e Cintura Escapular": [
+    "Crucifixo inverso na máquina",
+    "Crucifixo inverso simultâneo no cross polia média",
+    "Crucifixo inverso unilateral no cross polia média",
+    "Extensão de ombros no cross barra reta",
+    "Pullover no banco reto with HBC",
+    "Puxada aberta com barra reta no cross polia alta",
+    "Puxada aberta com barra romana pulley alto",
+    "Puxada aberta no pulley alto",
+    "Puxada com triângulo no pulley alto",
+    "Puxada supinada com barra reta no cross polia alta",
+    "Puxada supinada no pulley alto",
+    "Remada aberta com barra reta no cross polia média",
+    "Remada aberta com HBC decúbito ventral no banco 45°",
+    "Remada aberta alternada com HBC decúbito ventral no banco 45°",
+    "Remada aberta declinada no smith",
+    "Remada aberta na máquina",
+    "Remada baixa barra reta pegada supinada",
+    "Remada baixa com barra reta",
+    "Remada baixa com triângulo",
+    "Remada cavalo com HBL",
+    "Remada curvada aberta com cross",
+    "Remada curvada aberta com cross unilateral",
+    "Remada curvada aberta com HBC",
+    "Remada curvada aberta com HBM",
+    "Remada curvada supinada com cross",
+    "Remada curvada supinada com cross unilateral",
+    "Remada curvada supinada com HBC",
+    "Remada curvada supinada com HBM",
+    "Remada fechada alternada com HBC decubito ventral no banco 45°",
+    "Remada fechada com HBC decúbito ventral no banco 45°",
+    "Remada fechada na máquina",
+    "Remada no banco em 3 apoios pegada aberta com HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra com HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra no cross unilateral",
+    "Remada no banco em 3 apoios pegada supinada com HBC unilateral",
+    "Remada no banco em 3 apoios pegada supinada no cross unilateral",
+    "Remada supinada com barra reta no cross polia média"
+  ],
+  "Biceps": [
+    "Bíceps banco 45º com HBC pegada neutra simultâneo",
+    "Bíceps banco 45º com HBC pegada neutra unilateral",
+    "Bíceps banco 45º com HBC pegada pronada simultâneo",
+    "Bíceps banco 45º com HBC pegada pronada unilateral",
+    "Bíceps banco 45º com HBC pegada supinada simultâneo",
+    "Bíceps banco 45º com HBC pegada supinada unilateral",
+    "Bíceps banco 75º com HBC pegada neutra simultâneo",
+    "Bíceps banco 75º com HBC pegada neutra unilateral",
+    "Bíceps banco 75º com HBC pegada pronada simultâneo",
+    "Bíceps banco 75º com HBC pegada pronada unilateral",
+    "Bíceps banco 75º com HBC pegada supinada simultâneo",
+    "Bíceps banco 75º com HBC pegada supinada unilateral",
+    "Bíceps concentrado com HBC unilateral",
+    "Bíceps em pé com HBC pegada neutra alternado",
+    "Bíceps em pé com HBC pegada neutra simultâneo",
+    "Bíceps em pé com HBC pegada neutra unilateral",
+    "Bíceps em pé com HBC pegada pronada alternado",
+    "Bíceps em pé com HBC pegada pronada simultâneo",
+    "Bíceps em pé com HBC pegada pronada unilateral",
+    "Bíceps em pé com HBC pegada supinada alternado",
+    "Bíceps em pé com HBC pegada supinada simultâneo",
+    "Bíceps em pé com HBC pegada supinada unilateral",
+    "Bíceps em pé com HBM pegada pronada",
+    "Bíceps em pé com HBM pegada supinada",
+    "Bíceps no banco scott com HBC simultâneo",
+    "Bíceps no banco scott com HBC unilateral",
+    "Bíceps no banco scott com HBM pronado",
+    "Bíceps no banco scott com HBM supinado",
+    "Bíceps no banco scott com HBW simultâneo",
+    "Bíceps no cross barra reta",
+    "Bíceps no cross polia baixa unilateral",
+    "Bíceps superman no cross simultâneo",
+    "Bíceps superman no cross unilateral"
+  ],
+  "Core e Abdomen": [
+    "Abdominal diagonal na bola",
+    "Abdominal diagonal no bosu",
+    "Abdominal diagonal no solo",
+    "Abdominal infra no solo puxando as pernas",
+    "Abdominal infra pernas estendidas",
+    "Abdominal supra na bola",
+    "Abdominal supra no bosu",
+    "Abdominal supra no solo",
+    "Abdominal vela no solo",
+    "Prancha lateral na bola em isometria",
+    "Prancha lateral no bosu em isometria",
+    "Prancha lateral no solo em isometria",
+    "Prancha ventral na bola em isometria",
+    "Prancha ventral no bosu em isometria",
+    "Prancha ventral no solo em isometria"
+  ],
+  "Paravertebrais": [
+    "Elevação de quadril em isometria no solo",
+    "Mata-borrão isométrico no solo (super-man)",
+    "Perdigueiro em isometria no solo"
+  ],
+  "Quadríceps e Adutores": [
+    "Adução de quadril em decúbito dorsal",
+    "Adução de quadril em decúbito lateral no solo",
+    "Adução de quadril em pé no cross",
+    "Agachamento búlgaro",
+    "Agachamento em passada com HBC",
+    "Agachamento em passada com HBL",
+    "Agachamento em passada com HBM",
+    "Agachamento em passada com step a frente com HBC",
+    "Agachamento em passada com step a frente com HBL",
+    "Agachamento em passada com step a frente com HBM",
+    "Agachamento em passada com step a frente",
+    "Agachamento em passada com step atrás com HBC",
+    "Agachamento em passada com step atrás com HBL",
+    "Agachamento em passada com step atrás com HBM",
+    "Agachamento em passada com step atrás",
+    "Agachamento em passada no smith",
+    "Agachamento em passada com step a frente no smith",
+    "Agachamento em passada com step atrás no Smith",
+    "Agachamento livre com HBC",
+    "Agachamento livre com HBL barra sobre ombros",
+    "Agachamento livre with HBL",
+    "Agachamento livre with HBM barra sobre ombros",
+    "Agachamento livre",
+    "Agachamento no hack machine",
+    "Agachamento no sissy",
+    "Agachamento no Smith barra sobre os ombros",
+    "Agachamento no smith",
+    "Cadeira adutora",
+    "Cadeira extensora alternado",
+    "Cadeira extensora unilateral",
+    "Cadeira extensora",
+    "Flexão de quadril e joelho em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril e joelho em pé com caneleira",
+    "Flexão de quadril e joelho em pé no cross",
+    "Flexão de quadril em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril em pé com caneleira",
+    "Flexão de quadril em pé no cross",
+    "Leg press horizontal unilateral",
+    "Leg press horizontal",
+    "Leg press inclinado unilateral",
+    "Leg press inclinado",
+    "Levantar e sentar do banco reto com HBM",
+    "Levantar e sentar no banco reto com HBC",
+    "Levantar e sentar no banco reto"
+  ],
+  "Glúteos e Posteriores": [
+    "Abdução de quadril decúbito lateral no solo caneleira",
+    "Abdução de quadril em pé com caneleira",
+    "Agachamento sumô com HBC",
+    "Agachamento sumô com HBM",
+    "Cadeira flexora alternado",
+    "Cadeira flexora unilateral",
+    "Cadeira flexora",
+    "Elevação de quadril no banco reto com HBM",
+    "Elevação de Quadril no solo com anilha",
+    "Extensão de quadril e joelho em pé caneleira",
+    "Extensão de quadril e joelho em pé no cross",
+    "Extensão de quadril e joelho no cross",
+    "Extensão de quadril e joelho no solo caneleira",
+    "Extensão de quadril em pé caneleira",
+    "Extensão de quadril em pé no cross",
+    "Extensão de quadril no cross",
+    "Extensão de quadril no solo caneleira",
+    "Flexão de joelho em 3 apoios com caneleira",
+    "Flexão de joelho em pé com caneleira",
+    "Flexão de joelho em pé no cross",
+    "Levantamento terra com HBC",
+    "Levantamento terra com HBL",
+    "Levantamento terra com HBM",
+    "Levantamento terra no cross",
+    "Levantamento terra romeno com HBM",
+    "Mesa flexora alternado",
+    "Mesa flexora unilateral",
+    "Mesa flexora",
+    "Stiff com HBC simultâneo",
+    "Stiff com HBC unilateral",
+    "Stiff com HBM simultâneo",
+    "Stiff “bom dia” com HBM",
+    "Subida no step"
+  ],
+  "Panturrilha": [
+    "Cadeira solear",
+    "Flexão plantar com Halteres.",
+    "Flexão plantar em pé na Máquina",
+    "Flexão plantar em pé Unilateral",
+    "Flexão plantar no Leg press inclinado",
+    "Flexão plantar no leg press horizontal"
+  ]
 };
 
 const EXECUTION_METHODS = ["Simples", "Conjugada", "Drop Set", "Pirâmide", "Rest-Pause", "SST"];
@@ -74,11 +382,6 @@ export function ProfessorDashboard({ students, onLogout, onSelect }: { students:
                 <HeaderTitle text="Gestão de Atletas" />
               </h2>
            </div>
-           {renewalNotifications.length > 0 && (
-             <span className="text-[10px] font-black text-red-600 animate-pulse uppercase bg-red-600/10 px-3 py-1 rounded-full border border-red-600/20">
-               {renewalNotifications.length} Alertas
-             </span>
-           )}
         </div>
         
         <div className="grid grid-cols-1 gap-4">
@@ -132,18 +435,6 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
         </h2>
       </header>
 
-      {needsRenewal && (
-        <div className="mb-6 animate-in slide-in-from-top-2">
-          <div className="bg-red-600/10 border border-red-600/30 p-4 rounded-3xl flex items-center gap-4">
-            <div className="p-2 bg-red-600 rounded-xl"><AlertCircle className="text-white" size={20} /></div>
-            <div>
-              <p className="text-xs font-black text-white uppercase italic">Ciclo em Expiração</p>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase">Este atleta precisa de uma nova prescrição nos próximos 2 treinos.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-8 cursor-pointer border-l-4 border-l-indigo-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('PERIODIZATION')}>
           <div className="flex items-center justify-between">
@@ -188,37 +479,19 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout }
 
       <div className="mt-12 space-y-4">
          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Planilhas Prescritas</h3>
-            <span className="text-[9px] font-bold text-red-600 uppercase tracking-widest">{student.workouts?.length || 0} Ativas</span>
+            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Planilhas Ativas</h3>
          </div>
          <div className="space-y-3">
-            {student.workouts?.map(w => {
-              const completedCount = (student.workoutHistory || []).filter(h => h.workoutId === w.id).length;
-              const isEnding = w.projectedSessions && (w.projectedSessions - completedCount) <= 2;
-              return (
-                <div key={w.id} className={`p-6 rounded-[2rem] border flex justify-between items-center group transition-all shadow-lg ${isEnding ? 'bg-red-600/10 border-red-600/30' : 'bg-zinc-900/50 border-white/5 hover:border-red-600/30'}`}>
-                   <div>
-                      <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <p className="text-[9px] text-zinc-500 font-bold uppercase">{w.exercises.length} Exercícios</p>
-                        {w.projectedSessions && (
-                          <p className={`text-[9px] font-black uppercase ${isEnding ? 'text-red-500' : 'text-zinc-500'}`}>
-                            {completedCount}/{w.projectedSessions} SESSÕES
-                          </p>
-                        )}
-                      </div>
-                   </div>
-                   <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className={`p-3 rounded-xl transition-all shadow-inner ${isEnding ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600'}`}>
-                      <Edit3 size={18}/>
-                   </button>
-                </div>
-              );
-            })}
-            {(!student.workouts || student.workouts.length === 0) && (
-              <div className="p-10 text-center border-2 border-dashed border-zinc-800 rounded-[2.5rem] bg-zinc-950/20">
-                <p className="text-zinc-600 italic text-[10px] uppercase font-black tracking-widest">Nenhuma planilha vinculada.</p>
+            {student.workouts?.map(w => (
+              <div key={w.id} className="p-6 rounded-[2rem] border border-white/5 bg-zinc-900/50 flex justify-between items-center group transition-all shadow-lg">
+                 <div>
+                    <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
+                 </div>
+                 <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600 transition-all">
+                    <Edit3 size={18}/>
+                 </button>
               </div>
-            )}
+            ))}
          </div>
       </div>
       <EliteFooter />
@@ -230,43 +503,64 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [title, setTitle] = useState(workoutToEdit?.title || '');
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [projectedSessions, setProjectedSessions] = useState(workoutToEdit?.projectedSessions?.toString() || '12');
-  const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
   
-  // Library State
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  // PrescreveAI Specific State
+  const [selectedMuscle, setSelectedMuscle] = useState("");
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [isGeneratingCue, setIsGeneratingCue] = useState(false);
+  const [technicalCue, setTechnicalCue] = useState("");
+  const [bioInsight, setBioInsight] = useState("");
+  const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
-  const addExerciseFromLibrary = async (name: string) => {
-    const newEx: Exercise = { 
-      id: Date.now().toString(), 
-      name, 
-      sets: '3', 
-      reps: '10-12', 
-      rest: '60s',
-      executionType: 'Simples' 
-    };
-    const newIdx = exercises.length;
-    setExercises([...exercises, newEx]);
-    setIsLibraryOpen(false);
-    
-    // Auto-sync AI image for the selected exercise
-    setLoadingMap(prev => ({ ...prev, [newIdx]: true }));
-    try {
-      const res = await analyzeExerciseAndGenerateImage(name);
-      if (res) {
-        setExercises(current => current.map((ex, i) => i === newIdx ? { ...ex, description: res.description, thumb: res.imageUrl } : ex));
-      }
-    } finally {
-      setLoadingMap(prev => ({ ...prev, [newIdx]: false }));
+  const detailSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (student) {
+      generateBioInsight(student).then(setBioInsight);
     }
+  }, [student]);
+
+  const handleSelectExerciseWithDelay = async (exName: string) => {
+    setSelectedExercise({ name: exName });
+    setTechnicalCue("");
+    setImageLoading(true);
+
+    if (detailSectionRef.current) {
+      detailSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 0.5s snap delay for AI engine simulation
+    setTimeout(async () => {
+      const result = await analyzeExerciseAndGenerateImage(exName, student);
+      if (result) {
+        setSelectedExercise(result);
+      }
+      setImageLoading(false);
+    }, 500);
   };
 
-  const removeExercise = (index: number) => {
-    setExercises(exercises.filter((_, i) => i !== index));
+  const addExerciseToWorkout = (ex: any) => {
+    const newEx: Exercise = {
+      id: Date.now().toString(),
+      name: ex.name,
+      description: ex.description,
+      thumb: ex.imageUrl,
+      benefits: ex.benefits,
+      sets: '3',
+      reps: '10-12',
+      rest: '60s',
+      executionType: 'Simples'
+    };
+    setExercises([...exercises, newEx]);
   };
 
-  const updateExercise = (index: number, field: keyof Exercise, value: any) => {
-    setExercises(exercises.map((ex, i) => i === index ? { ...ex, [field]: value } : ex));
+  const removeExercise = (id: string) => {
+    setExercises(exercises.filter(e => e.id !== id));
+  };
+
+  const updateExercise = (id: string, field: keyof Exercise, value: any) => {
+    setExercises(exercises.map(ex => ex.id === id ? { ...ex, [field]: value } : ex));
   };
 
   const handleSave = async () => {
@@ -277,147 +571,189 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       projectedSessions: parseInt(projectedSessions),
       startDate: workoutToEdit?.startDate || new Date().toISOString()
     };
-
     const updatedWorkouts = workoutToEdit 
       ? (student.workouts || []).map(w => w.id === workout.id ? workout : w)
       : [...(student.workouts || []), workout];
-    
     await onSave(student.id, { workouts: updatedWorkouts });
     onBack();
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-50 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text={workoutToEdit ? "Editar Ciclo" : "PrescreveAI Elite"} /></h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text="PrescreveAI Elite" /></h2>
       </header>
 
-      {isLibraryOpen ? (
-        <div className="space-y-6 animate-in fade-in zoom-in duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex flex-col">
-              <h3 className="text-sm font-black uppercase text-red-600 italic tracking-tighter">Biblioteca PrescreveAI</h3>
-              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Selecione para prescrever</p>
-            </div>
-            <button onClick={() => setIsLibraryOpen(false)} className="text-zinc-500 p-2 bg-zinc-900 rounded-full"><ArrowLeft size={20}/></button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            {Object.keys(EXERCISE_LIBRARY).map(group => (
-              <button 
-                key={group} 
-                onClick={() => setSelectedMuscleGroup(selectedMuscleGroup === group ? null : group)}
-                className={`p-5 rounded-[1.5rem] border font-black uppercase text-[10px] text-center transition-all flex flex-col items-center gap-2 shadow-lg ${selectedMuscleGroup === group ? 'bg-red-600 border-red-600 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-red-600/30'}`}
-              >
-                <Layers size={18} />
-                {group}
-              </button>
-            ))}
-          </div>
-
-          {selectedMuscleGroup && (
-            <div className="space-y-3 mt-8 animate-in slide-in-from-top-4">
-              <div className="flex items-center gap-2 ml-2">
-                <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></div>
-                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Exercícios para {selectedMuscleGroup}</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-40">
+        {/* Left: Configuration and Inventory */}
+        <div className="lg:col-span-4 space-y-6">
+          <Card className="p-6 bg-zinc-900/50 border-white/5">
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 block italic">Título do Ciclo</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-2xl text-sm font-black text-white italic outline-none focus:border-red-600" placeholder="EX: TREINO A" />
               </div>
-              {EXERCISE_LIBRARY[selectedMuscleGroup].map(ex => (
-                <button 
-                  key={ex} 
-                  onClick={() => addExerciseFromLibrary(ex)}
-                  className="w-full p-5 bg-zinc-900/50 border border-white/5 rounded-[2rem] text-left flex justify-between items-center group hover:border-red-600 hover:bg-red-600/5 transition-all shadow-xl"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black uppercase italic text-white group-hover:text-red-500">{ex}</span>
-                    <span className="text-[8px] font-black text-zinc-600 uppercase mt-0.5">Biomecânica Prescritiva</span>
-                  </div>
-                  <Plus size={18} className="text-red-600 group-hover:scale-125 transition-transform" />
-                </button>
-              ))}
+              <div>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 block italic">Volume Total</label>
+                <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(e.target.value)} className="w-full bg-black border border-white/10 p-4 rounded-2xl text-sm font-black text-red-600 italic outline-none focus:border-red-600" />
+              </div>
+            </div>
+          </Card>
+
+          {bioInsight && (
+            <div className="bg-red-600/5 border border-red-600/20 rounded-[2rem] p-6 animate-in slide-in-from-left-4">
+              <div className="flex items-center gap-2 mb-4">
+                 <Sparkles className="w-4 h-4 text-red-600" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Bio-Insight PhD ✨</span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed italic">{bioInsight}</p>
             </div>
           )}
-        </div>
-      ) : (
-        <div className="space-y-8 pb-32">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Identificação do Treino</label>
-              <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-white italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="EX: TREINO A" />
-            </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Volume do Ciclo (Sessões)</label>
-              <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(e.target.value)} className="w-full p-5 bg-zinc-900 border border-white/5 rounded-[1.5rem] font-black text-red-600 italic text-lg outline-none focus:border-red-600 transition-all shadow-xl" placeholder="12" />
-            </div>
-          </div>
 
-          <div className="space-y-6">
-            <div className="flex justify-between items-center px-2">
-              <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-[0.2em] italic flex items-center gap-2"><Dumbbell size={14} className="text-red-600" /> Montagem da Planilha</h3>
-              <button onClick={() => setIsLibraryOpen(true)} className="p-3.5 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Plus size={18}/> Buscar Exercício</button>
-            </div>
-
+          <div className="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-white/5 shadow-2xl backdrop-blur-md">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 flex items-center gap-2 italic">
+              <Target className="w-4 h-4 text-red-600" /> Inventário Prescrito
+            </h2>
             <div className="space-y-6">
-              {exercises.length === 0 ? (
-                <div className="p-16 text-center border-2 border-dashed border-zinc-800 rounded-[3rem] bg-zinc-950/20 flex flex-col items-center gap-4">
-                  <Book size={32} className="text-zinc-800" />
-                  <p className="text-zinc-600 italic text-[10px] uppercase font-black tracking-widest leading-relaxed">Nenhum exercício selecionado.<br/>Use o botão acima para abrir a biblioteca.</p>
+              <div>
+                <label className="text-[10px] font-bold text-zinc-600 mb-3 block uppercase tracking-widest italic">Grupo Muscular</label>
+                <select className="w-full bg-black border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-red-600 outline-none appearance-none cursor-pointer" value={selectedMuscle} onChange={(e) => setSelectedMuscle(e.target.value)}>
+                  <option value="">Selecione...</option>
+                  {Object.keys(EXERCISE_DATABASE).map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              {selectedMuscle && (
+                <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {EXERCISE_DATABASE[selectedMuscle].map((exName, i) => (
+                    <button key={i} onClick={() => handleSelectExerciseWithDelay(exName)} className={`text-left px-5 py-4 rounded-2xl text-[10px] transition-all border flex items-center justify-between group ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white font-black' : 'bg-black border-white/5 text-zinc-500 hover:bg-zinc-900'}`}>
+                      <span className="truncate">{exName}</span>
+                      <Play className={`w-3 h-3 ${selectedExercise?.name === exName ? 'fill-white' : 'fill-red-600'}`} />
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                exercises.map((ex, i) => (
-                  <Card key={i} className="p-6 bg-zinc-900/50 border-zinc-800 space-y-6 relative group shadow-2xl overflow-visible">
-                    <button onClick={() => removeExercise(i)} className="absolute top-4 right-4 p-2.5 bg-black/40 text-zinc-600 hover:text-red-600 rounded-full transition-colors border border-white/5"><Trash2 size={16}/></button>
-                    
-                    <div className="flex gap-5">
-                      <div className="w-28 h-28 bg-black rounded-[2rem] overflow-hidden shrink-0 border border-white/5 shadow-inner flex items-center justify-center relative group/img">
-                        {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" alt="Ex"/> : <ImageIcon size={32} className="text-zinc-800" />}
-                        {loadingMap[i] && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Loader2 size={18} className="animate-spin text-red-600" /></div>}
-                        <div className="absolute inset-0 bg-red-600/0 group-hover/img:bg-red-600/10 transition-colors pointer-events-none"></div>
-                      </div>
-                      <div className="flex-1 space-y-4">
-                        <div className="flex flex-col">
-                          <h4 className="text-sm font-black text-white uppercase italic tracking-tighter leading-none">{ex.name}</h4>
-                          <span className="text-[8px] font-black text-zinc-600 uppercase mt-1">PrescreveAI Elite • PhD</span>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black text-zinc-500 uppercase ml-1 flex items-center gap-1"><Zap size={10} className="text-red-600"/> Metodologia de Execução</label>
-                          <select 
-                            value={ex.executionType} 
-                            onChange={e => updateExercise(i, 'executionType', e.target.value)}
-                            className="w-full bg-black border border-white/10 p-4 rounded-xl text-[10px] font-black text-red-500 uppercase italic outline-none focus:border-red-600 transition-all shadow-inner"
-                          >
-                            {EXECUTION_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Séries</label>
-                        <input type="text" value={ex.sets} onChange={e => updateExercise(i, 'sets', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="3" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Reps</label>
-                        <input type="text" value={ex.reps} onChange={e => updateExercise(i, 'reps', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="12" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black text-zinc-600 uppercase ml-1">Descanso</label>
-                        <input type="text" value={ex.rest} onChange={e => updateExercise(i, 'rest', e.target.value)} className="w-full bg-black border border-white/5 p-4 rounded-xl text-xs text-center font-black text-white" placeholder="60s" />
-                      </div>
-                    </div>
-                  </Card>
-                ))
               )}
             </div>
           </div>
+        </div>
 
-          <button onClick={handleSave} className="w-full py-7 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase text-sm italic flex items-center justify-center gap-4 shadow-2xl shadow-red-900/40 active:scale-95 transition-all mt-10">
-            <Save size={24}/> Liberar Planilha PrescreveAI
+        {/* Right: AI Detail & Plan Summary */}
+        <div className="lg:col-span-8 space-y-8">
+          <div ref={detailSectionRef}>
+            {selectedExercise ? (
+              <div className="bg-zinc-900 border border-white/10 rounded-[3rem] overflow-hidden shadow-3xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-white/5">
+                  {imageLoading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20">
+                      <Loader2 className="w-12 h-12 animate-spin text-red-600" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 mt-4 italic">Analysing Biomechanics...</span>
+                    </div>
+                  ) : selectedExercise.imageUrl && (
+                    <div className="w-full h-full relative video-motion-engine">
+                      <img src={selectedExercise.imageUrl} alt="Execução" className="w-full h-full object-cover" />
+                      <div className="absolute top-8 left-8 flex items-center gap-3">
+                        <div className="bg-red-600 h-2 w-2 rounded-full animate-pulse shadow-lg"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-black/60 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">LIVE BIOMECHANIC FEED</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-10">
+                  <div className="flex justify-between items-start mb-10">
+                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none max-w-lg">{selectedExercise.name}</h2>
+                    <div className="flex gap-2">
+                      <button onClick={async () => {
+                        setIsGeneratingCue(true);
+                        const cue = await generateTechnicalCue(selectedExercise.name, student);
+                        setTechnicalCue(cue);
+                        setIsGeneratingCue(false);
+                      }} className="bg-amber-500 p-4 rounded-2xl hover:scale-105 transition-all shadow-lg">
+                        {isGeneratingCue ? <Loader2 size={24} className="animate-spin text-black" /> : <Lightbulb size={24} className="text-black" />}
+                      </button>
+                      <button onClick={() => addExerciseToWorkout(selectedExercise)} className="bg-red-600 p-4 rounded-2xl hover:scale-105 transition-all shadow-lg text-white">
+                        <Plus size={24} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {technicalCue && (
+                    <div className="mb-10 p-6 bg-white/5 border border-amber-500/30 rounded-3xl animate-in zoom-in-95">
+                      <div className="flex items-center gap-2 mb-3 text-amber-500">
+                         <Zap size={14} className="fill-amber-500" />
+                         <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">Dica PhD ✨</span>
+                      </div>
+                      <p className="text-sm text-zinc-200 italic font-medium">"{technicalCue}"</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600 flex items-center gap-2 italic">Técnica Aplicada</h4>
+                      <p className="text-zinc-400 text-sm leading-relaxed border-l-2 border-red-600/20 pl-6 italic">{selectedExercise.description || "Iniciando processamento biomecânico..."}</p>
+                    </div>
+                    <div className="bg-black/50 p-8 rounded-[2rem] border border-white/5 shadow-inner">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 italic">Impacto Fisiológico</h4>
+                      <p className="text-zinc-300 text-[11px] leading-relaxed italic">{selectedExercise.benefits}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-[500px] flex flex-col items-center justify-center text-zinc-800 border-2 border-dashed border-white/5 rounded-[3rem] bg-zinc-950/20">
+                <Video className="w-16 h-16 opacity-10 mb-6" />
+                <p className="font-black uppercase tracking-[0.4em] text-[10px] text-red-600 text-center px-12 italic">Selecione um exercício para ver a biomecânica 8K analisada por IA</p>
+              </div>
+            )}
+          </div>
+
+          {/* Current Plan List */}
+          <div className="space-y-6">
+            <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-[0.2em] italic flex items-center gap-2 pl-2">
+              <Dumbbell size={16} className="text-red-600" /> Planilha de Execução ({exercises.length})
+            </h3>
+            <div className="space-y-4">
+              {exercises.map((ex, i) => (
+                <Card key={ex.id} className="p-6 bg-zinc-900 border-zinc-800 relative">
+                  <button onClick={() => removeExercise(ex.id!)} className="absolute top-4 right-4 p-2 text-zinc-600 hover:text-red-600 transition-colors"><Trash2 size={16}/></button>
+                  <div className="flex gap-6 mb-6">
+                    <div className="w-20 h-20 bg-black rounded-2xl overflow-hidden shrink-0 border border-white/5 shadow-inner">
+                      {ex.thumb ? <img src={ex.thumb} className="w-full h-full object-cover" /> : <Activity className="m-auto mt-6 text-zinc-800" />}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-black text-white uppercase italic tracking-tighter">{ex.name}</h4>
+                      <div className="mt-4">
+                         <label className="text-[8px] font-black text-zinc-500 uppercase italic mb-1 block">Método</label>
+                         <select value={ex.executionType} onChange={e => updateExercise(ex.id!, 'executionType', e.target.value)} className="w-full bg-black border border-white/10 p-2 rounded-xl text-[10px] font-black text-red-600 uppercase italic outline-none">
+                            {EXECUTION_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                         </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[8px] font-black text-zinc-500 uppercase block mb-1">Séries</label>
+                      <input type="text" value={ex.sets} onChange={e => updateExercise(ex.id!, 'sets', e.target.value)} className="w-full bg-black border border-white/5 p-3 rounded-xl text-xs font-black text-white text-center" />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-black text-zinc-500 uppercase block mb-1">Reps</label>
+                      <input type="text" value={ex.reps} onChange={e => updateExercise(ex.id!, 'reps', e.target.value)} className="w-full bg-black border border-white/5 p-3 rounded-xl text-xs font-black text-white text-center" />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-black text-zinc-500 uppercase block mb-1">Pausa</label>
+                      <input type="text" value={ex.rest} onChange={e => updateExercise(ex.id!, 'rest', e.target.value)} className="w-full bg-black border border-white/5 p-3 rounded-xl text-xs font-black text-white text-center" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={handleSave} className="w-full py-7 bg-red-600 hover:bg-red-700 rounded-[2.5rem] font-black uppercase tracking-widest text-sm italic flex items-center justify-center gap-4 shadow-2xl shadow-red-900/40 active:scale-95 transition-all mt-10">
+            <Save size={24}/> Finalizar Prescrição Elite
           </button>
         </div>
-      )}
+      </div>
       <EliteFooter />
     </div>
   );
@@ -445,21 +781,21 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
       <header className="flex items-center gap-4 mb-10">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text="Nova Avaliação" /></h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter"><HeaderTitle text="Avaliação Bio" /></h2>
       </header>
       
       <Card className="p-8 bg-zinc-900/80 border-l-4 border-l-emerald-600 space-y-8 shadow-2xl">
         <div className="flex items-center gap-4">
            <Scale className="text-emerald-500" size={32} />
            <div>
-             <h3 className="text-xl font-black italic uppercase text-white">Protocolo Bio</h3>
-             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Dados Antropométricos</p>
+             <h3 className="text-xl font-black italic uppercase text-white">Medidas Elite</h3>
+             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Protocolo Antropométrico</p>
            </div>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Peso Corporal (kg)</label>
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Peso (kg)</label>
             <input type="number" value={peso} onChange={e => setPeso(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="00.0" />
           </div>
           <div className="space-y-2">
@@ -467,11 +803,11 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
             <input type="number" value={altura} onChange={e => setAltura(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="000" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">% Gordura Estimado</label>
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">% Gordura</label>
             <input type="number" value={gordura} onChange={e => setGordura(e.target.value)} className="w-full p-5 bg-black border border-white/10 rounded-[1.5rem] font-black text-white outline-none focus:border-emerald-500 transition-all text-center text-lg" placeholder="0.0" />
           </div>
           <button onClick={handleSave} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 rounded-[2.5rem] font-black uppercase text-xs flex items-center justify-center gap-3 shadow-xl shadow-emerald-900/20 active:scale-95 transition-all">
-            <Save size={18}/> Salvar Avaliação PhD
+            <Save size={18}/> Registrar Avaliação
           </button>
         </div>
       </Card>
@@ -482,7 +818,6 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
 
 export function PeriodizationView({ student, onBack, onProceedToWorkout }: { student: Student, onBack: () => void, onProceedToWorkout: () => void }) {
   const [step, setStep] = useState<'form' | 'loading' | 'result'>('form');
-  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: student.nome,
     level: 'intermediario',
@@ -496,7 +831,6 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
 
   const handleGenerate = async () => {
     setStep('loading');
-    setError(null);
     try {
       const plan = await generatePeriodizationPlan(formData);
       if (plan) {
@@ -505,10 +839,10 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', student.id);
         await setDoc(docRef, { periodization: { ...plan, startDate: new Date().toISOString() } }, { merge: true });
       } else {
-        throw new Error("IA returned null");
+        throw new Error("IA error");
       }
     } catch (e) {
-      setError("Falha na geração científica. Tente novamente.");
+      alert("Erro na geração. Tente novamente.");
       setStep('form');
     }
   };
@@ -518,7 +852,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
       <header className="flex items-center gap-4 mb-10">
          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full"><ArrowLeft size={20}/></button>
          <h2 className="text-xl font-black italic uppercase tracking-tighter">
-          <HeaderTitle text="Ciência Força" />
+          <HeaderTitle text="Ciência PhD" />
          </h2>
       </header>
 
@@ -526,14 +860,14 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
         <Card className="p-8 bg-zinc-900 border-l-4 border-l-red-600">
            <div className="flex items-center gap-4 mb-8">
               <Brain className="text-red-600" size={32} />
-              <div><h3 className="text-2xl font-black italic uppercase tracking-tight">Anamnese Avançada</h3><p className="text-[10px] text-zinc-500 font-bold uppercase">Protocolo PBE • Elite Performance</p></div>
+              <div><h3 className="text-2xl font-black italic uppercase tracking-tight">Anamnese</h3><p className="text-[10px] text-zinc-500 font-bold uppercase">Planejamento Científico</p></div>
            </div>
            <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nível Biológico</label>
                 <select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="w-full p-4 bg-black border border-white/10 rounded-2xl text-sm font-bold outline-none focus:border-red-600">
                    <option value="iniciante">Adaptação Neural</option>
-                   <option value="intermediario">Retomada (Sem ritmo)</option>
+                   <option value="intermediario">Retomada / Intermediário</option>
                    <option value="avancado">Atleta de Performance</option>
                 </select>
               </div>
@@ -552,7 +886,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
                  </div>
               </div>
               <button onClick={handleGenerate} className="w-full mt-6 bg-red-600 hover:bg-red-700 py-6 rounded-[2.5rem] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-xl">
-                <Brain size={16}/> Gerar Planilha de Carga
+                <Brain size={16}/> Gerar Planilha PhD
               </button>
            </div>
         </Card>
@@ -560,42 +894,19 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
 
       {step === 'loading' && (
         <div className="flex flex-col items-center justify-center py-32 space-y-8 animate-in fade-in duration-300 text-center">
-           <div className="relative">
-             <div className="w-24 h-24 border-4 border-red-600/20 rounded-full animate-ping absolute inset-0"></div>
-             <Loader2 className="w-24 h-24 animate-spin text-red-600 relative z-10" />
-           </div>
-           <div className="space-y-2">
-             <p className="text-xl font-black uppercase tracking-widest italic text-white">Analisando Biomecânica</p>
-             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 animate-pulse">Integrando Metodologia PhD...</p>
-           </div>
+           <Loader2 className="w-24 h-24 animate-spin text-red-600" />
+           <p className="text-xl font-black uppercase tracking-widest italic text-white">Processando Dados...</p>
         </div>
       )}
 
       {step === 'result' && result && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
            <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl">
-              <p className="text-[9px] font-black uppercase text-red-600 mb-2 tracking-[0.2em]">{result.modelo_teorico}</p>
+              <p className="text-[9px] font-black uppercase text-red-600 mb-2 tracking-[0.2em]">{result.modelo_teorico || "PLANEJAMENTO PhD"}</p>
               <h1 className="text-2xl font-black italic uppercase text-white mb-2 leading-none">{result.titulo}</h1>
               <p className="text-xs text-zinc-400 font-medium leading-relaxed italic opacity-80">{result.objetivo_longo_prazo}</p>
            </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {result.microciclos?.map((m: any, i: number) => (
-                <Card key={i} className="p-6 bg-zinc-900 border-zinc-800">
-                   <h4 className="text-[11px] font-black text-white uppercase mb-4 leading-tight">SEMANA {m.semana}:<br/><span className="text-red-600">{m.tipo}</span></h4>
-                   <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
-                      <div className="flex justify-between items-center"><span className="text-[9px] text-zinc-500 font-bold uppercase">RPE:</span><span className="text-[10px] font-black text-white">{m.pse_alvo}</span></div>
-                      <div className="flex justify-between items-center"><span className="text-[10px] font-black text-white">{m.faixa_repeticoes}</span></div>
-                   </div>
-                </Card>
-              ))}
-           </div>
-           <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] relative overflow-hidden">
-              <h3 className="text-amber-500 font-black uppercase text-xs mb-4 flex items-center gap-3">
-                 <BookOpen size={16} /> NOTAS PHD
-              </h3>
-              <p className="text-xs text-zinc-300 leading-relaxed font-medium italic opacity-80">{result.notas_phd}</p>
-           </div>
-           <button onClick={onProceedToWorkout} className="w-full py-6 bg-red-600 rounded-[2.5rem] font-black uppercase text-[11px] text-white shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all active:scale-95">MONTAR EXERCÍCIOS</button>
+           <button onClick={onProceedToWorkout} className="w-full py-6 bg-red-600 rounded-[2.5rem] font-black uppercase text-[11px] text-white shadow-2xl hover:bg-red-700 transition-all">MONTAR EXERCÍCIOS</button>
         </div>
       )}
       <EliteFooter />

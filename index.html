@@ -7,61 +7,56 @@
     <meta name="theme-color" content="#000000" />
     <title>ABFIT Elite</title>
     
-    <!-- Forçar comportamento de App Nativo no iOS -->
+    <!-- Google Fonts: Inter para uniformidade total -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Forçar comportamento de App Nativo -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ABFIT Elite">
-    
-    <!-- Forçar comportamento de App Nativo no Android/Chrome -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="ABFIT Elite">
     
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Ícone de alta qualidade para iOS -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='80' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M60 135 L132 135 M60 120 L60 150 M50 125 L50 145 M132 120 L132 150 M142 125 L142 145' stroke='%23dc2626' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E" />
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         window.process = { env: { API_KEY: "AIzaSyCJ9K6sovkNzeO_fuQbSPD9LnIUG0p8Da4" } };
         window.__app_id = "abfit-elite-production";
 
-        // Service Worker com ativação imediata
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').then(reg => {
-                    reg.onupdatefound = () => {
-                        const installingWorker = reg.installing;
-                        if (installingWorker) {
-                            installingWorker.onstatechange = () => {
-                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    window.location.reload();
-                                }
-                            };
-                        }
-                    };
-                });
+                navigator.serviceWorker.register('/service-worker.js');
             });
         }
 
-        // Script para evitar que links abram no Safari fora do modo standalone (iOS)
         (function(a,b,c){if(c in b&&b[c]){var d,e=a.location,f=/^(a|html)$/i;a.addEventListener("click",function(a){d=a.target;while(!f.test(d.nodeName))d=d.parentNode;"href" in d&&(d.href.indexOf("http")||~d.href.indexOf(e.host))&&(a.preventDefault(),e.href=d.href)},!1)}})(document,window.navigator,"standalone");
     </script>
     <style>
-      /* Estilos para parecer App Nativo */
+      :root {
+        --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        --tracking-tight: -0.05em;
+        --tracking-wide: 0.15em;
+        --leading-tight: 1.1;
+        --leading-normal: 1.5;
+      }
+
       html, body { 
         background-color: #000; 
         color: #fff; 
-        overscroll-behavior-y: none; 
         margin: 0;
         padding: 0;
         height: 100%;
         width: 100%;
         overflow: hidden;
-        position: fixed; /* Impede scroll elástico indesejado no iOS */
+        position: fixed;
         -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        user-select: none;
+        font-family: var(--font-main);
+        letter-spacing: -0.015em;
+        line-height: var(--leading-normal);
+        -webkit-font-smoothing: antialiased;
       }
       
       #root {
@@ -71,9 +66,34 @@
         -webkit-overflow-scrolling: touch;
       }
 
+      .font-black { 
+        letter-spacing: var(--tracking-tight); 
+        line-height: var(--leading-tight);
+      }
+      
+      .tracking-widest { 
+        letter-spacing: var(--tracking-wide) !important; 
+      }
+
+      .italic {
+        font-style: italic;
+      }
+
+      input, select, textarea {
+        font-family: var(--font-main) !important;
+      }
+
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #18181b; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+
+      @keyframes biomechanicalVideo {
+        0% { transform: scale(1) translateY(0); filter: brightness(1) contrast(1); }
+        40% { transform: scale(1.02) translateY(-2px); filter: brightness(1.05) contrast(1.05); }
+        60% { transform: scale(1.02) translateY(-2px); filter: brightness(1.05) contrast(1.05); }
+        100% { transform: scale(1) translateY(0); filter: brightness(1) contrast(1); }
+      }
+      .video-motion-engine { animation: biomechanicalVideo 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
     </style>
 
     <script type="importmap">
@@ -88,11 +108,11 @@
     "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
     "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "recharts": "https://esm.sh/recharts@2.15.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "firebase/": "https://esm.sh/firebase@^12.8.0/"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>

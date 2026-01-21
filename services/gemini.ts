@@ -1,114 +1,67 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Inicialização segura com a chave do ambiente conforme as diretrizes
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Conforme diretrizes: Pro para tarefas complexas (Periodização), Flash para tarefas básicas
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
-/**
- * Gera um plano de periodização científica nível PhD (EEFD/UFRJ)
- */
 export async function generatePeriodizationPlan(data: any): Promise<any> {
   const systemInstruction = `Você é um PhD em Fisiologia do Exercício e mestre em Metodologia do Treinamento de Força.
   Sua tarefa é criar um MESOCICLO de 4 semanas extremamente técnico e personalizado.
-  
-  CONTEXTO CIENTÍFICO OBRIGATÓRIO:
-  - Aplicação de Matveev (Carga Progressiva) e Bompa (Periodização de Força).
-  - Ajuste de PSE (Percepção Subjetão de Esforço) conforme a fase.
-  - Otimização de volume conforme a frequência semanal do atleta.
+  - Responda APENAS JSON.`;
 
-  REGRAS DE RESPOSTA:
-  - Responda APENAS com o objeto JSON solicitado.
-  - Não use blocos de código markdown.
-  - Use termos técnicos em português do Brasil.`;
-
-  const prompt = `Gere uma periodização para o atleta ${data.name}.
-  Objetivo: ${data.goal}
-  Modelo: ${data.model}
-  Fase: ${data.phase}
-  Frequência: ${data.daysPerWeek} dias por semana
-  Atividade Concorrente: ${data.concurrent ? 'Sim' : 'Não'}
-
-  JSON esperado:
-  {
-    "titulo": "Nome Técnico do Mesociclo",
-    "modelo_teorico": "Explicação breve do modelo aplicado",
-    "objetivo_longo_prazo": "Meta para o final do ciclo",
-    "distribuicao_volume": "Como o volume variará semanalmente",
-    "microciclos": [
-      {
-        "semana": 1,
-        "tipo": "Ordinário/Choque/Recuperação",
-        "foco": "Força/Hipertrofia/RML",
-        "faixa_repeticoes": "Ex: 8-10",
-        "pse_alvo": "Ex: 7-8",
-        "descricao_carga": "Indicação de intensidade"
-      }
-    ],
-    "notas_phd": "Recomendação biomecânica final"
-  }`;
+  const prompt = `Gere uma periodização para o atleta ${data.name}. Objetivo: ${data.goal}. Dias: ${data.daysPerWeek}.
+  JSON: { "titulo": "", "modelo_teorico": "", "objetivo_longo_prazo": "", "microciclos": [{ "semana": 1, "tipo": "", "foco": "", "faixa_repeticoes": "", "pse_alvo": "" }], "notas_phd": "" }`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL_PRO,
       contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      }
+      config: { systemInstruction, responseMimeType: "application/json" }
     });
-
-    const text = response.text;
-    if (!text) return null;
-    
-    const jsonStr = text.trim();
-    return JSON.parse(jsonStr);
-  } catch (error) {
-    console.error("Gemini Periodization Error:", error);
-    return null;
-  }
+    return JSON.parse(response.text || "{}");
+  } catch (error) { return null; }
 }
 
-/**
- * Gera dados técnicos e uma imagem para o exercício especificado
- * Usa uma abordagem de duas etapas: 
- * 1. Analisa o exercício e gera o prompt visual detalhado
- * 2. Gera a imagem com base no prompt visual
- */
-export async function analyzeExerciseAndGenerateImage(exerciseName: string): Promise<any> {
+export async function generateRunningPlan(anamneseData: any): Promise<any> {
+  const systemInstruction = `Você é um Treinador de Corrida de Elite (PhD em Fisiologia do Exercício).
+  Sua tarefa é criar uma planilha de corrida semanal técnica baseada no perfil do atleta.
+  - Tipos de treino permitidos: tiro, ritmo, longao, fartlek.
+  - Responda APENAS JSON.`;
+
+  const prompt = `Atleta: ${anamneseData.name}. Nível: ${anamneseData.experience}. Objetivo: ${anamneseData.goal}. 
+  Gere uma lista de 3 a 5 treinos semanais.
+  JSON: { "workouts": [{ "dayOfWeek": "Segunda", "type": "tiro", "warmupTime": 10, "sets": 8, "reps": 1, "stimulusTime": "400m", "recoveryTime": 90, "cooldownTime": 5, "totalTime": 45, "pace": "04:30" }] }`;
+
   try {
-    // 1. O "Cérebro" analisa o exercício
+    const response = await ai.models.generateContent({
+      model: MODEL_PRO,
+      contents: prompt,
+      config: { systemInstruction, responseMimeType: "application/json" }
+    });
+    return JSON.parse(response.text || "{ \"workouts\": [] }");
+  } catch (error) { return null; }
+}
+
+export async function analyzeExerciseAndGenerateImage(exerciseName: string, studentProfile?: any): Promise<any> {
+  try {
     const brainPrompt = `Analise o exercício "${exerciseName}". 
-    Instruções obrigatórias:
-    - Se o nome contém "HBC", o equipamento deve ser obrigatoriamente um Haltere (Dumbbell).
-    - Se o nome contém "HBL", use obrigatoriamente Barra Longa.
-    - Se o nome contém "alternado", descreva uma execução onde um membro está em cima e o outro embaixo.
-    - Se o nome contém "sumô", descreva a postura de pernas afastadas.
-    
-    Forneça:
-    1. Descrição técnica da execução perfeita em português.
-    2. 3 Benefícios principais em português.
-    3. Um PROMPT VISUAL DETALHADO em INGLÊS para gerar uma foto 8k cinematográfica de um atleta negro em um ginásio moderno de luxo executando este movimento exato.
-    
-    Responda APENAS em JSON: {"description": "", "benefits": "", "visualPrompt": ""}`;
+    - Se HBC: Haltere. Se HBL: Barra Longa.
+    - Se "alternado": Execução asimétrica.
+    - Se "sumô": Pernas afastadas.
+    Forneça: 1. Descrição técnica (PT). 2. 3 Benefícios (PT). 3. PROMPT VISUAL INGLÊS 8k atleta preto, luz estúdio.
+    JSON: {"description": "", "benefits": "", "visualPrompt": ""}`;
 
     const brainResponse = await ai.models.generateContent({
       model: MODEL_FLASH,
       contents: brainPrompt,
-      config: {
-        responseMimeType: "application/json",
-        temperature: 0.4,
-      }
+      config: { responseMimeType: "application/json" }
     });
 
     const brainResult = JSON.parse(brainResponse.text || "{}");
     
-    // 2. Gerar a imagem
     const imageResponse = await ai.models.generateContent({
       model: MODEL_IMAGE,
       contents: { parts: [{ text: brainResult.visualPrompt || `Cinematic shot of athlete doing ${exerciseName}` }] },
@@ -125,45 +78,37 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string): Pro
       }
     }
 
-    return {
-      description: brainResult.description,
-      benefits: brainResult.benefits,
-      imageUrl
-    };
-  } catch (e) {
-    console.error("Exercise Analysis Error:", e);
-    return null;
-  }
+    return { ...brainResult, imageUrl };
+  } catch (e) { return null; }
 }
 
-/**
- * Função legado mantida para compatibilidade, agora roteada para a nova lógica se necessário
- */
-export async function generateExerciseImage(exerciseName: string): Promise<string | null> {
-  const result = await analyzeExerciseAndGenerateImage(exerciseName);
-  return result?.imageUrl || null;
-}
-
-/**
- * Fornece uma instrução biomecânica crucial (cue técnico)
- */
-export async function generateTechnicalCue(exerciseName: string) {
+export async function generateTechnicalCue(exerciseName: string, profile?: any) {
   try {
     const res = await ai.models.generateContent({
       model: MODEL_FLASH,
-      contents: { parts: [{ text: `Forneça uma instrução biomecânica crucial (cue técnico) curta e potente para o exercício: ${exerciseName}` }] },
+      contents: { parts: [{ text: `Dica biomecânica rápida para: "${exerciseName}". Aluno: ${profile?.neurodivergence || 'padrão'}.` }] },
       config: { systemInstruction: "Você é um treinador de elite especialista em biomecânica." }
     });
     return res.text || "Mantenha o controle do movimento.";
   } catch (e) { return "Mantenha o core ativado e a execução controlada."; }
 }
 
-/**
- * Gera um plano alimentar diário
- */
+export async function generateBioInsight(profile: any) {
+  if (!profile.nome) return "";
+  try {
+    const prompt = `Analise: Aluno: ${profile.nome}, TEA/TDAH: ${profile.neurodivergence}, Bariátrica: ${profile.bariatric ? 'Sim' : 'Não'}. Forneça 3 dicas curtas de segurança e foco para o treinador.`;
+    const data = await ai.models.generateContent({
+      model: MODEL_FLASH,
+      contents: prompt,
+      config: { systemInstruction: "Você é um PhD em Fisiologia. Responda de forma curta e técnica." }
+    });
+    return data.text || "";
+  } catch (err) { return ""; }
+}
+
 export async function generateAIMealPlan(profile: any): Promise<any> {
-  const systemInstruction = "Você é um nutricionista esportivo de elite. Gere um plano alimentar diário (Café da manhã, Almoço, Jantar, Snacks) baseado no perfil do usuário.";
-  const prompt = `Gere um plano alimentar para um atleta com objetivo de ${profile.goal}. Restrições: ${profile.restrictions}. Metas diárias: ${profile.dailyTargets.calories} kcal.`;
+  const systemInstruction = "Você é um nutricionista esportivo de elite. Gere um plano alimentar diário baseado nos objetivos e restrições do atleta.";
+  const prompt = `Gere um plano alimentar para um atleta com objetivo: ${profile.goal}. Restrições: ${profile.restrictions}. Alvos diários: ${JSON.stringify(profile.dailyTargets)}.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -175,36 +120,27 @@ export async function generateAIMealPlan(profile: any): Promise<any> {
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            breakfast: { type: Type.STRING, description: "Café da manhã sugerido" },
-            lunch: { type: Type.STRING, description: "Almoço sugerido" },
-            dinner: { type: Type.STRING, description: "Jantar sugerido" },
-            snacks: { type: Type.STRING, description: "Lanches sugeridos" },
+            id: { type: Type.STRING, description: "ID único para o plano" },
+            date: { type: Type.STRING, description: "Data no formato ISO ou similar" },
+            breakfast: { type: Type.STRING, description: "Descrição do café da manhã" },
+            lunch: { type: Type.STRING, description: "Descrição do almoço" },
+            dinner: { type: Type.STRING, description: "Descrição do jantar" },
+            snacks: { type: Type.STRING, description: "Descrição dos lanches" }
           },
-          required: ["breakfast", "lunch", "dinner", "snacks"],
+          required: ["id", "date", "breakfast", "lunch", "dinner", "snacks"]
         }
       }
     });
-
-    const text = response.text;
-    if (!text) return null;
-    const data = JSON.parse(text.trim());
-    return {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      ...data
-    };
+    return JSON.parse(response.text || "{}");
   } catch (error) {
-    console.error("Meal Plan Error:", error);
+    console.error("Error generating meal plan:", error);
     return null;
   }
 }
 
-/**
- * Estima macronutrientes para uma descrição de alimento
- */
 export async function estimateFoodMacros(foodDescription: string): Promise<any> {
-  const systemInstruction = "Você é um especialista em nutrição. Estime os macronutrientes (calorias, proteínas, carboidratos, gorduras) para a descrição de comida fornecida.";
-  const prompt = `Estime os macros para: "${foodDescription}"`;
+  const systemInstruction = "Você é um especialista em nutrição. Estime os macronutrientes da descrição de alimento fornecida.";
+  const prompt = `Estime os macronutrientes para: "${foodDescription}".`;
 
   try {
     const response = await ai.models.generateContent({
@@ -216,19 +152,18 @@ export async function estimateFoodMacros(foodDescription: string): Promise<any> 
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            calories: { type: Type.NUMBER, description: "Calorias em kcal" },
-            protein: { type: Type.NUMBER, description: "Proteínas em gramas" },
-            carbs: { type: Type.NUMBER, description: "Carboidratos em gramas" },
-            fat: { type: Type.NUMBER, description: "Gorduras em gramas" }
+            calories: { type: Type.NUMBER },
+            protein: { type: Type.NUMBER },
+            carbs: { type: Type.NUMBER },
+            fat: { type: Type.NUMBER }
           },
           required: ["calories", "protein", "carbs", "fat"]
         }
       }
     });
-    const text = response.text;
-    return text ? JSON.parse(text.trim()) : null;
+    return JSON.parse(response.text || "{}");
   } catch (error) {
-    console.error("Macro Estimation Error:", error);
+    console.error("Error estimating macros:", error);
     return null;
   }
 }

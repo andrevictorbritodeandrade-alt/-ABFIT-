@@ -5,33 +5,31 @@ import { AppNotification } from '../types';
 
 export function HeaderTitle({ text }: { text: string }) {
   const words = text.trim().split(/\s+/);
-  if (words.length <= 1) return <>{text}</>;
+  if (words.length <= 1) return <span className="tracking-tighter">{text}</span>;
   
   return (
-    <>
+    <span className="tracking-tighter">
       {words[0]} <span className="text-red-600">{words.slice(1).join(' ')}</span>
-    </>
+    </span>
   );
 }
 
 export function Logo({ size = "text-6xl", subSize = "text-[10px]" }: { size?: string, subSize?: string }) {
   return (
     <div className="text-center group select-none flex flex-col items-center justify-center">
-      {/* Container do ícone com tamanho reduzido conforme solicitado */}
       <div className="p-2 bg-zinc-900 rounded-[1.2rem] border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-3">
         <Dumbbell className="text-red-600 w-5 h-5 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
       </div>
-      {/* Texto da marca com tamanho controlado via props (no App.tsx é passado text-8xl) */}
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase leading-none`}>
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase leading-[0.9]`}>
         AB<span className="text-red-600">FIT</span>
       </h1>
-      <p className={`${subSize} text-zinc-400 tracking-[0.2em] uppercase font-bold leading-none mt-3`}>Assessoria em Treinamentos Físicos</p>
+      <p className={`${subSize} text-zinc-400 tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
 }
 
 export function Card({ children, className = "", onClick }: { children?: React.ReactNode, className?: string, key?: any, onClick?: any }) {
-  return <div onClick={onClick} className={`bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-xl overflow-hidden ${className}`}>{children}</div>;
+  return <div onClick={onClick} className={`bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
 }
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
@@ -54,16 +52,16 @@ export function EliteFooter() {
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
             ABFIT Elite v2.5.0
           </p>
-          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-500">
             Sistema de Alta Performance • Empresa Registrada
           </p>
         </div>
 
-        <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-4 rounded-3xl space-y-2">
-          <p className="text-[9px] font-black uppercase tracking-tight text-white italic">
+        <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-5 rounded-[2rem] space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-tight text-white italic">
             Desenvolvido por André Brito
           </p>
-          <p className="text-[8px] font-bold uppercase text-zinc-400 leading-relaxed">
+          <p className="text-[9px] font-bold uppercase text-zinc-400 leading-relaxed tracking-tight">
             Prof. de Ed. Física • <span className="text-red-500">CREF 039443 G/RJ</span><br/>
             Especialista em Desportos de Campo e de Quadra (UFRJ)<br/>
             Mestre em Ciências do Exercício e do Esporte (UERJ)
@@ -71,15 +69,14 @@ export function EliteFooter() {
         </div>
 
         <div className="flex flex-col items-center gap-2 pt-2">
-          <a href="mailto:britodeandrade@gmail.com" className="flex items-center gap-2 text-[8px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">
+          <a href="mailto:britodeandrade@gmail.com" className="flex items-center gap-2 text-[9px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-[0.2em]">
             <Mail size={10} className="text-red-600" /> britodeandrade@gmail.com
           </a>
-          {/* Link atualizado para WhatsApp direto conforme solicitado */}
           <a 
             href="https://wa.me/5521994527694" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="flex items-center gap-2 text-[8px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+            className="flex items-center gap-2 text-[9px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-[0.2em]"
           >
             <MessageCircle size={10} className="text-red-600" /> +55 21 99452-7694
           </a>
@@ -201,14 +198,14 @@ export function WeatherWidget() {
   if (loading) return (
     <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl px-4 py-2 flex items-center gap-2 animate-pulse shadow-lg">
       <Loader2 size={12} className="animate-spin text-zinc-600" />
-      <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Buscando...</span>
+      <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.1em]">Buscando...</span>
     </div>
   );
 
   if (error) return (
     <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-2xl px-4 py-2 flex items-center gap-2 shadow-lg">
       <MapPin size={12} className="text-zinc-700" />
-      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Local</span>
+      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.1em]">Local</span>
     </div>
   );
 
@@ -218,20 +215,20 @@ export function WeatherWidget() {
         <Sun className="text-amber-500" size={14} />
         <div>
           <p className="text-[10px] font-black leading-none text-white">{weather.temp}°</p>
-          <p className="text-[6px] text-zinc-500 uppercase font-bold tracking-widest mt-0.5">Local</p>
+          <p className="text-[7px] text-zinc-500 uppercase font-bold tracking-[0.1em] mt-0.5">Clima</p>
         </div>
       </div>
       <div className="h-4 w-px bg-white/10"></div>
       <div>
         <p className="text-[10px] font-black leading-none text-white">{weather.feels}°</p>
-        <p className="text-[6px] text-zinc-500 uppercase font-bold tracking-widest mt-0.5">Real</p>
+        <p className="text-[7px] text-zinc-500 uppercase font-bold tracking-[0.1em] mt-0.5">Sensa.</p>
       </div>
       <div className="h-4 w-px bg-white/10"></div>
       <div className="flex items-center gap-1.5">
         <CloudRain size={12} className={weather.rain > 30 ? "text-blue-400" : "text-zinc-500"} />
         <div>
           <p className="text-[10px] font-black leading-none text-white">{weather.rain}%</p>
-          <p className="text-[6px] text-zinc-500 uppercase font-bold tracking-widest mt-0.5">Chuva</p>
+          <p className="text-[7px] text-zinc-500 uppercase font-bold tracking-[0.1em] mt-0.5">Chuva</p>
         </div>
       </div>
     </div>
