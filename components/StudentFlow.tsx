@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, Dumbbell, CheckCircle2, HeartPulse, Trophy, 
@@ -5,7 +6,8 @@ import {
   TrendingUp, Flame, Activity, Zap, Footprints, Loader2, Maximize2,
   Timer, RotateCw, Power, FastForward, Calendar, History, Scale, Ruler, Brain,
   Bell, List, MapPin, Clock, DollarSign, AlertCircle, RefreshCcw, CalendarDays, ExternalLink,
-  Navigation, CheckCircle, Star, Sparkles, Info, Search, Target, Map as MapIcon, BookOpen
+  Navigation, CheckCircle, Star, Sparkles, Info, Search, Target, Map as MapIcon, BookOpen,
+  GraduationCap, Award, ShieldCheck
 } from 'lucide-react';
 import { Card, EliteFooter, SyncStatus, NotificationBadge } from './Layout';
 import { Student, PhysicalAssessment, WorkoutHistoryEntry, AnalyticsData, PeriodizationPlan, Workout } from '../types';
@@ -15,6 +17,90 @@ import { db, appId, auth } from '../services/firebase';
 import { RunTrackStudentView } from './RunTrack';
 import { generateExerciseImage } from '../services/gemini';
 import { GoogleGenAI } from "@google/genai";
+
+// --- ABOUT VIEW (INSTITUTIONAL) ---
+export function AboutView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
+          <ArrowLeft size={20}/>
+        </button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">Sobre a <span className="text-red-600">AB</span>FIT</h2>
+      </header>
+
+      <div className="space-y-8 max-w-2xl mx-auto">
+        {/* HERO SECTION */}
+        <div className="relative rounded-[3rem] overflow-hidden bg-zinc-900 border border-zinc-800 p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+            <Award size={120} className="text-red-600" />
+          </div>
+          <div className="relative z-10">
+            <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.4em] mb-4 block">A Elite do Treinamento</span>
+            <h1 className="text-4xl font-black italic uppercase text-white mb-6 leading-none tracking-tighter">Ciência e Performance</h1>
+            <p className="text-sm text-zinc-400 font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
+              "Transformamos dados biomecânicos em resultados estéticos e de performance através de uma metodologia baseada em evidências."
+            </p>
+          </div>
+        </div>
+
+        {/* MISSION & VISION */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-6 bg-zinc-900/50 border-zinc-800">
+            <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center border border-red-600/20 mb-4">
+              <Target className="text-red-600" size={20} />
+            </div>
+            <h3 className="font-black uppercase text-xs italic mb-2">Nossa Missão</h3>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase leading-relaxed tracking-tight">
+              Prover assessoria esportiva de elite, democratizando o treinamento PhD para atletas amadores e profissionais.
+            </p>
+          </Card>
+          <Card className="p-6 bg-zinc-900/50 border-zinc-800">
+            <div className="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center border border-emerald-600/20 mb-4">
+              <ShieldCheck className="text-emerald-500" size={20} />
+            </div>
+            <h3 className="font-black uppercase text-xs italic mb-2">Padrão Ouro</h3>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase leading-relaxed tracking-tight">
+              Protocolos validados pela EEFD/UFRJ, garantindo segurança articular e eficiência metabólica máxima.
+            </p>
+          </Card>
+        </div>
+
+        {/* THE COACH */}
+        <div className="space-y-4">
+          <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest pl-2">O Especialista</h3>
+          <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-zinc-900 border border-zinc-800 rounded-[3rem]">
+            <div className="w-32 h-32 rounded-[2rem] bg-zinc-800 border-2 border-red-600 overflow-hidden shrink-0 rotate-3">
+               <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop" className="w-full h-full object-cover" alt="André Brito" />
+            </div>
+            <div className="text-center md:text-left">
+              <h4 className="text-2xl font-black italic uppercase text-white leading-none">André Brito</h4>
+              <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-2 mb-4">PhD Candidate • Especialista em Biomecânica</p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Fisiologia do Exercício</span>
+                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Metodologia PBE</span>
+                <span className="px-3 py-1.5 bg-black border border-white/5 rounded-full text-[8px] font-black text-zinc-400 uppercase">Performance de Elite</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SCIENTIFIC FOUNDATION */}
+        <div className="p-8 bg-black border border-zinc-800 rounded-[2.5rem] relative overflow-hidden group hover:border-red-600/30 transition-all">
+          <GraduationCap className="mb-4 text-zinc-600 group-hover:text-red-600 transition-colors" size={32} />
+          <h3 className="text-sm font-black uppercase italic text-white mb-2">Fundamentação Acadêmica</h3>
+          <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+            Nossa base técnica advém da <strong className="text-zinc-300">Escola de Educação Física e Desportos da UFRJ</strong>, uma das maiores referências em ciência do esporte na América Latina. Aplicamos modelos matemáticos de carga para garantir que cada série tenha um propósito biológico claro.
+          </p>
+        </div>
+
+        <button onClick={onBack} className="w-full py-5 border border-white/10 rounded-full text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-zinc-900 transition-all">Voltar ao Dashboard</button>
+      </div>
+
+      <EliteFooter />
+    </div>
+  );
+}
 
 // --- PERIODIZATION VIEW FOR STUDENT ---
 export function StudentPeriodizationView({ student, onBack }: { student: Student, onBack: () => void }) {

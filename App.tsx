@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   User as UserIcon, Loader2, Dumbbell, 
-  CheckCircle2, HeartPulse, Trophy, Camera, Brain, Ruler, Footprints, AlertCircle, TrendingUp
+  CheckCircle2, HeartPulse, Trophy, Camera, Brain, Ruler, Footprints, AlertCircle, TrendingUp,
+  Info
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, NotificationBadge, SyncStatus } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
-import { WorkoutSessionView, WorkoutCounterView, StudentAssessmentView, CorreRJView, StudentPeriodizationView } from './components/StudentFlow';
+import { WorkoutSessionView, WorkoutCounterView, StudentAssessmentView, CorreRJView, StudentPeriodizationView, AboutView } from './components/StudentFlow';
 import { RunTrackStudentView } from './components/RunTrack';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -161,7 +163,7 @@ export default function App() {
           </div>
           <div className="mb-10 text-center"><Logo size="text-6xl" subSize="text-[9px]" /></div>
           
-          <div className="mt-12 space-y-4 pb-20 text-left">
+          <div className="mt-12 space-y-4 pb-20 text-left flex flex-col">
             <button onClick={() => setView('STUDENT_PERIODIZATION')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-indigo-600/30 transition-all shadow-xl">
                 <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-indigo-500 transition-colors">Periodização PhD</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Macrociclo & Planejamento</p></div>
                 <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-600 transition-colors"><Brain className="text-indigo-500 group-hover:text-white" /></div>
@@ -187,6 +189,11 @@ export default function App() {
                 <div className="w-12 h-12 bg-amber-600/10 rounded-2xl flex items-center justify-center border border-amber-500/20 group-hover:bg-amber-600 transition-colors"><TrendingUp className="text-amber-500 group-hover:text-white" /></div>
             </button>
 
+            <button onClick={() => setView('ABOUT_ABFIT')} className="w-full bg-zinc-900 p-7 rounded-[3rem] border border-zinc-800 flex items-center justify-between group hover:border-zinc-500/30 transition-all shadow-xl">
+                <div className="flex flex-col items-start"><span className="font-black italic uppercase text-lg group-hover:text-zinc-300 transition-colors">Sobre a ABFIT</span><p className="text-[8px] text-zinc-500 font-bold uppercase">Metodologia & Expertise</p></div>
+                <div className="w-12 h-12 bg-zinc-500/10 rounded-2xl flex items-center justify-center border border-zinc-500/20 group-hover:bg-zinc-500 transition-colors"><Info className="text-zinc-500 group-hover:text-white" /></div>
+            </button>
+
             <button onClick={() => setView('LOGIN')} className="mt-16 py-4 border border-white/5 rounded-full text-zinc-700 text-[10px] font-black uppercase tracking-[0.4em] active:bg-zinc-900 transition-all w-full">Sair do Sistema</button>
           </div>
           <EliteFooter />
@@ -198,6 +205,7 @@ export default function App() {
       {view === 'STUDENT_ASSESSMENT' && selectedStudent && <StudentAssessmentView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
       {view === 'RUNTRACK_STUDENT' && selectedStudent && <RunTrackStudentView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
       {view === 'ANALYTICS' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
+      {view === 'ABOUT_ABFIT' && <AboutView onBack={() => setView('DASHBOARD')} />}
       
       {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} />}
       {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} />}

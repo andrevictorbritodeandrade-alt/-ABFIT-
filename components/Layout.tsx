@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { CloudRain, Sun, Droplets, RefreshCw, Bell, MapPin, Navigation, Info } from 'lucide-react';
+import { CloudRain, Sun, Droplets, RefreshCw, Bell, MapPin, Navigation, Info, Dumbbell } from 'lucide-react';
 import { AppNotification } from '../types';
 
-export function Logo({ size = "text-8xl", subSize = "text-[10px]" }: { size?: string, subSize?: string }) {
+export function Logo({ size = "text-6xl", subSize = "text-[10px]" }: { size?: string, subSize?: string }) {
   return (
-    <div className="text-center group select-none">
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase`}>
+    <div className="text-center group select-none flex flex-col items-center justify-center">
+      {/* Ícone posicionado acima */}
+      <div className="p-3 bg-zinc-900 rounded-[2rem] border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-4">
+        <Dumbbell className="text-red-600 w-10 h-10 md:w-12 md:h-12 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]" />
+      </div>
+      
+      {/* Texto da Marca */}
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase leading-none`}>
         <span className="text-red-600">AB</span>FIT
       </h1>
-      <p className={`${subSize} text-zinc-400 tracking-[0.2em] uppercase font-bold leading-none`}>Assessoria em Treinamentos Físicos</p>
+      
+      {/* Subtítulo */}
+      <p className={`${subSize} text-zinc-400 tracking-[0.2em] uppercase font-bold leading-none mt-3`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
 }
