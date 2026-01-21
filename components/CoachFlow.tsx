@@ -724,6 +724,9 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     onBack();
   };
 
+  // Filtrar treinos salvos para exibir apenas os outros
+  const otherWorkouts = (student.workouts || []).filter(w => w.id !== workoutToEdit?.id);
+
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar flex flex-col">
       <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/95 backdrop-blur-xl py-4 z-50 -mx-6 px-6 border-b border-white/5">
@@ -744,6 +747,29 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         {/* LADO ESQUERDO: INVENTÁRIO & PLANILHA ATUAL */}
         <aside className="lg:col-span-4 space-y-6">
           
+          <div className="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-white/5 shadow-xl">
+             <div className="flex justify-between items-center mb-6 px-1">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Planilha em Edição</h3>
+                <span className="bg-zinc-800 px-3 py-1 rounded-full text-[8px] font-black text-white">{exercises.length} EXs</span>
+             </div>
+             <input 
+                type="text" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                className="w-full bg-black border border-white/5 p-4 rounded-2xl text-xs font-black italic uppercase text-white mb-4 focus:border-red-600 outline-none" 
+                placeholder="NOME DA PLANILHA..."
+             />
+             <div className="space-y-3">
+                {exercises.map((ex, i) => (
+                  <div key={i} className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group">
+                     <span className="text-[10px] font-black italic uppercase truncate max-w-[150px]">{ex.name}</span>
+                     <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
+                  </div>
+                ))}
+                {exercises.length === 0 && <p className="text-[9px] text-zinc-600 font-bold uppercase text-center py-4 italic">Nenhum exercício adicionado</p>}
+             </div>
+          </div>
+
           <div className="bg-zinc-900/60 p-6 rounded-[2.5rem] border border-white/5 shadow-2xl backdrop-blur-md">
             <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 flex items-center gap-2 italic">
               <Target className="w-4 h-4 text-red-600" /> Inventário Prescrito
@@ -778,28 +804,19 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
             </div>
           </div>
 
-          <div className="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-white/5 shadow-xl">
-             <div className="flex justify-between items-center mb-6 px-1">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Planilha em Edição</h3>
-                <span className="bg-zinc-800 px-3 py-1 rounded-full text-[8px] font-black text-white">{exercises.length} EXs</span>
-             </div>
-             <input 
-                type="text" 
-                value={title} 
-                onChange={e => setTitle(e.target.value)} 
-                className="w-full bg-black border border-white/5 p-4 rounded-2xl text-xs font-black italic uppercase text-white mb-4 focus:border-red-600 outline-none" 
-                placeholder="NOME DA PLANILHA..."
-             />
-             <div className="space-y-3">
-                {exercises.map((ex, i) => (
-                  <div key={i} className="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group">
-                     <span className="text-[10px] font-black italic uppercase truncate max-w-[150px]">{ex.name}</span>
-                     <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
-                  </div>
-                ))}
-                {exercises.length === 0 && <p className="text-[9px] text-zinc-600 font-bold uppercase text-center py-4 italic">Nenhum exercício adicionado</p>}
-             </div>
-          </div>
+          {otherWorkouts.length > 0 && (
+            <div className="bg-zinc-900/20 p-6 rounded-[2.5rem] border border-white/5 border-dashed">
+                <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4 italic text-center">Treinos Salvos</h3>
+                <div className="space-y-2">
+                    {otherWorkouts.map(w => (
+                        <div key={w.id} className="p-3 bg-black/60 rounded-xl border border-white/5 text-center">
+                            <span className="text-[10px] font-black uppercase italic text-zinc-400">{w.title}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+          )}
+
         </aside>
 
         {/* LADO DIREITO: FEED BIOMECÂNICO & ANÁLISE */}
