@@ -3,14 +3,23 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <title>ABFIT Elite</title>
     
+    <!-- PWA Primary Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ABFIT Elite">
+    <meta name="application-name" content="ABFIT Elite">
+    
     <link rel="manifest" href="/manifest.json" />
-    <!-- Favicon customizado com AB + Halter -->
+    
+    <!-- Apple Touch Icon (Obrigatório para iOS reconhecer como App de qualidade) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='80' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M60 135 L132 135 M60 120 L60 150 M50 125 L50 145 M132 120 L132 150 M142 125 L142 145' stroke='%23dc2626' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E" />
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='black'/%3E%3Ctext x='50%25' y='45%25' font-family='Arial, sans-serif' font-weight='900' font-style='italic' font-size='45' fill='white' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan fill='%23dc2626'%3EAB%3C/tspan%3E%3C/text%3E%3Cpath d='M30 72 L70 72 M30 65 L30 79 M25 68 L25 76 M70 65 L70 79 M75 68 L75 76' stroke='%23dc2626' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,10 +28,10 @@
         window.process = { env: { API_KEY: "AIzaSyCJ9K6sovkNzeO_fuQbSPD9LnIUG0p8Da4" } };
         window.__app_id = "abfit-elite-production";
 
-        // Register Service Worker
+        // Register Service Worker de forma agressiva
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(registration => {
                     console.log('SW registered: ', registration);
                 }).catch(registrationError => {
                     console.log('SW registration failed: ', registrationError);
@@ -34,7 +43,27 @@
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #18181b; }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
-      body { background-color: #000; color: #fff; overscroll-behavior-y: none; }
+      
+      /* Reset para comportamento de App Nativo */
+      html, body { 
+        background-color: #000; 
+        color: #fff; 
+        overscroll-behavior-y: none; 
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        user-select: none;
+      }
+      
+      #root {
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
       @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
       .animate-fade-in { animation: fade-in 0.5s ease-out; }
     </style>

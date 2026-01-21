@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints, TrendingUp,
   Info, History as HistoryIcon, LogOut, Layout, Bell, AlertCircle,
-  BarChart3, ChevronRight, Activity, Smartphone
+  BarChart3, ChevronRight, Activity
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -12,7 +12,6 @@ import { WorkoutSessionView, StudentAssessmentView, StudentPeriodizationView, Ab
 import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
-import { InstallPrompt } from './components/InstallPrompt';
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -81,12 +80,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showInstallModal, setShowInstallModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const isStandalone = useMemo(() => {
-    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-  }, []);
 
   useEffect(() => {
     const initAuth = async () => { 
@@ -194,7 +188,6 @@ export default function App() {
   return (
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
-      {showInstallModal && <InstallPrompt onClose={() => setShowInstallModal(false)} />}
       
       {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} />}
       
@@ -362,24 +355,6 @@ export default function App() {
                   <ChevronRight className="text-zinc-600 group-hover:translate-x-1 transition-transform" size={18} />
                </div>
             </Card>
-
-            {/* CARD DE INSTALAÇÃO MANUAL - APENAS SE NÃO ESTIVER INSTALADO */}
-            {!isStandalone && (
-              <Card className="p-6 bg-white/5 border-white/10 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setShowInstallModal(true)}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-white text-black rounded-2xl shadow-lg">
-                        <Smartphone size={22} />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Instalar App Elite</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Acesso rápido & Performance máxima</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-white group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
 
             <button 
               onClick={() => { setUser(null); setView('LOGIN'); }} 
