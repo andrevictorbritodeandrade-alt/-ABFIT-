@@ -87,27 +87,46 @@ export default function App() {
         try { await signInAnonymously(auth); } catch (err: any) { setLoading(false); } 
     };
     initAuth();
-    const unsub = onAuthStateChanged(auth, (u) => { 
+    const unsubAuth = onAuthStateChanged(auth, (u) => { 
         if (u) { setUser(u); setLoading(false); }
     });
-    return () => unsub();
+    return () => unsubAuth();
   }, []);
 
+  // O "SEGREDO": Listener Reativo (Túnel de Dados)
   useEffect(() => {
     if (!user) return;
-    try {
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'));
-        const unsub = onSnapshot(q, (snapshot) => { 
-            const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
-            setStudents(updatedStudents); 
-            if (selectedStudent) {
-              const current = updatedStudents.find(s => s.id === selectedStudent.id);
-              if (current) setSelectedStudent(current);
-            }
-        });
-        return () => unsub();
-    } catch (e) { console.error(e); }
-  }, [user, selectedStudent?.id]);
+    
+    let unsub: () => void;
+
+    // Se estiver no Dashboard do Professor ou em telas de gestão
+    if (view !== 'LOGIN' && view.startsWith('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || view === 'COACH_ASSESSMENT' || view === 'PERIODIZATION') {
+      const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'));
+      unsub = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+        // Lógica de Sincronização: Laranja se tem escritas pendentes
+        setIsSyncing(snapshot.metadata.hasPendingWrites);
+        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+        setStudents(updatedStudents);
+        
+        if (selectedStudent) {
+          const current = updatedStudents.find(s => s.id === selectedStudent.id);
+          if (current) setSelectedStudent(current);
+        }
+      });
+    } 
+    // Se for um Aluno Logado (Túnel Instantâneo)
+    else if (selectedStudent && view !== 'LOGIN') {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
+      unsub = onSnapshot(docRef, { includeMetadataChanges: true }, (docSnap) => {
+        setIsSyncing(docSnap.metadata.hasPendingWrites);
+        if (docSnap.exists()) {
+          setSelectedStudent({ id: docSnap.id, ...docSnap.data() } as Student);
+        }
+      });
+    }
+
+    return () => { if (unsub) unsub(); };
+  }, [user, view, selectedStudent?.id]);
 
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
@@ -159,14 +178,11 @@ export default function App() {
   };
 
   const handleSaveData = async (sid: string, data: any) => {
-    setIsSyncing(true);
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
     } catch (e: any) { 
       console.error("Erro ao salvar dados:", e.message); 
-    } finally {
-      setTimeout(() => setIsSyncing(false), 300);
     }
   };
 

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { NutritionProfile, MealPlan, MacroNutrients } from "../types";
 

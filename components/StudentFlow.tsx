@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Dumbbell, Activity, Play,
@@ -279,6 +278,28 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         >
           {isFinishing ? <Loader2 className="animate-spin" /> : <><CheckCircle2 /> SALVAR NO FEED</>}
         </button>
+      </div>
+    );
+  }
+
+  if (!activeWorkout) {
+    return (
+      <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
+        <header className="flex items-center gap-4 mb-10">
+          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter">Meus Treinos</h2>
+        </header>
+        <div className="space-y-4">
+          {user.workouts?.map(w => (
+            <Card key={w.id} className="p-6 bg-zinc-900 border-zinc-800 flex justify-between items-center group cursor-pointer" onClick={() => startSession(w)}>
+              <div>
+                <h4 className="text-lg font-black italic uppercase text-white">{w.title}</h4>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase">{w.exercises.length} Exercícios</p>
+              </div>
+              <Play className="text-red-600 group-hover:scale-110 transition-transform" />
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }

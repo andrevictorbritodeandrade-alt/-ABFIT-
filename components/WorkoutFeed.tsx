@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowLeft, Camera, Heart, Zap, MapPin, Share2, Activity, Clock } from 'lucide-react';
 import { Card, HeaderTitle, EliteFooter } from './Layout';

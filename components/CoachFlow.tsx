@@ -339,7 +339,6 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
 
 const MUSCLE_GROUPS = Object.keys(EXERCISE_DATABASE);
 
-// Categorized Training Methods for Dropdown
 const TRAINING_METHODS = {
   "Métodos de Organização de Carga (Pirâmides)": [
     "Série Estável",
@@ -386,7 +385,6 @@ const TRAINING_METHODS = {
   ]
 };
 
-// Methods that imply grouping multiple exercises
 const GROUPING_METHODS = [
   "Bi-Set",
   "Tri-Set",
@@ -565,19 +563,22 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
             {DASHBOARD_FEATURES.map((feature) => {
               const isDisabled = (student.disabledFeatures || []).includes(feature.id);
               return (
-                <div key={feature.id} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5">
+                <div 
+                  key={feature.id} 
+                  onClick={() => toggleFeatureVisibility(feature.id)}
+                  className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/5 transition-all group"
+                >
                   <div className="flex items-center gap-3">
                     <feature.icon size={16} className={isDisabled ? "text-zinc-700" : "text-red-600"} />
                     <span className={`text-xs font-black uppercase italic ${isDisabled ? 'text-zinc-600' : 'text-white'}`}>
                       {feature.label}
                     </span>
                   </div>
-                  <button 
-                    onClick={() => toggleFeatureVisibility(feature.id)}
+                  <div 
                     className={`w-12 h-6 rounded-full relative transition-all duration-300 ${isDisabled ? 'bg-zinc-800' : 'bg-red-600 shadow-lg shadow-red-600/20'}`}
                   >
                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${isDisabled ? 'left-1' : 'left-7'}`} />
-                  </button>
+                  </div>
                 </div>
               );
             })}
@@ -613,7 +614,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
     setLoading(true);
     const plan = await generatePeriodizationPlan({ name: student.nome, goal: student.goal || 'Performance', daysPerWeek: '4' });
     if (plan) {
-      // Logic to save plan would typically go here via student persistence
+      // Logic to save plan
     }
     setLoading(false);
   };
@@ -695,7 +696,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [loading, setLoading] = useState(false);
   
-  // PrescreveAI States
   const [selectedMuscle, setSelectedMuscle] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
   const [exerciseImage, setExerciseImage] = useState<string | null>(null);
@@ -703,7 +703,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [technicalCue, setTechnicalCue] = useState("");
   const [isGeneratingCue, setIsGeneratingCue] = useState(false);
   
-  // Exercise Config State
   const [config, setConfig] = useState({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável' });
 
   const detailSectionRef = useRef<HTMLDivElement>(null);
@@ -712,7 +711,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     setSelectedExercise({ name: exerciseName });
     setExerciseImage(null);
     setTechnicalCue("");
-    setConfig({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável' }); // Reset config on new selection
+    setConfig({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável' });
     
     if (detailSectionRef.current) {
         detailSectionRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -753,24 +752,19 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const handleAddSelectedToWorkout = () => {
     if (!selectedExercise) return;
 
-    // Logic for Auto-Grouping (Bi-sets, Tri-sets, etc)
     const isGroupingMethod = GROUPING_METHODS.includes(config.method);
     let groupId = undefined;
 
     if (isGroupingMethod) {
        const lastExercise = exercises[exercises.length - 1];
-       // Se o exercício anterior tem o mesmo método de agrupamento, vincula a ele
        if (lastExercise && lastExercise.method === config.method) {
-         groupId = lastExercise.groupId || Date.now().toString(); // Usa o existente ou cria um novo se faltar
-         
-         // Garante que o anterior tenha ID se não tiver (caso seja o primeiro do grupo)
+         groupId = lastExercise.groupId || Date.now().toString();
          if (!lastExercise.groupId) {
             const updatedExercises = [...exercises];
             updatedExercises[updatedExercises.length - 1].groupId = groupId;
             setExercises(updatedExercises);
          }
        } else {
-         // Inicia um novo grupo
          groupId = Date.now().toString();
        }
     }
@@ -786,7 +780,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       groupId: groupId
     };
 
-    // Se atualizamos o exercício anterior (para setar ID), usamos o estado atualizado, senão o atual
     setExercises(prev => {
         const list = [...prev];
         if (groupId && list.length > 0 && list[list.length - 1].method === config.method && !list[list.length - 1].groupId) {
@@ -802,24 +795,40 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
   const handleSave = async () => {
     setLoading(true);
-    const newWorkout: Workout = {
-      id: workoutToEdit?.id || Date.now().toString(),
-      title,
-      exercises
-    };
-    const currentWorkouts = student.workouts || [];
-    let updatedWorkouts;
-    if (workoutToEdit) {
-      updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
-    } else {
-      updatedWorkouts = [...currentWorkouts, newWorkout];
+    try {
+      const newWorkout: Workout = {
+        id: workoutToEdit?.id || Date.now().toString(),
+        title: title || 'Treino Sem Nome',
+        exercises
+      };
+      const currentWorkouts = student.workouts || [];
+      let updatedWorkouts;
+      if (workoutToEdit) {
+        updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
+      } else {
+        updatedWorkouts = [...currentWorkouts, newWorkout];
+      }
+      
+      // Gravação Imediata via Persistence (Local-first)
+      await onSave(student.id, { workouts: updatedWorkouts });
+      
+      // RESET DO FORMULÁRIO (Mantém a tela para criar o próximo treino B, C, etc)
+      setTitle('');
+      setExercises([]);
+      setSelectedExercise(null);
+      setExerciseImage(null);
+      setTechnicalCue("");
+      setSelectedMuscle("");
+      setConfig({ sets: '3', reps: '10', rest: '60s', method: 'Série Estável' });
+
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+    } finally {
+      setLoading(false);
+      // onBack() NÃO é chamado aqui para permitir criação sequencial
     }
-    await onSave(student.id, { workouts: updatedWorkouts });
-    setLoading(false);
-    onBack();
   };
 
-  // Filtrar treinos salvos para exibir apenas os outros
   const otherWorkouts = (student.workouts || []).filter(w => w.id !== workoutToEdit?.id);
 
   return (
@@ -838,10 +847,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 pb-48">
-        
-        {/* LADO ESQUERDO: INVENTÁRIO & PLANILHA ATUAL */}
         <aside className="lg:col-span-4 space-y-6">
-          
           <div className="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-white/5 shadow-xl">
              <div className="flex justify-between items-center mb-6 px-1">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Planilha em Edição</h3>
@@ -859,22 +865,18 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                   const isGrouped = !!ex.groupId;
                   const prevEx = exercises[i-1];
                   const nextEx = exercises[i+1];
-                  
-                  // Visual logic for brackets
                   const isGroupStart = isGrouped && (!prevEx || prevEx.groupId !== ex.groupId);
                   const isGroupEnd = isGrouped && (!nextEx || nextEx.groupId !== ex.groupId);
                   const isGroupMiddle = isGrouped && !isGroupStart && !isGroupEnd;
 
                   return (
                     <div key={i} className="relative pl-6">
-                      {/* Visual Bracket Connector */}
                       {isGrouped && (
                         <div className={`absolute left-0 w-3 border-zinc-500
                             ${isGroupStart ? 'top-1/2 bottom-0 border-l-2 border-t-2 rounded-tl-xl h-[calc(50%+8px)]' : ''}
                             ${isGroupEnd ? 'top-0 bottom-1/2 border-l-2 border-b-2 rounded-bl-xl h-[calc(50%+8px)]' : ''}
                             ${isGroupMiddle ? 'top-0 bottom-0 border-l-2 h-full' : ''}
                         `}>
-                            {/* Optional: Add method badge on the connector */}
                             {isGroupStart && (
                                 <div className="absolute -top-3 -left-1 bg-zinc-800 text-[6px] font-black uppercase text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 whitespace-nowrap z-10">
                                     {ex.method}
@@ -882,10 +884,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                             )}
                         </div>
                       )}
-
                       <div className={`flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5 group relative ${isGrouped ? 'border-l-0 rounded-l-md ml-1' : ''}`}>
                          {isGrouped && isGroupMiddle && <div className="absolute -left-[26px] top-1/2 w-3 h-0.5 bg-zinc-500"></div>}
-                         
                          <div>
                            <div className="flex items-center gap-2">
                                {isGrouped && <LinkIcon size={10} className="text-zinc-500" />}
@@ -918,7 +918,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                   {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
-
               {selectedMuscle && (
                 <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                   {EXERCISE_DATABASE[selectedMuscle].map((exName, i) => (
@@ -935,23 +934,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
               )}
             </div>
           </div>
-
-          {otherWorkouts.length > 0 && (
-            <div className="bg-zinc-900/20 p-6 rounded-[2.5rem] border border-white/5 border-dashed">
-                <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4 italic text-center">Treinos Salvos</h3>
-                <div className="space-y-2">
-                    {otherWorkouts.map(w => (
-                        <div key={w.id} className="p-3 bg-black/60 rounded-xl border border-white/5 text-center">
-                            <span className="text-[10px] font-black uppercase italic text-zinc-400">{w.title}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-          )}
-
         </aside>
 
-        {/* LADO DIREITO: FEED BIOMECÂNICO & ANÁLISE */}
         <section className="lg:col-span-8 space-y-6">
           {!selectedExercise ? (
             <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-zinc-800 border-2 border-dashed border-white/5 rounded-[3rem] bg-zinc-950/20">
@@ -961,8 +945,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           ) : (
             <div ref={detailSectionRef} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="bg-zinc-900/60 rounded-[3.5rem] overflow-hidden border border-white/10 shadow-3xl backdrop-blur-3xl">
-                
-                {/* LIVE BIOMECHANIC FEED WINDOW */}
                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-white/5">
                   {imageLoading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950 z-20">
@@ -1008,7 +990,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       </button>
                     </div>
                   </div>
-
                   {technicalCue && (
                     <div className="mb-12 p-8 bg-red-600/5 border border-red-600/30 rounded-[2.5rem] animate-in zoom-in-95 shadow-2xl">
                       <div className="flex items-center gap-2 mb-4 text-red-600">
@@ -1018,7 +999,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       <p className="text-lg text-zinc-200 italic leading-relaxed font-medium">"{technicalCue}"</p>
                     </div>
                   )}
-
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
                     <div className="space-y-6">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600 flex items-center gap-2 italic"><ZapIcon className="w-4 h-4 fill-red-600" /> Técnica Aplicada</h4>
@@ -1031,8 +1011,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       </div>
                     </div>
                   </div>
-
-                  {/* PAINEL DE CONFIGURAÇÃO DE SÉRIES E MÉTODO */}
                   <div className="mb-8 bg-zinc-900/60 p-8 rounded-[2.5rem] border border-white/5">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 flex items-center gap-2 italic">
                       <Settings2 size={14} className="text-red-600" /> Configuração Técnica
@@ -1040,40 +1018,21 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="space-y-2">
                            <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1">Séries</label>
-                           <input 
-                             type="text" 
-                             value={config.sets} 
-                             onChange={e => setConfig({...config, sets: e.target.value})} 
-                             className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
-                           />
+                           <input type="text" value={config.sets} onChange={e => setConfig({...config, sets: e.target.value})} className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors" />
                         </div>
                         <div className="space-y-2">
                            <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1">Reps</label>
-                           <input 
-                             type="text" 
-                             value={config.reps} 
-                             onChange={e => setConfig({...config, reps: e.target.value})} 
-                             className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
-                           />
+                           <input type="text" value={config.reps} onChange={e => setConfig({...config, reps: e.target.value})} className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors" />
                         </div>
                         <div className="space-y-2">
                            <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1">Descanso</label>
-                           <input 
-                             type="text" 
-                             value={config.rest} 
-                             onChange={e => setConfig({...config, rest: e.target.value})} 
-                             className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors"
-                           />
+                           <input type="text" value={config.rest} onChange={e => setConfig({...config, rest: e.target.value})} className="w-full bg-black border border-white/10 rounded-2xl p-4 text-center font-black text-white focus:border-red-600 outline-none transition-colors" />
                         </div>
                     </div>
                     <div className="space-y-2">
                         <label className="text-[8px] font-black text-zinc-500 uppercase tracking-widest ml-1">Método de Treino</label>
                         <div className="relative">
-                          <select 
-                            value={config.method} 
-                            onChange={e => setConfig({...config, method: e.target.value})} 
-                            className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white font-black italic uppercase focus:border-red-600 outline-none appearance-none cursor-pointer pr-10 text-sm"
-                          >
+                          <select value={config.method} onChange={e => setConfig({...config, method: e.target.value})} className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white font-black italic uppercase focus:border-red-600 outline-none appearance-none cursor-pointer pr-10 text-sm">
                             {Object.entries(TRAINING_METHODS).map(([category, methods]) => (
                               <optgroup key={category} label={category} className="bg-zinc-900 text-zinc-400 font-bold not-italic">
                                 {methods.map(m => (
@@ -1086,11 +1045,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                         </div>
                     </div>
                   </div>
-
-                  <button 
-                    onClick={handleAddSelectedToWorkout}
-                    className="w-full py-6 bg-white text-black rounded-[2.5rem] font-black uppercase italic tracking-[0.1em] text-sm hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
-                  >
+                  <button onClick={handleAddSelectedToWorkout} className="w-full py-6 bg-white text-black rounded-[2.5rem] font-black uppercase italic tracking-[0.1em] text-sm hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3">
                     <PlusSquareIcon size={20} /> ADICIONAR À PLANILHA ELITE
                   </button>
                 </div>

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar } from 'lucide-react';
 import { Card, EliteFooter, HeaderTitle } from './Layout';
@@ -31,7 +30,6 @@ export function AnalyticsDashboard({ student, onBack }: AnalyticsProps) {
   }, [analytics.exercises]);
 
   // 2. Preparação da Frequência (Gráfico de Linha)
-  // Ajuste: O histórico salva data como "DD/MM/YYYY" via toLocaleDateString('pt-BR')
   const frequencyData = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
