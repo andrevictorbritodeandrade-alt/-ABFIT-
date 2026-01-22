@@ -28,7 +28,6 @@ export function Logo({ size = "text-6xl", subSize = "text-[10px]" }: { size?: st
   );
 }
 
-// Added key to props type to fix excess property check errors in mapped components
 export function Card({ children, className = "", onClick }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key }) {
   return <div onClick={onClick} className={`bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
 }
@@ -57,20 +56,15 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
   }, []);
 
   return (
-    <div className="fixed top-6 left-6 z-[100] animate-in fade-in slide-in-from-left-4 duration-1000">
-      <div className={`flex items-center gap-3 px-4 py-2.5 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-500 ${isSyncing ? 'bg-orange-600/10 border-orange-600/30' : 'bg-emerald-600/10 border-emerald-600/30'}`}>
+    <div className="fixed top-6 right-6 z-[100] animate-in fade-in slide-in-from-right-4 duration-1000">
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-500 ${isSyncing ? 'bg-orange-600/20 border-orange-600/40' : 'bg-emerald-600/20 border-emerald-600/40'}`}>
         <div className="relative">
-          <div className={`w-2.5 h-2.5 rounded-full ${isSyncing ? 'bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}></div>
-          {isSyncing && <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping opacity-75"></div>}
+          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
+          {isSyncing && <div className="absolute inset-0 w-2 h-2 rounded-full bg-orange-500 animate-ping opacity-75"></div>}
         </div>
-        <div className="flex flex-col">
-          <span className={`text-[8px] font-black uppercase tracking-widest leading-none ${isSyncing ? 'text-orange-500' : 'text-emerald-500'}`}>
-            {isSyncing ? 'Sincronizando...' : 'Sincronizado'}
-          </span>
-          <span className="text-[7px] text-zinc-500 uppercase font-bold mt-0.5">
-            {online ? 'Cloud Active' : 'Offline Mode'}
-          </span>
-        </div>
+        <span className={`text-[9px] font-black uppercase tracking-tighter ${isSyncing ? 'text-orange-500' : 'text-emerald-500'}`}>
+          {isSyncing ? 'SYNC' : 'ON'}
+        </span>
       </div>
     </div>
   );
@@ -94,7 +88,6 @@ export function WeatherWidget() {
   const [weather, setWeather] = useState({ temp: '--', condition: 'Loading' });
 
   useEffect(() => {
-    // Simulação de clima para estética da UI
     const timer = setTimeout(() => {
       setWeather({ temp: '28°', condition: 'Ensolarado' });
     }, 1500);

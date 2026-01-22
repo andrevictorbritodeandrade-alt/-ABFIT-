@@ -93,29 +93,21 @@ export default function App() {
     return () => unsubAuth();
   }, []);
 
-  // O "SEGREDO": Listener Reativo (Túnel de Dados)
   useEffect(() => {
     if (!user) return;
-    
     let unsub: () => void;
-
-    // Se estiver no Dashboard do Professor ou em telas de gestão
-    if (view !== 'LOGIN' && view.startsWith('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || view === 'COACH_ASSESSMENT' || view === 'PERIODIZATION') {
+    if (view !== 'LOGIN' && (view.startsWith('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || view === 'COACH_ASSESSMENT' || view === 'PERIODIZATION')) {
       const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'));
       unsub = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-        // Lógica de Sincronização: Laranja se tem escritas pendentes
         setIsSyncing(snapshot.metadata.hasPendingWrites);
         const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
         setStudents(updatedStudents);
-        
         if (selectedStudent) {
           const current = updatedStudents.find(s => s.id === selectedStudent.id);
           if (current) setSelectedStudent(current);
         }
       });
-    } 
-    // Se for um Aluno Logado (Túnel Instantâneo)
-    else if (selectedStudent && view !== 'LOGIN') {
+    } else if (selectedStudent && view !== 'LOGIN') {
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
       unsub = onSnapshot(docRef, { includeMetadataChanges: true }, (docSnap) => {
         setIsSyncing(docSnap.metadata.hasPendingWrites);
@@ -124,7 +116,6 @@ export default function App() {
         }
       });
     }
-
     return () => { if (unsub) unsub(); };
   }, [user, view, selectedStudent?.id]);
 
@@ -132,25 +123,15 @@ export default function App() {
     if (!selectedStudent) return [];
     const notifications: AppNotification[] = [];
     const history = selectedStudent.workoutHistory || [];
-    
     selectedStudent.workouts?.forEach(w => {
       if (w.projectedSessions) {
         const completed = history.filter(h => h.workoutId === w.id).length;
         const remaining = w.projectedSessions - completed;
-        
         if (remaining <= 2 && remaining >= 0) {
-          notifications.push({
-            id: `renew-${w.id}`,
-            title: 'Renovação Necessária',
-            message: `Atenção: Faltam apenas ${remaining} treinos para o fim da sua planilha "${w.title}"! Entre em contato com o André Brito para atualizar seu plano.`,
-            date: new Date().toLocaleDateString('pt-BR'),
-            read: false,
-            type: 'RENEWAL'
-          });
+          notifications.push({ id: `renew-${w.id}`, title: 'Renovação Necessária', message: `Faltam ${remaining} treinos para o fim da sua planilha "${w.title}".`, date: new Date().toLocaleDateString('pt-BR'), read: false, type: 'RENEWAL' });
         }
       }
     });
-
     return notifications;
   }, [selectedStudent]);
 
@@ -181,15 +162,12 @@ export default function App() {
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
-    } catch (e: any) { 
-      console.error("Erro ao salvar dados:", e.message); 
-    }
+    } catch (e: any) { console.error("Erro ao salvar:", e.message); }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedStudent) return;
-    
     setUploadingPhoto(true);
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -197,12 +175,10 @@ export default function App() {
       img.onload = async () => {
         const canvas = document.createElement('canvas');
         const MAX_SIZE = 400;
-        let width = img.width;
-        let height = img.height;
+        let width = img.width; let height = img.height;
         if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
         else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
@@ -215,11 +191,6 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const isFeatureVisible = (featureId: string) => {
-    if (!selectedStudent) return true;
-    return !(selectedStudent.disabledFeatures || []).includes(featureId);
-  };
-
   if (loading) return <div className="h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin text-red-600" /></div>;
 
   return (
@@ -228,16 +199,14 @@ export default function App() {
       {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} />}
       {view === 'DASHBOARD' && selectedStudent && (
         <div className="p-6 text-white text-center pt-10 h-screen overflow-y-auto custom-scrollbar flex flex-col items-center">
-          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-1000">
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 animate-in fade-in duration-1000">
              <div className="text-right">
                 <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest italic">Atleta Elite</p>
                 <p className="text-xs font-black text-white italic uppercase tracking-tighter">{selectedStudent.nome}</p>
              </div>
           </div>
-          <div className="mb-10 w-full flex justify-center animate-in fade-in slide-in-from-top-4 duration-700">
-            <Logo size="text-8xl" subSize="text-[10px]" />
-          </div>
-          <div className="relative mb-8 animate-in zoom-in duration-1000">
+          <Logo size="text-8xl" subSize="text-[10px]" />
+          <div className="relative mt-8 mb-8 animate-in zoom-in duration-1000">
              <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">
                   {selectedStudent?.photoUrl ? ( <img src={selectedStudent.photoUrl} className="w-full h-full object-cover" alt="Perfil"/> ) : ( <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon size={40} className="text-zinc-600" /></div> )}
@@ -248,147 +217,47 @@ export default function App() {
              </div>
              <div className="absolute -top-3 -right-4"> <NotificationBadge notifications={studentNotifications} onClick={() => setShowNotifications(!showNotifications)} /> </div>
           </div>
-          <div className="mb-12 animate-in fade-in slide-in-from-bottom-2 duration-1000"> <WeatherWidget /> </div>
-          {showNotifications && (
-            <div className="w-full mb-8 animate-in slide-in-from-top-4 duration-300">
-              <Card className="p-6 bg-red-600/5 border-red-600/20">
-                <div className="flex items-center gap-2 mb-4 text-red-600"> <Bell size={16} /> <h4 className="text-[10px] font-black uppercase tracking-widest">Avisos Importantes</h4> </div>
-                {studentNotifications.length === 0 ? ( <p className="text-[10px] text-zinc-500 font-bold uppercase italic text-center">Sem notificações no momento.</p> ) : (
-                  <div className="space-y-4">
-                    {studentNotifications.map(n => (
-                      <div key={n.id} className="text-left bg-black/40 p-4 rounded-2xl border border-white/5">
-                        <p className="text-xs font-black text-white italic mb-1 uppercase tracking-tight">{n.title}</p>
-                        <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">{n.message}</p>
-                      </div>
-                    ))}
+          <WeatherWidget />
+          <div className="w-full mt-10 space-y-5 pb-20 text-left flex flex-col">
+            <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('FEED')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-red-600 rounded-2xl shadow-lg shadow-red-600/40"> <Layout className="text-white" size={22} /> </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Feed de Performance</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Veja seus registros e selfie de elite</p>
+                    </div>
                   </div>
-                )}
-              </Card>
-            </div>
-          )}
-          <div className="w-full space-y-5 pb-20 text-left flex flex-col">
-            {isFeatureVisible('FEED') && (
-              <Card className="p-6 bg-red-600/10 border-red-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('FEED')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-red-600 rounded-2xl shadow-lg shadow-red-600/40"> <Layout className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Feed de Performance</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Veja seus registros e selfie de elite</p>
-                      </div>
+                  <ChevronRight className="text-red-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+            <Card className="p-6 bg-orange-600/10 border-orange-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('WORKOUTS')}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-orange-600 rounded-2xl shadow-lg shadow-orange-600/40"> <Dumbbell className="text-white" size={22} /> </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Meus Treinos</h3>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Sessões de Força & Hipertrofia</p>
                     </div>
-                    <ChevronRight className="text-red-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('WORKOUTS') && (
-              <Card className="p-6 bg-orange-600/10 border-orange-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('WORKOUTS')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-orange-600 rounded-2xl shadow-lg shadow-orange-600/40"> <Dumbbell className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Meus Treinos</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Sessões de Força & Hipertrofia</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('STUDENT_PERIODIZATION') && (
-              <Card className="p-6 bg-indigo-600/10 border-indigo-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_PERIODIZATION')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/40"> <Brain className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Periodização PhD</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Macrociclo & Planejamento Científico</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('STUDENT_ASSESSMENT') && (
-              <Card className="p-6 bg-emerald-600/10 border-emerald-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('STUDENT_ASSESSMENT')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-emerald-600 rounded-2xl shadow-lg shadow-emerald-600/40"> <Ruler className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Avaliação Física</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Composição Corporal & Medidas Bio</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('RUNTRACK_STUDENT') && (
-              <Card className="p-6 bg-rose-600/10 border-rose-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('RUNTRACK_STUDENT')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-rose-600 rounded-2xl shadow-lg shadow-rose-600/40"> <Footprints className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">RunTrack Elite</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Monitoramento de Corrida & Cardio</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('ANALYTICS') && (
-              <Card className="p-6 bg-amber-600/10 border-amber-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ANALYTICS')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-amber-600 rounded-2xl shadow-lg shadow-amber-600/40"> <BarChart3 className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Análise de Dados</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Performance & Estatísticas PBE</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-amber-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            {isFeatureVisible('ABOUT_ABFIT') && (
-              <Card className="p-6 bg-zinc-600/10 border-zinc-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl" onClick={() => setView('ABOUT_ABFIT')}>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 bg-zinc-600 rounded-2xl shadow-lg shadow-zinc-600/40"> <Info className="text-white" size={22} /> </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest leading-none">Sobre a ABFIT Elite</h3>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase mt-1.5">Metodologia PhD & Institucional</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="text-zinc-600 group-hover:translate-x-1 transition-transform" size={18} />
-                 </div>
-              </Card>
-            )}
-            <button 
-              onClick={() => { setUser(null); setView('LOGIN'); }} 
-              className="w-full mt-10 py-6 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] flex items-center justify-center gap-3 text-zinc-600 hover:text-red-600 hover:border-red-600/30 transition-all active:scale-95 shadow-xl group"
-            >
+                  </div>
+                  <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" size={18} />
+               </div>
+            </Card>
+            <button onClick={() => { setUser(null); setView('LOGIN'); }} className="w-full mt-10 py-6 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] flex items-center justify-center gap-3 text-zinc-600 hover:text-red-600 hover:border-red-600/30 transition-all active:scale-95 shadow-xl group">
               <LogOut size={18} className="group-hover:rotate-180 transition-transform duration-500" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Finalizar Sessão Elite</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Finalizar Sessão</span>
             </button>
           </div>
           <EliteFooter />
         </div>
       )}
       {view === 'FEED' && selectedStudent && <WorkoutFeed history={selectedStudent.workoutHistory || []} onBack={() => setView('DASHBOARD')} />}
-      {view === 'STUDENT_PERIODIZATION' && selectedStudent && <StudentPeriodizationView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
       {view === 'WORKOUTS' && selectedStudent && <WorkoutSessionView user={selectedStudent} onBack={() => setView('DASHBOARD')} onSave={handleSaveData} />}
-      {view === 'STUDENT_ASSESSMENT' && selectedStudent && <StudentAssessmentView student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
-      {view === 'RUNTRACK_STUDENT' && selectedStudent && <RunTrackStudentView student={selectedStudent} onBack={() => setView('DASHBOARD')} onSave={handleSaveData} />}
-      {view === 'ANALYTICS' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('DASHBOARD')} />}
-      {view === 'ABOUT_ABFIT' && <AboutView onBack={() => setView('DASHBOARD')} />}
       {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} />}
       {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} onSave={handleSaveData} />}
-      {view === 'PERIODIZATION' && selectedStudent && <PeriodizationView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onProceedToWorkout={() => { setSelectedWorkout(null); setView('WORKOUT_EDITOR'); }} />}
+      {view === 'PERIODIZATION' && selectedStudent && <PeriodizationView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onProceedToWorkout={() => setView('WORKOUT_EDITOR')} />}
       {view === 'COACH_ASSESSMENT' && selectedStudent && <CoachAssessmentView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}
       {view === 'WORKOUT_EDITOR' && selectedStudent && <WorkoutEditorView student={selectedStudent} workoutToEdit={selectedWorkout} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}
-      {view === 'RUNTRACK_ELITE' && selectedStudent && <RunTrackManager student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
     </BackgroundWrapper>
   );
 }
