@@ -5,11 +5,26 @@ import { AppNotification } from '../types';
 
 export function HeaderTitle({ text }: { text: string }) {
   const words = text.trim().split(/\s+/);
-  if (words.length <= 1) return <span className="tracking-tighter">{text}</span>;
   
+  // Regra de Branding ABFIT:
+  // Se > 1 palavra, a última palavra é vermelha.
+  // Se apenas 1 palavra, as últimas 2 ou 3 letras são vermelhas.
+  if (words.length === 1) {
+    const word = words[0];
+    if (word.length <= 2) return <span className="text-red-600 uppercase italic tracking-tighter">{word}</span>;
+    const splitIndex = word.length > 3 ? word.length - 3 : word.length - 2;
+    return (
+      <span className="tracking-tighter uppercase italic">
+        {word.substring(0, splitIndex)}
+        <span className="text-red-600">{word.substring(splitIndex)}</span>
+      </span>
+    );
+  }
+  
+  const lastWord = words.pop();
   return (
-    <span className="tracking-tighter">
-      {words[0]} <span className="text-red-600">{words.slice(1).join(' ')}</span>
+    <span className="tracking-tighter uppercase italic">
+      {words.join(' ')} <span className="text-red-600">{lastWord}</span>
     </span>
   );
 }

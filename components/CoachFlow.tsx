@@ -40,7 +40,7 @@ const DASHBOARD_FEATURES = [
 
 export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex justify-between items-center mb-10">
         <Logo size="text-4xl" />
         <div className="flex items-center gap-4">
@@ -124,8 +124,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
   const hasDrafts = student.workouts?.some(w => w.status === 'draft' || !w.status);
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
-      <header className="flex items-center justify-between mb-10">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
+      <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
           <h2 className="text-xl font-black italic uppercase tracking-tighter">
@@ -139,12 +139,12 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
             className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 rounded-full font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all"
            >
              {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} 
-             Publicar Treinos
+             Publicar
            </button>
         )}
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         <Card className="p-8 cursor-pointer border-l-4 border-l-indigo-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('PERIODIZATION')}>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -224,7 +224,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [title, setTitle] = useState(workoutToEdit?.title || '');
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
-  
   const [selectedMuscle, setSelectedMuscle] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
   const [exerciseImage, setExerciseImage] = useState<string | null>(null);
@@ -263,25 +262,13 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       id: workoutToEdit?.id || Date.now().toString(),
       title: title || 'Novo Treino',
       exercises,
-      status: 'draft' // Salva como rascunho
+      status: 'draft'
     };
-
     const currentWorkouts = student.workouts || [];
-    let updatedWorkouts;
-    if (workoutToEdit) {
-      updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
-    } else {
-      updatedWorkouts = [...currentWorkouts, newWorkout];
-    }
-
+    let updatedWorkouts = workoutToEdit ? currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w) : [...currentWorkouts, newWorkout];
     try {
       await onSave(student.id, { workouts: updatedWorkouts });
       setSaveState('saved');
-      // Permanece na tela para permitir treino B, limpando campos se for novo
-      if (!workoutToEdit) {
-        setTitle('');
-        setExercises([]);
-      }
       setTimeout(() => setSaveState('idle'), 2000);
     } catch (e) {
       setSaveState('idle');
@@ -289,11 +276,13 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">Editor PrescreveAI</h2>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter">
+            <HeaderTitle text="Editor PrescreveAI" />
+          </h2>
         </div>
         <button 
           onClick={handleSaveWorkout} 
@@ -301,11 +290,11 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           className={`px-8 py-3 rounded-full font-black text-[10px] uppercase shadow-xl transition-all flex items-center gap-2 ${saveState === 'loading' ? 'bg-orange-600 animate-pulse' : saveState === 'saved' ? 'bg-emerald-600' : 'bg-red-600'}`}
         >
           {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} 
-          {saveState === 'loading' ? 'Lendo...' : saveState === 'saved' ? 'Salvo!' : 'Salvar Treino'}
+          {saveState === 'loading' ? 'Salvando...' : saveState === 'saved' ? 'Salvo!' : 'Salvar'}
         </button>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-32">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-32 mt-6">
         <div className="space-y-6">
           <Card className="p-6 bg-zinc-900/50">
              <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO (Ex: TREINO A)" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
@@ -360,15 +349,17 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
 export function PeriodizationView({ student, onBack, onProceedToWorkout }: { student: Student, onBack: () => void, onProceedToWorkout: () => void }) {
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
-      <header className="flex items-center gap-4 mb-10">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Periodização</h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+          <HeaderTitle text="Periodização PhD" />
+        </h2>
       </header>
-      <div className="flex flex-col items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 mt-10">
         <Brain className="text-zinc-800 mb-6" size={64} />
-        <p className="text-zinc-500 font-black uppercase text-xs italic">Seção em desenvolvimento técnico.</p>
-        <button onClick={onProceedToWorkout} className="mt-10 px-8 py-4 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-[10px]">Ir para Treinos</button>
+        <p className="text-zinc-500 font-black uppercase text-xs italic text-center leading-relaxed">Configuração técnica de macrociclo<br/>em desenvolvimento biomecânico.</p>
+        <button onClick={onProceedToWorkout} className="mt-10 px-8 py-4 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg active:scale-95 transition-all">Configurar Planilhas</button>
       </div>
     </div>
   );
@@ -387,17 +378,19 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar">
-      <header className="flex items-center gap-4 mb-10">
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Nova Avaliação</h2>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+          <HeaderTitle text="Nova Avaliação" />
+        </h2>
       </header>
-      <div className="space-y-6">
+      <div className="space-y-6 mt-6">
         <Card className="p-6 bg-zinc-900 border-zinc-800 space-y-4">
           <input type="number" placeholder="PESO (KG)" value={weight} onChange={e => setWeight(e.target.value)} className="w-full bg-black p-4 rounded-xl border border-zinc-800 outline-none focus:border-red-600 font-black italic" />
           <input type="number" placeholder="ALTURA (CM)" value={height} onChange={e => setHeight(e.target.value)} className="w-full bg-black p-4 rounded-xl border border-zinc-800 outline-none focus:border-red-600 font-black italic" />
           <input type="number" placeholder="% GORDURA" value={fat} onChange={e => setFat(e.target.value)} className="w-full bg-black p-4 rounded-xl border border-zinc-800 outline-none focus:border-red-600 font-black italic" />
-          <button onClick={handleSave} className="w-full py-5 bg-emerald-600 rounded-xl font-black uppercase tracking-widest">Salvar Avaliação</button>
+          <button onClick={handleSave} className="w-full py-5 bg-emerald-600 rounded-xl font-black uppercase tracking-widest shadow-lg">Salvar Avaliação</button>
         </Card>
       </div>
     </div>
