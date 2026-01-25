@@ -1,3 +1,4 @@
+
 export interface Exercise {
   id?: string;
   name: string;
@@ -8,8 +9,9 @@ export interface Exercise {
   reps?: string;
   rest?: string;
   load?: string;
-  method?: string; // Novo campo para o método de treino
-  groupId?: string; // ID para agrupar exercícios (Bi-set, Tri-set, etc)
+  loadUnit?: 'Kg' | 'Placas';
+  method?: string; 
+  groupId?: string; 
   executionType?: 'Simples' | 'Conjugado' | 'Drop Set' | 'Pirâmide' | 'Rest-Pause' | 'SST';
 }
 
@@ -20,7 +22,8 @@ export interface Workout {
   startDate?: string;
   endDate?: string;
   frequencyWeekly?: number;
-  projectedSessions?: number; // Total de sessões previstas para o ciclo
+  projectedSessions?: number;
+  status?: 'draft' | 'published';
 }
 
 export interface RunningStats {
@@ -28,14 +31,14 @@ export interface RunningStats {
   avgPace?: string;
   avgHR?: number;
   maxHR?: number;
-  cadence?: number; // SPM
+  cadence?: number;
   vo2max?: number;
   elevation?: number;
   calories?: number;
-  strideLength?: number; // cm
-  verticalOscillation?: number; // cm
-  groundContactTime?: number; // ms
-  asymmetry?: string; // %
+  strideLength?: number;
+  verticalOscillation?: number;
+  groundContactTime?: number;
+  asymmetry?: string;
 }
 
 export interface WorkoutHistoryEntry {
@@ -130,10 +133,11 @@ export interface Student {
   analytics?: AnalyticsData;
   nutrition?: NutritionProfile;
   notifications?: AppNotification[];
-  disabledFeatures?: string[]; // IDs das funcionalidades desabilitadas para este aluno
+  disabledFeatures?: string[];
   age?: string | number;
   weight?: string | number;
   height?: string | number;
   goal?: string;
   anamneseComplete?: boolean;
+  protocolStartDate?: string; // Novo: Data em que o aluno começou o protocolo de fato
 }

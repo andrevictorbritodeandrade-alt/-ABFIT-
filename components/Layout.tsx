@@ -56,15 +56,13 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
   }, []);
 
   return (
-    <div className="fixed top-6 right-6 z-[100] animate-in fade-in slide-in-from-right-4 duration-1000">
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-500 ${isSyncing ? 'bg-orange-600/20 border-orange-600/40' : 'bg-emerald-600/20 border-emerald-600/40'}`}>
+    <div className="fixed bottom-10 right-6 z-[100] animate-in fade-in slide-in-from-right-4 duration-1000">
+      <div className={`flex items-center justify-center w-8 h-8 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-500 ${isSyncing ? 'bg-orange-600/10 border-orange-600/30' : 'bg-emerald-600/10 border-emerald-600/30'}`}>
         <div className="relative">
-          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}></div>
           {isSyncing && <div className="absolute inset-0 w-2 h-2 rounded-full bg-orange-500 animate-ping opacity-75"></div>}
+          {!online && <WifiOff size={10} className="absolute -top-3 -right-3 text-red-600" />}
         </div>
-        <span className={`text-[9px] font-black uppercase tracking-tighter ${isSyncing ? 'text-orange-500' : 'text-emerald-500'}`}>
-          {isSyncing ? 'SYNC' : 'ON'}
-        </span>
       </div>
     </div>
   );
