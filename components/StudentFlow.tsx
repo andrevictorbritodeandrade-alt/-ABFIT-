@@ -5,7 +5,7 @@ import {
   Loader2, Clock, Target, Award, ShieldCheck, Brain,
   Camera, CheckCircle2, X, Trash2, FastForward, Check,
   Trophy, AlertCircle, Info, ChevronDown, ChevronUp,
-  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw
+  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu
 } from 'lucide-react';
 import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
@@ -87,7 +87,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
   const totalReps = ex.reps || '15';
 
   return (
-    <div className={`relative bg-zinc-900/30 border ${progress.isFinished ? 'border-emerald-600/40' : 'border-white/5'} rounded-[2.5rem] overflow-hidden transition-all mb-4 p-6 shadow-2xl`}>
+    <div className={`relative bg-zinc-900/30 border ${progress.isFinished ? 'border-emerald-600/40' : 'border-white/5'} rounded-[2.5rem] overflow-hidden transition-all duration-300 ease-out mb-4 p-6 shadow-2xl hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)] hover:border-red-600/30 group/card`}>
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1 cursor-pointer group" onClick={() => onShowDetail(ex)}>
           <div className="flex items-center gap-2 mb-1">
@@ -235,13 +235,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   };
 
   const cancelSession = () => {
-    if (confirm("Deseja realmente sair? O progresso desta sessão será perdido.")) {
-      localStorage.removeItem(`workout_start_${user.id}`);
-      localStorage.removeItem(`active_workout_id_${user.id}`);
-      setSessionStartTime(null);
-      setActiveWorkout(null);
-      onBack(); 
-    }
+    onBack(); // Agora onBack abre o menu, mas você pode navegar para a Home se desejar sair.
   };
 
   const capturePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,7 +344,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
         <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors shadow-xl">
-            <ArrowLeft size={20}/>
+            <Menu size={20}/>
           </button>
           <h2 className="text-xl font-black italic uppercase tracking-tighter">
             <HeaderTitle text="Planilhas de Treino" />
@@ -379,7 +373,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-4">
            <button onClick={cancelSession} className="p-3 bg-zinc-800 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
-              <ArrowLeft size={20}/>
+              <Menu size={20}/>
            </button>
            <div className="flex flex-col">
               <span className="text-[8px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
@@ -398,31 +392,33 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       {/* DASHBOARD DE PROTOCOLO INTEGRADO - Tipografia Padronizada */}
       {workoutStats && (
         <div className="mb-8 animate-in slide-in-from-top-4 duration-700">
-           <Card className="bg-zinc-900/40 border-white/5 p-6 flex items-center justify-between backdrop-blur-xl rounded-[2.5rem] shadow-3xl">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-red-600/10 rounded-2xl flex items-center justify-center border border-red-600/20">
-                    <Calendar size={20} className="text-red-600" />
+           <Card className="bg-zinc-900/40 border-white/5 p-4 flex items-center justify-between backdrop-blur-xl rounded-[2.5rem] shadow-3xl">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-red-600/10 rounded-2xl flex items-center justify-center border border-red-600/20 shrink-0">
+                    <Calendar size={18} className="text-red-600" />
                  </div>
-                 <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
-                    <span className={`text-4xl font-black italic tracking-tighter leading-none ${!workoutStats.rawStartDate ? 'text-zinc-700' : 'text-white'}`}>
-                      {workoutStats.startDate.split('/')[0]}<span className="text-red-600 text-lg">/</span>{workoutStats.startDate.split('/')[1]}
+                 <div className="flex flex-col min-w-0">
+                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
+                    <span className={`font-black italic tracking-tighter leading-none truncate ${!workoutStats.rawStartDate ? 'text-zinc-700 text-[10px]' : 'text-white text-2xl'}`}>
+                      {!workoutStats.rawStartDate ? workoutStats.startDate : (
+                        <>{workoutStats.startDate.split('/')[0]}<span className="text-red-600 text-sm">/</span>{workoutStats.startDate.split('/')[1]}</>
+                      )}
                     </span>
                  </div>
               </div>
-              <div className="flex gap-10">
+              <div className="flex gap-4 sm:gap-8 shrink-0">
                  <div className="text-center">
-                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Execuções</span>
-                    <div className="flex items-baseline gap-1">
-                       <span className="text-4xl font-black text-white italic tracking-tighter leading-none">{workoutStats.completed}</span>
-                       <span className="text-[10px] font-black text-zinc-700 italic">/ {workoutStats.total}</span>
+                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Execuções</span>
+                    <div className="flex items-baseline gap-0.5">
+                       <span className="text-2xl font-black text-white italic tracking-tighter leading-none">{workoutStats.completed}</span>
+                       <span className="text-[8px] font-black text-zinc-700 italic">/{workoutStats.total}</span>
                     </div>
                  </div>
-                 <div className="text-right">
-                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Renovação</span>
-                    <div className="flex items-center gap-2 justify-end">
-                       <RefreshCw size={12} className={workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500 animate-spin" : "text-zinc-700"} />
-                       <span className={`text-xl font-black italic uppercase leading-none ${workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500" : "text-zinc-400"}`}>
+                 <div className="text-right hidden xs:block">
+                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Renovação</span>
+                    <div className="flex items-center gap-1 justify-end">
+                       <RefreshCw size={10} className={workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500 animate-spin" : "text-zinc-700"} />
+                       <span className={`text-xs font-black italic uppercase leading-none ${workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500" : "text-zinc-400"}`}>
                           {workoutStats.completed >= workoutStats.total ? "EXCEDIDA" : "OK"}
                        </span>
                     </div>
@@ -466,7 +462,9 @@ export function StudentAssessmentView({ student, onBack }: { student: Student, o
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl"><ArrowLeft size={20}/></button>
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+          <Menu size={20}/>
+        </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Avaliação PhD" />
         </h2>
@@ -505,7 +503,9 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl"><ArrowLeft size={20}/></button>
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+          <Menu size={20}/>
+        </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Periodização PhD" />
         </h2>
@@ -527,7 +527,9 @@ export function AboutView({ onBack }: { onBack: () => void }) {
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl"><ArrowLeft size={20}/></button>
+        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+          <Menu size={20}/>
+        </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Sobre a ABFIT" />
         </h2>

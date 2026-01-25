@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowLeft, Camera, Heart, Zap, MapPin, Share2, Activity, Clock } from 'lucide-react';
+import { ArrowLeft, Camera, Heart, Zap, MapPin, Share2, Activity, Clock, Menu } from 'lucide-react';
 import { Card, HeaderTitle, EliteFooter } from './Layout';
 import { WorkoutHistoryEntry } from '../types';
 
@@ -8,7 +9,7 @@ export function WorkoutFeed({ history, onBack }: { history: WorkoutHistoryEntry[
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors">
-          <ArrowLeft size={20}/>
+          <Menu size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter">
           <HeaderTitle text="Feed de Elite" />

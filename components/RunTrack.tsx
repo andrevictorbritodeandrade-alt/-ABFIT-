@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Activity, ChevronDown, Clock, 
@@ -5,7 +6,7 @@ import {
   ArrowLeft, Zap, BrainCircuit, 
   Lock, RefreshCw, Sparkles, Repeat, AlertCircle, User,
   Camera, CheckCircle2, X, Heart, Play, Brain, Footprints,
-  ClipboardList, Beaker, TrendingUp
+  ClipboardList, Beaker, TrendingUp, Menu
 } from 'lucide-react';
 import { 
   collection, doc, setDoc, 
@@ -175,7 +176,9 @@ export function RunTrackStudentView({ student, onBack, onSave }: { student: Stud
   return (
     <div className="p-6 space-y-8 animate-in fade-in duration-500 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
       <div className="flex items-center gap-4 mb-4">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
+            <Menu size={20}/>
+          </button>
           <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
             <HeaderTitle text="RunTrack Elite" />
           </h2>

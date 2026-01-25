@@ -1,5 +1,6 @@
+
 import React, { useMemo } from 'react';
-import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar } from 'lucide-react';
+import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu } from 'lucide-react';
 import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts';
@@ -61,7 +62,7 @@ export function AnalyticsDashboard({ student, onBack }: AnalyticsProps) {
           onClick={onBack} 
           className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"
         >
-          <ArrowLeft size={20}/>
+          <Menu size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Performance Analytics" />

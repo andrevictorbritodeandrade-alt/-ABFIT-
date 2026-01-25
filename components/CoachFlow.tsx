@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -38,11 +38,16 @@ const DASHBOARD_FEATURES = [
   { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT Elite', icon: Info },
 ];
 
-export function ProfessorDashboard({ students, onLogout, onSelect }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void }) {
+export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void, onToggleMenu: () => void }) {
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex justify-between items-center mb-10">
-        <Logo size="text-4xl" />
+        <div className="flex items-center gap-4">
+          <button onClick={onToggleMenu} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
+            <Menu size={20} />
+          </button>
+          <Logo size="text-4xl" />
+        </div>
         <div className="flex items-center gap-4">
           <WeatherWidget />
           <button onClick={onLogout} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
@@ -365,7 +370,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout }: { stu
   );
 }
 
-export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (sid: string, data: any) => void }) {
+export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState(student.height?.toString() || '');
   const [fat, setFat] = useState('');
