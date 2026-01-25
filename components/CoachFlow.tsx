@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -38,66 +38,86 @@ const DASHBOARD_FEATURES = [
   { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT Elite', icon: Info },
 ];
 
-export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu }: { students: Student[], onLogout: () => void, onSelect: (s: Student) => void, onToggleMenu: () => void }) {
+export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
+  students: Student[], 
+  onLogout: () => void, 
+  onSelect: (s: Student) => void, 
+  onToggleMenu: () => void,
+  onNavigate: (view: string) => void
+}) {
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex justify-between items-center mb-10">
-        <div className="flex items-center gap-4">
-          <button onClick={onToggleMenu} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
-            <Menu size={20} />
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left flex flex-col items-center">
+      <header className="w-full flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onToggleMenu} className="p-3 bg-zinc-900 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+            <Menu size={20}/>
           </button>
-          <Logo size="text-4xl" />
-        </div>
-        <div className="flex items-center gap-4">
           <WeatherWidget />
-          <button onClick={onLogout} className="p-3 bg-zinc-900 border border-white/5 rounded-full text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
-            <LogOut size={20} />
-          </button>
         </div>
+        <button onClick={onLogout} className="p-3 bg-zinc-900 rounded-full text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
+          <LogOut size={20} />
+        </button>
       </header>
       
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-6">
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-600 rounded-xl shadow-lg shadow-red-600/20">
-                 <Users className="text-white" size={24} />
-              </div>
-              <h2 className="text-xl font-black italic uppercase tracking-tighter">
-                <HeaderTitle text="Gestão de Atletas" />
-              </h2>
-           </div>
+      <Logo size="text-5xl" subSize="text-[8px]" />
+
+      <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
+        {/* Ferramentas de Gestão PhD */}
+        <div className="grid grid-cols-2 gap-3 mb-2">
+          <Card className="p-4 bg-red-600/10 border-red-600/20 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('COACH_AI')}>
+            <div className="p-2 bg-red-600 w-fit rounded-xl mb-3 shadow-lg shadow-red-600/20">
+              <Sparkles className="text-white" size={18} />
+            </div>
+            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Elite Coach AI</h3>
+            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Prescrição Inteligente</p>
+          </Card>
+          <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
+            <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
+              <Layout className="text-zinc-400" size={18} />
+            </div>
+            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Feed Global</h3>
+            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Timeline de Atletas</p>
+          </Card>
         </div>
-        
-        <div className="grid grid-cols-1 gap-4">
-          {students.map(s => {
-            const totalSessions = s.workoutHistory?.length || 0;
-            return (
-              <button 
-                key={s.id} 
-                onClick={() => onSelect(s)} 
-                className={`w-full bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-800 hover:border-red-600/50 transition-all text-left shadow-xl flex items-center justify-between group`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5">
-                    {s.photoUrl ? (
-                      <img src={s.photoUrl} className="w-full h-full object-cover" alt={s.nome} />
-                    ) : (
-                      <Activity className="text-zinc-600" size={24} />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-black uppercase italic text-lg text-white leading-none tracking-tight">{s.nome}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                       <p className="text-[10px] text-zinc-500 uppercase font-bold opacity-60">{s.email}</p>
-                       <div className="h-1 w-1 bg-zinc-700 rounded-full"></div>
-                       <p className="text-[10px] text-red-600 font-black uppercase italic">{totalSessions} Sessões</p>
+
+        {/* Lista de Atletas */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 px-2 mb-2">
+            <Users className="text-red-600" size={14} />
+            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gestão de Atletas ({students.length})</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-2.5">
+            {students.map(s => {
+              const totalSessions = s.workoutHistory?.length || 0;
+              return (
+                <button 
+                  key={s.id} 
+                  onClick={() => onSelect(s)} 
+                  className="w-full bg-zinc-900/50 p-4 rounded-[1.8rem] border border-white/5 hover:border-red-600/40 transition-all text-left shadow-lg flex items-center justify-between group active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5 shadow-inner">
+                      {s.photoUrl ? (
+                        <img src={s.photoUrl} className="w-full h-full object-cover" alt={s.nome} />
+                      ) : (
+                        <Activity className="text-zinc-700" size={18} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-black uppercase italic text-sm text-white leading-none tracking-tight">{s.nome}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                         <p className="text-[8px] text-zinc-500 uppercase font-bold truncate max-w-[120px]">{s.email}</p>
+                         <div className="h-0.5 w-0.5 bg-zinc-700 rounded-full"></div>
+                         <p className="text-[8px] text-red-600 font-black uppercase italic">{totalSessions} Sessões</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <ChevronRight className="transition-all text-zinc-700 group-hover:text-red-600 group-hover:translate-x-1" />
-              </button>
-            );
-          })}
+                  <ChevronRight className="transition-all text-zinc-700 group-hover:text-red-600 group-hover:translate-x-1" size={16} />
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
       <EliteFooter />

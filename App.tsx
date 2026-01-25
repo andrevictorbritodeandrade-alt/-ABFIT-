@@ -16,7 +16,7 @@ import AICoach from './components/AICoach';
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
-import { Student, Workout, AppNotification } from './types';
+import { Student, Workout, AppNotification, WorkoutHistoryEntry } from './types';
 
 function SettingsView({ onBack }: { onBack: () => void }) {
   return (
@@ -132,7 +132,7 @@ export default function App() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isProfessor = view.includes('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR';
+  const isProfessor = view.includes('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || (view === 'COACH_AI' && !selectedStudent);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
@@ -238,6 +238,21 @@ export default function App() {
     if (isProfessor) return selectedStudent;
     return { ...selectedStudent, workouts: (selectedStudent.workouts || []).filter(w => w.status === 'published') };
   }, [selectedStudent, view, isProfessor]);
+
+  // Feed de Performance Global para o Professor
+  const globalFeedHistory = useMemo(() => {
+    if (!isProfessor) return studentForView?.workoutHistory || [];
+    
+    // Mescla todos os históricos de todos os alunos e injeta o nome do atleta
+    const allHistory: WorkoutHistoryEntry[] = students.flatMap(s => 
+      (s.workoutHistory || []).map(h => ({
+        ...h,
+        athleteName: s.nome // Injeta o nome do aluno para o professor saber quem treinou
+      }))
+    );
+    
+    return allHistory.sort((a, b) => b.timestamp - a.timestamp);
+  }, [isProfessor, students, studentForView]);
 
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
@@ -365,7 +380,7 @@ export default function App() {
             <EliteFooter />
           </div>
         )}
-        {view === 'FEED' && studentForView && <WorkoutFeed history={studentForView.workoutHistory || []} onBack={toggleSidebar} />}
+        {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={toggleSidebar} isProfessor={isProfessor} />}
         {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={toggleSidebar} onSave={handleSaveData} />}
         {view === 'COACH_AI' && <AICoach />}
         {view === 'SETTINGS' && <SettingsView onBack={isProfessor ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
@@ -374,7 +389,7 @@ export default function App() {
         {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={toggleSidebar} onSave={handleSaveData} />}
         {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={toggleSidebar} />}
         {view === 'ABOUT_ABFIT' && <AboutView onBack={toggleSidebar} />}
-        {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} />}
+        {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} onNavigate={setView} />}
         {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} onSave={handleSaveData} />}
         {view === 'WORKOUT_EDITOR' && selectedStudent && <WorkoutEditorView student={selectedStudent} workoutToEdit={selectedWorkout} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}
         {view === 'COACH_ASSESSMENT' && selectedStudent && <CoachAssessmentView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}

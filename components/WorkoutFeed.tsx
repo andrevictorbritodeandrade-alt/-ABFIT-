@@ -4,7 +4,7 @@ import { ArrowLeft, Camera, Heart, Zap, MapPin, Share2, Activity, Clock, Menu } 
 import { Card, HeaderTitle, EliteFooter } from './Layout';
 import { WorkoutHistoryEntry } from '../types';
 
-export function WorkoutFeed({ history, onBack }: { history: WorkoutHistoryEntry[], onBack: () => void }) {
+export function WorkoutFeed({ history, onBack, isProfessor = false }: { history: WorkoutHistoryEntry[], onBack: () => void, isProfessor?: boolean }) {
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
@@ -12,7 +12,7 @@ export function WorkoutFeed({ history, onBack }: { history: WorkoutHistoryEntry[
           <Menu size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter">
-          <HeaderTitle text="Feed de Elite" />
+          <HeaderTitle text={isProfessor ? "Feed Global Elite" : "Meu Feed de Elite"} />
         </h2>
       </header>
 
@@ -26,11 +26,18 @@ export function WorkoutFeed({ history, onBack }: { history: WorkoutHistoryEntry[
           history.map((post) => (
             <div key={post.id} className="animate-in slide-in-from-bottom-10">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-black italic text-xs border border-white/10 shadow-lg">
-                  {post.name.substring(0, 1)}
+                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-black italic text-xs border border-white/10 shadow-lg shrink-0">
+                  {(post.athleteName || post.name).substring(0, 1)}
                 </div>
-                <div>
-                  <h4 className="text-[11px] font-black uppercase italic text-white tracking-tight">{post.name}</h4>
+                <div className="min-w-0">
+                  {isProfessor && post.athleteName ? (
+                    <>
+                      <h4 className="text-[12px] font-black uppercase italic text-red-600 tracking-tight leading-none mb-1">{post.athleteName}</h4>
+                      <p className="text-[9px] text-white font-black uppercase italic truncate">{post.name}</p>
+                    </>
+                  ) : (
+                    <h4 className="text-[11px] font-black uppercase italic text-white tracking-tight">{post.name}</h4>
+                  )}
                   <p className="text-[8px] text-zinc-500 font-bold uppercase">{post.date} • {post.type === 'RUNNING' ? 'CORRIDA' : 'FORÇA'}</p>
                 </div>
               </div>

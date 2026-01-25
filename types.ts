@@ -45,6 +45,7 @@ export interface WorkoutHistoryEntry {
   id: string;
   workoutId?: string;
   name: string;
+  athleteName?: string; // Novo: Identifica o atleta no Feed Global
   duration: string;
   date: string;
   timestamp: number;
@@ -139,5 +140,5 @@ export interface Student {
   height?: string | number;
   goal?: string;
   anamneseComplete?: boolean;
-  protocolStartDate?: string; // Novo: Data em que o aluno começou o protocolo de fato
+  protocolStartDate?: string; 
 }
