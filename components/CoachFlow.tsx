@@ -7,20 +7,50 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
-import { analyzeExerciseAndGenerateImage } from '../services/gemini';
+import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage } from '../services/gemini';
 import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
+
+// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
+const GIF_DATABASE: Record<string, string> = {
+  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", // Exemplo genérico
+  "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
+  "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif", // Reuso para exemplo
+  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif", // Exemplo genérico
+  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+  "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
+};
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
   students: Student[], 
   onLogout: () => void, 
   onSelect: (s: Student) => void, 
-  onToggleMenu: () => void,
+  onToggleMenu: () => void, 
   onNavigate: (view: string) => void
 }) {
   return (
@@ -40,14 +70,8 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       <Logo size="text-5xl" subSize="text-[8px]" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
-        <div className="grid grid-cols-2 gap-3 mb-2">
-          <Card className="p-4 bg-red-600/10 border-red-600/20 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('COACH_AI')}>
-            <div className="p-2 bg-red-600 w-fit rounded-xl mb-3 shadow-lg shadow-red-600/20">
-              <Sparkles className="text-white" size={18} />
-            </div>
-            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Elite Coach AI</h3>
-            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Prescrição Inteligente</p>
-          </Card>
+        {/* Card PrescreveAI REMOVIDO daqui. Acesso agora é dentro do editor de treino. */}
+        <div className="grid grid-cols-1 mb-2">
           <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
             <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
               <Layout className="text-zinc-400" size={18} />
@@ -150,7 +174,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         )}
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      {/* Card PrescreveAI Elite removido daqui. Acesso via "Novo Treino" */}
+      <div className="mt-6">
         <Card className="p-8 cursor-pointer border-l-4 border-l-indigo-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('PERIODIZATION')}>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -158,16 +183,6 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Macro & Microciclos PBE</p>
             </div>
             <Brain className="text-indigo-600 group-hover:scale-110 transition-transform" size={32} />
-          </div>
-        </Card>
-
-        <Card className="p-8 cursor-pointer border-l-4 border-l-red-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('COACH_AI')}>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-red-600 transition-colors">PrescreveAI Elite</h4>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">IA & Biomecânica PhD</p>
-            </div>
-            <Video className="text-red-600 group-hover:scale-110 transition-transform" size={32} />
           </div>
         </Card>
       </div>
@@ -220,8 +235,17 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               </div>
             ))}
             {(!student.workouts || student.workouts.length === 0) && (
-              <p className="text-zinc-700 text-[10px] font-black uppercase text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem]">Nenhuma planilha ativa</p>
+              <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] space-y-3">
+                 <p className="text-zinc-700 text-[10px] font-black uppercase">Nenhuma planilha ativa</p>
+                 <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="px-6 py-2 bg-red-600 rounded-full text-[10px] font-black uppercase text-white shadow-lg">Criar Novo Treino</button>
+              </div>
             )}
+            
+            {/* Botão de Criação Rápida */}
+            <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
+              <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
+              <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
+            </button>
          </div>
       </div>
       <EliteFooter />
@@ -234,6 +258,9 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [projectedSessions, setProjectedSessions] = useState(workoutToEdit?.projectedSessions || 12);
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleSaveWorkout = async () => {
     setSaveState('loading');
@@ -252,6 +279,42 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       setTimeout(() => setSaveState('idle'), 2000);
     } catch (e) {
       setSaveState('idle');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsAnalyzing(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        try {
+          const extractedExercises = await extractWorkoutFromImage(base64);
+          
+          // Mapeia os exercícios extraídos com as imagens do banco usando o GIF_DATABASE
+          const enrichedExercises = extractedExercises.map(ex => {
+            // Busca simples por substring no banco de dados de GIFs (case insensitive)
+            const matchKey = Object.keys(GIF_DATABASE).find(key => 
+              ex.name.toLowerCase().includes(key.toLowerCase())
+            );
+            
+            return {
+              ...ex,
+              id: Date.now().toString() + Math.random(),
+              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined
+            };
+          });
+
+          setExercises(prev => [...prev, ...enrichedExercises]);
+        } catch (error) {
+          console.error(error);
+          alert("Erro ao analisar imagem. Tente novamente.");
+        } finally {
+          setIsAnalyzing(false);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -294,16 +357,47 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         </Card>
 
         <div className="space-y-4">
-           <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest pl-2">Exercícios do Treino ({exercises.length})</h3>
+           {/* Cabeçalho da Lista + Botão Discreto de Importação */}
+           <div className="flex items-center justify-between pl-2">
+              <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
+              
+              {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
+              <div 
+                 onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+                 className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
+              >
+                  {isAnalyzing ? (
+                     <div className="flex items-center gap-1">
+                        <Loader2 size={12} className="text-orange-500 animate-spin" />
+                        <span className="text-[8px] font-black uppercase text-orange-500">Lendo PrescreveAI...</span>
+                     </div>
+                  ) : (
+                     <>
+                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
+                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
+                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
+                        </div>
+                     </>
+                  )}
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </div>
+           </div>
+
            {exercises.map((ex, i) => (
-             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5">
+             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0">
-                     {ex.thumb && <img src={ex.thumb} className="w-full h-full object-cover" />}
+                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
+                     {ex.thumb ? (
+                       <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                     ) : (
+                       <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                         <Dumbbell size={16} className="text-zinc-600"/>
+                       </div>
+                     )}
                   </div>
                   <div className="flex-1">
                      <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
-                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method}</p>
+                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method || 'Série Estável'}</p>
                   </div>
                   <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
                 </div>
@@ -314,7 +408,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              </div>
            ))}
            <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] text-zinc-700 text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
-             Use o PrescreveAI Elite para adicionar exercícios
+             Voltar
            </button>
         </div>
       </div>

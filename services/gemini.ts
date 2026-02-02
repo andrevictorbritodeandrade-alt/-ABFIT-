@@ -106,3 +106,50 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
     return JSON.parse(res.text || "{}");
   } catch (e) { return null; }
 }
+
+export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // Limpa o header do base64 se existir, para enviar apenas os dados
+  const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+
+  const prompt = `
+    Analise esta imagem de uma ficha de treino (provavelmente do app PrescreveAI ou similar).
+    Extraia TODOS os exercícios listados.
+    
+    Retorne APENAS um JSON no seguinte formato Array:
+    [
+      {
+        "name": "Nome do Exercício (padronize para nomes comuns de musculação em Português)",
+        "sets": "Número de séries (ex: 3, 4)",
+        "reps": "Número de repetições (ex: 10, 12-15, Falha)",
+        "rest": "Tempo de descanso em segundos (apenas o número, ex: 60)",
+        "method": "Método se houver (ex: Bi-set, Drop-set, ou 'SÉRIE ESTÁVEL' se não especificado)"
+      }
+    ]
+    
+    Se não conseguir ler algum campo específico, infira um valor padrão seguro para hipertrofia (3 sets, 12 reps, 60s descanso).
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_TEXT,
+      contents: {
+        parts: [
+          { inlineData: { mimeType: 'image/png', data: base64Data } },
+          { text: prompt }
+        ]
+      },
+      config: { responseMimeType: "application/json" }
+    });
+
+    const text = response.text;
+    if (!text) return [];
+    
+    const json = JSON.parse(text);
+    return Array.isArray(json) ? json : [];
+  } catch (e) {
+    console.error("Erro ao extrair treino da imagem:", e);
+    return [];
+  }
+}

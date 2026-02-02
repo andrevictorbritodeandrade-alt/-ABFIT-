@@ -11,11 +11,26 @@ import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
 
 /**
+ * Estilos de Animação para o "Loop" da Figura
+ */
+const animationStyles = `
+  @keyframes biomechanicalVideo {
+    0% { transform: scale(1); filter: brightness(1) contrast(1); }
+    50% { transform: scale(1.02); filter: brightness(1.1) contrast(1.1); }
+    100% { transform: scale(1); filter: brightness(1) contrast(1); }
+  }
+  .video-motion-engine { 
+    animation: biomechanicalVideo 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+  }
+`;
+
+/**
  * Modal Cinematográfico PrescreveAI
  */
 function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar text-left">
+      <style>{animationStyles}</style>
       <header className="flex justify-between items-center mb-8 sticky top-0 z-50 py-2">
         <div className="flex flex-col">
           <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.4em] italic leading-none mb-2">PrescreveAI Elite</p>
@@ -29,10 +44,16 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
       <div className="max-w-2xl mx-auto w-full space-y-8 pb-20">
         <div className="relative aspect-video w-full bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-3xl group">
           {ex.thumb ? (
-            <img src={ex.thumb} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[10s] ease-linear" alt={ex.name} />
+            <img 
+              src={ex.thumb} 
+              className="w-full h-full object-cover video-motion-engine" 
+              alt={ex.name} 
+              referrerPolicy="no-referrer"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-zinc-800">
                <Brain size={48} className="text-zinc-600 animate-pulse" />
+               <p className="absolute mt-16 text-[10px] uppercase tracking-widest text-zinc-600">Visualizando Biomecânica</p>
             </div>
           )}
           <div className="absolute inset-0 pointer-events-none">
@@ -52,7 +73,7 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
                 <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest italic">Execução Técnica</h4>
              </div>
              <p className="text-xs text-zinc-300 font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
-               {ex.description || "Foco no controle da fase excêntrica e estabilidade escapular conforme protocolo PhD."}
+               {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua."}
              </p>
           </Card>
           <Card className="p-6 bg-zinc-900/50 border-white/5 space-y-4">
@@ -85,50 +106,65 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
 }) {
   const totalSets = parseInt(ex.sets || '3') || 3;
   const totalReps = ex.reps || '15';
+  
+  // Verifica se todas as séries foram completadas
+  const allSetsCompleted = progress.completedSets.length >= totalSets;
 
   return (
-    <div className={`relative bg-zinc-900/30 border ${progress.isFinished ? 'border-emerald-600/40' : 'border-white/5'} rounded-[2.5rem] overflow-hidden transition-all duration-300 ease-out mb-4 p-6 shadow-2xl hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)] hover:border-red-600/30 group/card`}>
+    <div className={`relative bg-zinc-900/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
+      ${allSetsCompleted 
+        ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)] bg-emerald-950/10' 
+        : 'border-white/5 hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
+      }`}
+    >
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1 cursor-pointer group" onClick={() => onShowDetail(ex)}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-black text-red-600 italic uppercase tracking-widest leading-none">{idx + 1}º Exercício</span>
+            <span className={`text-[10px] font-black italic uppercase tracking-widest leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>{idx + 1}º Exercício</span>
             <Maximize2 size={10} className="text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-          <h4 className="text-4xl font-black italic uppercase text-white tracking-tighter leading-none group-hover:text-red-600 transition-colors">
+          <h4 className={`text-4xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-white group-hover:text-red-600'}`}>
             {ex.name}
           </h4>
           <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
         </div>
-        <button 
-          onClick={() => onToggleFinish(ex.id || '')}
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shrink-0 ${progress.isFinished ? 'bg-emerald-600 text-white shadow-lg' : 'bg-zinc-800 text-zinc-600 hover:text-white border border-white/5'}`}
-        >
-          <Check size={28} />
-        </button>
+        
+        {/* Checkmark Button */}
+        {allSetsCompleted && (
+           <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300">
+             <Check size={28} />
+           </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center">
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
             {Array.from({ length: totalSets }).map((_, sIdx) => (
               <button 
                 key={sIdx}
                 onClick={() => onMarkSet(ex.id || '', sIdx, ex.rest || '60')}
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-black italic text-xs transition-all border ${progress.completedSets.includes(sIdx) ? 'bg-red-600 border-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]' : 'bg-zinc-900 border-white/10 text-zinc-600'}`}
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-black italic text-sm transition-all border-2 
+                  ${progress.completedSets.includes(sIdx) 
+                    ? 'bg-red-600 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] scale-110' 
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-red-600/50 hover:text-white'
+                  }`}
               >
                 {sIdx + 1}
               </button>
             ))}
           </div>
-          <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-3 italic">Registro de Séries</p>
+          <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-3 italic">
+            {allSetsCompleted ? <span className="text-emerald-500">SÉRIE CONCLUÍDA</span> : "Registro de Séries"}
+          </p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center">
+        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center">
           <span className="text-5xl font-black text-white italic leading-none tracking-tighter">{totalReps}</span>
           <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center">
+        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center">
           <div className="flex items-baseline gap-1">
             <input 
               type="number" 
@@ -137,14 +173,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
               onBlur={(e) => onUpdateLoad(ex.id!, e.target.value)}
               className="bg-transparent border-none p-0 text-5xl font-black text-center text-white outline-none focus:ring-0 w-20 italic tracking-tighter"
             />
-            <select 
-              defaultValue={ex.loadUnit || 'Kg'}
-              onChange={(e) => onUpdateUnit(ex.id!, e.target.value as 'Kg' | 'Placas')}
-              className="bg-transparent border-none text-[10px] font-black text-red-600 outline-none appearance-none uppercase italic"
-            >
-              <option value="Kg">Kg</option>
-              <option value="Placas">Plcs</option>
-            </select>
+            <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
           </div>
           <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Carga Atual</p>
         </div>
@@ -235,7 +264,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   };
 
   const cancelSession = () => {
-    onBack(); // Agora onBack abre o menu, mas você pode navegar para a Home se desejar sair.
+    // Retorna para a lista de treinos, saindo da tela do treino ativo
+    setActiveWorkout(null);
   };
 
   const capturePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -343,6 +373,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     return (
       <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
         <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
+          {/* Menu icon no topo da lista para abrir a sidebar */}
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors shadow-xl">
             <Menu size={20}/>
           </button>
@@ -371,9 +402,14 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
       {/* COCKPIT HEADER - Limpo e com fonte de impacto */}
       <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-white/5">
-        <div className="flex items-center gap-4">
-           <button onClick={cancelSession} className="p-3 bg-zinc-800 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+        <div className="flex items-center gap-3">
+           {/* Botão Menu (abre sidebar) */}
+           <button onClick={onBack} className="p-3 bg-zinc-900 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
               <Menu size={20}/>
+           </button>
+           {/* Botão Voltar (volta para a lista de treinos) */}
+           <button onClick={cancelSession} className="p-3 bg-zinc-800 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+              <ArrowLeft size={20}/>
            </button>
            <div className="flex flex-col">
               <span className="text-[8px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
@@ -440,7 +476,13 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               progress={progress} 
               onToggleFinish={(id) => setExerciseProgress(p => ({ ...p, [id]: { ...p[id], isFinished: !p[id].isFinished } }))}
               onMarkSet={(id, sIdx, rest) => {
-                 setExerciseProgress(p => ({ ...p, [id]: { ...p[id], completedSets: [...p[id].completedSets, sIdx] } }));
+                 setExerciseProgress(p => {
+                   const prev = p[id] || { completedSets: [], isFinished: false };
+                   const newSets = prev.completedSets.includes(sIdx) 
+                     ? prev.completedSets.filter(s => s !== sIdx) // Toggle OFF logic if needed, but standard is append
+                     : [...prev.completedSets, sIdx];
+                   return { ...p, [id]: { ...prev, completedSets: newSets } };
+                 });
                  setRestCountdown(parseInt(rest) || 60);
                  setIsResting(true);
               }}
@@ -463,7 +505,7 @@ export function StudentAssessmentView({ student, onBack }: { student: Student, o
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-          <Menu size={20}/>
+          <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Avaliação PhD" />
@@ -507,7 +549,7 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
       <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
         <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-            <Menu size={20}/>
+            <ArrowLeft size={20}/>
           </button>
           <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
             <HeaderTitle text="Periodização PhD" />
@@ -525,7 +567,7 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-8 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-          <Menu size={20}/>
+          <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Relatório Científico" />
@@ -597,7 +639,7 @@ export function AboutView({ onBack }: { onBack: () => void }) {
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-          <Menu size={20}/>
+          <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Sobre a ABFIT" />

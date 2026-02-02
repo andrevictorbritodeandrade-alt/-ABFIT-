@@ -124,6 +124,7 @@ export default function App() {
   const [view, setView] = useState('LOGIN');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isCoach, setIsCoach] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
@@ -133,8 +134,6 @@ export default function App() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const isProfessor = view.includes('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || (view === 'COACH_AI' && !selectedStudent);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
@@ -162,7 +161,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     let unsub: () => void;
-    if (view !== 'LOGIN' && isProfessor) {
+    if (view !== 'LOGIN' && isCoach) {
       const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
       unsub = onSnapshot(q, (snapshot) => {
         setIsSyncing(snapshot.metadata.hasPendingWrites);
@@ -181,7 +180,7 @@ export default function App() {
       });
     }
     return () => { if (unsub) unsub(); };
-  }, [user, view, selectedStudent?.id]);
+  }, [user, view, selectedStudent?.id, isCoach]);
 
   const allStudentsForCoach = useMemo(() => {
     const defaultStudents: Student[] = [
@@ -222,13 +221,13 @@ export default function App() {
               status: 'published',
               projectedSessions: 12,
               exercises: [
-                { id: '1', name: 'Leg press horizontal', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '2', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '3', name: 'Agachamento livre', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '4', name: 'Abdominal supra no solo', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '5', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '6', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
-                { id: '7', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '1', name: 'Leg press horizontal', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                { id: '2', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif' },
+                { id: '3', name: 'Agachamento livre', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                { id: '4', name: 'Abdominal supra no solo', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' },
+                { id: '5', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif' },
+                { id: '6', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                { id: '7', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
               ]
             },
             {
@@ -274,13 +273,13 @@ export default function App() {
 
   const studentForView = useMemo(() => {
     if (!selectedStudent) return null;
-    if (isProfessor) return selectedStudent;
+    if (isCoach) return selectedStudent;
     return { ...selectedStudent, workouts: (selectedStudent.workouts || []).filter(w => w.status === 'published') };
-  }, [selectedStudent, view, isProfessor]);
+  }, [selectedStudent, view, isCoach]);
 
   // Feed de Performance Global para o Professor
   const globalFeedHistory = useMemo(() => {
-    if (!isProfessor) return studentForView?.workoutHistory || [];
+    if (!isCoach) return studentForView?.workoutHistory || [];
     
     // Mescla todos os históricos de todos os alunos e injeta o nome do atleta
     const allHistory: WorkoutHistoryEntry[] = students.flatMap(s => 
@@ -291,7 +290,7 @@ export default function App() {
     );
     
     return allHistory.sort((a, b) => b.timestamp - a.timestamp);
-  }, [isProfessor, students, studentForView]);
+  }, [isCoach, students, studentForView]);
 
   const studentNotifications = useMemo(() => {
     if (!selectedStudent) return [];
@@ -319,10 +318,21 @@ export default function App() {
     setLoginError('');
     if (!val) return;
     const cleanVal = val.trim().toLowerCase();
-    if (cleanVal === "professor") { setView('PROFESSOR_DASH'); return; }
+    
+    if (cleanVal === "professor") { 
+        setIsCoach(true);
+        setView('PROFESSOR_DASH'); 
+        return; 
+    }
+    
     const student = allStudentsForCoach.find(s => (s.email || "").trim().toLowerCase() === cleanVal);
-    if (student) { setSelectedStudent(student); setView('DASHBOARD'); } 
-    else { setLoginError('ATLETA NÃO ENCONTRADO NO BANCO'); }
+    if (student) { 
+        setIsCoach(false);
+        setSelectedStudent(student); 
+        setView('DASHBOARD'); 
+    } else { 
+        setLoginError('ATLETA NÃO ENCONTRADO NO BANCO'); 
+    }
   };
 
   const handleSaveData = async (sid: string, data: any) => {
@@ -360,6 +370,22 @@ export default function App() {
   if (loading) return <div className="h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin text-red-600" /></div>;
 
   const showSidebar = view !== 'LOGIN';
+  
+  // Lógica centralizada para o botão de voltar, dependendo se é professor ou aluno
+  const handleBackNavigation = () => {
+      if (isCoach) {
+          // Se for coach e estiver dentro de uma sub-view do aluno, volta para STUDENT_MGMT
+          // Se estiver na raiz do coach (PROFESSOR_DASH), o botão nem deveria aparecer ou faz logout
+          if (selectedStudent) {
+            setView('STUDENT_MGMT');
+          } else {
+            setView('PROFESSOR_DASH');
+          }
+      } else {
+          // Se for aluno, abre o menu lateral
+          toggleSidebar();
+      }
+  };
 
   return (
     <BackgroundWrapper>
@@ -373,7 +399,7 @@ export default function App() {
           onClose={() => setIsSidebarOpen(false)} 
           activeView={view} 
           onNavigate={setView}
-          isProfessor={isProfessor}
+          isProfessor={isCoach}
         />
       )}
 
@@ -429,15 +455,16 @@ export default function App() {
             <EliteFooter />
           </div>
         )}
-        {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={toggleSidebar} isProfessor={isProfessor} />}
-        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={toggleSidebar} onSave={handleSaveData} />}
-        {view === 'COACH_AI' && <AICoach />}
-        {view === 'SETTINGS' && <SettingsView onBack={isProfessor ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
-        {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={toggleSidebar} />}
-        {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={toggleSidebar} />}
-        {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={toggleSidebar} onSave={handleSaveData} />}
-        {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={toggleSidebar} />}
-        {view === 'ABOUT_ABFIT' && <AboutView onBack={toggleSidebar} />}
+        {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={handleBackNavigation} isProfessor={isCoach} />}
+        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} />}
+        {view === 'COACH_AI' && <AICoach onBack={isCoach ? handleBackNavigation : undefined} />}
+        {view === 'SETTINGS' && <SettingsView onBack={isCoach ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
+        {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={handleBackNavigation} />}
+        {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={handleBackNavigation} />}
+        {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} />}
+        {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={handleBackNavigation} />}
+        {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
+        
         {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} onNavigate={setView} />}
         {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} onSave={handleSaveData} />}
         {view === 'WORKOUT_EDITOR' && selectedStudent && <WorkoutEditorView student={selectedStudent} workoutToEdit={selectedWorkout} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}

@@ -80,7 +80,7 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   ]
 };
 
-const AICoach: React.FC = () => {
+const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -124,6 +124,11 @@ const AICoach: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-black text-white p-6 pb-32">
       <header className="flex items-center gap-4 mb-6">
+        {onBack && (
+          <button onClick={onBack} className="p-3 bg-zinc-900 rounded-2xl text-white hover:bg-red-600 transition-colors shadow-lg">
+            <ArrowLeft size={20}/>
+          </button>
+        )}
         <div className="p-3 bg-red-600 rounded-2xl shadow-lg">
           <BrainCircuit className="text-white" size={24} />
         </div>
