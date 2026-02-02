@@ -106,8 +106,6 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
 }) {
   const totalSets = parseInt(ex.sets || '3') || 3;
   const totalReps = ex.reps || '15';
-  
-  // Verifica se todas as séries foram completadas
   const allSetsCompleted = progress.completedSets.length >= totalSets;
 
   return (
@@ -128,8 +126,6 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
           </h4>
           <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
         </div>
-        
-        {/* Checkmark Button */}
         {allSetsCompleted && (
            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300">
              <Check size={28} />
@@ -264,7 +260,6 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   };
 
   const cancelSession = () => {
-    // Retorna para a lista de treinos, saindo da tela do treino ativo
     setActiveWorkout(null);
   };
 
@@ -373,7 +368,6 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     return (
       <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
         <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
-          {/* Menu icon no topo da lista para abrir a sidebar */}
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors shadow-xl">
             <Menu size={20}/>
           </button>
@@ -382,17 +376,24 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
           </h2>
         </header>
         <div className="space-y-4">
-          {user.workouts?.map(w => (
-            <Card key={w.id} className="p-8 bg-zinc-900/50 border-white/5 flex justify-between items-center group cursor-pointer hover:border-red-600/20 shadow-2xl rounded-[3rem]" onClick={() => startSession(w)}>
-              <div>
-                <h4 className="text-3xl font-black italic uppercase text-white tracking-tighter group-hover:text-red-600 transition-colors">{w.title}</h4>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{w.exercises.length} Exercícios Prescritos</p>
-              </div>
-              <div className="p-4 bg-zinc-800 rounded-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">
-                <Play size={24} fill="currentColor" />
-              </div>
-            </Card>
-          ))}
+          {(user.workouts || []).length > 0 ? (
+            user.workouts!.map(w => (
+              <Card key={w.id} className="p-8 bg-zinc-900/50 border-white/5 flex justify-between items-center group cursor-pointer hover:border-red-600/20 shadow-2xl rounded-[3rem]" onClick={() => startSession(w)}>
+                <div>
+                  <h4 className="text-3xl font-black italic uppercase text-white tracking-tighter group-hover:text-red-600 transition-colors">{w.title}</h4>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{w.exercises.length} Exercícios Prescritos</p>
+                </div>
+                <div className="p-4 bg-zinc-800 rounded-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">
+                  <Play size={24} fill="currentColor" />
+                </div>
+              </Card>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-zinc-900 rounded-[3rem]">
+               <Dumbbell size={48} className="text-zinc-800 mb-6" />
+               <p className="text-zinc-600 font-black uppercase text-xs italic tracking-widest">Nenhum treino publicado pelo professor.</p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -400,14 +401,11 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
-      {/* COCKPIT HEADER - Limpo e com fonte de impacto */}
       <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-3">
-           {/* Botão Menu (abre sidebar) */}
            <button onClick={onBack} className="p-3 bg-zinc-900 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
               <Menu size={20}/>
            </button>
-           {/* Botão Voltar (volta para a lista de treinos) */}
            <button onClick={cancelSession} className="p-3 bg-zinc-800 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
               <ArrowLeft size={20}/>
            </button>
@@ -425,7 +423,6 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         </div>
       </header>
 
-      {/* DASHBOARD DE PROTOCOLO INTEGRADO - Tipografia Padronizada */}
       {workoutStats && (
         <div className="mb-8 animate-in slide-in-from-top-4 duration-700">
            <Card className="bg-zinc-900/40 border-white/5 p-4 flex items-center justify-between backdrop-blur-xl rounded-[2.5rem] shadow-3xl">
@@ -464,7 +461,6 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         </div>
       )}
 
-      {/* LISTA DE EXERCÍCIOS */}
       <div className="space-y-4">
         {activeWorkout.exercises.map((ex, idx) => {
           const progress = exerciseProgress[ex.id || ''] || { completedSets: [], isFinished: false };
@@ -479,7 +475,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                  setExerciseProgress(p => {
                    const prev = p[id] || { completedSets: [], isFinished: false };
                    const newSets = prev.completedSets.includes(sIdx) 
-                     ? prev.completedSets.filter(s => s !== sIdx) // Toggle OFF logic if needed, but standard is append
+                     ? prev.completedSets.filter(s => s !== sIdx)
                      : [...prev.completedSets, sIdx];
                    return { ...p, [id]: { ...prev, completedSets: newSets } };
                  });
@@ -596,7 +592,6 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
       </header>
 
       <div className="space-y-6">
-        {/* BIO INSIGHT */}
         {plan.bioInsight && (
           <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/40 to-black border border-rose-600/20 shadow-lg relative overflow-hidden">
              <div className="absolute top-0 right-0 p-6 opacity-20"><Sparkles className="text-rose-500" size={64}/></div>
@@ -623,7 +618,6 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           {/* ESTRATÉGIA GERAL */}
            <Card className="p-8 bg-zinc-900/50 border-white/5 h-full">
               <h3 className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-4 italic">Estratégia Geral</h3>
               <p className="text-white text-sm italic font-medium leading-relaxed mb-6">
@@ -637,7 +631,6 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
               )}
            </Card>
 
-           {/* SEGURANÇA CLÍNICA */}
            <Card className="p-8 bg-red-950/10 border-red-900/20 h-full">
               <h3 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-6 italic">Segurança Clínica</h3>
               <div className="space-y-5">

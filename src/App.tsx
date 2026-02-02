@@ -13,7 +13,7 @@ import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
-// import { InstallPrompt } from './components/InstallPrompt'; // Removido para não exibir notificação automática
+import { InstallPrompt } from './components/InstallPrompt'; // Importação adicionada
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -132,12 +132,24 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
-  // NOTA: Removido prompt de instalação automática para evitar UX ruim.
-  // O app agora confia no manifesto e meta tags para instalação nativa via menu do navegador.
+  // Verificação de PWA (Instalação)
+  useEffect(() => {
+    // Verifica se já está rodando como app (standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    
+    // Se NÃO estiver instalado, mostra o prompt após 2 segundos
+    if (!isStandalone) {
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => { try { await signInAnonymously(auth); } catch (err: any) { setLoading(false); } };
@@ -373,6 +385,8 @@ export default function App() {
   return (
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
+      
+      {showInstallPrompt && <InstallPrompt onClose={() => setShowInstallPrompt(false)} />}
       
       {showSidebar && (
         <SideNav 

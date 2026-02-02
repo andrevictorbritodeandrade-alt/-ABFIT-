@@ -20,11 +20,11 @@ export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 const GIF_DATABASE: Record<string, string> = {
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
   "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", 
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", // Exemplo genérico
   "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
   "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
   "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif", // Reuso para exemplo
   "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
   "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
   "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
@@ -33,7 +33,7 @@ const GIF_DATABASE: Record<string, string> = {
   "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif", // Exemplo genérico
   "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
   "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
   "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
@@ -133,7 +133,9 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
   const [publishing, setPublishing] = useState(false);
   const workoutsRef = useRef<HTMLDivElement>(null);
 
+  // Toggle de visibilidade do dashboard
   const toggleFeatureVisibility = async (featureId: string) => {
+    // Calcula o novo estado baseando-se no atual (garante que não usamos valor stale)
     const currentDisabled = student.disabledFeatures || [];
     let newDisabled;
     if (currentDisabled.includes(featureId)) {
@@ -141,6 +143,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
     } else {
       newDisabled = [...currentDisabled, featureId];
     }
+    
+    // Chama o onSave (que agora dispara o indicador de sync)
     await onSave(student.id, { disabledFeatures: newDisabled });
   };
 
@@ -153,6 +157,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
   const hasDrafts = student.workouts?.some(w => w.status === 'draft' || !w.status);
 
+  // Scroll suave para a lista de treinos
   const scrollToWorkouts = () => {
     workoutsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -178,7 +183,10 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         )}
       </header>
 
+      {/* MENU VERTICAL COMPLETO (IDÊNTICO AO ALUNO) */}
       <div className="space-y-3 mb-10">
+        
+        {/* Planilhas Ativas - Scroll para lista abaixo */}
         <button onClick={scrollToWorkouts} className="w-full p-4 rounded-[2rem] bg-orange-950/20 border border-orange-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-orange-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-600/20">
@@ -189,6 +197,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Periodização PhD */}
         <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-4 rounded-[2rem] bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
@@ -199,6 +208,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Avaliação Física */}
         <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full p-4 rounded-[2rem] bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
@@ -209,6 +219,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* RunTrack Elite */}
         <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
@@ -219,6 +230,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Análise de Dados */}
         <button onClick={() => onNavigate('ANALYTICS_COACH')} className="w-full p-4 rounded-[2rem] bg-blue-950/20 border border-blue-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-blue-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
@@ -228,8 +240,10 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            </div>
            <ChevronRight className="text-blue-600 group-hover:translate-x-1 transition-transform" />
         </button>
+
       </div>
 
+      {/* Planilhas Atuais - Lista Expansível / Atalho Rápido */}
       <div className="mt-8 space-y-4" ref={workoutsRef}>
          <div className="flex items-center justify-between px-2">
             <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gerenciar Planilhas</h3>
@@ -256,62 +270,35 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               </div>
             )}
             
+            {/* Botão de Criação Rápida */}
             <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
               <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
               <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
             </button>
          </div>
       </div>
-
-      <div className="mt-12 space-y-4">
-        <div className="flex items-center gap-3 px-2">
-          <Eye size={16} className="text-red-600" />
-          <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Visibilidade do Dashboard</h3>
-        </div>
-        <Card className="bg-zinc-900/50 border-zinc-800 p-6">
-          <div className="grid grid-cols-1 gap-3">
-            {FEATURE_LIST.map((feature) => {
-              const isDisabled = (student.disabledFeatures || []).includes(feature.id);
-              return (
-                <div 
-                  key={feature.id} 
-                  onClick={() => toggleFeatureVisibility(feature.id)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all group active:scale-[0.98] ${isDisabled ? 'bg-zinc-950 border-zinc-800' : 'bg-black/60 border-white/10'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <feature.icon size={16} className={isDisabled ? "text-zinc-700" : "text-red-600"} />
-                    <span className={`text-xs font-black uppercase italic ${isDisabled ? 'text-zinc-600 line-through' : 'text-white'}`}>
-                      {feature.label}
-                    </span>
-                  </div>
-                  <div className={`w-12 h-6 rounded-full relative transition-all duration-300 shadow-inner ${isDisabled ? 'bg-zinc-800' : 'bg-red-600'}`}>
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isDisabled ? 'left-1' : 'left-7'}`} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-
-      <EliteFooter />
     </div>
   );
 }
 
 export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (sid: string, data: any) => void }) {
   const [title, setTitle] = useState(workoutToEdit?.title || '');
+  // Garante que projectedSessions seja um número
   const [projectedSessions, setProjectedSessions] = useState<number>(workoutToEdit?.projectedSessions || 12);
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Novos estados para padronização
   const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
   const [defaultReps, setDefaultReps] = useState(workoutToEdit?.defaultReps || '');
   const [defaultRest, setDefaultRest] = useState(workoutToEdit?.defaultRest || '');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleApplyDefaults = () => {
     if (!defaultSets && !defaultReps && !defaultRest) return;
+    
     const updatedExercises = exercises.map(ex => ({
       ...ex,
       sets: defaultSets || ex.sets,
@@ -323,6 +310,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
   const handleSaveWorkout = async () => {
     setSaveState('loading');
+    
+    // Assegura que o valor seja um número válido antes de salvar
     const finalSessions = Number(projectedSessions);
     const safeSessions = isNaN(finalSessions) || finalSessions < 1 ? 12 : finalSessions;
 
@@ -330,7 +319,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       id: workoutToEdit?.id || Date.now().toString(),
       title: title || 'Novo Treino',
       exercises: exercises,
-      projectedSessions: safeSessions,
+      projectedSessions: safeSessions, // Usa o valor garantido
       status: 'draft',
       defaultSets: defaultSets,
       defaultReps: defaultReps,
@@ -346,14 +335,18 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     }
 
     try {
+      // Race condition para evitar que o loading fique infinito em caso de falha silenciosa
       const savePromise = onSave(student.id, { workouts: updatedWorkouts });
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save Timeout')), 10000));
+      
       await Promise.race([savePromise, timeoutPromise]);
+      
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
     } catch (e) {
       console.error("Save error:", e);
-      setSaveState('idle');
+      setSaveState('idle'); // Destrava o botão em caso de erro
+      // alert("Ocorreu um erro ao salvar. Verifique sua conexão.");
     }
   };
 
@@ -366,19 +359,25 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         const base64 = reader.result as string;
         try {
           const extractedExercises = await extractWorkoutFromImage(base64);
+          
+          // Mapeia os exercícios extraídos com as imagens do banco usando o GIF_DATABASE
           const enrichedExercises = extractedExercises.map(ex => {
+            // Busca simples por substring no banco de dados de GIFs (case insensitive)
             const matchKey = Object.keys(GIF_DATABASE).find(key => 
               ex.name.toLowerCase().includes(key.toLowerCase())
             );
+            
             return {
               ...ex,
               id: Date.now().toString() + Math.random(),
               thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
+              // Aplica defaults se disponíveis e não vierem da IA
               sets: ex.sets || defaultSets || '3',
               reps: ex.reps || defaultReps || '12',
               rest: ex.rest || defaultRest || '60'
             };
           });
+
           setExercises(prev => [...prev, ...enrichedExercises]);
         } catch (error) {
           console.error(error);
@@ -429,10 +428,14 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              <p className="text-[8px] text-zinc-600 mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
            </div>
 
+           {/* NOVA ÁREA DE PADRONIZAÇÃO */}
            <div className="pt-4 border-t border-white/5">
              <div className="flex justify-between items-center mb-2">
                <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] block">Padronização de Carga</label>
-               <button onClick={handleApplyDefaults} className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md">
+               <button 
+                  onClick={handleApplyDefaults}
+                  className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md"
+               >
                   <Copy size={10} /> Aplicar Padrão a Todos
                </button>
              </div>
@@ -454,8 +457,11 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         </Card>
 
         <div className="space-y-4">
+           {/* Cabeçalho da Lista + Botão Discreto de Importação */}
            <div className="flex items-center justify-between pl-2">
               <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
+              
+              {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
               <div 
                  onClick={() => !isAnalyzing && fileInputRef.current?.click()}
                  className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
@@ -517,8 +523,9 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!weight || !bodyFat) return;
+    if (!weight || !bodyFat) return; // Simple validation
     setSaving(true);
+    
     const newAssessment = {
       id: Date.now().toString(),
       data: new Date().toISOString(),
@@ -526,12 +533,16 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       altura: height || (student.height as string) || '',
       bio_percentual_gordura: bodyFat
     };
+
     const updatedAssessments = [newAssessment, ...(student.physicalAssessments || [])];
+    
+    // Update assessments and current stats
     await onSave(student.id, { 
       physicalAssessments: updatedAssessments,
       weight: weight,
       height: height || student.height
     });
+    
     setSaving(false);
     onBack();
   };
@@ -548,21 +559,46 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       <Card className="p-8 bg-zinc-900/50 border-white/5 space-y-6">
         <div>
           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Peso Corporal (kg)</label>
-          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="0.0" className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+          <input 
+            type="number" 
+            value={weight} 
+            onChange={e => setWeight(e.target.value)} 
+            placeholder="0.0"
+            className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+          />
         </div>
         <div>
            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Altura (cm)</label>
-           <input type="number" value={height} onChange={e => setHeight(e.target.value)} placeholder={String(student.height || '')} className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+           <input 
+             type="number" 
+             value={height} 
+             onChange={e => setHeight(e.target.value)} 
+             placeholder={String(student.height || '')}
+             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+           />
         </div>
         <div>
            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Gordura Corporal (%)</label>
-           <input type="number" value={bodyFat} onChange={e => setBodyFat(e.target.value)} placeholder="0.0" className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+           <input 
+             type="number" 
+             value={bodyFat} 
+             onChange={e => setBodyFat(e.target.value)} 
+             placeholder="0.0"
+             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+           />
         </div>
-        <button onClick={handleSave} disabled={saving} className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2">
-          {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />} Salvar Avaliação
+
+        <button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+        >
+          {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+          Salvar Avaliação
         </button>
       </Card>
       
+      {/* History List */}
       <div className="mt-8 space-y-4">
         <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] pl-2">Histórico Recente</h3>
         {(student.physicalAssessments || []).map(a => (
@@ -580,6 +616,7 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
 
 export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave }: { student: Student, onBack: () => void, onProceedToWorkout: () => void, onSave: (id: string, data: any) => void }) {
    const p = student.periodization || {} as any;
+   
    const [phaseTitle, setPhaseTitle] = useState(p.phaseTitle || '');
    const [generalStrategy, setGeneralStrategy] = useState(p.generalStrategy || '');
    const [safetyNotes, setSafetyNotes] = useState(p.clinicalSafety ? p.clinicalSafety.join('\n') : '');
@@ -590,7 +627,9 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
    const handleAI = async () => {
       setGenerating(true);
       const insight = await generateBioInsight({ name: student.nome, phase: phaseTitle });
-      if (insight) setBioContext(insight);
+      if (insight) {
+          setBioContext(insight);
+      }
       setGenerating(false);
    };
 
@@ -608,6 +647,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
          },
          type: 'STRENGTH'
       };
+      
       onSave(student.id, { periodization: newPeriodization });
       onBack();
    };
