@@ -63,6 +63,14 @@ export interface PeriodizationPlan {
   microciclos: any[];
   notas_phd?: string;
   type: 'STRENGTH' | 'RUNNING';
+  // Novos campos do Relatório Científico
+  phaseTitle?: string;
+  generalStrategy?: string;
+  clinicalSafety?: string[];
+  bioInsight?: {
+    context: string;
+    tips: string[];
+  };
 }
 
 export interface PhysicalAssessment {

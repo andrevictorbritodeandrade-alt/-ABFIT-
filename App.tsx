@@ -193,28 +193,49 @@ export default function App() {
           workoutHistory: [], 
           sexo: 'Feminino', 
           age: 35,
+          periodization: {
+            id: 'per-liliane-01',
+            titulo: 'Relatório Científico',
+            startDate: new Date().toISOString(),
+            microciclos: [],
+            type: 'STRENGTH',
+            phaseTitle: 'Fase de Adaptação Metabólica e Redução de Peso (Alto Gasto Calórico)',
+            generalStrategy: 'Periodização estruturada em fases metabólicas, priorizando o déficit calórico sustentado através da combinação de treinamento de força (para preservar a massa magra) e condicionamento de alta densidade (para maximizar o gasto energético e o EPOC). O objetivo primário é a perda de peso corporal, com monitoramento rigoroso da composição corporal para garantir que a perda seja predominantemente de gordura.\n\nO macrociclo deve ser dividido em três fases principais (total de 16-20 semanas): 1. Fase de Adaptação e Consistência (4 semanas): Foco na técnica e na criação de rotina. 2. Fase Metabólica de Pico (8-10 semanas): Máxima densidade de treino e elevação do volume de trabalho (TSS), mantendo o déficit calórico. 3. Fase de Transição e Sustentação (4-6 semanas): Consolidação do peso perdido e início da fase de recomposição corporal, com reintrodução de cargas de carboidratos estratégicas (refeeds).',
+            clinicalSafety: [
+              'Dada a formação em Fisiologia, a adesão será maximizada com o uso de dados quantificáveis (carga, volume, calorimetria estimada) para reforçar o \'porquê\' da metodologia.',
+              'A meta de perda de peso deve ser gradual (0.5-1.0 kg/semana). Enfatizar que a estagnação temporária na balança pode ser reflexo da troca de composição corporal (preservação ou ganho discreto de massa magra) e não um fracasso do déficit.',
+              'Considerando os traços de neurodivergência (TEA/TDAH), a rotina semanal de exercícios deve ser extremamente estruturada e previsível (mesmos dias e horários), mas o conteúdo dos treinos (variáveis de intensidade, repetições, métodos) deve ser manipulado frequentemente (microciclo) para manter o engajamento e a novidade, evitando o tédio e a desistência.'
+            ],
+            bioInsight: {
+              context: 'Liliane Torres é uma aluna que, embora sem diagnóstico formal (TEA/TDAH), apresenta **traços notáveis de neurodivergência**. Essa característica exige que o treinador adote estratégias que promovam clareza, previsibilidade e minimizem a sobrecarga sensorial/cognitiva para garantir segurança e foco durante o treinamento. A ausência de histórico bariátrico simplifica a consideração de protocolos pós-cirúrgicos, mas o foco principal deve ser na adaptação neurocognitiva.',
+              tips: [
+                '**Estrutura e Previsibilidade Rígidas:** Apresente o treino em blocos curtos e visuais (se possível, por escrito/tópicos) e não altere a sequência principal de exercícios bruscamente. **Objetivo:** Reduzir a ansiedade e a sobrecarga cognitiva (características comuns em traços de TDAH/TEA), permitindo que a aluna se concentre na execução em vez de tentar processar e memorizar novas instruções constantemente.',
+                '**Linguagem Direta e Unifocal:** Use comandos concisos, claros e dê apenas uma instrução de cada vez. Evite metáforas complexas ou longas explicações multitarefa. **Objetivo:** Melhorar o foco e a retenção da informação. A clareza minimiza erros de interpretação (que podem levar à insegurança ou lesão) e ajuda a aluna a canalizar sua atenção para a tarefa motora.',
+                '**Feedback Imediato e Calmo:** Corrija a técnica imediatamente após a execução, usando tom de voz neutro e encorajador. Evite ambientes muito barulhentos ou estimulantes. **Objetivo:** Reforçar a segurança postural e diminuir a frustração ou o "shutdown" (reação comum à sobrecarga sensorial ou crítica percebida). O *feedback* imediato ajuda a manter a conexão entre a ação e a correção.'
+              ]
+            }
+          },
           workouts: [
             {
               id: 'treino-a-liliane',
               title: 'TREINO - A',
               status: 'published',
-              projectedSessions: 20,
+              projectedSessions: 12,
               exercises: [
-                { id: '1', name: 'LEG PRESS HORIZONTAL', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '2', name: 'LEVANTAR E SENTAR NO BANCO', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '3', name: 'CADEIRA EXTENSORA', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '4', name: 'SUPINO RETO COM HBL', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '5', name: 'REMADA ALTA EM PÉ NO CROSS', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '6', name: 'TRÍCEPS NO CROSS COM BARRA', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: '8', name: 'PRANCHA VENTRAL NO SOLO', sets: '3', reps: '15S', method: 'SÉRIE ESTÁVEL', rest: '60s' }
+                { id: '1', name: 'Leg press horizontal', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '2', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '3', name: 'Agachamento livre', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '4', name: 'Abdominal supra no solo', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '5', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '6', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: '7', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
               ]
             },
             {
               id: 'treino-b-liliane',
               title: 'TREINO - B',
               status: 'published',
-              projectedSessions: 20,
+              projectedSessions: 12,
               exercises: [
                 { id: 'b1', name: 'PUXADA ABERTA NO PULLEY', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
                 { id: 'b2', name: 'REMADA BAIXA TRIÂNGULO', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
@@ -244,6 +265,8 @@ export default function App() {
           if (!merged[existingIndex].workouts || merged[existingIndex].workouts.length === 0) merged[existingIndex].workouts = def.workouts;
           if (!merged[existingIndex].nome) merged[existingIndex].nome = def.nome;
           if (!merged[existingIndex].email) merged[existingIndex].email = def.email;
+          // Garante que a periodização da Liliane seja mesclada corretamente se existir no default
+          if (def.periodization && !merged[existingIndex].periodization) merged[existingIndex].periodization = def.periodization;
         }
     });
     return merged;
@@ -276,9 +299,17 @@ export default function App() {
     const history = selectedStudent.workoutHistory || [];
     selectedStudent.workouts?.forEach(w => {
       const completed = history.filter(h => h.workoutId === w.id).length;
-      const remaining = (w.projectedSessions || 20) - completed;
+      const target = w.projectedSessions || 12;
+      const remaining = target - completed;
       if (remaining <= 2 && remaining >= 0) {
-        notifications.push({ id: `renew-${w.id}`, title: 'Renovação PhD', message: `Faltam ${remaining} sessões para o fim da sua planilha.`, date: new Date().toLocaleDateString('pt-BR'), read: false, type: 'RENEWAL' });
+        notifications.push({ 
+          id: `renew-${w.id}`, 
+          title: 'Renovação e Avaliação', 
+          message: `Faltam ${remaining} sessões. Agende sua nova avaliação física para troca de série.`, 
+          date: new Date().toLocaleDateString('pt-BR'), 
+          read: false, 
+          type: 'RENEWAL' 
+        });
       }
     });
     return notifications;

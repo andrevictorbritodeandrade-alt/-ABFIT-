@@ -5,7 +5,7 @@ import {
   Loader2, Clock, Target, Award, ShieldCheck, Brain,
   Camera, CheckCircle2, X, Trash2, FastForward, Check,
   Trophy, AlertCircle, Info, ChevronDown, ChevronUp,
-  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu
+  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
@@ -500,24 +500,93 @@ export function StudentAssessmentView({ student, onBack }: { student: Student, o
 }
 
 export function StudentPeriodizationView({ student, onBack }: { student: Student, onBack: () => void }) {
+  const plan = student.periodization;
+
+  if (!plan || !plan.generalStrategy) {
+    return (
+      <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
+        <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+            <Menu size={20}/>
+          </button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+            <HeaderTitle text="Periodização PhD" />
+          </h2>
+        </header>
+        <div className="flex flex-col items-center justify-center py-20">
+          <Brain className="text-zinc-800 mb-6" size={64} />
+          <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Aguardando configuração de macrociclo<br/>pelo seu treinador PhD.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+      <header className="flex items-center gap-4 mb-8 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
           <Menu size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Periodização PhD" />
+          <HeaderTitle text="Relatório Científico" />
         </h2>
       </header>
-      <div className="flex flex-col items-center justify-center py-20">
-        <Brain className="text-zinc-800 mb-6" size={64} />
-        <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Acesso aos seus ciclos de treinamento<br/>estrategicamente planejados por IA.</p>
-        <Card className="mt-10 p-6 bg-zinc-900/50 border-white/5 w-full max-w-sm">
-           <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-2 italic">Ciclo Atual</p>
-           <h3 className="text-3xl font-black italic uppercase text-white tracking-tighter leading-none">Fase de Acumulação</h3>
-           <p className="text-xs text-zinc-500 mt-2 italic">Consulte seu treinador para detalhes dos microciclos.</p>
-        </Card>
+
+      <div className="space-y-6">
+        {/* BIO INSIGHT */}
+        {plan.bioInsight && (
+          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/40 to-black border border-rose-600/20 shadow-lg relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-6 opacity-20"><Sparkles className="text-rose-500" size={64}/></div>
+             <div className="flex items-center gap-3 mb-6 relative z-10">
+                <Sparkles className="text-rose-500" size={20} />
+                <h3 className="text-lg font-black uppercase italic text-rose-500 tracking-widest">Bio-Insight</h3>
+             </div>
+             
+             <p className="text-zinc-300 text-xs italic leading-relaxed mb-8 relative z-10 font-medium">
+               {plan.bioInsight.context}
+             </p>
+
+             <div className="space-y-4 relative z-10">
+               {plan.bioInsight.tips.map((tip, idx) => (
+                 <div key={idx} className="flex gap-4">
+                    <span className="text-rose-500 font-black italic text-lg">{idx + 1}.</span>
+                    <p className="text-zinc-400 text-[11px] leading-relaxed">
+                      {tip.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white font-bold">{part}</strong> : part)}
+                    </p>
+                 </div>
+               ))}
+             </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {/* ESTRATÉGIA GERAL */}
+           <Card className="p-8 bg-zinc-900/50 border-white/5 h-full">
+              <h3 className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-4 italic">Estratégia Geral</h3>
+              <p className="text-white text-sm italic font-medium leading-relaxed mb-6">
+                "{plan.generalStrategy}"
+              </p>
+              {plan.phaseTitle && (
+                <div className="pt-6 border-t border-white/5">
+                   <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-1">Fase Atual</p>
+                   <p className="text-xs text-white font-bold uppercase">{plan.phaseTitle}</p>
+                </div>
+              )}
+           </Card>
+
+           {/* SEGURANÇA CLÍNICA */}
+           <Card className="p-8 bg-red-950/10 border-red-900/20 h-full">
+              <h3 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-6 italic">Segurança Clínica</h3>
+              <div className="space-y-5">
+                 {(plan.clinicalSafety || []).map((item, idx) => (
+                   <div key={idx} className="flex gap-3">
+                      <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">{item}</p>
+                   </div>
+                 ))}
+              </div>
+           </Card>
+        </div>
       </div>
     </div>
   );

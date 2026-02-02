@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -231,6 +231,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
 export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (sid: string, data: any) => void }) {
   const [title, setTitle] = useState(workoutToEdit?.title || '');
+  const [projectedSessions, setProjectedSessions] = useState(workoutToEdit?.projectedSessions || 12);
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   
@@ -240,6 +241,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       id: workoutToEdit?.id || Date.now().toString(),
       title: title || 'Novo Treino',
       exercises,
+      projectedSessions,
       status: 'draft'
     };
     const currentWorkouts = student.workouts || [];
@@ -251,6 +253,12 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     } catch (e) {
       setSaveState('idle');
     }
+  };
+
+  const updateExerciseRest = (idx: number, val: string) => {
+    const updated = [...exercises];
+    updated[idx] = { ...updated[idx], rest: val };
+    setExercises(updated);
   };
 
   return (
@@ -273,22 +281,36 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       </header>
 
       <div className="space-y-6 pb-32">
-        <Card className="p-6 bg-zinc-900/50">
-           <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+        <Card className="p-6 bg-zinc-900/50 space-y-4">
+           <div>
+             <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Nome da Planilha</label>
+             <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+           </div>
+           <div>
+             <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Validade (Sessões)</label>
+             <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(parseInt(e.target.value))} placeholder="Ex: 12" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+             <p className="text-[8px] text-zinc-600 mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
+           </div>
         </Card>
 
         <div className="space-y-4">
            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest pl-2">Exercícios do Treino ({exercises.length})</h3>
            {exercises.map((ex, i) => (
-             <div key={i} className="flex items-center gap-4 bg-zinc-900 p-4 rounded-2xl border border-white/5">
-                <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0">
-                   {ex.thumb && <img src={ex.thumb} className="w-full h-full object-cover" />}
+             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0">
+                     {ex.thumb && <img src={ex.thumb} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1">
+                     <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
+                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method}</p>
+                  </div>
+                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
                 </div>
-                <div className="flex-1">
-                   <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
-                   <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method}</p>
+                <div className="mt-2 flex items-center gap-2">
+                   <label className="text-[8px] font-black uppercase text-zinc-600">Descanso:</label>
+                   <input type="text" value={ex.rest} onChange={(e) => updateExerciseRest(i, e.target.value)} className="bg-black border border-zinc-800 rounded px-2 py-1 text-[10px] text-white w-16 text-center outline-none focus:border-red-600" />
                 </div>
-                <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
              </div>
            ))}
            <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] text-zinc-700 text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
@@ -301,18 +323,93 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 }
 
 export function PeriodizationView({ student, onBack, onProceedToWorkout }: { student: Student, onBack: () => void, onProceedToWorkout: () => void }) {
+  const plan = student.periodization;
+
+  if (!plan || !plan.generalStrategy) {
+    return (
+      <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
+        <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+            <HeaderTitle text="Periodização PhD" />
+          </h2>
+        </header>
+        <div className="flex flex-col items-center justify-center py-20 mt-10">
+          <Brain className="text-zinc-800 mb-6" size={64} />
+          <p className="text-zinc-500 font-black uppercase text-xs italic text-center leading-relaxed">Configuração técnica de macrociclo<br/>em desenvolvimento biomecânico.</p>
+          <button onClick={onProceedToWorkout} className="mt-10 px-8 py-4 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg active:scale-95 transition-all">Configurar Planilhas</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Periodização PhD" />
-        </h2>
+    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left animate-in fade-in">
+      <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+            <HeaderTitle text="Relatório Científico" />
+          </h2>
+        </div>
+        <button onClick={onProceedToWorkout} className="px-6 py-2 bg-white text-black rounded-full font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">Fechar</button>
       </header>
-      <div className="flex flex-col items-center justify-center py-20 mt-10">
-        <Brain className="text-zinc-800 mb-6" size={64} />
-        <p className="text-zinc-500 font-black uppercase text-xs italic text-center leading-relaxed">Configuração técnica de macrociclo<br/>em desenvolvimento biomecânico.</p>
-        <button onClick={onProceedToWorkout} className="mt-10 px-8 py-4 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg active:scale-95 transition-all">Configurar Planilhas</button>
+
+      <div className="space-y-6 pb-20">
+        {/* BIO INSIGHT */}
+        {plan.bioInsight && (
+          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/40 to-black border border-rose-600/20 shadow-lg relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-6 opacity-20"><Sparkles className="text-rose-500" size={64}/></div>
+             <div className="flex items-center gap-3 mb-6 relative z-10">
+                <Sparkles className="text-rose-500" size={20} />
+                <h3 className="text-lg font-black uppercase italic text-rose-500 tracking-widest">Bio-Insight</h3>
+             </div>
+             
+             <p className="text-zinc-300 text-xs italic leading-relaxed mb-8 relative z-10 font-medium">
+               {plan.bioInsight.context}
+             </p>
+
+             <div className="space-y-4 relative z-10">
+               {plan.bioInsight.tips.map((tip, idx) => (
+                 <div key={idx} className="flex gap-4">
+                    <span className="text-rose-500 font-black italic text-lg">{idx + 1}.</span>
+                    <p className="text-zinc-400 text-[11px] leading-relaxed">
+                      {tip.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white font-bold">{part}</strong> : part)}
+                    </p>
+                 </div>
+               ))}
+             </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {/* ESTRATÉGIA GERAL */}
+           <Card className="p-8 bg-zinc-900/50 border-white/5 h-full">
+              <h3 className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-4 italic">Estratégia Geral</h3>
+              <p className="text-white text-sm italic font-medium leading-relaxed mb-6">
+                "{plan.generalStrategy}"
+              </p>
+              {plan.phaseTitle && (
+                <div className="pt-6 border-t border-white/5">
+                   <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-1">Fase Atual</p>
+                   <p className="text-xs text-white font-bold uppercase">{plan.phaseTitle}</p>
+                </div>
+              )}
+           </Card>
+
+           {/* SEGURANÇA CLÍNICA */}
+           <Card className="p-8 bg-red-950/10 border-red-900/20 h-full">
+              <h3 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-6 italic">Segurança Clínica</h3>
+              <div className="space-y-5">
+                 {(plan.clinicalSafety || []).map((item, idx) => (
+                   <div key={idx} className="flex gap-3">
+                      <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">{item}</p>
+                   </div>
+                 ))}
+              </div>
+           </Card>
+        </div>
       </div>
     </div>
   );
