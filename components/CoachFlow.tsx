@@ -16,6 +16,325 @@ import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
+// BANCO DE DADOS DE EXERCÍCIOS (COMPLETO)
+const EXERCISE_DATABASE: Record<string, string[]> = {
+  "Peito": [
+    "Crucifixo aberto alternado com HBC no banco declinado",
+    "Crucifixo aberto alternado com HBC no banco inclinado",
+    "Crucifixo aberto alternado com HBC no banco reto",
+    "Crucifixo aberto com HBC no banco declinado",
+    "Crucifixo aberto com HBC no banco inclinado",
+    "Crucifixo aberto com HBC no banco reto",
+    "Crucifixo aberto na máquina",
+    "Crucifixo alternado na máquina",
+    "Crucifixo em pé no cross polia alta",
+    "Crucifixo em pé no cross polia média",
+    "Crucifixo unilateral na máquina",
+    "Extensão de cotovelos no solo (Flexão de Braços)",
+    "PullUp na polia baixa pegada supinada",
+    "Supino aberto banco declinado no smith",
+    "Supino aberto banco inclinado no smith",
+    "Supino aberto no banco reto no smith",
+    "Supino alternado banco 45° fechado no crossover",
+    "Supino alternado banco 45° no crossover",
+    "Supino alternado banco 75° aberto no crossover",
+    "Supino alternado banco 75° fechado no crossover",
+    "Supino alternado banco reto aberto no crossover",
+    "Supino alternado banco reto fechado no crossover",
+    "Supino alternado deitado aberto na máquina",
+    "Supino alternado deitado fechado na máquina",
+    "Supino alternado inclinado aberto na máquina",
+    "Supino alternado inclinado fechado na máquina",
+    "Supino alternado sentado aberto na máquina",
+    "Supino alternado sentado fechado na máquina",
+    "Supino banco 45º aberto no crossover",
+    "Supino banco 45º fechado no crossover",
+    "Supino banco 75º aberto no crossover",
+    "Supino banco 75º fechado no crossover",
+    "Supino banco reto aberto no crossover",
+    "Supino banco reto fechado no crossover",
+    "Supino declinado alternado com HBC",
+    "Supino declinado com HBC",
+    "Supino declinado com HBL",
+    "Supino deitado aberto na máquina",
+    "Supino deitado fechado na máquina",
+    "Supino inclinado aberto na máquina",
+    "Supino inclinado alternado com HBC",
+    "Supino inclinado com HBC",
+    "Supino inclinado com HBL",
+    "Supino inclinado fechado na máquina",
+    "Supino Reto com HBL",
+    "Supino reto alternado com HBC",
+    "Supino reto com HBC",
+    "Supino sentado aberto na máquina",
+    "Supino sentado fechado na máquina",
+    "Supino unilateral deitado aberto na máquina",
+    "Supino unilateral deitado fechado na máquina",
+    "Supino unilateral inclinado aberto na máquina",
+    "Supino unilateral inclinado fechado na máquina",
+    "Supino unilateral sentado aberto na máquina",
+    "Supino unilateral sentado fechado na máquina",
+    "Voador peitoral"
+  ],
+  "Ombro": [
+    "Abdução de ombros banco 75º com HBC pegada neutra",
+    "Abdução de ombros banco 75º com HBC pegada pronada",
+    "Abdução de ombros em pé com HBC pegada neutra",
+    "Abdução de ombros em pé com HBC pegada pronada",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º HBC",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º no cross",
+    "Abdução de ombros unilateral no cross",
+    "Desenvolvimento aberto banco 75º no smith",
+    "Desenvolvimento aberto na máquina",
+    "Desenvolvimento banco 75º aberto com HBC",
+    "Desenvolvimento banco 75º aberto com HBM",
+    "Desenvolvimento banco 75º arnold com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBM",
+    "Desenvolvimento banco 75º fechado supinado com HBC",
+    "Desenvolvimento banco 75º fechado supinado com HBM",
+    "Desenvolvimento em pé aberto com HBC",
+    "Desenvolvimento em pé aberto com HBM",
+    "Desenvolvimento em pé arnold com HBC",
+    "Desenvolvimento em pé fechado pronado com HBC",
+    "Desenvolvimento em pé fechado pronado with HBM",
+    "Desenvolvimento em pé fechado supinado com HBC",
+    "Desenvolvimento em pé fechado supinado with HBM",
+    "Desenvolvimento fechado pronado banco 75º no smith",
+    "Desenvolvimento fechado supinado banco 75º no smith",
+    "Encolhimento de ombros com HBC",
+    "Encolhimento de ombros with HBM",
+    "Encolhimento de ombros no cross",
+    "Flexão de ombro with HBM pegada pronada",
+    "Flexão de ombro simultâneo com HBC pegada neutra",
+    "Flexão de ombro simultâneo com HBC pegada pronada",
+    "Flexão de ombro unilateral com HBC pegada neutra",
+    "Flexão de ombro unilateral com HBC pegada pronada",
+    "Flexão de ombro unilateral no cross",
+    "Remada alta banco 45º cross",
+    "Remada alta com HBM no banco 45º",
+    "Remada alta com Kettlebell",
+    "Remada alta em decúbito dorsal cross",
+    "Remada alta em pé com HBC",
+    "Remada alta em pé com HBL",
+    "Remada alta em pé com HBM",
+    "Remada alta em pé no cross"
+  ],
+  "Triceps": [
+    "Extensão de cotovelos fechados no solo (Flexão de braços)",
+    "Tríceps banco 75º francês com HBC simultâneo",
+    "Tríceps banco 75º francês com HBC unilateral",
+    "Tríceps coice curvado com HBC simultâneo",
+    "Tríceps coice curvado com HBC unilateral",
+    "Tríceps coice curvado no cross",
+    "Tríceps em pé francês com HBC simultâneo",
+    "Tríceps em pé francês com HBC unilateral",
+    "Tríceps francês no cross simultâneo",
+    "Tríceps francês no cross unilateral",
+    "Tríceps mergulho no banco reto",
+    "Tríceps no cross with barra reta",
+    "Tríceps no cross with barra reta inverso",
+    "Tríceps no cross with barra V",
+    "Tríceps no cross with barra W",
+    "Tríceps no cross with corda",
+    "Tríceps no cross inverso unilateral",
+    "Tríceps superman no cross segurando nos cabos",
+    "Tríceps supinado with HBM banco reto",
+    "Tríceps supinado no smith banco reto",
+    "Tríceps supinado pegada neutra with HBC",
+    "Tríceps testa HBM banco reto",
+    "Tríceps testa simultâneo HBC banco reto",
+    "Tríceps testa simultâneo no cross",
+    "Tríceps testa unilateral HBC banco reto",
+    "Tríceps testa unilateral no cross"
+  ],
+  "Costas e Cintura Escapular": [
+    "Crucifixo inverso na máquina",
+    "Crucifixo inverso simultâneo no cross polia média",
+    "Crucifixo inverso unilateral no cross polia média",
+    "Extensão de ombros no cross barra reta",
+    "Pullover no banco reto with HBC",
+    "Puxada aberta with barra reta no cross polia alta",
+    "Puxada aberta with barra romana pulley alto",
+    "Puxada aberta no pulley alto",
+    "Puxada com triângulo no pulley alto",
+    "Puxada supinada with barra reta no cross polia alta",
+    "Puxada supinada no pulley alto",
+    "Remada aberta with barra reta no cross polia média",
+    "Remada aberta with HBC decúbito ventral no banco 45°",
+    "Remada aberta alternada with HBC decúbito ventral no banco 45°",
+    "Remada aberta declinada no smith",
+    "Remada aberta na máquina",
+    "Remada baixa barra reta pegada supinada",
+    "Remada baixa with barra reta",
+    "Remada baixa com triângulo",
+    "Remada cavalo with HBL",
+    "Remada curvada aberta no cross",
+    "Remada curvada aberta no cross unilateral",
+    "Remada curvada aberta with HBC",
+    "Remada curvada aberta with HBM",
+    "Remada curvada supinada no cross",
+    "Remada curvada supinada no cross unilateral",
+    "Remada curvada supinada with HBC",
+    "Remada curvada supinada with HBM",
+    "Remada fechada alternada with HBC decubito ventral no banco 45°",
+    "Remada fechada with HBC decúbito ventral no banco 45°",
+    "Remada fechada na máquina",
+    "Remada no banco em 3 apoios pegada aberta with HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra with HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra no cross unilateral",
+    "Remada no banco em 3 apoios pegada supinada with HBC unilateral",
+    "Remada no banco em 3 apoios pegada supinada no cross unilateral",
+    "Remada supinada with barra reta no cross polia média"
+  ],
+  "Biceps": [
+    "Bíceps banco 45º with HBC pegada neutra simultâneo",
+    "Bíceps banco 45º with HBC pegada neutra unilateral",
+    "Bíceps banco 45º with HBC pegada pronada simultâneo",
+    "Bíceps banco 45º with HBC pegada pronada unilateral",
+    "Bíceps banco 45º with HBC pegada supinada simultâneo",
+    "Bíceps banco 45º with HBC pegada supinada unilateral",
+    "Bíceps banco 75º with HBC pegada neutra simultâneo",
+    "Bíceps banco 75º with HBC pegada neutra unilateral",
+    "Bíceps banco 75º with HBC pegada pronada simultâneo",
+    "Bíceps banco 75º with HBC pegada pronada unilateral",
+    "Bíceps banco 75º with HBC pegada supinada simultâneo",
+    "Bíceps banco 75º with HBC pegada supinada unilateral",
+    "Bíceps concentrado with HBC unilateral",
+    "Bíceps em pé with HBC pegada neutra alternado",
+    "Bíceps em pé with HBC pegada neutra simultâneo",
+    "Bíceps em pé with HBC pegada neutra unilateral",
+    "Bíceps em pé with HBC pegada pronada alternado",
+    "Bíceps em pé with HBC pegada pronada simultâneo",
+    "Bíceps em pé with HBC pegada pronada unilateral",
+    "Bíceps em pé with HBC pegada supinada alternado",
+    "Bíceps em pé with HBC pegada supinada simultâneo",
+    "Bíceps em pé with HBC pegada supinada unilateral",
+    "Bíceps em pé with HBM pegada pronada",
+    "Bíceps em pé with HBM pegada supinada",
+    "Bíceps no banco scott with HBC simultâneo",
+    "Bíceps no banco scott with HBC unilateral",
+    "Bíceps no banco scott with HBM pronado",
+    "Bíceps no banco scott with HBM supinado",
+    "Bíceps no banco scott with HBW simultâneo",
+    "Bíceps no cross barra reta",
+    "Bíceps no cross polia baixa unilateral",
+    "Bíceps superman no cross simultâneo",
+    "Bíceps superman no cross unilateral"
+  ],
+  "Core e Abdomen": [
+    "Abdominal diagonal na bola",
+    "Abdominal diagonal no bosu",
+    "Abdominal diagonal no solo",
+    "Abdominal infra no solo puxando as pernas",
+    "Abdominal infra pernas estendidas",
+    "Abdominal supra na bola",
+    "Abdominal supra no bosu",
+    "Abdominal supra no solo",
+    "Abdominal vela no solo",
+    "Prancha lateral na bola em isometria",
+    "Prancha lateral no bosu em isometria",
+    "Prancha lateral no solo em isometria",
+    "Prancha ventral na bola em isometria",
+    "Prancha ventral no bosu em isometria",
+    "Prancha ventral no solo em isometria"
+  ],
+  "Paravertebrais": [
+    "Elevação de quadril em isometria no solo",
+    "Mata-borrão isométrico no solo (super-man)",
+    "Perdigueiro em isometria no solo"
+  ],
+  "Quadríceps e Adutores": [
+    "Adução de quadril em decúbito dorsal",
+    "Adução de quadril em decúbito lateral no solo",
+    "Adução de quadril em pé no cross",
+    "Agachamento búlgaro",
+    "Agachamento em passada with HBC",
+    "Agachamento em passada with HBL",
+    "Agachamento em passada with HBM",
+    "Agachamento em passada with step a frente with HBC",
+    "Agachamento em passada with step a frente with HBL",
+    "Agachamento em passada with step a frente with HBM",
+    "Agachamento em passada com step a frente",
+    "Agachamento em passada with step atrás with HBC",
+    "Agachamento em passada with step atrás with HBL",
+    "Agachamento em passada with step atrás with HBM",
+    "Agachamento em passada com step atrás",
+    "Agachamento em passada no smith",
+    "Agachamento em passada com step a frente no smith",
+    "Agachamento em passada com step atrás no Smith",
+    "Agachamento livre with HBC",
+    "Agachamento livre with HBL barra sobre ombros",
+    "Agachamento livre with HBL",
+    "Agachamento livre with HBM barra sobre ombros",
+    "Agachamento livre",
+    "Agachamento no hack machine",
+    "Agachamento no sissy",
+    "Agachamento no Smith barra sobre os ombros",
+    "Agachamento no smith",
+    "Cadeira adutora",
+    "Cadeira extensora alternado",
+    "Cadeira extensora unilateral",
+    "Cadeira extensora",
+    "Flexão de quadril e joelho em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril e joelho em pé com caneleira",
+    "Flexão de quadril e joelho em pé no cross",
+    "Flexão de quadril em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril em pé com caneleira",
+    "Flexão de quadril em pé no cross",
+    "Leg press horizontal unilateral",
+    "Leg press horizontal",
+    "Leg press inclinado unilateral",
+    "Leg press inclinado",
+    "Levantar e sentar do banco reto with HBM",
+    "Levantar e sentar no banco reto with HBC",
+    "Levantar e sentar no banco reto"
+  ],
+  "Glúteos e Posteriores": [
+    "Abdução de quadril decúbito lateral no solo caneleira",
+    "Abdução de quadril em pé com caneleira",
+    "Agachamento sumô with HBC",
+    "Agachamento sumô with HBM",
+    "Cadeira flexora alternado",
+    "Cadeira flexora unilateral",
+    "Cadeira flexora",
+    "Elevação de quadril no banco reto with HBM",
+    "Elevação de Quadril no solo com anilha",
+    "Extensão de quadril e joelho em pé caneleira",
+    "Extensão de quadril e joelho em pé no cross",
+    "Extensão de quadril e joelho no cross",
+    "Extensão de quadril e joelho no solo caneleira",
+    "Extensão de quadril em pé caneleira",
+    "Extensão de quadril em pé no cross",
+    "Extensão de quadril no cross",
+    "Extensão de quadril no solo caneleira",
+    "Flexão de joelho em 3 apoios com caneleira",
+    "Flexão de joelho em pé com caneleira",
+    "Flexão de joelho em pé no cross",
+    "Levantamento terra with HBC",
+    "Levantamento terra with HBL",
+    "Levantamento terra with HBM",
+    "Levantamento terra no cross",
+    "Levantamento terra romeno with HBM",
+    "Mesa flexora alternado",
+    "Mesa flexora unilateral",
+    "Mesa flexora",
+    "Stiff with HBC simultâneo",
+    "Stiff with HBC unilateral",
+    "Stiff with HBM simultâneo",
+    "Stiff “bom dia” with HBM",
+    "Subida no step"
+  ],
+  "Panturrilha": [
+    "Cadeira solear",
+    "Flexão plantar com Halteres.",
+    "Flexão plantar em pé na Máquina",
+    "Flexão plantar em pé Unilateral",
+    "Flexão plantar no Leg press inclinado",
+    "Flexão plantar no leg press horizontal"
+  ]
+};
+
 // BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
 const GIF_DATABASE: Record<string, string> = {
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
@@ -308,6 +627,12 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
   const [defaultReps, setDefaultReps] = useState(workoutToEdit?.defaultReps || '');
   const [defaultRest, setDefaultRest] = useState(workoutToEdit?.defaultRest || '');
+  
+  // Estado para adição manual
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualMuscleGroup, setManualMuscleGroup] = useState("");
+  const [manualExerciseName, setManualExerciseName] = useState("");
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleApplyDefaults = () => {
@@ -319,6 +644,29 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       rest: defaultRest || ex.rest
     }));
     setExercises(updatedExercises);
+  };
+
+  const handleAddManualExercise = () => {
+    if (!manualExerciseName) return;
+    
+    // Busca GIF
+    const matchKey = Object.keys(GIF_DATABASE).find(key => 
+      manualExerciseName.toLowerCase().includes(key.toLowerCase())
+    );
+
+    const newEx: Exercise = {
+        id: Date.now().toString() + Math.random(),
+        name: manualExerciseName,
+        sets: defaultSets || '3',
+        reps: defaultReps || '12',
+        rest: defaultRest || '60',
+        thumb: matchKey ? GIF_DATABASE[matchKey] : undefined
+    };
+
+    setExercises([...exercises, newEx]);
+    setManualExerciseName("");
+    setManualMuscleGroup("");
+    setShowManualInput(false);
   };
 
   const handleSaveWorkout = async () => {
@@ -456,26 +804,73 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         <div className="space-y-4">
            <div className="flex items-center justify-between pl-2">
               <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
-              <div 
-                 onClick={() => !isAnalyzing && fileInputRef.current?.click()}
-                 className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
-              >
-                  {isAnalyzing ? (
-                     <div className="flex items-center gap-1">
-                        <Loader2 size={12} className="text-orange-500 animate-spin" />
-                        <span className="text-[8px] font-black uppercase text-orange-500">Lendo PrescreveAI...</span>
-                     </div>
-                  ) : (
-                     <>
-                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
-                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
-                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
-                        </div>
-                     </>
-                  )}
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+              
+              <div className="flex items-center gap-2">
+                  <button 
+                     onClick={() => setShowManualInput(!showManualInput)}
+                     className="flex items-center gap-1 bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-red-600/50 transition-colors"
+                  >
+                     <Edit3 size={12} className="text-zinc-400" />
+                     <span className="text-[8px] font-black uppercase text-zinc-400">Manual</span>
+                  </button>
+
+                  <div 
+                     onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+                     className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-red-600/50"
+                  >
+                      {isAnalyzing ? (
+                         <div className="flex items-center gap-1">
+                            <Loader2 size={12} className="text-orange-500 animate-spin" />
+                            <span className="text-[8px] font-black uppercase text-orange-500">Lendo...</span>
+                         </div>
+                      ) : (
+                         <div className="flex items-center gap-1">
+                            <Scan size={12} className="text-zinc-400" />
+                            <span className="text-[8px] font-black uppercase text-zinc-400">Importar Print</span>
+                         </div>
+                      )}
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </div>
               </div>
            </div>
+
+           {/* AREA DE INSERÇÃO MANUAL */}
+           {showManualInput && (
+             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl animate-in slide-in-from-top-2 space-y-3">
+                <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Adicionar da Base de Dados</p>
+                <select 
+                  className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none"
+                  value={manualMuscleGroup}
+                  onChange={(e) => setManualMuscleGroup(e.target.value)}
+                >
+                   <option value="">Selecione Grupo Muscular</option>
+                   {Object.keys(EXERCISE_DATABASE).map(group => (
+                      <option key={group} value={group}>{group}</option>
+                   ))}
+                </select>
+                
+                {manualMuscleGroup && (
+                   <select 
+                     className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none"
+                     value={manualExerciseName}
+                     onChange={(e) => setManualExerciseName(e.target.value)}
+                   >
+                      <option value="">Selecione Exercício</option>
+                      {EXERCISE_DATABASE[manualMuscleGroup].map((ex, i) => (
+                         <option key={i} value={ex}>{ex}</option>
+                      ))}
+                   </select>
+                )}
+
+                <button 
+                  onClick={handleAddManualExercise}
+                  disabled={!manualExerciseName}
+                  className="w-full py-3 bg-red-600 rounded-xl text-[10px] font-black uppercase text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                   Adicionar à Lista
+                </button>
+             </div>
+           )}
 
            {exercises.map((ex, i) => (
              <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">

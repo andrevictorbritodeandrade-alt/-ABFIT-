@@ -13,7 +13,7 @@ import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
-// import { InstallPrompt } from './components/InstallPrompt'; // Removido para não exibir notificação automática
+import { InstallPrompt } from './components/InstallPrompt'; 
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -132,12 +132,24 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
-  // NOTA: Removido prompt de instalação automática para evitar UX ruim.
-  // O app agora confia no manifesto e meta tags para instalação nativa via menu do navegador.
+  // Verificação de PWA (Instalação)
+  useEffect(() => {
+    // Verifica se já está rodando como app (standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    
+    // Se NÃO estiver instalado, mostra o prompt após 2 segundos
+    if (!isStandalone) {
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => { try { await signInAnonymously(auth); } catch (err: any) { setLoading(false); } };
@@ -172,16 +184,16 @@ export default function App() {
   }, [user, view, selectedStudent?.id, isCoach]);
 
   const allStudentsForCoach = useMemo(() => {
-    // Definição dos dados padrão/hardcoded
+    // Definição dos dados padrão/hardcoded com os treinos CORRIGIDOS (7 Exercícios cada)
     const defaultStudents: Student[] = [
         { 
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
           email: 'lilicatorres@gmail.com', 
-          physicalAssessments: [], 
-          workoutHistory: [], 
           sexo: 'Feminino', 
           age: 35,
+          physicalAssessments: [], 
+          workoutHistory: [], 
           periodization: {
             id: 'per-liliane-01',
             titulo: 'Relatório Científico',
@@ -189,14 +201,45 @@ export default function App() {
             microciclos: [],
             type: 'STRENGTH',
             phaseTitle: 'Fase de Adaptação Metabólica',
-            generalStrategy: 'Periodização estruturada em fases metabólicas.',
-            clinicalSafety: ['Monitoramento de carga.'],
+            generalStrategy: 'Periodização estruturada em fases metabólicas com foco em resistência de força.',
+            clinicalSafety: ['Monitoramento de carga.', 'Atenção à postura lombar.'],
             bioInsight: {
-              context: 'Liliane Torres apresenta traços de neurodivergência.',
+              context: 'Liliane Torres apresenta ótima resposta a volume moderado.',
               tips: ['Estrutura Rígida', 'Linguagem Direta']
             }
           },
-          workouts: [] // Inicialmente vazio nos defaults para não sobrescrever
+          workouts: [
+            {
+                id: 'treino-a-liliane',
+                title: 'Treino A - Inferiores',
+                status: 'published',
+                projectedSessions: 12,
+                exercises: [
+                    { id: 'ex1', name: 'Agachamento Livre', sets: '4', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                    { id: 'ex2', name: 'Leg Press 45', sets: '3', reps: '15', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                    { id: 'ex3', name: 'Cadeira Extensora', sets: '3', reps: '15-20', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
+                    { id: 'ex4', name: 'Stiff com Halteres', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                    { id: 'ex5', name: 'Mesa Flexora', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                    { id: 'ex6', name: 'Elevação Pélvica', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                    { id: 'ex7', name: 'Panturrilha Sentado', sets: '3', reps: '20', rest: '30', thumb: 'https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif' }
+                ]
+            },
+            {
+                id: 'treino-b-liliane',
+                title: 'Treino B - Superiores',
+                status: 'published',
+                projectedSessions: 12,
+                exercises: [
+                    { id: 'ex1b', name: 'Puxada Alta', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                    { id: 'ex2b', name: 'Remada Baixa', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                    { id: 'ex3b', name: 'Supino Reto HBC', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                    { id: 'ex4b', name: 'Desenvolvimento HBC', sets: '3', reps: '12', rest: '60', thumb: null },
+                    { id: 'ex5b', name: 'Elevação Lateral', sets: '3', reps: '15', rest: '45', thumb: null },
+                    { id: 'ex6b', name: 'Tríceps Corda', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
+                    { id: 'ex7b', name: 'Abdominal Supra', sets: '3', reps: '20', rest: '30', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }
+                ]
+            }
+          ]
         },
         { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
         { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
@@ -225,6 +268,10 @@ export default function App() {
             // Só aplica periodização padrão se o objeto periodization não existir
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
+            }
+            // Importante: Se o banco estiver vazio de treinos, restauramos o padrão
+            if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
+                merged[existingIndex].workouts = def.workouts;
             }
         }
     });
@@ -373,6 +420,8 @@ export default function App() {
   return (
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
+      
+      {showInstallPrompt && <InstallPrompt onClose={() => setShowInstallPrompt(false)} />}
       
       {showSidebar && (
         <SideNav 
