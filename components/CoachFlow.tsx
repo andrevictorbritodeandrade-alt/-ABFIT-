@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -70,7 +70,6 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       <Logo size="text-5xl" subSize="text-[8px]" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
-        {/* Card PrescreveAI REMOVIDO daqui. Acesso agora é dentro do editor de treino. */}
         <div className="grid grid-cols-1 mb-2">
           <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
             <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
@@ -132,6 +131,7 @@ const FEATURE_LIST = [
 
 export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, onSave }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout | null) => void, onSave: (sid: string, data: any) => void }) {
   const [publishing, setPublishing] = useState(false);
+  const workoutsRef = useRef<HTMLDivElement>(null);
 
   const toggleFeatureVisibility = async (featureId: string) => {
     const currentDisabled = student.disabledFeatures || [];
@@ -153,9 +153,14 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
   const hasDrafts = student.workouts?.some(w => w.status === 'draft' || !w.status);
 
+  // Scroll suave para a lista de treinos
+  const scrollToWorkouts = () => {
+    workoutsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+      <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
           <h2 className="text-xl font-black italic uppercase tracking-tighter">
@@ -174,19 +179,102 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         )}
       </header>
 
-      {/* Card PrescreveAI Elite removido daqui. Acesso via "Novo Treino" */}
-      <div className="mt-6">
-        <Card className="p-8 cursor-pointer border-l-4 border-l-indigo-600 group hover:bg-zinc-800/50 transition-all" onClick={() => onNavigate('PERIODIZATION')}>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h4 className="text-xl font-black italic uppercase text-white group-hover:text-indigo-500 transition-colors">Periodização PhD</h4>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Macro & Microciclos PBE</p>
-            </div>
-            <Brain className="text-indigo-600 group-hover:scale-110 transition-transform" size={32} />
-          </div>
-        </Card>
+      {/* MENU VERTICAL COMPLETO (IDÊNTICO AO ALUNO) */}
+      <div className="space-y-3 mb-10">
+        
+        {/* Planilhas Ativas - Scroll para lista abaixo */}
+        <button onClick={scrollToWorkouts} className="w-full p-4 rounded-[2rem] bg-orange-950/20 border border-orange-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-orange-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-600/20">
+                 <Dumbbell size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Planilhas Ativas</span>
+           </div>
+           <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Periodização PhD */}
+        <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-4 rounded-[2rem] bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                 <Brain size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização PhD</span>
+           </div>
+           <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Avaliação Física */}
+        <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full p-4 rounded-[2rem] bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
+                 <Ruler size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Avaliação Física</span>
+           </div>
+           <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* RunTrack Elite */}
+        <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
+                 <Footprints size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">RunTrack Elite</span>
+           </div>
+           <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Análise de Dados */}
+        <button onClick={() => onNavigate('ANALYTICS_COACH')} className="w-full p-4 rounded-[2rem] bg-blue-950/20 border border-blue-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-blue-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                 <BarChart3 size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Análise de Dados</span>
+           </div>
+           <ChevronRight className="text-blue-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
       </div>
 
+      {/* Planilhas Atuais - Lista Expansível / Atalho Rápido */}
+      <div className="mt-8 space-y-4" ref={workoutsRef}>
+         <div className="flex items-center justify-between px-2">
+            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gerenciar Planilhas</h3>
+            <span className="text-[8px] font-black uppercase text-zinc-700 bg-zinc-900 px-2 py-1 rounded-md">{student.workouts?.length || 0} Ativas</span>
+         </div>
+         <div className="space-y-3">
+            {(student.workouts || []).map(w => (
+              <div key={w.id} className="p-6 rounded-[2rem] border border-white/5 bg-zinc-900/50 flex justify-between items-center group transition-all shadow-lg hover:border-orange-600/30">
+                 <div className="flex items-center gap-4">
+                    <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
+                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase italic ${w.status === 'published' ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20' : 'bg-orange-600/10 text-orange-500 border border-orange-600/20'}`}>
+                      {w.status === 'published' ? 'Publicado' : 'Rascunho'}
+                    </span>
+                 </div>
+                 <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600 transition-all">
+                    <Edit3 size={18}/>
+                 </button>
+              </div>
+            ))}
+            {(!student.workouts || student.workouts.length === 0) && (
+              <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] space-y-3">
+                 <p className="text-zinc-700 text-[10px] font-black uppercase">Nenhuma planilha ativa</p>
+                 <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="px-6 py-2 bg-red-600 rounded-full text-[10px] font-black uppercase text-white shadow-lg">Criar Novo Treino</button>
+              </div>
+            )}
+            
+            {/* Botão de Criação Rápida */}
+            <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
+              <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
+              <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
+            </button>
+         </div>
+      </div>
+
+      {/* Visibilidade do Dashboard - Movido para o final */}
       <div className="mt-12 space-y-4">
         <div className="flex items-center gap-3 px-2">
           <Eye size={16} className="text-red-600" />
@@ -218,36 +306,6 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         </Card>
       </div>
 
-      <div className="mt-12 space-y-4">
-         <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic pl-2">Planilhas Atuais</h3>
-         <div className="space-y-3">
-            {(student.workouts || []).map(w => (
-              <div key={w.id} className="p-6 rounded-[2rem] border border-white/5 bg-zinc-900/50 flex justify-between items-center group transition-all shadow-lg">
-                 <div className="flex items-center gap-4">
-                    <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
-                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase italic ${w.status === 'published' ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20' : 'bg-orange-600/10 text-orange-500 border border-orange-600/20'}`}>
-                      {w.status === 'published' ? 'Publicado' : 'Rascunho'}
-                    </span>
-                 </div>
-                 <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600 transition-all">
-                    <Edit3 size={18}/>
-                 </button>
-              </div>
-            ))}
-            {(!student.workouts || student.workouts.length === 0) && (
-              <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] space-y-3">
-                 <p className="text-zinc-700 text-[10px] font-black uppercase">Nenhuma planilha ativa</p>
-                 <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="px-6 py-2 bg-red-600 rounded-full text-[10px] font-black uppercase text-white shadow-lg">Criar Novo Treino</button>
-              </div>
-            )}
-            
-            {/* Botão de Criação Rápida */}
-            <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
-              <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
-              <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
-            </button>
-         </div>
-      </div>
       <EliteFooter />
     </div>
   );
@@ -260,25 +318,63 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
+  // Novos estados para padronização
+  const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
+  const [defaultReps, setDefaultReps] = useState(workoutToEdit?.defaultReps || '');
+  const [defaultRest, setDefaultRest] = useState(workoutToEdit?.defaultRest || '');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const handleApplyDefaults = () => {
+    if (!defaultSets && !defaultReps && !defaultRest) return;
+    
+    const updatedExercises = exercises.map(ex => ({
+      ...ex,
+      sets: defaultSets || ex.sets,
+      reps: defaultReps || ex.reps,
+      rest: defaultRest || ex.rest
+    }));
+    setExercises(updatedExercises);
+  };
+
   const handleSaveWorkout = async () => {
     setSaveState('loading');
+    
+    // Fallback seguro para sessões se estiver vazio ou NaN
+    const safeSessions = isNaN(projectedSessions) || projectedSessions < 1 ? 12 : projectedSessions;
+
     const newWorkout: Workout = {
       id: workoutToEdit?.id || Date.now().toString(),
       title: title || 'Novo Treino',
-      exercises,
-      projectedSessions,
-      status: 'draft'
+      exercises: exercises,
+      projectedSessions: safeSessions,
+      status: 'draft',
+      defaultSets: defaultSets,
+      defaultReps: defaultReps,
+      defaultRest: defaultRest
     };
+
     const currentWorkouts = student.workouts || [];
-    let updatedWorkouts = workoutToEdit ? currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w) : [...currentWorkouts, newWorkout];
+    let updatedWorkouts;
+    if (workoutToEdit) {
+      updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
+    } else {
+      updatedWorkouts = [...currentWorkouts, newWorkout];
+    }
+
     try {
-      await onSave(student.id, { workouts: updatedWorkouts });
+      // Race condition para evitar que o loading fique infinito em caso de falha silenciosa
+      const savePromise = onSave(student.id, { workouts: updatedWorkouts });
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save Timeout')), 10000));
+      
+      await Promise.race([savePromise, timeoutPromise]);
+      
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
     } catch (e) {
-      setSaveState('idle');
+      console.error("Save error:", e);
+      setSaveState('idle'); // Destrava o botão em caso de erro
+      // alert("Ocorreu um erro ao salvar. Verifique sua conexão.");
     }
   };
 
@@ -302,7 +398,11 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
             return {
               ...ex,
               id: Date.now().toString() + Math.random(),
-              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined
+              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
+              // Aplica defaults se disponíveis e não vierem da IA
+              sets: ex.sets || defaultSets || '3',
+              reps: ex.reps || defaultReps || '12',
+              rest: ex.rest || defaultRest || '60'
             };
           });
 
@@ -349,10 +449,38 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Nome da Planilha</label>
              <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
            </div>
+           
            <div>
              <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Validade (Sessões)</label>
              <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(parseInt(e.target.value))} placeholder="Ex: 12" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
              <p className="text-[8px] text-zinc-600 mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
+           </div>
+
+           {/* NOVA ÁREA DE PADRONIZAÇÃO */}
+           <div className="pt-4 border-t border-white/5">
+             <div className="flex justify-between items-center mb-2">
+               <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] block">Padronização de Carga</label>
+               <button 
+                  onClick={handleApplyDefaults}
+                  className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md"
+               >
+                  <Copy size={10} /> Aplicar Padrão a Todos
+               </button>
+             </div>
+             <div className="grid grid-cols-3 gap-3">
+               <div>
+                 <input type="text" value={defaultSets} onChange={e => setDefaultSets(e.target.value)} placeholder="SÉRIES" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Séries</p>
+               </div>
+               <div>
+                 <input type="text" value={defaultReps} onChange={e => setDefaultReps(e.target.value)} placeholder="REPS" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Repetições</p>
+               </div>
+               <div>
+                 <input type="text" value={defaultRest} onChange={e => setDefaultRest(e.target.value)} placeholder="SEG" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Descanso (s)</p>
+               </div>
+             </div>
            </div>
         </Card>
 

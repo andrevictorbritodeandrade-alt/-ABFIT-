@@ -24,6 +24,9 @@ export interface Workout {
   frequencyWeekly?: number;
   projectedSessions?: number;
   status?: 'draft' | 'published';
+  defaultSets?: string;
+  defaultReps?: string;
+  defaultRest?: string;
 }
 
 export interface RunningStats {
