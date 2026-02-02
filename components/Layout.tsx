@@ -81,7 +81,6 @@ export function SideNav({
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
-    { id: 'COACH_AI', label: 'Elite Coach AI', icon: Bot, color: 'red' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' },
     { id: 'SETTINGS', label: 'Configurações', icon: Settings2, color: 'zinc' },
   ];

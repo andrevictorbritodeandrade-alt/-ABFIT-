@@ -268,7 +268,7 @@ export default function App() {
           if (def.periodization && !merged[existingIndex].periodization) merged[existingIndex].periodization = def.periodization;
         }
     });
-    return merged;
+    return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   }, [students]);
 
   const studentForView = useMemo(() => {
