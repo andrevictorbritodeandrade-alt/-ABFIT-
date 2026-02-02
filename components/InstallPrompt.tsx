@@ -7,6 +7,7 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('android');
 
   useEffect(() => {
+    // Detectar plataforma
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIos = /iphone|ipad|ipod/.test(userAgent);
     const isDesktop = !/android|iphone|ipad|ipod/.test(userAgent);
@@ -17,10 +18,12 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
         setPlatform('desktop');
     }
 
+    // Listener para o evento de instalação (Chrome/Android/Desktop)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setPlatform('android');
+      // Se for Android/Desktop, garantimos que a plataforma esteja correta
+      if (!isIos) setPlatform(isDesktop ? 'desktop' : 'android');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -31,8 +34,8 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-        // Fallback para navegadores que não suportam prompt automático mas permitem manual
-        alert("Para instalar, use o menu do seu navegador (três pontos ou seta) e selecione 'Instalar App' ou 'Adicionar à Tela Inicial'.");
+        if (platform === 'ios') return; // iOS não tem clique para instalar
+        alert("Para instalar, utilize o menu do seu navegador e selecione 'Adicionar à Tela Inicial' ou 'Instalar Aplicativo'.");
         return;
     }
     deferredPrompt.prompt();
@@ -42,6 +45,11 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
     }
     setDeferredPrompt(null);
   };
+
+  // Se já estiver instalado (standalone), não mostramos nada (segurança extra)
+  if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-end md:items-center justify-center p-4 animate-in fade-in duration-500">
@@ -53,9 +61,9 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
                 <Smartphone size={40} className="text-white" />
              </div>
              
-             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Instalar App</h3>
+             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Instalar App Elite</h3>
              <p className="text-sm text-zinc-400 font-medium leading-relaxed px-4 mb-8">
-                Instale o <strong className="text-white">ABFIT Elite</strong> para melhor performance, acesso offline e experiência em tela cheia (Full Screen).
+                Instale o <strong className="text-white">ABFIT Elite</strong> para performance máxima, acesso offline e modo Tela Cheia.
              </p>
 
              {platform === 'ios' && (

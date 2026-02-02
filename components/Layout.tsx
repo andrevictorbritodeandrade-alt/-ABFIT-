@@ -137,17 +137,17 @@ export function SideNav({
   return (
     <>
       <div 
-        className={`fixed inset-0 z-[80] bg-black/80 backdrop-blur-md transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[80] bg-black/80 backdrop-blur-md transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
 
       <aside 
-        className={`fixed top-0 left-0 z-[90] h-screen bg-zinc-950 border-r border-white/5 transition-transform duration-500 transform lg:translate-x-0 w-[280px] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 z-[90] h-screen bg-zinc-950 border-r border-white/5 transition-transform duration-500 transform w-[280px] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-8 flex flex-col h-full">
           <div className="flex items-center justify-between mb-10">
             <Logo size="text-2xl" subSize="text-[8px]" />
-            <button onClick={onClose} className="lg:hidden p-2 text-zinc-500 hover:text-white bg-zinc-900 rounded-full border border-white/5">
+            <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-zinc-900 rounded-full border border-white/5">
               <X size={20} />
             </button>
           </div>
@@ -214,12 +214,28 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
   }, []);
 
   return (
-    <div className="fixed bottom-10 right-6 z-[100] animate-in fade-in slide-in-from-right-4 duration-1000">
-      <div className={`flex items-center justify-center w-8 h-8 rounded-full border shadow-2xl backdrop-blur-md transition-all duration-500 ${isSyncing ? 'bg-orange-600/10 border-orange-600/30' : 'bg-emerald-600/10 border-emerald-600/30'}`}>
-        <div className="relative">
-          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}></div>
-          {isSyncing && <div className="absolute inset-0 w-2 h-2 rounded-full bg-orange-500 animate-ping opacity-75"></div>}
-          {!online && <WifiOff size={10} className="absolute -top-3 -right-3 text-red-600" />}
+    <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-1000 pointer-events-none select-none">
+      <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-zinc-900/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
+        <div className="relative flex items-center justify-center w-5 h-5">
+           {isSyncing ? (
+             <RefreshCw size={18} className="text-orange-500 animate-spin" />
+           ) : online ? (
+             <>
+               <Wifi size={18} className="text-emerald-500 relative z-10" />
+               <div className="absolute inset-0 bg-emerald-500/30 rounded-full animate-ping opacity-75"></div>
+             </>
+           ) : (
+             <WifiOff size={18} className="text-red-500" />
+           )}
+        </div>
+        
+        <div className="flex flex-col">
+          <span className={`text-[9px] font-black uppercase tracking-[0.2em] leading-none ${isSyncing ? 'text-orange-400' : (online ? 'text-emerald-500' : 'text-red-400')}`}>
+            {isSyncing ? 'SINCRONIZANDO' : (online ? 'SISTEMA ONLINE' : 'DESCONECTADO')}
+          </span>
+          <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-wider leading-none mt-1">
+            {isSyncing ? 'SALVANDO DADOS...' : (online ? 'BASE ATUALIZADA' : 'MODO OFFLINE')}
+          </span>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
+import { InstallPrompt } from './components/InstallPrompt'; // Importação adicionada
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -130,11 +131,26 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isProfessor = view.includes('PROFESSOR') || view === 'STUDENT_MGMT' || view === 'WORKOUT_EDITOR' || (view === 'COACH_AI' && !selectedStudent);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
+
+  // Verificação de PWA (Instalação)
+  useEffect(() => {
+    // Verifica se já está rodando como app (standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    
+    // Se NÃO estiver instalado, mostra o prompt após 2 segundos
+    if (!isStandalone) {
+      const timer = setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => { try { await signInAnonymously(auth); } catch (err: any) { setLoading(false); } };
@@ -318,6 +334,8 @@ export default function App() {
     <BackgroundWrapper>
       <GlobalSyncIndicator isSyncing={isSyncing} />
       
+      {showInstallPrompt && <InstallPrompt onClose={() => setShowInstallPrompt(false)} />}
+      
       {showSidebar && (
         <SideNav 
           isOpen={isSidebarOpen} 
@@ -328,7 +346,7 @@ export default function App() {
         />
       )}
 
-      <main className={`transition-all duration-500 ${showSidebar ? 'lg:pl-[280px]' : ''}`}>
+      <main className="transition-all duration-500">
         {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} students={allStudentsForCoach} />}
         {view === 'DASHBOARD' && studentForView && (
           <div className="p-6 text-white text-center pt-6 h-screen overflow-y-auto custom-scrollbar flex flex-col items-center">
