@@ -79,7 +79,7 @@ function getWorkoutColor(type: string) {
   }
 }
 
-export function RunTrackStudentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
+export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void, onToggleMenu?: () => void }) {
   const [modelWorkouts, setModelWorkouts] = useState<any[]>([]);
   const [showFinishForm, setShowFinishForm] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
@@ -176,9 +176,16 @@ export function RunTrackStudentView({ student, onBack, onSave }: { student: Stud
   return (
     <div className="p-6 space-y-8 animate-in fade-in duration-500 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
       <div className="flex items-center gap-4 mb-4">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
-            <Menu size={20}/>
-          </button>
+          <div className="flex items-center gap-3">
+             {onToggleMenu && (
+               <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+                 <Menu size={20}/>
+               </button>
+             )}
+             <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
+               <ArrowLeft size={20}/>
+             </button>
+          </div>
           <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
             <HeaderTitle text="RunTrack Elite" />
           </h2>

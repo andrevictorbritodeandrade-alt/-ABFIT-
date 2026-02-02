@@ -500,13 +500,20 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   );
 }
 
-export function StudentAssessmentView({ student, onBack }: { student: Student, onBack: () => void }) {
+export function StudentAssessmentView({ student, onBack, onToggleMenu }: { student: Student, onBack: () => void, onToggleMenu?: () => void }) {
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-          <ArrowLeft size={20}/>
-        </button>
+        <div className="flex items-center gap-3">
+           {onToggleMenu && (
+             <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+               <Menu size={20}/>
+             </button>
+           )}
+           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+             <ArrowLeft size={20}/>
+           </button>
+        </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Avaliação PhD" />
         </h2>
@@ -541,16 +548,23 @@ export function StudentAssessmentView({ student, onBack }: { student: Student, o
   );
 }
 
-export function StudentPeriodizationView({ student, onBack }: { student: Student, onBack: () => void }) {
+export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { student: Student, onBack: () => void, onToggleMenu?: () => void }) {
   const plan = student.periodization;
 
   if (!plan || !plan.generalStrategy) {
     return (
       <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
         <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-            <ArrowLeft size={20}/>
-          </button>
+          <div className="flex items-center gap-3">
+             {onToggleMenu && (
+               <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+                 <Menu size={20}/>
+               </button>
+             )}
+             <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+               <ArrowLeft size={20}/>
+             </button>
+          </div>
           <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
             <HeaderTitle text="Periodização PhD" />
           </h2>
@@ -566,9 +580,16 @@ export function StudentPeriodizationView({ student, onBack }: { student: Student
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
       <header className="flex items-center gap-4 mb-8 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-          <ArrowLeft size={20}/>
-        </button>
+        <div className="flex items-center gap-3">
+           {onToggleMenu && (
+             <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+               <Menu size={20}/>
+             </button>
+           )}
+           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+             <ArrowLeft size={20}/>
+           </button>
+        </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Relatório Científico" />
         </h2>

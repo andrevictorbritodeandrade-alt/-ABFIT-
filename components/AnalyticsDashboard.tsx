@@ -8,9 +8,10 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 interface AnalyticsProps {
   student: Student;
   onBack: () => void;
+  onToggleMenu?: () => void;
 }
 
-export function AnalyticsDashboard({ student, onBack }: AnalyticsProps) {
+export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsProps) {
   // Garantia de dados iniciais para evitar crash
   const history = useMemo(() => student.workoutHistory || [], [student.workoutHistory]);
   const analytics = useMemo(() => student.analytics || { exercises: {}, sessionsCompleted: 0, streakDays: 0 }, [student.analytics]);
@@ -58,12 +59,19 @@ export function AnalyticsDashboard({ student, onBack }: AnalyticsProps) {
   return (
     <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-black">
       <header className="flex items-center gap-4 mb-10">
-        <button 
-          onClick={onBack} 
-          className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"
-        >
-          <Menu size={20}/>
-        </button>
+        <div className="flex items-center gap-3">
+           {onToggleMenu && (
+             <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+               <Menu size={20}/>
+             </button>
+           )}
+           <button 
+             onClick={onBack} 
+             className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"
+           >
+             <ArrowLeft size={20}/>
+           </button>
+        </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Performance Analytics" />
         </h2>

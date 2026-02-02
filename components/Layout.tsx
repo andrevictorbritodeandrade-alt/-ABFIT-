@@ -4,7 +4,7 @@ import {
   CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, 
   Mail, Phone, Loader2, MapPin, MessageCircle, Menu, X, 
   LayoutGrid, Bot, Settings2, User, Layout, Brain, Ruler, 
-  Footprints, BarChart3, Info 
+  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
@@ -256,22 +256,142 @@ export function NotificationBadge({ notifications, onClick }: { notifications: A
   );
 }
 
+interface WeatherData {
+  temp: number;
+  feelsLike: number;
+  min: number;
+  max: number;
+  rainProb: number;
+  condition: string;
+  location: string;
+}
+
 export function WeatherWidget() {
-  const [weather, setWeather] = useState({ temp: '--', condition: 'Loading' });
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchWeather = async (lat: number, lon: number) => {
+    try {
+      // 1. Fetch Weather Data (Open-Meteo)
+      const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
+      );
+      const wData = await weatherRes.json();
+
+      // 2. Fetch Location Name (Reverse Geocoding free)
+      const geoRes = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`
+      );
+      const gData = await geoRes.json();
+
+      const city = gData.city || gData.locality || "Localização";
+
+      setWeather({
+        temp: Math.round(wData.current.temperature_2m),
+        feelsLike: Math.round(wData.current.apparent_temperature),
+        min: Math.round(wData.daily.temperature_2m_min[0]),
+        max: Math.round(wData.daily.temperature_2m_max[0]),
+        rainProb: wData.daily.precipitation_probability_max[0],
+        condition: getWeatherCondition(wData.current.weather_code),
+        location: city
+      });
+      setError(null);
+    } catch (err) {
+      console.error("Weather error:", err);
+      setError("Erro Clima");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getWeatherCondition = (code: number) => {
+    if (code === 0) return 'Limpo';
+    if (code >= 1 && code <= 3) return 'Nublado';
+    if (code >= 45 && code <= 48) return 'Nevoeiro';
+    if (code >= 51 && code <= 67) return 'Chuva Fraca';
+    if (code >= 71) return 'Chuva Forte'; // Simplificação
+    if (code >= 95) return 'Tempestade';
+    return 'Variável';
+  };
+
+  const getIcon = () => {
+    if (!weather) return <Sun size={16} className="text-orange-500" />;
+    const cond = weather.condition.toLowerCase();
+    if (cond.includes('chuva') || cond.includes('tempestade')) return <CloudRain size={16} className="text-blue-500" />;
+    if (cond.includes('nublado') || cond.includes('nevoeiro')) return <Cloud size={16} className="text-zinc-400" />;
+    return <Sun size={16} className="text-orange-500" />;
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setWeather({ temp: '28°', condition: 'Ensolarado' });
-    }, 1500);
-    return () => clearTimeout(timer);
+    const initWeather = () => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            fetchWeather(position.coords.latitude, position.coords.longitude);
+          },
+          (err) => {
+            console.error("GPS Error", err);
+            setError("GPS Inativo");
+            setLoading(false);
+          }
+        );
+      } else {
+        setError("GPS N/A");
+        setLoading(false);
+      }
+    };
+
+    initWeather();
+
+    // Atualiza a cada 1 hora (3600000 ms)
+    const interval = setInterval(initWeather, 3600000);
+    return () => clearInterval(interval);
   }, []);
 
+  if (error) {
+    return (
+      <div className="flex items-center gap-3 bg-zinc-900/40 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+        <MapPin className="text-red-600" size={16} />
+        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{error}</span>
+      </div>
+    );
+  }
+
+  if (loading || !weather) {
+    return (
+      <div className="flex items-center gap-3 bg-zinc-900/40 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+        <Loader2 className="text-zinc-600 animate-spin" size={16} />
+        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Carregando...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-3 bg-zinc-900/40 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
-      <Sun className="text-orange-500" size={16} />
+    <div className="flex items-center gap-4 bg-zinc-900/40 pl-4 pr-5 py-2.5 rounded-[1.2rem] border border-white/5 backdrop-blur-md shadow-lg group hover:bg-zinc-900/60 transition-colors cursor-default">
+      {getIcon()}
       <div className="flex flex-col">
-        <span className="text-[10px] font-black text-white italic">{weather.temp}</span>
-        <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">{weather.condition}</span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-black text-white italic leading-none">{weather.temp}°</span>
+          <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wide leading-none">
+             Max {weather.max}° • Min {weather.min}°
+          </span>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+           <MapPin size={8} className="text-red-600" />
+           <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest truncate max-w-[100px]">{weather.location}</span>
+           <span className="text-[8px] text-zinc-600">|</span>
+           <div className="flex items-center gap-1">
+             <Thermometer size={8} className="text-orange-500" />
+             <span className="text-[8px] font-bold text-zinc-500 uppercase">Sens {weather.feelsLike}°</span>
+           </div>
+           {weather.rainProb > 0 && (
+             <div className="flex items-center gap-1 ml-1">
+                <Droplets size={8} className="text-blue-500" />
+                <span className="text-[8px] font-bold text-blue-400 uppercase">{weather.rainProb}%</span>
+             </div>
+           )}
+        </div>
       </div>
     </div>
   );
