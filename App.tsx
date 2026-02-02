@@ -236,13 +236,13 @@ export default function App() {
               status: 'published',
               projectedSessions: 12,
               exercises: [
-                { id: 'b1', name: 'PUXADA ABERTA NO PULLEY', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b2', name: 'REMADA BAIXA TRIÂNGULO', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b3', name: 'BÍCEPS COM HALTERES', sets: '3', reps: '12', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b4', name: 'ELEVAÇÃO LATERAL', sets: '3', reps: '12', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b5', name: 'STIFF COM BARRA', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b6', name: 'MESA FLEXORA', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '60s' },
-                { id: 'b7', name: 'PANTURRILHA EM PÉ', sets: '3', reps: '20', method: 'SÉRIE ESTÁVEL', rest: '60s' }
+                { id: 'b1', name: 'Extensão de quadril e joelho em pé caneleira', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b3', name: 'Subida no step', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b4', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b6', name: 'Extensão de ombros no cross barra reta', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' },
+                { id: 'b7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', method: 'SÉRIE ESTÁVEL', rest: '30s' }
               ]
             }
           ]
