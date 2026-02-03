@@ -335,34 +335,47 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   ]
 };
 
-// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
+// BANCO DE DADOS DE IMAGENS (GIFS) EXTENDIDO E CORRIGIDO
+// Mapeia palavras-chave para GIFs de alta qualidade (estilo PrescreveAI)
 const GIF_DATABASE: Record<string, string> = {
-  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", 
-  "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
+  // PEITO
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif", 
+  "voador": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "flexão": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  
+  // COSTAS
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "pullover": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+
+  // OMBROS
+  "desenvolvimento": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif", 
+  "elevação": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "abdução": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+
+  // PERNAS
   "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "passada": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "búlgaro": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+
+  // BRAÇOS
+  "bíceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "tríceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "coice": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+
+  // ABDOMEN E CORE
   "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
   "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
-  "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
-  "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
-  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
+  "infra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif"
 };
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
@@ -637,6 +650,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   
   const handleApplyDefaults = () => {
     if (!defaultSets && !defaultReps && !defaultRest) return;
+    
     const updatedExercises = exercises.map(ex => ({
       ...ex,
       sets: defaultSets || ex.sets,
@@ -649,7 +663,9 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const handleAddManualExercise = () => {
     if (!manualExerciseName) return;
     
-    // Busca GIF
+    // BUSCA INTELIGENTE DE GIF NA BASE
+    // Tenta encontrar uma chave no GIF_DATABASE que esteja contida no nome do exercício selecionado
+    // Ex: "Supino Reto" vai dar match com "supino"
     const matchKey = Object.keys(GIF_DATABASE).find(key => 
       manualExerciseName.toLowerCase().includes(key.toLowerCase())
     );
@@ -665,7 +681,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
     setExercises([...exercises, newEx]);
     setManualExerciseName("");
-    setManualMuscleGroup("");
+    // Não limpa o grupo para facilitar a adição de múltiplos do mesmo grupo
+    // setManualMuscleGroup(""); 
     setShowManualInput(false);
   };
 
@@ -688,16 +705,11 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     const currentWorkouts = student.workouts || [];
     let updatedWorkouts;
     
-    // VERIFICAÇÃO CRÍTICA: Se o treino que estamos editando JÁ EXISTE na lista do banco de dados (currentWorkouts)
-    // Se workoutToEdit for nulo, obviamente é novo.
-    // Se workoutToEdit existe, mas seu ID NÃO está na lista currentWorkouts (ex: era um padrão não salvo), tratamos como NOVO (push).
     const existsInDB = workoutToEdit && currentWorkouts.some(w => w.id === workoutToEdit.id);
 
     if (existsInDB) {
-      // Atualiza o existente
       updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
     } else {
-      // Adiciona como novo (Push), pois não existe no banco para ser atualizado
       updatedWorkouts = [...currentWorkouts, newWorkout];
     }
 
@@ -722,10 +734,12 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         const base64 = reader.result as string;
         try {
           const extractedExercises = await extractWorkoutFromImage(base64);
+          
           const enrichedExercises = extractedExercises.map(ex => {
             const matchKey = Object.keys(GIF_DATABASE).find(key => 
               ex.name.toLowerCase().includes(key.toLowerCase())
             );
+            
             return {
               ...ex,
               id: Date.now().toString() + Math.random(),
@@ -735,6 +749,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
               rest: ex.rest || defaultRest || '60'
             };
           });
+
           setExercises(prev => [...prev, ...enrichedExercises]);
         } catch (error) {
           console.error(error);
@@ -752,6 +767,15 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     updated[idx] = { ...updated[idx], rest: val };
     setExercises(updated);
   };
+
+  // Preview do GIF ao selecionar no dropdown manual
+  const selectedManualGif = useMemo(() => {
+    if (!manualExerciseName) return null;
+    const matchKey = Object.keys(GIF_DATABASE).find(key => 
+      manualExerciseName.toLowerCase().includes(key.toLowerCase())
+    );
+    return matchKey ? GIF_DATABASE[matchKey] : null;
+  }, [manualExerciseName]);
 
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
@@ -788,7 +812,10 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
            <div className="pt-4 border-t border-white/5">
              <div className="flex justify-between items-center mb-2">
                <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] block">Padronização de Carga</label>
-               <button onClick={handleApplyDefaults} className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md">
+               <button 
+                  onClick={handleApplyDefaults}
+                  className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md"
+               >
                   <Copy size={10} /> Aplicar Padrão a Todos
                </button>
              </div>
@@ -842,40 +869,66 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
               </div>
            </div>
 
-           {/* AREA DE INSERÇÃO MANUAL */}
+           {/* AREA DE INSERÇÃO MANUAL MELHORADA */}
            {showManualInput && (
-             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl animate-in slide-in-from-top-2 space-y-3">
-                <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Adicionar da Base de Dados</p>
-                <select 
-                  className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none"
-                  value={manualMuscleGroup}
-                  onChange={(e) => setManualMuscleGroup(e.target.value)}
-                >
-                   <option value="">Selecione Grupo Muscular</option>
-                   {Object.keys(EXERCISE_DATABASE).map(group => (
-                      <option key={group} value={group}>{group}</option>
-                   ))}
-                </select>
+             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl animate-in slide-in-from-top-2 space-y-3 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                   <Dumbbell size={64} className="text-white" />
+                </div>
+                <div className="flex justify-between items-center">
+                   <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Banco de Dados PrescreveAI</p>
+                   <button onClick={() => setShowManualInput(false)} className="text-zinc-600 hover:text-white"><X size={14}/></button>
+                </div>
                 
-                {manualMuscleGroup && (
-                   <select 
-                     className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none"
-                     value={manualExerciseName}
-                     onChange={(e) => setManualExerciseName(e.target.value)}
-                   >
-                      <option value="">Selecione Exercício</option>
-                      {EXERCISE_DATABASE[manualMuscleGroup].map((ex, i) => (
-                         <option key={i} value={ex}>{ex}</option>
-                      ))}
-                   </select>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-3">
+                      <select 
+                        className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none focus:border-red-600 transition-colors"
+                        value={manualMuscleGroup}
+                        onChange={(e) => setManualMuscleGroup(e.target.value)}
+                      >
+                         <option value="">Selecione Grupo Muscular</option>
+                         {Object.keys(EXERCISE_DATABASE).map(group => (
+                            <option key={group} value={group}>{group}</option>
+                         ))}
+                      </select>
+                      
+                      {manualMuscleGroup && (
+                         <select 
+                           className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none focus:border-red-600 transition-colors"
+                           value={manualExerciseName}
+                           onChange={(e) => setManualExerciseName(e.target.value)}
+                         >
+                            <option value="">Selecione Exercício</option>
+                            {EXERCISE_DATABASE[manualMuscleGroup].map((ex, i) => (
+                               <option key={i} value={ex}>{ex}</option>
+                            ))}
+                         </select>
+                      )}
+                   </div>
+
+                   {/* PREVIEW DO GIF AUTOMÁTICO */}
+                   <div className="bg-black rounded-xl border border-zinc-800 h-32 flex items-center justify-center overflow-hidden relative">
+                      {selectedManualGif ? (
+                         <>
+                           <img src={selectedManualGif} className="w-full h-full object-cover opacity-80" alt="Preview" />
+                           <div className="absolute bottom-2 right-2 bg-red-600 px-2 py-0.5 rounded text-[7px] font-black uppercase text-white">GIF 8K Ativo</div>
+                         </>
+                      ) : (
+                         <div className="text-center opacity-30">
+                            <Video size={24} className="mx-auto mb-1 text-zinc-500" />
+                            <p className="text-[8px] font-black uppercase text-zinc-600">Preview</p>
+                         </div>
+                      )}
+                   </div>
+                </div>
 
                 <button 
                   onClick={handleAddManualExercise}
                   disabled={!manualExerciseName}
-                  className="w-full py-3 bg-red-600 rounded-xl text-[10px] font-black uppercase text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-red-600 rounded-xl text-[10px] font-black uppercase text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                   Adicionar à Lista
+                   <Plus size={14} /> Adicionar à Série
                 </button>
              </div>
            )}
@@ -883,9 +936,14 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
            {exercises.map((ex, i) => (
              <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
+                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 relative group">
                      {ex.thumb ? (
-                       <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                       <>
+                         <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                         <div className="absolute bottom-0 right-0 bg-red-600 w-3 h-3 flex items-center justify-center rounded-tl-md">
+                            <Video size={8} className="text-white" />
+                         </div>
+                       </>
                      ) : (
                        <div className="w-full h-full flex items-center justify-center bg-zinc-800">
                          <Dumbbell size={16} className="text-zinc-600"/>
