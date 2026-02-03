@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
-  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu
+  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -14,6 +14,7 @@ import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
 import { InstallPrompt } from './components/InstallPrompt'; 
+import { CorreRJView } from './components/CorreRJ';
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -164,9 +165,7 @@ export default function App() {
     if (view !== 'LOGIN' && isCoach) {
       const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
       unsub = onSnapshot(q, (snapshot) => {
-        if (snapshot.metadata.hasPendingWrites) {
-           setIsSyncing(true);
-        }
+        setIsSyncing(snapshot.metadata.hasPendingWrites);
         const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
         setStudents(updatedStudents);
         // Atualiza o aluno selecionado em tempo real se ele estiver aberto
@@ -178,9 +177,7 @@ export default function App() {
     } else if (selectedStudent && view !== 'LOGIN') {
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
       unsub = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.metadata.hasPendingWrites) {
-           setIsSyncing(true);
-        }
+        setIsSyncing(docSnap.metadata.hasPendingWrites);
         if (docSnap.exists()) setSelectedStudent({ id: docSnap.id, ...docSnap.data() } as Student);
       });
     }
@@ -188,16 +185,16 @@ export default function App() {
   }, [user, view, selectedStudent?.id, isCoach]);
 
   const allStudentsForCoach = useMemo(() => {
-    // Definição dos dados padrão/hardcoded com os treinos CORRIGIDOS (7 Exercícios cada)
+    // Definição dos dados padrão/hardcoded com os treinos CORRIGIDOS
     const defaultStudents: Student[] = [
         { 
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
           email: 'lilicatorres@gmail.com', 
-          sexo: 'Feminino', 
-          age: 35,
           physicalAssessments: [], 
           workoutHistory: [], 
+          sexo: 'Feminino', 
+          age: 35,
           periodization: {
             id: 'per-liliane-01',
             titulo: 'Relatório Científico',
@@ -240,13 +237,13 @@ export default function App() {
                 defaultReps: '15',
                 defaultRest: '30',
                 exercises: [
-                    { id: 'lb1', name: 'Extensão de quadril em pé caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                    { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                    { id: 'lb3', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                    { id: 'lb4', name: 'Subida no step', sets: '3', reps: '15', rest: '30', thumb: null },
-                    { id: 'lb5', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: null },
-                    { id: 'lb6', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: null },
-                    { id: 'lb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' }
+                    { id: 'lb1', name: 'Extensão de quadril em pé caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                    { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
+                    { id: 'lb3', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
+                    { id: 'lb4', name: 'Subida no step', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif' },
+                    { id: 'lb5', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
+                    { id: 'lb6', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
+                    { id: 'lb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' }
                 ]
             }
           ]
@@ -269,9 +266,11 @@ export default function App() {
             if (!existing.nome) merged[existingIndex].nome = def.nome;
             if (!existing.email) merged[existingIndex].email = def.email;
             
+            // Só aplica periodização padrão se o objeto periodization não existir
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
             }
+            // CORREÇÃO: Se não existirem treinos no banco, usa os treinos padrão (A e B)
             if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
                 merged[existingIndex].workouts = def.workouts;
             }
@@ -284,16 +283,19 @@ export default function App() {
   const studentForView = useMemo(() => {
     if (!selectedStudent) return null;
     if (isCoach) return selectedStudent;
+    // O aluno vê o que está selecionado (que vem do banco ou do merge)
     return selectedStudent;
   }, [selectedStudent, view, isCoach]);
 
+  // Feed de Performance Global para o Professor
   const globalFeedHistory = useMemo(() => {
     if (!isCoach) return studentForView?.workoutHistory || [];
     
+    // Mescla todos os históricos de todos os alunos e injeta o nome do atleta
     const allHistory: WorkoutHistoryEntry[] = students.flatMap(s => 
       (s.workoutHistory || []).map(h => ({
         ...h,
-        athleteName: s.nome
+        athleteName: s.nome // Injeta o nome do aluno para o professor saber quem treinou
       }))
     );
     
@@ -344,19 +346,15 @@ export default function App() {
   };
 
   const handleSaveData = async (sid: string, data: any) => {
-    // FORCE SYNC INDICATOR TO SHOW IMMEDIATELY
+    // Dispara o indicador de sync
     setIsSyncing(true);
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
+      // O isSyncing voltará a false automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       console.error("Erro ao salvar:", e.message); 
-    } finally {
-      // Ensure the sync indicator stays visible for a moment so the user sees it,
-      // and then turn it off explicitly.
-      setTimeout(() => {
-        setIsSyncing(false);
-      }, 1500);
+      setIsSyncing(false); // Força false em erro
     }
   };
 
@@ -401,12 +399,14 @@ export default function App() {
       }
   };
 
+  // DEFINIÇÃO DOS BOTÕES DO DASHBOARD DO ALUNO
   const allDashboardItems = [
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
+    { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
@@ -483,6 +483,7 @@ export default function App() {
         {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onSave={handleSaveData} onToggleMenu={toggleSidebar} />}
         {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
+        {view === 'CORRE_RJ' && <CorreRJView onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} />}
         {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
         
         {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} onNavigate={setView} />}

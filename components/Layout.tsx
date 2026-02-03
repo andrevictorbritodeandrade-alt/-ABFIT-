@@ -80,6 +80,7 @@ export function SideNav({
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
+    { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' },
     { id: 'SETTINGS', label: 'Configurações', icon: Settings2, color: 'zinc' },
@@ -103,6 +104,7 @@ export function SideNav({
       case 'emerald': return 'bg-emerald-600/10 text-white';
       case 'rose': return 'bg-rose-600/10 text-white';
       case 'blue': return 'bg-blue-600/10 text-white';
+      case 'yellow': return 'bg-yellow-600/10 text-white';
       default: return 'bg-zinc-800 text-white';
     }
   };
@@ -117,6 +119,7 @@ export function SideNav({
       case 'emerald': return 'text-emerald-600';
       case 'rose': return 'text-rose-600';
       case 'blue': return 'text-blue-600';
+      case 'yellow': return 'text-yellow-500';
       default: return 'text-white';
     }
   };
@@ -129,6 +132,7 @@ export function SideNav({
       case 'emerald': return 'bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.8)]';
       case 'rose': return 'bg-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.8)]';
       case 'blue': return 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.8)]';
+      case 'yellow': return 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.8)]';
       default: return 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.4)]';
     }
   };

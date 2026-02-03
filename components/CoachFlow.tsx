@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy, Cloud
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy, Cloud, MapPin
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -16,100 +16,57 @@ import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
+// IMAGEM PADRÃO PARA QUANDO NÃO ENCONTRAR NADA
+const DEFAULT_EXERCISE_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
+
+// BANCO DE DADOS DE IMAGENS (GIFS) EXTENDIDO
 const GIF_DATABASE: Record<string, string> = {
+  // PERNAS / GLÚTEOS
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
   "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
   "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
   "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
   "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
   "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
-  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "extensão de quadril": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "gluteo": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "flexão de joelho": "https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif",
+  "step": "https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif",
+  "subida": "https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif",
+  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif", 
+
+  // SUPERIORES / COSTAS / PEITO
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "desenvolvimento": "https://i.pinimg.com/originals/e7/17/74/e71774e363b9bc298d022b7a9f7374b0.gif",
+  "elevação lateral": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif", // Generic arm/shoulder
+  
+  // BRAÇOS
+  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+
+  // ABDOMEN / CORE
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
 };
 
 const EXERCISE_DATABASE: Record<string, string[]> = {
-  "Peito": [
-    "Crucifixo aberto alternado com HBC no banco declinado",
-    "Crucifixo aberto alternado com HBC no banco inclinado",
-    "Crucifixo aberto alternado com HBC no banco reto",
-    "Crucifixo aberto com HBC no banco declinado",
-    "Crucifixo aberto com HBC no banco inclinado",
-    "Crucifixo aberto com HBC no banco reto",
-    "Crucifixo aberto na máquina",
-    "Crucifixo alternado na máquina",
-    "Crucifixo em pé no cross polia alta",
-    "Crucifixo em pé no cross polia média",
-    "Crucifixo unilateral na máquina",
-    "Extensão de cotovelos no solo (Flexão de Braços)",
-    "PullUp na polia baixa pegada supinada",
-    "Supino aberto banco declinado no smith",
-    "Supino aberto banco inclinado no smith",
-    "Supino aberto no banco reto no smith",
-    "Supino alternado banco 45° fechado no crossover",
-    "Supino alternado banco 45° no crossover",
-    "Supino alternado banco 75° aberto no crossover",
-    "Supino alternado banco 75° fechado no crossover",
-    "Supino alternado banco reto aberto no crossover",
-    "Supino alternado banco reto fechado no crossover",
-    "Supino alternado deitado aberto na máquina",
-    "Supino alternado deitado fechado na máquina",
-    "Supino alternado inclinado aberto na máquina",
-    "Supino alternado inclinado fechado na máquina",
-    "Supino alternado sentado aberto na máquina",
-    "Supino alternado sentado fechado na máquina",
-    "Supino banco 45º aberto no crossover",
-    "Supino banco 45º fechado no crossover",
-    "Supino banco 75º aberto no crossover",
-    "Supino banco 75º fechado no crossover",
-    "Supino banco reto aberto no crossover",
-    "Supino banco reto fechado no crossover",
-    "Supino declinado alternado com HBC",
-    "Supino declinado com HBC",
-    "Supino declinado com HBL",
-    "Supino deitado aberto na máquina",
-    "Supino deitado fechado na máquina",
-    "Supino inclinado aberto na máquina",
-    "Supino inclinado alternado com HBC",
-    "Supino inclinado com HBC",
-    "Supino inclinado com HBL",
-    "Supino inclinado fechado na máquina",
-    "Supino Reto com HBL",
-    "Supino reto alternado com HBC",
-    "Supino reto com HBC",
-    "Supino sentado aberto na máquina",
-    "Supino sentado fechado na máquina",
-    "Supino unilateral deitado aberto na máquina",
-    "Supino unilateral deitado fechado na máquina",
-    "Supino unilateral inclinado aberto na máquina",
-    "Supino unilateral inclinado fechado na máquina",
-    "Supino unilateral sentado aberto na máquina",
-    "Supino unilateral sentado fechado na máquina",
-    "Voador peitoral"
-  ],
-  "Ombro": [
-    "Abdução de ombros banco 75º com HBC pegada neutra",
-    "Abdução de ombros banco 75º com HBC pegada pronada",
-    "Abdução de ombros em pé com HBC"
-  ]
+  "Peito": ["Supino Reto", "Supino Inclinado", "Crucifixo", "Voador", "Flexão de Braço"],
+  "Costas": ["Puxada Alta", "Remada Curvada", "Remada Baixa", "Pulldown", "Barra Fixa"],
+  "Pernas": ["Agachamento Livre", "Leg Press 45", "Cadeira Extensora", "Mesa Flexora", "Stiff", "Afundo"],
+  "Ombros": ["Desenvolvimento", "Elevação Lateral", "Elevação Frontal", "Crucifixo Inverso"],
+  "Braços": ["Rosca Direta", "Rosca Martelo", "Tríceps Corda", "Tríceps Testa"],
+  "Abdomen": ["Abdominal Supra", "Abdominal Infra", "Prancha", "Abdominal Remador"]
 };
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
@@ -136,13 +93,20 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       <Logo size="text-5xl" subSize="text-[8px]" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
-        <div className="grid grid-cols-1 mb-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
             <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
               <Layout className="text-zinc-400" size={18} />
             </div>
             <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Feed Global</h3>
             <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Timeline de Atletas</p>
+          </Card>
+          <Card className="p-4 bg-yellow-950/20 border-yellow-600/20 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('CORRE_RJ')}>
+            <div className="p-2 bg-yellow-600 w-fit rounded-xl mb-3">
+              <MapPin className="text-white" size={18} />
+            </div>
+            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Corre RJ</h3>
+            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Calendário 2026</p>
           </Card>
         </div>
 
@@ -373,7 +337,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         sets: defaultSets || '3',
         reps: defaultReps || '12',
         rest: defaultRest || '60',
-        thumb: matchKey ? GIF_DATABASE[matchKey] : undefined
+        // USA IMAGEM DEFAULT SE NÃO ENCONTRAR MATCH
+        thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE
     };
 
     setExercises([...exercises, newEx]);
@@ -440,7 +405,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                 return {
                   ...ex,
                   id: Date.now().toString() + Math.random(),
-                  thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
+                  // USA IMAGEM DEFAULT SE NÃO ENCONTRAR MATCH
+                  thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE,
                   sets: ex.sets || defaultSets || '3',
                   reps: ex.reps || defaultReps || '12',
                   rest: ex.rest || defaultRest || '60'
@@ -472,7 +438,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     const matchKey = Object.keys(GIF_DATABASE).find(key => 
       manualExerciseName.toLowerCase().includes(key.toLowerCase())
     );
-    return matchKey ? GIF_DATABASE[matchKey] : null;
+    return matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE;
   }, [manualExerciseName]);
 
   return (
