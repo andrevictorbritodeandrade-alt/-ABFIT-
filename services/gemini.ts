@@ -110,26 +110,25 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
+  // Limpeza de header base64 caso exista
   const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  // Prompt mais permissivo e inteligente para lidar com imagens ruins
   const prompt = `
-    Analyze this workout image. It contains a list of exercises.
-    Extract the exercises into a JSON Array.
+    Analyze the image which contains a list of gym exercises.
+    Return a JSON ARRAY containing the exercises found.
+    Translate exercise names to Portuguese (Brazil) if they are in English.
     
-    If the image is blurry or handwritten, make your best guess based on gym context.
-    If numbers (sets/reps) are missing, infer standard values (3 sets, 12 reps).
-    translate names to Portuguese if needed.
+    Structure per item:
+    {
+      "name": "Nome do Exercício",
+      "sets": "3",
+      "reps": "12",
+      "rest": "60",
+      "method": "Normal"
+    }
 
-    Expected JSON Structure:
-    [
-      {
-        "name": "Exercise Name",
-        "sets": "3",
-        "reps": "12",
-        "rest": "60"
-      }
-    ]
+    If sets/reps are not visible, use default "3" sets and "12" reps.
+    Do NOT include markdown formatting. Just the raw JSON array.
   `;
 
   try {
@@ -137,30 +136,17 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
       model: MODEL_TEXT,
       contents: {
         parts: [
-          { inlineData: { mimeType: 'image/png', data: base64Data } },
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
           { text: prompt }
         ]
-      }
+      },
+      // FORÇA A RESPOSTA EM JSON PURO PARA EVITAR ERROS DE PARSE
+      config: { responseMimeType: "application/json" }
     });
 
-    let text = response.text || "";
-    
-    // PARSER CIRÚRGICO: Encontra onde começa [ e onde termina ] ignorando o resto
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    
-    if (jsonMatch) {
-        try {
-            const cleanJson = jsonMatch[0];
-            const parsed = JSON.parse(cleanJson);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (parseError) {
-            console.error("Erro ao fazer parse do JSON extraído:", parseError);
-            return [];
-        }
-    } else {
-        console.warn("Nenhum array JSON encontrado na resposta da IA.");
-        return [];
-    }
+    const text = response.text || "[]";
+    const json = JSON.parse(text);
+    return Array.isArray(json) ? json : [];
 
   } catch (e) {
     console.error("Erro fatal na extração:", e);

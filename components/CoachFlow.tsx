@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy, Cloud
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -16,7 +16,36 @@ import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-// BANCO DE DADOS DE EXERCÍCIOS (COMPLETO)
+// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
+const GIF_DATABASE: Record<string, string> = {
+  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
+  "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+  "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
+};
+
 const EXERCISE_DATABASE: Record<string, string[]> = {
   "Peito": [
     "Crucifixo aberto alternado com HBC no banco declinado",
@@ -79,303 +108,8 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   "Ombro": [
     "Abdução de ombros banco 75º com HBC pegada neutra",
     "Abdução de ombros banco 75º com HBC pegada pronada",
-    "Abdução de ombros em pé com HBC pegada neutra",
-    "Abdução de ombros em pé com HBC pegada pronada",
-    "Abdução de ombros unilateral em decúbito lateral no banco 45º HBC",
-    "Abdução de ombros unilateral em decúbito lateral no banco 45º no cross",
-    "Abdução de ombros unilateral no cross",
-    "Desenvolvimento aberto banco 75º no smith",
-    "Desenvolvimento aberto na máquina",
-    "Desenvolvimento banco 75º aberto com HBC",
-    "Desenvolvimento banco 75º aberto com HBM",
-    "Desenvolvimento banco 75º arnold com HBC",
-    "Desenvolvimento banco 75º fechado pronado com HBC",
-    "Desenvolvimento banco 75º fechado pronado com HBM",
-    "Desenvolvimento banco 75º fechado supinado com HBC",
-    "Desenvolvimento banco 75º fechado supinado com HBM",
-    "Desenvolvimento em pé aberto com HBC",
-    "Desenvolvimento em pé aberto com HBM",
-    "Desenvolvimento em pé arnold com HBC",
-    "Desenvolvimento em pé fechado pronado com HBC",
-    "Desenvolvimento em pé fechado pronado with HBM",
-    "Desenvolvimento em pé fechado supinado com HBC",
-    "Desenvolvimento em pé fechado supinado with HBM",
-    "Desenvolvimento fechado pronado banco 75º no smith",
-    "Desenvolvimento fechado supinado banco 75º no smith",
-    "Encolhimento de ombros com HBC",
-    "Encolhimento de ombros with HBM",
-    "Encolhimento de ombros no cross",
-    "Flexão de ombro with HBM pegada pronada",
-    "Flexão de ombro simultâneo com HBC pegada neutra",
-    "Flexão de ombro simultâneo com HBC pegada pronada",
-    "Flexão de ombro unilateral com HBC pegada neutra",
-    "Flexão de ombro unilateral com HBC pegada pronada",
-    "Flexão de ombro unilateral no cross",
-    "Remada alta banco 45º cross",
-    "Remada alta com HBM no banco 45º",
-    "Remada alta com Kettlebell",
-    "Remada alta em decúbito dorsal cross",
-    "Remada alta em pé com HBC",
-    "Remada alta em pé com HBL",
-    "Remada alta em pé com HBM",
-    "Remada alta em pé no cross"
-  ],
-  "Triceps": [
-    "Extensão de cotovelos fechados no solo (Flexão de braços)",
-    "Tríceps banco 75º francês com HBC simultâneo",
-    "Tríceps banco 75º francês com HBC unilateral",
-    "Tríceps coice curvado com HBC simultâneo",
-    "Tríceps coice curvado com HBC unilateral",
-    "Tríceps coice curvado no cross",
-    "Tríceps em pé francês com HBC simultâneo",
-    "Tríceps em pé francês com HBC unilateral",
-    "Tríceps francês no cross simultâneo",
-    "Tríceps francês no cross unilateral",
-    "Tríceps mergulho no banco reto",
-    "Tríceps no cross with barra reta",
-    "Tríceps no cross with barra reta inverso",
-    "Tríceps no cross with barra V",
-    "Tríceps no cross with barra W",
-    "Tríceps no cross with corda",
-    "Tríceps no cross inverso unilateral",
-    "Tríceps superman no cross segurando nos cabos",
-    "Tríceps supinado with HBM banco reto",
-    "Tríceps supinado no smith banco reto",
-    "Tríceps supinado pegada neutra with HBC",
-    "Tríceps testa HBM banco reto",
-    "Tríceps testa simultâneo HBC banco reto",
-    "Tríceps testa simultâneo no cross",
-    "Tríceps testa unilateral HBC banco reto",
-    "Tríceps testa unilateral no cross"
-  ],
-  "Costas e Cintura Escapular": [
-    "Crucifixo inverso na máquina",
-    "Crucifixo inverso simultâneo no cross polia média",
-    "Crucifixo inverso unilateral no cross polia média",
-    "Extensão de ombros no cross barra reta",
-    "Pullover no banco reto with HBC",
-    "Puxada aberta with barra reta no cross polia alta",
-    "Puxada aberta with barra romana pulley alto",
-    "Puxada aberta no pulley alto",
-    "Puxada com triângulo no pulley alto",
-    "Puxada supinada with barra reta no cross polia alta",
-    "Puxada supinada no pulley alto",
-    "Remada aberta with barra reta no cross polia média",
-    "Remada aberta with HBC decúbito ventral no banco 45°",
-    "Remada aberta alternada with HBC decúbito ventral no banco 45°",
-    "Remada aberta declinada no smith",
-    "Remada aberta na máquina",
-    "Remada baixa barra reta pegada supinada",
-    "Remada baixa with barra reta",
-    "Remada baixa com triângulo",
-    "Remada cavalo with HBL",
-    "Remada curvada aberta no cross",
-    "Remada curvada aberta no cross unilateral",
-    "Remada curvada aberta with HBC",
-    "Remada curvada aberta with HBM",
-    "Remada curvada supinada no cross",
-    "Remada curvada supinada no cross unilateral",
-    "Remada curvada supinada with HBC",
-    "Remada curvada supinada with HBM",
-    "Remada fechada alternada with HBC decubito ventral no banco 45°",
-    "Remada fechada with HBC decúbito ventral no banco 45°",
-    "Remada fechada na máquina",
-    "Remada no banco em 3 apoios pegada aberta with HBC unilateral",
-    "Remada no banco em 3 apoios pegada neutra with HBC unilateral",
-    "Remada no banco em 3 apoios pegada neutra no cross unilateral",
-    "Remada no banco em 3 apoios pegada supinada with HBC unilateral",
-    "Remada no banco em 3 apoios pegada supinada no cross unilateral",
-    "Remada supinada with barra reta no cross polia média"
-  ],
-  "Biceps": [
-    "Bíceps banco 45º with HBC pegada neutra simultâneo",
-    "Bíceps banco 45º with HBC pegada neutra unilateral",
-    "Bíceps banco 45º with HBC pegada pronada simultâneo",
-    "Bíceps banco 45º with HBC pegada pronada unilateral",
-    "Bíceps banco 45º with HBC pegada supinada simultâneo",
-    "Bíceps banco 45º with HBC pegada supinada unilateral",
-    "Bíceps banco 75º with HBC pegada neutra simultâneo",
-    "Bíceps banco 75º with HBC pegada neutra unilateral",
-    "Bíceps banco 75º with HBC pegada pronada simultâneo",
-    "Bíceps banco 75º with HBC pegada pronada unilateral",
-    "Bíceps banco 75º with HBC pegada supinada simultâneo",
-    "Bíceps banco 75º with HBC pegada supinada unilateral",
-    "Bíceps concentrado with HBC unilateral",
-    "Bíceps em pé with HBC pegada neutra alternado",
-    "Bíceps em pé with HBC pegada neutra simultâneo",
-    "Bíceps em pé with HBC pegada neutra unilateral",
-    "Bíceps em pé with HBC pegada pronada alternado",
-    "Bíceps em pé with HBC pegada pronada simultâneo",
-    "Bíceps em pé with HBC pegada pronada unilateral",
-    "Bíceps em pé with HBC pegada supinada alternado",
-    "Bíceps em pé with HBC pegada supinada simultâneo",
-    "Bíceps em pé with HBC pegada supinada unilateral",
-    "Bíceps em pé with HBM pegada pronada",
-    "Bíceps em pé with HBM pegada supinada",
-    "Bíceps no banco scott with HBC simultâneo",
-    "Bíceps no banco scott with HBC unilateral",
-    "Bíceps no banco scott with HBM pronado",
-    "Bíceps no banco scott with HBM supinado",
-    "Bíceps no banco scott with HBW simultâneo",
-    "Bíceps no cross barra reta",
-    "Bíceps no cross polia baixa unilateral",
-    "Bíceps superman no cross simultâneo",
-    "Bíceps superman no cross unilateral"
-  ],
-  "Core e Abdomen": [
-    "Abdominal diagonal na bola",
-    "Abdominal diagonal no bosu",
-    "Abdominal diagonal no solo",
-    "Abdominal infra no solo puxando as pernas",
-    "Abdominal infra pernas estendidas",
-    "Abdominal supra na bola",
-    "Abdominal supra no bosu",
-    "Abdominal supra no solo",
-    "Abdominal vela no solo",
-    "Prancha lateral na bola em isometria",
-    "Prancha lateral no bosu em isometria",
-    "Prancha lateral no solo em isometria",
-    "Prancha ventral na bola em isometria",
-    "Prancha ventral no bosu em isometria",
-    "Prancha ventral no solo em isometria"
-  ],
-  "Paravertebrais": [
-    "Elevação de quadril em isometria no solo",
-    "Mata-borrão isométrico no solo (super-man)",
-    "Perdigueiro em isometria no solo"
-  ],
-  "Quadríceps e Adutores": [
-    "Adução de quadril em decúbito dorsal",
-    "Adução de quadril em decúbito lateral no solo",
-    "Adução de quadril em pé no cross",
-    "Agachamento búlgaro",
-    "Agachamento em passada with HBC",
-    "Agachamento em passada with HBL",
-    "Agachamento em passada with HBM",
-    "Agachamento em passada with step a frente with HBC",
-    "Agachamento em passada with step a frente with HBL",
-    "Agachamento em passada with step a frente with HBM",
-    "Agachamento em passada com step a frente",
-    "Agachamento em passada with step atrás with HBC",
-    "Agachamento em passada with step atrás with HBL",
-    "Agachamento em passada with step atrás with HBM",
-    "Agachamento em passada com step atrás",
-    "Agachamento em passada no smith",
-    "Agachamento em passada com step a frente no smith",
-    "Agachamento em passada com step atrás no Smith",
-    "Agachamento livre with HBC",
-    "Agachamento livre with HBL barra sobre ombros",
-    "Agachamento livre with HBL",
-    "Agachamento livre with HBM barra sobre ombros",
-    "Agachamento livre",
-    "Agachamento no hack machine",
-    "Agachamento no sissy",
-    "Agachamento no Smith barra sobre os ombros",
-    "Agachamento no smith",
-    "Cadeira adutora",
-    "Cadeira extensora alternado",
-    "Cadeira extensora unilateral",
-    "Cadeira extensora",
-    "Flexão de quadril e joelho em decúbito dorsal no solo com caneleira",
-    "Flexão de quadril e joelho em pé com caneleira",
-    "Flexão de quadril e joelho em pé no cross",
-    "Flexão de quadril em decúbito dorsal no solo com caneleira",
-    "Flexão de quadril em pé com caneleira",
-    "Flexão de quadril em pé no cross",
-    "Leg press horizontal unilateral",
-    "Leg press horizontal",
-    "Leg press inclinado unilateral",
-    "Leg press inclinado",
-    "Levantar e sentar do banco reto with HBM",
-    "Levantar e sentar no banco reto with HBC",
-    "Levantar e sentar no banco reto"
-  ],
-  "Glúteos e Posteriores": [
-    "Abdução de quadril decúbito lateral no solo caneleira",
-    "Abdução de quadril em pé com caneleira",
-    "Agachamento sumô with HBC",
-    "Agachamento sumô with HBM",
-    "Cadeira flexora alternado",
-    "Cadeira flexora unilateral",
-    "Cadeira flexora",
-    "Elevação de quadril no banco reto with HBM",
-    "Elevação de Quadril no solo com anilha",
-    "Extensão de quadril e joelho em pé caneleira",
-    "Extensão de quadril e joelho em pé no cross",
-    "Extensão de quadril e joelho no cross",
-    "Extensão de quadril e joelho no solo caneleira",
-    "Extensão de quadril em pé caneleira",
-    "Extensão de quadril em pé no cross",
-    "Extensão de quadril no cross",
-    "Extensão de quadril no solo caneleira",
-    "Flexão de joelho em 3 apoios com caneleira",
-    "Flexão de joelho em pé com caneleira",
-    "Flexão de joelho em pé no cross",
-    "Levantamento terra with HBC",
-    "Levantamento terra with HBL",
-    "Levantamento terra with HBM",
-    "Levantamento terra no cross",
-    "Levantamento terra romeno with HBM",
-    "Mesa flexora alternado",
-    "Mesa flexora unilateral",
-    "Mesa flexora",
-    "Stiff with HBC simultâneo",
-    "Stiff with HBC unilateral",
-    "Stiff with HBM simultâneo",
-    "Stiff “bom dia” with HBM",
-    "Subida no step"
-  ],
-  "Panturrilha": [
-    "Cadeira solear",
-    "Flexão plantar com Halteres.",
-    "Flexão plantar em pé na Máquina",
-    "Flexão plantar em pé Unilateral",
-    "Flexão plantar no Leg press inclinado",
-    "Flexão plantar no leg press horizontal"
+    "Abdução de ombros em pé com HBC"
   ]
-};
-
-// BANCO DE DADOS DE IMAGENS (GIFS) EXTENDIDO E CORRIGIDO
-// Mapeia palavras-chave para GIFs de alta qualidade (estilo PrescreveAI)
-const GIF_DATABASE: Record<string, string> = {
-  // PEITO
-  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif", 
-  "voador": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "flexão": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  
-  // COSTAS
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "pullover": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-
-  // OMBROS
-  "desenvolvimento": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif", 
-  "elevação": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "abdução": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-
-  // PERNAS
-  "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
-  "flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
-  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
-  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
-  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
-  "passada": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "búlgaro": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-
-  // BRAÇOS
-  "bíceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "tríceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "coice": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-
-  // ABDOMEN E CORE
-  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "infra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif"
 };
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
@@ -594,39 +328,6 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
             </button>
          </div>
       </div>
-
-      <div className="mt-12 space-y-4">
-        <div className="flex items-center gap-3 px-2">
-          <Eye size={16} className="text-red-600" />
-          <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Visibilidade do Dashboard</h3>
-        </div>
-        <Card className="bg-zinc-900/50 border-zinc-800 p-6">
-          <div className="grid grid-cols-1 gap-3">
-            {FEATURE_LIST.map((feature) => {
-              const isDisabled = (student.disabledFeatures || []).includes(feature.id);
-              return (
-                <div 
-                  key={feature.id} 
-                  onClick={() => toggleFeatureVisibility(feature.id)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all group active:scale-[0.98] ${isDisabled ? 'bg-zinc-950 border-zinc-800' : 'bg-black/60 border-white/10'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <feature.icon size={16} className={isDisabled ? "text-zinc-700" : "text-red-600"} />
-                    <span className={`text-xs font-black uppercase italic ${isDisabled ? 'text-zinc-600 line-through' : 'text-white'}`}>
-                      {feature.label}
-                    </span>
-                  </div>
-                  <div className={`w-12 h-6 rounded-full relative transition-all duration-300 shadow-inner ${isDisabled ? 'bg-zinc-800' : 'bg-red-600'}`}>
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isDisabled ? 'left-1' : 'left-7'}`} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-
-      <EliteFooter />
     </div>
   );
 }
@@ -641,7 +342,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [defaultReps, setDefaultReps] = useState(workoutToEdit?.defaultReps || '');
   const [defaultRest, setDefaultRest] = useState(workoutToEdit?.defaultRest || '');
   
-  // Estado para adição manual
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualMuscleGroup, setManualMuscleGroup] = useState("");
   const [manualExerciseName, setManualExerciseName] = useState("");
@@ -663,8 +363,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const handleAddManualExercise = () => {
     if (!manualExerciseName) return;
     
-    // BUSCA INTELIGENTE DE GIF NA BASE
-    // Tenta encontrar uma chave no GIF_DATABASE que esteja contida no nome do exercício selecionado
     const matchKey = Object.keys(GIF_DATABASE).find(key => 
       manualExerciseName.toLowerCase().includes(key.toLowerCase())
     );
@@ -685,6 +383,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
   const handleSaveWorkout = async () => {
     setSaveState('loading');
+    
     const finalSessions = Number(projectedSessions);
     const safeSessions = isNaN(finalSessions) || finalSessions < 1 ? 12 : finalSessions;
 
@@ -701,10 +400,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
     const currentWorkouts = student.workouts || [];
     let updatedWorkouts;
-    
-    const existsInDB = workoutToEdit && currentWorkouts.some(w => w.id === workoutToEdit.id);
-
-    if (existsInDB) {
+    if (workoutToEdit) {
       updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
     } else {
       updatedWorkouts = [...currentWorkouts, newWorkout];
@@ -727,18 +423,20 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     if (file) {
       setIsAnalyzing(true);
       const reader = new FileReader();
+      
       reader.onloadend = async () => {
         const base64 = reader.result as string;
         try {
           const extractedExercises = await extractWorkoutFromImage(base64);
           
           if (extractedExercises.length === 0) {
-             alert("Não foi possível identificar exercícios na imagem. Tente uma foto mais nítida ou corte apenas a lista.");
+             alert("Não consegui ler os exercícios. Tente cortar a imagem apenas na lista de treino.");
           } else {
              const enrichedExercises = extractedExercises.map(ex => {
                 const matchKey = Object.keys(GIF_DATABASE).find(key => 
                   ex.name.toLowerCase().includes(key.toLowerCase())
                 );
+                
                 return {
                   ...ex,
                   id: Date.now().toString() + Math.random(),
@@ -751,12 +449,14 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              setExercises(prev => [...prev, ...enrichedExercises]);
           }
         } catch (error) {
-          console.error(error);
-          alert("Erro ao analisar imagem. Tente novamente.");
+          console.error("Erro na pipeline:", error);
+          alert("Erro ao processar imagem.");
         } finally {
           setIsAnalyzing(false);
+          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       };
+      
       reader.readAsDataURL(file);
     }
   };
@@ -767,7 +467,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     setExercises(updated);
   };
 
-  // Preview do GIF ao selecionar no dropdown manual
   const selectedManualGif = useMemo(() => {
     if (!manualExerciseName) return null;
     const matchKey = Object.keys(GIF_DATABASE).find(key => 
@@ -790,8 +489,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           disabled={saveState === 'loading'}
           className={`px-8 py-3 rounded-full font-black text-[10px] uppercase shadow-xl transition-all flex items-center gap-2 ${saveState === 'loading' ? 'bg-orange-600 animate-pulse' : saveState === 'saved' ? 'bg-emerald-600' : 'bg-red-600'}`}
         >
-          {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} 
-          {saveState === 'loading' ? 'Salvando...' : saveState === 'saved' ? 'Salvo!' : 'Salvar'}
+          {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : (saveState === 'saved' ? <Cloud size={14} /> : <Save size={14} />)} 
+          {saveState === 'loading' ? 'Enviando...' : saveState === 'saved' ? 'Salvo na Nuvem' : 'Salvar na Nuvem'}
         </button>
       </header>
 
@@ -868,7 +567,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
               </div>
            </div>
 
-           {/* AREA DE INSERÇÃO MANUAL MELHORADA */}
            {showManualInput && (
              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl animate-in slide-in-from-top-2 space-y-3 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
@@ -906,7 +604,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                       )}
                    </div>
 
-                   {/* PREVIEW DO GIF AUTOMÁTICO */}
                    <div className="bg-black rounded-xl border border-zinc-800 h-32 flex items-center justify-center overflow-hidden relative">
                       {selectedManualGif ? (
                          <>
