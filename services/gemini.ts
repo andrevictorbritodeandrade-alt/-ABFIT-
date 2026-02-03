@@ -110,47 +110,60 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  // Limpa o header do base64 se existir, para enviar apenas os dados
   const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  // Prompt simplificado e direto para velocidade e precisão
+  // Prompt mais permissivo e inteligente para lidar com imagens ruins
   const prompt = `
-    Extract workout exercises from this image.
-    Return STRICTLY a JSON Array. NO markdown.
-    Format:
+    Analyze this workout image. It contains a list of exercises.
+    Extract the exercises into a JSON Array.
+    
+    If the image is blurry or handwritten, make your best guess based on gym context.
+    If numbers (sets/reps) are missing, infer standard values (3 sets, 12 reps).
+    translate names to Portuguese if needed.
+
+    Expected JSON Structure:
     [
       {
-        "name": "Exercise Name in Portuguese",
+        "name": "Exercise Name",
         "sets": "3",
         "reps": "12",
-        "rest": "60",
-        "method": ""
+        "rest": "60"
       }
     ]
-    If values are missing, use defaults (3 sets, 12 reps, 60s).
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: MODEL_TEXT, // Flash é mais rápido
+      model: MODEL_TEXT,
       contents: {
         parts: [
           { inlineData: { mimeType: 'image/png', data: base64Data } },
           { text: prompt }
         ]
-      },
-      config: { responseMimeType: "application/json" }
+      }
     });
 
-    let text = response.text || "[]";
+    let text = response.text || "";
     
-    // LIMPEZA CRÍTICA: Remove formatação Markdown que a IA às vezes adiciona
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    // PARSER CIRÚRGICO: Encontra onde começa [ e onde termina ] ignorando o resto
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    
+    if (jsonMatch) {
+        try {
+            const cleanJson = jsonMatch[0];
+            const parsed = JSON.parse(cleanJson);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (parseError) {
+            console.error("Erro ao fazer parse do JSON extraído:", parseError);
+            return [];
+        }
+    } else {
+        console.warn("Nenhum array JSON encontrado na resposta da IA.");
+        return [];
+    }
 
-    const json = JSON.parse(text);
-    return Array.isArray(json) ? json : [];
   } catch (e) {
-    console.error("Erro ao extrair treino da imagem:", e);
+    console.error("Erro fatal na extração:", e);
     return [];
   }
 }
