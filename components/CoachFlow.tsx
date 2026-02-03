@@ -687,9 +687,17 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
     const currentWorkouts = student.workouts || [];
     let updatedWorkouts;
-    if (workoutToEdit) {
+    
+    // VERIFICAÇÃO CRÍTICA: Se o treino que estamos editando JÁ EXISTE na lista do banco de dados (currentWorkouts)
+    // Se workoutToEdit for nulo, obviamente é novo.
+    // Se workoutToEdit existe, mas seu ID NÃO está na lista currentWorkouts (ex: era um padrão não salvo), tratamos como NOVO (push).
+    const existsInDB = workoutToEdit && currentWorkouts.some(w => w.id === workoutToEdit.id);
+
+    if (existsInDB) {
+      // Atualiza o existente
       updatedWorkouts = currentWorkouts.map(w => w.id === workoutToEdit.id ? newWorkout : w);
     } else {
+      // Adiciona como novo (Push), pois não existe no banco para ser atualizado
       updatedWorkouts = [...currentWorkouts, newWorkout];
     }
 
