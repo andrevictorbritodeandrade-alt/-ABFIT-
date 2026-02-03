@@ -164,7 +164,9 @@ export default function App() {
     if (view !== 'LOGIN' && isCoach) {
       const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
       unsub = onSnapshot(q, (snapshot) => {
-        setIsSyncing(snapshot.metadata.hasPendingWrites);
+        if (snapshot.metadata.hasPendingWrites) {
+           setIsSyncing(true);
+        }
         const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
         setStudents(updatedStudents);
         // Atualiza o aluno selecionado em tempo real se ele estiver aberto
@@ -176,7 +178,9 @@ export default function App() {
     } else if (selectedStudent && view !== 'LOGIN') {
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
       unsub = onSnapshot(docRef, (docSnap) => {
-        setIsSyncing(docSnap.metadata.hasPendingWrites);
+        if (docSnap.metadata.hasPendingWrites) {
+           setIsSyncing(true);
+        }
         if (docSnap.exists()) setSelectedStudent({ id: docSnap.id, ...docSnap.data() } as Student);
       });
     }
@@ -246,56 +250,44 @@ export default function App() {
     ];
 
     // LÓGICA DE MESCLAGEM CORRIGIDA: Prioridade total ao Firestore
-    // 1. Começamos com os alunos vindos do Firestore (students)
     const merged = [...students];
 
-    // 2. Para cada aluno padrão, verificamos se ele já existe nos dados do Firestore
     defaultStudents.forEach(def => {
         const existingIndex = merged.findIndex(s => s.id === def.id || (s.email && s.email.toLowerCase() === def.email.toLowerCase()));
         
         if (existingIndex === -1) {
-            // Se não existe no banco, adiciona o padrão completo
             merged.push(def);
         } else {
-            // Se já existe, PRESERVAMOS os dados do banco.
-            // Apenas preenchemos campos que estejam COMPLETAMENTE faltando (undefined/null) no banco.
-            // NÃO sobrescrevemos arrays vazios do banco com arrays do padrão.
             const existing = merged[existingIndex];
             
             if (!existing.nome) merged[existingIndex].nome = def.nome;
             if (!existing.email) merged[existingIndex].email = def.email;
             
-            // Só aplica periodização padrão se o objeto periodization não existir
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
             }
-            // Importante: Se o banco estiver vazio de treinos, restauramos o padrão
             if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
                 merged[existingIndex].workouts = def.workouts;
             }
         }
     });
 
-    // Ordenação alfabética
     return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   }, [students]);
 
   const studentForView = useMemo(() => {
     if (!selectedStudent) return null;
     if (isCoach) return selectedStudent;
-    // O aluno vê o que está selecionado (que vem do banco ou do merge)
     return selectedStudent;
   }, [selectedStudent, view, isCoach]);
 
-  // Feed de Performance Global para o Professor
   const globalFeedHistory = useMemo(() => {
     if (!isCoach) return studentForView?.workoutHistory || [];
     
-    // Mescla todos os históricos de todos os alunos e injeta o nome do atleta
     const allHistory: WorkoutHistoryEntry[] = students.flatMap(s => 
       (s.workoutHistory || []).map(h => ({
         ...h,
-        athleteName: s.nome // Injeta o nome do aluno para o professor saber quem treinou
+        athleteName: s.nome
       }))
     );
     
@@ -346,15 +338,19 @@ export default function App() {
   };
 
   const handleSaveData = async (sid: string, data: any) => {
-    // Dispara o indicador de sync
+    // FORCE SYNC INDICATOR TO SHOW IMMEDIATELY
     setIsSyncing(true);
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
-      // O isSyncing voltará a false automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       console.error("Erro ao salvar:", e.message); 
-      setIsSyncing(false); // Força false em erro
+    } finally {
+      // Ensure the sync indicator stays visible for a moment so the user sees it,
+      // and then turn it off explicitly.
+      setTimeout(() => {
+        setIsSyncing(false);
+      }, 1500);
     }
   };
 
@@ -399,8 +395,6 @@ export default function App() {
       }
   };
 
-  // DEFINIÇÃO DOS BOTÕES DO DASHBOARD DO ALUNO
-  // Filtramos aqui com base em studentForView.disabledFeatures
   const allDashboardItems = [
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
@@ -412,8 +406,6 @@ export default function App() {
   ];
 
   const visibleDashboardItems = allDashboardItems.filter(item => {
-    // Se o aluno não tiver a lista de disabledFeatures, mostra tudo.
-    // Se tiver, esconde se o ID estiver na lista.
     return !studentForView?.disabledFeatures?.includes(item.id);
   });
 
