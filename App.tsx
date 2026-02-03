@@ -215,32 +215,38 @@ export default function App() {
           workouts: [
             {
                 id: 'treino-a-liliane',
-                title: 'Treino A - Inferiores',
+                title: 'Treino A',
                 status: 'published',
-                projectedSessions: 12,
+                projectedSessions: 20,
+                defaultSets: '3',
+                defaultReps: '15',
+                defaultRest: '30',
                 exercises: [
-                    { id: 'ex1', name: 'Agachamento Livre', sets: '4', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                    { id: 'ex2', name: 'Leg Press 45', sets: '3', reps: '15', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
-                    { id: 'ex3', name: 'Cadeira Extensora', sets: '3', reps: '15-20', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
-                    { id: 'ex4', name: 'Stiff com Halteres', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                    { id: 'ex5', name: 'Mesa Flexora', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                    { id: 'ex6', name: 'Elevação Pélvica', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                    { id: 'ex7', name: 'Panturrilha Sentado', sets: '3', reps: '20', rest: '30', thumb: 'https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif' }
+                    { id: 'la1', name: 'Leg press horizontal', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                    { id: 'la2', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif' },
+                    { id: 'la3', name: 'Agachamento livre', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                    { id: 'la4', name: 'Abdominal supra no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' },
+                    { id: 'la5', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif' },
+                    { id: 'la6', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                    { id: 'la7', name: 'Crucifixo aberto com HBC no banco inclinado', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' }
                 ]
             },
             {
                 id: 'treino-b-liliane',
-                title: 'Treino B - Superiores',
+                title: 'Treino B',
                 status: 'published',
-                projectedSessions: 12,
+                projectedSessions: 20,
+                defaultSets: '3',
+                defaultReps: '15',
+                defaultRest: '30',
                 exercises: [
-                    { id: 'ex1b', name: 'Puxada Alta', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                    { id: 'ex2b', name: 'Remada Baixa', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                    { id: 'ex3b', name: 'Supino Reto HBC', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
-                    { id: 'ex4b', name: 'Desenvolvimento HBC', sets: '3', reps: '12', rest: '60', thumb: null },
-                    { id: 'ex5b', name: 'Elevação Lateral', sets: '3', reps: '15', rest: '45', thumb: null },
-                    { id: 'ex6b', name: 'Tríceps Corda', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
-                    { id: 'ex7b', name: 'Abdominal Supra', sets: '3', reps: '20', rest: '30', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }
+                    { id: 'lb1', name: 'Extensão de quadril em pé caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                    { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                    { id: 'lb3', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                    { id: 'lb4', name: 'Subida no step', sets: '3', reps: '15', rest: '30', thumb: null },
+                    { id: 'lb5', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: null },
+                    { id: 'lb6', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: null },
+                    { id: 'lb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' }
                 ]
             }
           ]
