@@ -665,7 +665,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     
     // BUSCA INTELIGENTE DE GIF NA BASE
     // Tenta encontrar uma chave no GIF_DATABASE que esteja contida no nome do exercício selecionado
-    // Ex: "Supino Reto" vai dar match com "supino"
     const matchKey = Object.keys(GIF_DATABASE).find(key => 
       manualExerciseName.toLowerCase().includes(key.toLowerCase())
     );
@@ -681,8 +680,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
     setExercises([...exercises, newEx]);
     setManualExerciseName("");
-    // Não limpa o grupo para facilitar a adição de múltiplos do mesmo grupo
-    // setManualMuscleGroup(""); 
     setShowManualInput(false);
   };
 
@@ -735,22 +732,24 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         try {
           const extractedExercises = await extractWorkoutFromImage(base64);
           
-          const enrichedExercises = extractedExercises.map(ex => {
-            const matchKey = Object.keys(GIF_DATABASE).find(key => 
-              ex.name.toLowerCase().includes(key.toLowerCase())
-            );
-            
-            return {
-              ...ex,
-              id: Date.now().toString() + Math.random(),
-              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
-              sets: ex.sets || defaultSets || '3',
-              reps: ex.reps || defaultReps || '12',
-              rest: ex.rest || defaultRest || '60'
-            };
-          });
-
-          setExercises(prev => [...prev, ...enrichedExercises]);
+          if (extractedExercises.length === 0) {
+             alert("Não foi possível identificar exercícios na imagem. Tente uma foto mais nítida ou corte apenas a lista.");
+          } else {
+             const enrichedExercises = extractedExercises.map(ex => {
+                const matchKey = Object.keys(GIF_DATABASE).find(key => 
+                  ex.name.toLowerCase().includes(key.toLowerCase())
+                );
+                return {
+                  ...ex,
+                  id: Date.now().toString() + Math.random(),
+                  thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
+                  sets: ex.sets || defaultSets || '3',
+                  reps: ex.reps || defaultReps || '12',
+                  rest: ex.rest || defaultRest || '60'
+                };
+             });
+             setExercises(prev => [...prev, ...enrichedExercises]);
+          }
         } catch (error) {
           console.error(error);
           alert("Erro ao analisar imagem. Tente novamente.");

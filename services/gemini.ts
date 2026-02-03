@@ -113,27 +113,26 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
   // Limpa o header do base64 se existir, para enviar apenas os dados
   const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
+  // Prompt simplificado e direto para velocidade e precisão
   const prompt = `
-    Analise esta imagem de uma ficha de treino (provavelmente do app PrescreveAI ou similar).
-    Extraia TODOS os exercícios listados.
-    
-    Retorne APENAS um JSON no seguinte formato Array:
+    Extract workout exercises from this image.
+    Return STRICTLY a JSON Array. NO markdown.
+    Format:
     [
       {
-        "name": "Nome do Exercício (padronize para nomes comuns de musculação em Português)",
-        "sets": "Número de séries (ex: 3, 4)",
-        "reps": "Número de repetições (ex: 10, 12-15, Falha)",
-        "rest": "Tempo de descanso em segundos (apenas o número, ex: 60)",
-        "method": "Método se houver (ex: Bi-set, Drop-set, ou 'SÉRIE ESTÁVEL' se não especificado)"
+        "name": "Exercise Name in Portuguese",
+        "sets": "3",
+        "reps": "12",
+        "rest": "60",
+        "method": ""
       }
     ]
-    
-    Se não conseguir ler algum campo específico, infira um valor padrão seguro para hipertrofia (3 sets, 12 reps, 60s descanso).
+    If values are missing, use defaults (3 sets, 12 reps, 60s).
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: MODEL_TEXT,
+      model: MODEL_TEXT, // Flash é mais rápido
       contents: {
         parts: [
           { inlineData: { mimeType: 'image/png', data: base64Data } },
@@ -143,9 +142,11 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
       config: { responseMimeType: "application/json" }
     });
 
-    const text = response.text;
-    if (!text) return [];
+    let text = response.text || "[]";
     
+    // LIMPEZA CRÍTICA: Remove formatação Markdown que a IA às vezes adiciona
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
     const json = JSON.parse(text);
     return Array.isArray(json) ? json : [];
   } catch (e) {
