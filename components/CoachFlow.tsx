@@ -152,7 +152,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
 const FEATURE_LIST = [
   { id: 'FEED', label: 'Feed Performance', icon: LayoutGrid },
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
-  { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain },
+  { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain },
   { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler },
   { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints },
   { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3 },
@@ -224,7 +224,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                  <Brain size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização PhD</span>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização</span>
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -741,7 +741,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
         <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
            <h2 className="text-xl font-black italic uppercase tracking-tighter">
-             <HeaderTitle text="Periodização PhD" />
+             <HeaderTitle text="Periodização" />
            </h2>
         </div>
         <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-zinc-500 hover:text-white flex items-center gap-1">

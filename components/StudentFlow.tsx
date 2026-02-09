@@ -562,7 +562,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
              </button>
           </div>
           <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-            <HeaderTitle text="Periodização PhD" />
+            <HeaderTitle text="Periodização" />
           </h2>
         </header>
         <div className="flex flex-col items-center justify-center py-20">
@@ -587,7 +587,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
            </button>
         </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Relatório Científico" />
+          <HeaderTitle text="Periodização" />
         </h2>
       </header>
 

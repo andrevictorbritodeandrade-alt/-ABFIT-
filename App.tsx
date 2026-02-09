@@ -201,12 +201,22 @@ export default function App() {
             startDate: new Date().toISOString(),
             microciclos: [],
             type: 'STRENGTH',
-            phaseTitle: 'Fase de Adaptação Metabólica',
-            generalStrategy: 'Periodização estruturada em fases metabólicas com foco em resistência de força.',
-            clinicalSafety: ['Monitoramento de carga.', 'Atenção à postura lombar.'],
+            phaseTitle: 'Metabólico e Comportamental (16 Semanas)',
+            generalStrategy: 'Periodização focada na maximização do déficit energético para promover a perda de peso corporal, utilizando alta densidade e variabilidade de treino para otimizar a adesão, especialmente considerando a possibilidade de Transtorno de Déficit de Atenção e Hiperatividade (TDAH).\n\nMetabólico e Comportamental (16 Semanas): Fase 1 (Base e Adaptação): 4 semanas. Fase 2 (Volume e Densidade Máxima): 8 semanas. Fase 3 (Peak de DHE e Manutenção): 4 semanas.',
+            clinicalSafety: [
+                'Aderência ao Treino (TDAH): O planejamento deve priorizar a variedade de métodos (circuitos, EMOM, AMRAP) e a troca frequente de exercícios para evitar a monotonia e manter o engajamento e a dopamina elevada.',
+                'Estrutura do Treino: As sessões devem ser altamente estruturadas com objetivos claros e listas de verificação (checklists) para auxiliar no foco e organização durante o exercício.',
+                'Foco no Metabolismo: Priorizar exercícios compostos e de alta demanda muscular em formato de supersérie ou circuito para aumentar o gasto calórico pós-exercício (EPOC).',
+                'Nutrição: Necessidade de acompanhamento nutricional estrito para garantir um déficit calórico sustentável e alta ingestão proteica para proteger a massa magra durante a fase de emagrecimento rápido.',
+                'Cardio: Integrar sessões curtas e intensas (HIIT) 3x/semana e sessões de baixa intensidade e longa duração (LISS) 2x/semana, com duração máxima de 45 minutos para LISS para evitar a perda de foco.'
+            ],
             bioInsight: {
-              context: 'Liliane Torres apresenta ótima resposta a volume moderado.',
-              tips: ['Estrutura Rígida', 'Linguagem Direta']
+              context: 'Liliane Torres é uma aluna com possível TDAH.',
+              tips: [
+                  '**Estrutura e Previsibilidade:** Use comandos curtos e claros. Mantenha a rotina do treino consistente (início, meio e fim) para gerenciar a desatenção típica do TDAH.',
+                  '**Âncoras de Foco Visual:** Indique um ponto fixo (na parede, no chão ou no equipamento) para onde ela deve olhar durante a execução do exercício. Isso ajuda a reduzir a distração sensorial.',
+                  '**Reforço Imediato:** Dê feedback positivo *imediatamente* após a conclusão correta de um exercício ou após um período de bom foco. O reforço rápido é crucial para a motivação em pessoas com TDAH.'
+              ]
             }
           },
           workouts: [
@@ -237,13 +247,13 @@ export default function App() {
                 defaultReps: '15',
                 defaultRest: '30',
                 exercises: [
-                    { id: 'lb1', name: 'Extensão de quadril em pé caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                    { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
-                    { id: 'lb3', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
-                    { id: 'lb4', name: 'Subida no step', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif' },
-                    { id: 'lb5', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
-                    { id: 'lb6', name: 'Mata-borrão isométrico no solo (superman)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
-                    { id: 'lb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' }
+                    { id: 'lb1-new', name: 'Extensão de quadril no solo caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                    { id: 'lb2-new', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
+                    { id: 'lb3-new', name: 'Abdução de quadril em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                    { id: 'lb4-new', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                    { id: 'lb5-new', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
+                    { id: 'lb6-new', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
+                    { id: 'lb7-new', name: 'Extensão de ombros no cross barra reta', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
                 ]
             }
           ]
@@ -403,7 +413,7 @@ export default function App() {
   const allDashboardItems = [
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
-    { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
+    { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
