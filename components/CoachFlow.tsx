@@ -7,7 +7,8 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy, Cloud, MapPin
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
+  MapPin, Cloud
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -16,10 +17,8 @@ import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-// IMAGEM PADRÃO PARA QUANDO NÃO ENCONTRAR NADA
-const DEFAULT_EXERCISE_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
-
 // BANCO DE DADOS DE IMAGENS (GIFS) EXTENDIDO
+// Mantido aqui para garantir que o EDITOR tenha acesso às URLs ao criar novos exercícios
 const GIF_DATABASE: Record<string, string> = {
   // PERNAS / GLÚTEOS
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
@@ -60,7 +59,7 @@ const GIF_DATABASE: Record<string, string> = {
   "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
 };
 
-const EXERCISE_DATABASE: Record<string, string[]> = {
+const EXERCISE_GROUPS_DATABASE: Record<string, string[]> = {
   "Peito": ["Supino Reto", "Supino Inclinado", "Crucifixo", "Voador", "Flexão de Braço"],
   "Costas": ["Puxada Alta", "Remada Curvada", "Remada Baixa", "Pulldown", "Barra Fixa"],
   "Pernas": ["Agachamento Livre", "Leg Press 45", "Cadeira Extensora", "Mesa Flexora", "Stiff", "Afundo"],
@@ -68,6 +67,9 @@ const EXERCISE_DATABASE: Record<string, string[]> = {
   "Braços": ["Rosca Direta", "Rosca Martelo", "Tríceps Corda", "Tríceps Testa"],
   "Abdomen": ["Abdominal Supra", "Abdominal Infra", "Prancha", "Abdominal Remador"]
 };
+
+// IMAGEM PADRÃO
+const DEFAULT_EXERCISE_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
   students: Student[], 
@@ -337,7 +339,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         sets: defaultSets || '3',
         reps: defaultReps || '12',
         rest: defaultRest || '60',
-        // USA IMAGEM DEFAULT SE NÃO ENCONTRAR MATCH
         thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE
     };
 
@@ -405,7 +406,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                 return {
                   ...ex,
                   id: Date.now().toString() + Math.random(),
-                  // USA IMAGEM DEFAULT SE NÃO ENCONTRAR MATCH
                   thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE,
                   sets: ex.sets || defaultSets || '3',
                   reps: ex.reps || defaultReps || '12',
@@ -551,7 +551,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                         onChange={(e) => setManualMuscleGroup(e.target.value)}
                       >
                          <option value="">Selecione Grupo Muscular</option>
-                         {Object.keys(EXERCISE_DATABASE).map(group => (
+                         {Object.keys(EXERCISE_GROUPS_DATABASE).map(group => (
                             <option key={group} value={group}>{group}</option>
                          ))}
                       </select>
@@ -563,7 +563,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                            onChange={(e) => setManualExerciseName(e.target.value)}
                          >
                             <option value="">Selecione Exercício</option>
-                            {EXERCISE_DATABASE[manualMuscleGroup].map((ex, i) => (
+                            {EXERCISE_GROUPS_DATABASE[manualMuscleGroup].map((ex, i) => (
                                <option key={i} value={ex}>{ex}</option>
                             ))}
                          </select>

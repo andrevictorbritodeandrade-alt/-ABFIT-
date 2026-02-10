@@ -10,6 +10,114 @@ import {
 import { Card, EliteFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
 
+// --- BANCO DE DADOS VISUAL (FALLBACK) ---
+const GIF_DATABASE: Record<string, string> = {
+  // PERNAS / GLÚTEOS
+  "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
+  "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+  "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "extensão de quadril": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "gluteo": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "flexão de joelho": "https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif",
+  "abdução": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif", 
+  "elevação de quadril": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+
+  // SUPERIORES / COSTAS / PEITO
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "desenvolvimento": "https://i.pinimg.com/originals/e7/17/74/e71774e363b9bc298d022b7a9f7374b0.gif",
+  "elevação lateral": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "extensão de ombros": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  
+  // BRAÇOS
+  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "bíceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "tríceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+
+  // ABDOMEN / CORE
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "super-man": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
+};
+
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
+
+// Componente de Imagem Inteligente com Fallback
+function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) {
+  const [src, setSrc] = useState<string>("");
+  const [attempt, setAttempt] = useState(0); // 0: ex.thumb, 1: DB match, 2: Default
+
+  const findInDb = (name: string) => {
+    const nameLower = name.toLowerCase();
+    const match = Object.keys(GIF_DATABASE).find(key => nameLower.includes(key));
+    return match ? GIF_DATABASE[match] : null;
+  };
+
+  useEffect(() => {
+    // Reset state when exercise changes
+    setAttempt(0);
+    if (ex.thumb && ex.thumb.length > 10) {
+      setSrc(ex.thumb);
+    } else {
+      // Try DB immediately if no thumb
+      const dbMatch = findInDb(ex.name);
+      if (dbMatch) {
+        setSrc(dbMatch);
+        setAttempt(1);
+      } else {
+        setSrc(DEFAULT_IMAGE);
+        setAttempt(2);
+      }
+    }
+  }, [ex]);
+
+  const handleError = () => {
+    // Se falhar na tentativa 0 (thumb do banco/prescreveAI)
+    if (attempt === 0) {
+        const dbMatch = findInDb(ex.name);
+        // Só muda se o DB match for diferente do atual (pra evitar loop se thumb == dbMatch)
+        if (dbMatch && dbMatch !== src) {
+            setSrc(dbMatch);
+            setAttempt(1);
+        } else {
+            setSrc(DEFAULT_IMAGE);
+            setAttempt(2);
+        }
+    } 
+    // Se falhar na tentativa 1 (DB), vai pro default
+    else if (attempt === 1) {
+        setSrc(DEFAULT_IMAGE);
+        setAttempt(2);
+    }
+    // Se falhar na tentativa 2 (Default), não faz nada (mantém imagem quebrada ou tenta reload)
+  };
+
+  return (
+    <img 
+      src={src || DEFAULT_IMAGE} 
+      alt={ex.name} 
+      className={className} 
+      onError={handleError}
+      referrerPolicy="no-referrer"
+    />
+  );
+}
+
 /**
  * Estilos de Animação para o "Loop" da Figura
  */
@@ -34,7 +142,7 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
       <header className="flex justify-between items-center mb-8 sticky top-0 z-50 py-2">
         <div className="flex flex-col">
           <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.4em] italic leading-none mb-2">PrescreveAI Elite</p>
-          <h2 className="text-4xl font-black italic uppercase text-white tracking-tighter leading-none">{ex.name}</h2>
+          <h2 className="text-4xl font-black italic uppercase text-white tracking-tighter leading-none max-w-[80%]">{ex.name}</h2>
         </div>
         <button onClick={onClose} className="p-3 bg-zinc-900 rounded-full border border-white/10 text-zinc-500 hover:text-white transition-all shadow-2xl">
           <X size={24} />
@@ -43,19 +151,10 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
 
       <div className="max-w-2xl mx-auto w-full space-y-8 pb-20">
         <div className="relative aspect-video w-full bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-3xl group">
-          {ex.thumb ? (
-            <img 
-              src={ex.thumb} 
-              className="w-full h-full object-cover video-motion-engine" 
-              alt={ex.name} 
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-               <Brain size={48} className="text-zinc-600 animate-pulse" />
-               <p className="absolute mt-16 text-[10px] uppercase tracking-widest text-zinc-600">Visualizando Biomecânica</p>
-            </div>
-          )}
+          <ExerciseImage 
+            ex={ex}
+            className="w-full h-full object-cover video-motion-engine"
+          />
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
             <div className="absolute top-0 left-0 w-full h-[2px] bg-red-600/30 animate-[scan_3s_infinite]"></div>
@@ -73,7 +172,7 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
                 <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest italic">Execução Técnica</h4>
              </div>
              <p className="text-xs text-zinc-300 font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
-               {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua."}
+               {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua durante a execução."}
              </p>
           </Card>
           <Card className="p-6 bg-zinc-900/50 border-white/5 space-y-4">
@@ -116,19 +215,28 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
       }`}
     >
       <div className="flex justify-between items-start mb-6">
-        <div className="flex-1 cursor-pointer group" onClick={() => onShowDetail(ex)}>
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`text-[10px] font-black italic uppercase tracking-widest leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>{idx + 1}º Exercício</span>
-            <Maximize2 size={10} className="text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="flex-1 cursor-pointer group flex items-start gap-4" onClick={() => onShowDetail(ex)}>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-black relative">
+             <ExerciseImage 
+               ex={ex}
+               className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+             />
+             <div className="absolute inset-0 bg-red-600/10 mix-blend-overlay"></div>
           </div>
-          <h4 className={`text-4xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-white group-hover:text-red-600'}`}>
-            {ex.name}
-          </h4>
-          <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-[10px] font-black italic uppercase tracking-widest leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>{idx + 1}º Exercício</span>
+              <Maximize2 size={10} className="text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-white group-hover:text-red-600'}`}>
+              {ex.name}
+            </h4>
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
+          </div>
         </div>
         {allSetsCompleted && (
-           <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300">
-             <Check size={28} />
+           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300">
+             <Check size={20} />
            </div>
         )}
       </div>
@@ -156,7 +264,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
         </div>
 
         <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center">
-          <span className="text-5xl font-black text-white italic leading-none tracking-tighter">{totalReps}</span>
+          <span className="text-3xl font-black text-white italic leading-none tracking-tighter">{totalReps}</span>
           <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
@@ -167,7 +275,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
               defaultValue={ex.load || ''}
               placeholder="--"
               onBlur={(e) => onUpdateLoad(ex.id!, e.target.value)}
-              className="bg-transparent border-none p-0 text-5xl font-black text-center text-white outline-none focus:ring-0 w-20 italic tracking-tighter"
+              className="bg-transparent border-none p-0 text-3xl font-black text-center text-white outline-none focus:ring-0 w-16 italic tracking-tighter"
             />
             <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
           </div>
