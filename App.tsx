@@ -288,7 +288,48 @@ export default function App() {
               ]
             }
           },
-          workouts: [] 
+          workouts: [
+            {
+              id: 'treino-a-andre',
+              title: 'Treino A',
+              status: 'published',
+              projectedSessions: 24,
+              defaultSets: '3',
+              defaultReps: '10-12',
+              defaultRest: '60',
+              exercises: [
+                { id: 'aa1', name: 'Supino Reto com HBL', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                { id: 'aa2', name: 'Supino inclinado com HBC', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                { id: 'aa3', name: 'Remada alta em pé no cross', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'aa4', name: 'Tríceps testa HBM banco reto', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
+                { id: 'aa5', name: 'Tríceps no cross with barra reta inverso', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
+                { id: 'aa6', name: 'Agachamento livre with HBL', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                { id: 'aa7', name: 'Agachamento livre with HBC', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                { id: 'aa8', name: 'Leg press horizontal', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                { id: 'aa9', name: 'Abdominal supra no solo', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }
+              ]
+            },
+            {
+              id: 'treino-b-andre',
+              title: 'Treino B',
+              status: 'published',
+              projectedSessions: 24,
+              defaultSets: '3',
+              defaultReps: '12',
+              defaultRest: '30',
+              exercises: [
+                { id: 'bb1', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'bb2', name: 'Remada fechada na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'bb3', name: 'Puxada com triângulo no pulley alto', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'bb4', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
+                { id: 'bb5', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
+                { id: 'bb6', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
+                { id: 'bb7', name: 'Extensão de quadril e joelho em pé caneleira', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                { id: 'bb8', name: 'Stiff with HBC simultâneo', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                { id: 'bb9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' }
+              ]
+            }
+          ] 
         }, 
         { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
     ];
