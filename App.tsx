@@ -258,7 +258,38 @@ export default function App() {
             }
           ]
         },
-        { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
+        { 
+          id: 'fixed-andre', 
+          nome: 'André Brito', 
+          email: 'britodeandrade@gmail.com', 
+          physicalAssessments: [], 
+          workoutHistory: [], 
+          sexo: 'Masculino', 
+          periodization: {
+            id: 'per-andre-01',
+            titulo: 'Relatório Científico',
+            startDate: new Date().toISOString(),
+            microciclos: [],
+            type: 'STRENGTH',
+            phaseTitle: 'Macrociclo de 20 Semanas (UNDP)',
+            generalStrategy: `"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético e otimização da densidade do treino. Estratégia adaptada para a gestão da carga sensorial e manutenção da aderência em indivíduos com TEA/TDAH."\n\nMacrociclo de 20 Semanas (5 mesociclos de 4 semanas) focado na redução progressiva do peso corporal (alvo: 87kg). Fases: (1) Adaptação Metabólica (Semanas 1-8): Foco em exercícios complexos de baixo impacto e alta repetição para estabelecer volume basal; (2) Densidade e Gasto Calórico (Semanas 9-16): Introdução de complexos metabólicos, supersets e protocolos de alta intensidade (HIIT) para maximizar o EPOC; (3) Consolidação (Semanas 17-20): Redução do volume, manutenção da intensidade e transição para rotinas de sustentabilidade.`,
+            clinicalSafety: [
+                'Gestão Sensorial (TEA): Priorizar ambientes de treino consistentes, minimizando estímulos externos (música alta, luzes piscantes). A previsibilidade da rotina é crucial para a segurança e aderência.',
+                'Engajamento e Foco (TDAH): As sessões devem ter duração máxima de 60 minutos e incluir variação de exercícios (múltiplos blocos de 10-15 minutos) para combater a inatenção e o tédio, mantendo a estrutura geral.',
+                'Disfunção Executiva: Utilizar sistemas de feedback claro (e.g., RPE 6-8) e permitir ajustes na carga ou volume nos dias em que a capacidade de autorregulação e iniciação motora estiver comprometida.',
+                'Controle Metabólico: Monitoramento constante da hidratação e da glicemia, visto que a atenção plena (mindfulness) a sinais internos (fome/sede) pode ser afetada pelo TDAH.'
+            ],
+            bioInsight: {
+              context: `**Análise do Aluno:** André Brito (TEA/TDAH e Bariátrica)\n\n**Perfil:** O aluno apresenta um duplo desafio de foco e atenção (TDAH e TEA) e uma complicação física de saúde e recuperação (Bariátrica).\n\n**Implicações para o Treinamento:**\n\n1. **TEA:** Necessidade de rotina clara, comunicação literal e previsibilidade. Sensibilidade a estímulos (luzes, ruídos) pode ser alta.\n2. **TDAH:** Dificuldade em manter o foco, impulsividade e necessidade de variedade/movimento para manter o engajamento.\n3. **Bariátrica:** Foco fundamental na hidratação, nutrição (proteínas), e cuidado extremo com a execução para proteger articulações e evitar lesões causadas por mudanças rápidas de peso ou nutrição.`,
+              tips: [
+                  "**Segurança (Pós-Bariátrica e Execução)**\n**Dica:** Priorize a técnica acima da carga. Monitore constantemente a hidratação e a ingestão de proteínas (se possível, pergunte a André sobre sua rotina alimentar). Garanta aquecimentos adequados para as articulações e use *feedbacks* de execução extremamente precisos e visuais.",
+                  "**Foco (TDAH)**\n**Dica:** Divida os treinos em blocos de 10-15 minutos com objetivos muito específicos. Use lembretes físicos ou táteis (tocar o ombro, apontar a meta) para redirecionar o foco quando a atenção se dispersar. Mantenha as instruções curtas e em formato de lista (ex: '1. Agacha, 2. Sobe, 3. Respira').",
+                  "**Previsibilidade e Ambiente (TEA)**\n**Dica:** Mantenha a rotina da sessão o mais constante possível (mesmo horário, mesma área de treino). Avise André com antecedência (1-2 minutos) sobre qualquer mudança inesperada no exercício, ordem ou ambiente. Minimizar ruídos e luzes piscantes ajudará a prevenir sobrecarga sensorial."
+              ]
+            }
+          },
+          workouts: [] 
+        }, 
         { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
     ];
 
