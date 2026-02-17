@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
-  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin
+  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -185,7 +185,7 @@ export default function App() {
   }, [user, view, selectedStudent?.id, isCoach]);
 
   const allStudentsForCoach = useMemo(() => {
-    // Definição dos dados padrão/hardcoded com os treinos CORRIGIDOS
+    // Definição dos dados padrão/hardcoded
     const defaultStudents: Student[] = [
         { 
           id: 'fixed-liliane', 
@@ -201,60 +201,57 @@ export default function App() {
             startDate: new Date().toISOString(),
             microciclos: [],
             type: 'STRENGTH',
-            phaseTitle: 'Metabólico e Comportamental (16 Semanas)',
-            generalStrategy: 'Periodização focada na maximização do déficit energético para promover a perda de peso corporal, utilizando alta densidade e variabilidade de treino para otimizar a adesão, especialmente considerando a possibilidade de Transtorno de Déficit de Atenção e Hiperatividade (TDAH).\n\nMetabólico e Comportamental (16 Semanas): Fase 1 (Base e Adaptação): 4 semanas. Fase 2 (Volume e Densidade Máxima): 8 semanas. Fase 3 (Peak de DHE e Manutenção): 4 semanas.',
+            phaseTitle: 'Emagrecimento e Controle TDAH',
+            generalStrategy: "Periodização focada na maximização do déficit energético para promover a perda de peso corporal, utilizando alta densidade e variabilidade de treino para otimizar a adesão, especialmente considerando a possibilidade de Transtorno de Déficit de Atenção e Hiperatividade (TDAH).\n\nMetabólico e Comportamental (16 Semanas): Fase 1 (Base e Adaptação): 4 semanas. Fase 2 (Volume e Densidade Máxima): 8 semanas. Fase 3 (Peak de DHE e Manutenção): 4 semanas.",
             clinicalSafety: [
-                'Aderência ao Treino (TDAH): O planejamento deve priorizar a variedade de métodos (circuitos, EMOM, AMRAP) e a troca frequente de exercícios para evitar a monotonia e manter o engajamento e a dopamina elevada.',
-                'Estrutura do Treino: As sessões devem ser altamente estruturadas com objetivos claros e listas de verificação (checklists) para auxiliar no foco e organização durante o exercício.',
-                'Foco no Metabolismo: Priorizar exercícios compostos e de alta demanda muscular em formato de supersérie ou circuito para aumentar o gasto calórico pós-exercício (EPOC).',
-                'Nutrição: Necessidade de acompanhamento nutricional estrito para garantir um déficit calórico sustentável e alta ingestão proteica para proteger a massa magra durante a fase de emagrecimento rápido.',
-                'Cardio: Integrar sessões curtas e intensas (HIIT) 3x/semana e sessões de baixa intensidade e longa duração (LISS) 2x/semana, com duração máxima de 45 minutos para LISS para evitar a perda de foco.'
+              "Aderência ao Treino (TDAH): O planejamento deve priorizar a variedade de métodos (circuitos, EMOM, AMRAP) e a troca frequente de exercícios para evitar a monotonia e manter o engajamento e a dopamina elevada.",
+              "Estrutura do Treino: As sessões devem ser altamente estruturadas com objetivos claros e listas de verificação (checklists) para auxiliar no foco e organização durante o exercício.",
+              "Foco no Metabolismo: Priorizar exercícios compostos e de alta demanda muscular em formato de supersérie ou circuito para aumentar o gasto calórico pós-exercício (EPOC).",
+              "Nutrição: Necessidade de acompanhamento nutricional estrito para garantir um déficit calórico sustentável e alta ingestão proteica para proteger a massa magra durante a fase de emagrecimento rápido.",
+              "Cardio: Integrar sessões curtas e intensas (HIIT) 3x/semana e sessões de baixa intensidade e longa duração (LISS) 2x/semana, com duração máxima de 45 minutos para LISS para evitar a perda de foco."
             ],
             bioInsight: {
-              context: 'Liliane Torres é uma aluna com possível TDAH.',
+              context: "Liliane Torres é uma aluna com possível TDAH.",
               tips: [
-                  '**Estrutura e Previsibilidade:** Use comandos curtos e claros. Mantenha a rotina do treino consistente (início, meio e fim) para gerenciar a desatenção típica do TDAH.',
-                  '**Âncoras de Foco Visual:** Indique um ponto fixo (na parede, no chão ou no equipamento) para onde ela deve olhar durante a execução do exercício. Isso ajuda a reduzir a distração sensorial.',
-                  '**Reforço Imediato:** Dê feedback positivo *imediatamente* após a conclusão correta de um exercício ou após um período de bom foco. O reforço rápido é crucial para a motivação em pessoas com TDAH.'
+                "**Estrutura e Previsibilidade:** Use comandos curtos e claros. Mantenha a rotina do treino consistente (início, meio e fim) para gerenciar a desatenção típica do TDAH.",
+                "**Âncoras de Foco Visual:** Indique um ponto fixo (na parede, no chão ou no equipamento) para onde ela deve olhar durante a execução do exercício. Isso ajuda a reduzir a distração sensorial.",
+                "**Reforço Imediato:** Dê feedback positivo *imediatamente* após a conclusão correta de um exercício ou após um período de bom foco. O reforço rápido é crucial para a motivação em pessoas com TDAH."
               ]
             }
           },
           workouts: [
             {
-                id: 'treino-a-liliane',
-                title: 'Treino A',
-                status: 'published',
-                projectedSessions: 20,
-                defaultSets: '3',
-                defaultReps: '15',
-                defaultRest: '30',
-                exercises: [
-                    { id: 'la1', name: 'Leg press horizontal', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
-                    { id: 'la2', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif' },
-                    { id: 'la3', name: 'Agachamento livre', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                    { id: 'la4', name: 'Abdominal supra no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' },
-                    { id: 'la5', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif' },
-                    { id: 'la6', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
-                    { id: 'la7', name: 'Crucifixo aberto com HBC no banco inclinado', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' }
-                ]
+              id: 'treino-a-liliane',
+              title: 'Treino A - Inferiores',
+              status: 'published',
+              projectedSessions: 20,
+              defaultSets: '3',
+              defaultReps: '12',
+              defaultRest: '60',
+              exercises: [
+                { id: 'la1', name: 'Agachamento Livre', sets: '4', reps: '10', rest: '90', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                { id: 'la2', name: 'Leg Press 45', sets: '4', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                { id: 'la3', name: 'Stiff com Halteres', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                { id: 'la4', name: 'Cadeira Extensora', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' }
+              ]
             },
             {
-                id: 'treino-b-liliane',
-                title: 'Treino B',
-                status: 'published',
-                projectedSessions: 20,
-                defaultSets: '3',
-                defaultReps: '15',
-                defaultRest: '30',
-                exercises: [
-                    { id: 'lb1-new', name: 'Extensão de quadril no solo caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                    { id: 'lb2-new', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
-                    { id: 'lb3-new', name: 'Abdução de quadril em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                    { id: 'lb4-new', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                    { id: 'lb5-new', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
-                    { id: 'lb6-new', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
-                    { id: 'lb7-new', name: 'Extensão de ombros no cross barra reta', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
-                ]
+              id: 'treino-b-liliane',
+              title: 'Treino B',
+              status: 'published',
+              projectedSessions: 20,
+              defaultSets: '3',
+              defaultReps: '15',
+              defaultRest: '30',
+              exercises: [
+                { id: 'lb1', name: 'Extensão de quadril no solo caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
+                { id: 'lb3', name: 'Abdução de quadril em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                { id: 'lb4', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                { id: 'lb5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
+                { id: 'lb6', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
+                { id: 'lb7', name: 'Extensão de ombros no cross barra reta', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
+              ]
             }
           ]
         },
@@ -271,20 +268,20 @@ export default function App() {
             startDate: new Date().toISOString(),
             microciclos: [],
             type: 'STRENGTH',
-            phaseTitle: 'Macrociclo de 20 Semanas (UNDP)',
-            generalStrategy: `"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético e otimização da densidade do treino. Estratégia adaptada para a gestão da carga sensorial e manutenção da aderência em indivíduos com TEA/TDAH."\n\nMacrociclo de 20 Semanas (5 mesociclos de 4 semanas) focado na redução progressiva do peso corporal (alvo: 87kg). Fases: (1) Adaptação Metabólica (Semanas 1-8): Foco em exercícios complexos de baixo impacto e alta repetição para estabelecer volume basal; (2) Densidade e Gasto Calórico (Semanas 9-16): Introdução de complexos metabólicos, supersets e protocolos de alta intensidade (HIIT) para maximizar o EPOC; (3) Consolidação (Semanas 17-20): Redução do volume, manutenção da intensidade e transição para rotinas de sustentabilidade.`,
+            phaseTitle: 'Emagrecimento - Foco Metabólico e Cognitivo',
+            generalStrategy: "\"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético e otimização da densidade do treino. Estratégia adaptada para a gestão da carga sensorial e manutenção da aderência em indivíduos com TEA/TDAH.\"\n\nMacrociclo de 20 Semanas (5 mesociclos de 4 semanas) focado na redução progressiva do peso corporal (alvo: 87kg). Fases: (1) Adaptação Metabólica (Semanas 1-8): Foco em exercícios complexos de baixo impacto e alta repetição para estabelecer volume basal; (2) Densidade e Gasto Calórico (Semanas 9-16): Introdução de complexos metabólicos, supersets e protocolos de alta intensidade (HIIT) para maximizar o EPOC; (3) Consolidação (Semanas 17-20): Redução do volume, manutenção da intensidade e transição para rotinas de sustentabilidade.",
             clinicalSafety: [
-                'Gestão Sensorial (TEA): Priorizar ambientes de treino consistentes, minimizando estímulos externos (música alta, luzes piscantes). A previsibilidade da rotina é crucial para a segurança e aderência.',
-                'Engajamento e Foco (TDAH): As sessões devem ter duração máxima de 60 minutos e incluir variação de exercícios (múltiplos blocos de 10-15 minutos) para combater a inatenção e o tédio, mantendo a estrutura geral.',
-                'Disfunção Executiva: Utilizar sistemas de feedback claro (e.g., RPE 6-8) e permitir ajustes na carga ou volume nos dias em que a capacidade de autorregulação e iniciação motora estiver comprometida.',
-                'Controle Metabólico: Monitoramento constante da hidratação e da glicemia, visto que a atenção plena (mindfulness) a sinais internos (fome/sede) pode ser afetada pelo TDAH.'
+              "Gestão Sensorial (TEA): Priorizar ambientes de treino consistentes, minimizando estímulos externos (música alta, luzes piscantes). A previsibilidade da rotina é crucial para a segurança e aderência.",
+              "Engajamento e Foco (TDAH): As sessões devem ter duração máxima de 60 minutos e incluir variação de exercícios (múltiplos blocos de 10-15 minutos) para combater a inatenção e o tédio, mantendo a estrutura geral.",
+              "Disfunção Executiva: Utilizar sistemas de feedback claro (e.g., RPE 6-8) e permitir ajustes na carga ou volume nos dias em que a capacidade de autorregulação e iniciação motora estiver comprometida.",
+              "Controle Metabólico: Monitoramento constante da hidratação e da glicemia, visto que a atenção plena (mindfulness) a sinais internos (fome/sede) pode ser afetada pelo TDAH."
             ],
             bioInsight: {
-              context: `**Análise do Aluno:** André Brito (TEA/TDAH e Bariátrica)\n\n**Perfil:** O aluno apresenta um duplo desafio de foco e atenção (TDAH e TEA) e uma complicação física de saúde e recuperação (Bariátrica).\n\n**Implicações para o Treinamento:**\n\n1. **TEA:** Necessidade de rotina clara, comunicação literal e previsibilidade. Sensibilidade a estímulos (luzes, ruídos) pode ser alta.\n2. **TDAH:** Dificuldade em manter o foco, impulsividade e necessidade de variedade/movimento para manter o engajamento.\n3. **Bariátrica:** Foco fundamental na hidratação, nutrição (proteínas), e cuidado extremo com a execução para proteger articulações e evitar lesões causadas por mudanças rápidas de peso ou nutrição.`,
+              context: "**Condição Neurológica:** Transtorno do Espectro Autista (TEA) e TDAH.\n**Condição Médica:** Pós-Cirurgia Bariátrica.\n\n**Implicações:**\n1. **TEA:** Necessidade de rotina clara e comunicação literal.\n2. **TDAH:** Dificuldade de foco, necessidade de variedade.\n3. **Bariátrica:** Foco em hidratação, proteínas e proteção articular.",
               tips: [
-                  "**Segurança (Pós-Bariátrica e Execução)**\n**Dica:** Priorize a técnica acima da carga. Monitore constantemente a hidratação e a ingestão de proteínas (se possível, pergunte a André sobre sua rotina alimentar). Garanta aquecimentos adequados para as articulações e use *feedbacks* de execução extremamente precisos e visuais.",
-                  "**Foco (TDAH)**\n**Dica:** Divida os treinos em blocos de 10-15 minutos com objetivos muito específicos. Use lembretes físicos ou táteis (tocar o ombro, apontar a meta) para redirecionar o foco quando a atenção se dispersar. Mantenha as instruções curtas e em formato de lista (ex: '1. Agacha, 2. Sobe, 3. Respira').",
-                  "**Previsibilidade e Ambiente (TEA)**\n**Dica:** Mantenha a rotina da sessão o mais constante possível (mesmo horário, mesma área de treino). Avise André com antecedência (1-2 minutos) sobre qualquer mudança inesperada no exercício, ordem ou ambiente. Minimizar ruídos e luzes piscantes ajudará a prevenir sobrecarga sensorial."
+                "**Segurança (Pós-Bariátrica):** Priorize técnica acima da carga. Monitore hidratação e proteínas. Feedbacks visuais e precisos.",
+                "**Foco (TDAH):** Blocos curtos (10-15min). Lembretes táteis para redirecionar atenção. Instruções em lista (1. Agacha, 2. Sobe).",
+                "**Previsibilidade (TEA):** Rotina constante (mesmo local/horário). Avisar mudanças com antecedência. Minimizar ruídos/luzes."
               ]
             }
           },
@@ -318,31 +315,107 @@ export default function App() {
               defaultReps: '12',
               defaultRest: '30',
               exercises: [
-                { id: 'bb1', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'bb2', name: 'Remada fechada na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'bb3', name: 'Puxada com triângulo no pulley alto', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'bb4', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
-                { id: 'bb5', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
-                { id: 'bb6', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
-                { id: 'bb7', name: 'Extensão de quadril e joelho em pé caneleira', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                { id: 'bb8', name: 'Stiff with HBC simultâneo', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                { id: 'bb9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' }
+                { id: 'ab1', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'ab2', name: 'Remada fechada na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'ab3', name: 'Puxada com triângulo no pulley alto', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
+                { id: 'ab4', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
+                { id: 'ab5', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
+                { id: 'ab6', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
+                { id: 'ab7', name: 'Extensão de quadril e joelho em pé caneleira', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
+                { id: 'ab8', name: 'Stiff with HBC simultâneo', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                { id: 'ab9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' }
               ]
             }
-          ] 
+          ]
         }, 
-        { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
+        { 
+          id: 'fixed-marcelly', 
+          nome: 'Marcelly Bispo', 
+          email: 'marcellybispo92@gmail.com', 
+          physicalAssessments: [], 
+          workoutHistory: [], 
+          sexo: 'Feminino',
+          periodization: {
+            id: 'per-marcelly-01',
+            titulo: 'Relatório Científico',
+            startDate: new Date().toISOString(),
+            microciclos: [],
+            type: 'STRENGTH',
+            phaseTitle: 'Hipertrofia - Foco em Massa Magra',
+            generalStrategy: "Periodização de longo prazo (12+ meses) com foco primário em hipertrofia muscular para atingir 62kg de massa magra. A estratégia enfatiza a manipulação progressiva do volume, tensão mecânica e estresse metabólico para otimizar o recrutamento de unidades motoras e a síntese proteica muscular.\n\nMacrociclo anual dividido em três mesociclos de 4 meses (modelo ondulatório): 1. Acumulação (Alto Volume, ênfase sarcoplasmática, 10-15 repetições); 2. Transmutação (Volume Moderado/Intensidade Crescente, ênfase miofibrilar, 6-12 repetições); 3. Realização/Pico (Foco em força máxima relativa e recrutamento total, 4-8 repetições). Seguido por uma semana de destreinamento ativo (deload) e reinício do ciclo de Acumulação.",
+            clinicalSafety: [
+              "A ausência de TEA/TDAH relatado simplifica a prescrição, permitindo maior liberdade na utilização de estratégias de alto volume e densidade, essenciais para hipertrofia.",
+              "Para alcançar o objetivo de 62kg de massa muscular, é mandatório o acompanhamento nutricional com foco em superávit calórico consistente e ingestão proteica diária elevada (1.8 - 2.5 g/kg de peso corporal).",
+              "Monitoramento bimensal da composição corporal é necessário para garantir que o ganho de peso seja predominantemente massa magra e não acúmulo excessivo de tecido adiposo.",
+              "Devido ao alto volume de treinamento exigido, a recuperação é crucial. Ênfase no sono (7-9 horas) e controle do estresse sistêmico para otimizar a relação anabolismo/catabolismo."
+            ],
+            bioInsight: {
+              context: "Com base na análise do perfil (Marcelly Bispo, sem relatos de TEA/TDAH ou histórico bariátrico), o treinador pode se concentrar em métodos gerais de segurança e otimização da atenção.",
+              tips: [
+                "**Priorize a técnica antes da carga.** (Foco em Segurança)",
+                "**Instruções diretas (uma por vez).** (Foco em Foco/Concentração)",
+                "**Feedback imediato e específico sobre a execução.** (Foco em Foco e Segurança)"
+              ]
+            }
+          },
+          workouts: [
+            {
+              id: 'treino-a-marcelly',
+              title: 'Treino A',
+              status: 'published',
+              projectedSessions: 20,
+              defaultSets: '3',
+              defaultReps: '12',
+              defaultRest: '45',
+              exercises: [
+                { id: 'ma1', name: 'Cadeira extensora', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
+                { id: 'ma2', name: 'Cadeira extensora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
+                { id: 'ma3', name: 'Flexão de quadril e joelho em decúbito dorsal no solo com caneleira', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }, 
+                { id: 'ma4', name: 'Leg press horizontal unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
+                { id: 'ma5', name: 'Abdominal diagonal no solo', sets: '3', reps: '20', rest: '60', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' },
+                { id: 'ma6', name: 'Prancha ventral no bosu em isometria', sets: '3', reps: '20s', rest: '30', thumb: 'https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif' },
+                { id: 'ma7', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
+                { id: 'ma8', name: 'Abdução de ombros em pé com HBC pegada pronada', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
+              ]
+            },
+            {
+              id: 'treino-b-marcelly',
+              title: 'Treino B',
+              status: 'published',
+              projectedSessions: 20,
+              defaultSets: '3',
+              defaultReps: '12',
+              defaultRest: '45',
+              exercises: [
+                { id: 'mb1', name: 'Cadeira flexora', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                { id: 'mb2', name: 'Cadeira flexora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                { id: 'mb3', name: 'Cadeira flexora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
+                { id: 'mb4', name: 'Agachamento sumô with HBM', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
+                { id: 'mb5', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '30s', rest: '45', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
+                { id: 'mb6', name: 'Perdigueiro em isometria no solo', sets: '3', reps: '20s', rest: '45', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
+                { id: 'mb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
+                { id: 'mb8', name: 'Crucifixo inverso na máquina', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' }
+              ]
+            }
+          ]
+        }
     ];
 
     // LÓGICA DE MESCLAGEM CORRIGIDA: Prioridade total ao Firestore
+    // 1. Começamos com os alunos vindos do Firestore (students)
     const merged = [...students];
 
+    // 2. Para cada aluno padrão, verificamos se ele já existe nos dados do Firestore
     defaultStudents.forEach(def => {
         const existingIndex = merged.findIndex(s => s.id === def.id || (s.email && s.email.toLowerCase() === def.email.toLowerCase()));
         
         if (existingIndex === -1) {
+            // Se não existe no banco, adiciona o padrão completo
             merged.push(def);
         } else {
+            // Se já existe, PRESERVAMOS os dados do banco.
+            // Apenas preenchemos campos que estejam COMPLETAMENTE faltando (undefined/null) no banco.
+            // NÃO sobrescrevemos arrays vazios do banco com arrays do padrão.
             const existing = merged[existingIndex];
             
             if (!existing.nome) merged[existingIndex].nome = def.nome;
@@ -359,6 +432,7 @@ export default function App() {
         }
     });
 
+    // Ordenação alfabética
     return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   }, [students]);
 
@@ -482,18 +556,20 @@ export default function App() {
   };
 
   // DEFINIÇÃO DOS BOTÕES DO DASHBOARD DO ALUNO
+  // Filtramos aqui com base em studentForView.disabledFeatures
   const allDashboardItems = [
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
-    { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain, color: 'indigo' },
+    { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
-    { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
-    { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
+    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
 
   const visibleDashboardItems = allDashboardItems.filter(item => {
+    // Se o aluno não tiver a lista de disabledFeatures, mostra tudo.
+    // Se tiver, esconde se o ID estiver na lista.
     return !studentForView?.disabledFeatures?.includes(item.id);
   });
 
@@ -565,7 +641,6 @@ export default function App() {
         {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onSave={handleSaveData} onToggleMenu={toggleSidebar} />}
         {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
-        {view === 'CORRE_RJ' && <CorreRJView onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} />}
         {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
         
         {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} onNavigate={setView} />}

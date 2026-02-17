@@ -246,7 +246,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
                  <Footprints size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">RunTrack Elite</span>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">ABFIT RUN</span>
            </div>
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
