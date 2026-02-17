@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
-  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu
+  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -134,9 +134,57 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  
+  // SESSION RESTORE STATE
+  const [restoredSession, setRestoredSession] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
+
+  // --- 1. CONFIGURAÇÃO DE PERSISTÊNCIA E LOGIN AUTOMÁTICO ---
+  useEffect(() => {
+    const restoreSession = async () => {
+        const savedSession = localStorage.getItem('elite_session_v2');
+        if (savedSession) {
+            try {
+                const parsed = JSON.parse(savedSession);
+                if (parsed.isCoach !== undefined && parsed.view) {
+                    setIsCoach(parsed.isCoach);
+                    setView(parsed.view);
+                    // O aluno será selecionado quando os dados do Firestore carregarem
+                    if (parsed.selectedStudentId) {
+                        // Armazenamos temporariamente para usar no efeito de carga de dados
+                        (window as any)._tempStudentId = parsed.selectedStudentId;
+                    }
+                    if (parsed.selectedWorkoutId) {
+                        (window as any)._tempWorkoutId = parsed.selectedWorkoutId;
+                    }
+                    setRestoredSession(true);
+                }
+            } catch (e) {
+                console.error("Erro ao restaurar sessão", e);
+                localStorage.removeItem('elite_session_v2');
+            }
+        }
+    };
+    restoreSession();
+  }, []);
+
+  // --- 2. SALVAMENTO AUTOMÁTICO DE ESTADO (VIEW E SELEÇÃO) ---
+  useEffect(() => {
+    if (view === 'LOGIN') {
+        localStorage.removeItem('elite_session_v2');
+    } else {
+        const sessionData = {
+            isCoach,
+            view,
+            selectedStudentId: selectedStudent?.id,
+            selectedWorkoutId: selectedWorkout?.id
+        };
+        localStorage.setItem('elite_session_v2', JSON.stringify(sessionData));
+    }
+  }, [view, isCoach, selectedStudent, selectedWorkout]);
 
   // Verificação de PWA (Instalação)
   useEffect(() => {
@@ -361,17 +409,28 @@ export default function App() {
           const current = updatedStudents.find(s => s.id === selectedStudent.id);
           if (current) setSelectedStudent(current);
         }
+        // Restauração de aluno selecionado após refresh
+        if ((window as any)._tempStudentId && !selectedStudent) {
+            const saved = updatedStudents.find(s => s.id === (window as any)._tempStudentId);
+            if (saved) {
+                setSelectedStudent(saved);
+                // Limpa flag
+                delete (window as any)._tempStudentId;
+            }
+        }
       });
-    } else if (selectedStudent && view !== 'LOGIN') {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
+    } else if ((selectedStudent || (window as any)._tempStudentId) && view !== 'LOGIN') {
+      // Se tivermos um ID temporário restaurado ou um estudante já selecionado
+      const targetId = selectedStudent?.id || (window as any)._tempStudentId;
+      if (!targetId) return;
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', targetId);
       unsub = onSnapshot(docRef, (docSnap) => {
         setIsSyncing(docSnap.metadata.hasPendingWrites);
         if (docSnap.exists()) {
             const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
             
             // --- MERGE COM DADOS PADRÃO (FIX PARA ALUNO) ---
-            // Se o aluno tiver dados faltando no Firestore (ex: treinos),
-            // mesclamos com o padrão definido localmente.
             const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
             
             if (defaultProfile) {
@@ -380,13 +439,19 @@ export default function App() {
                 if (!rawData.periodization && defaultProfile.periodization) {
                     rawData.periodization = defaultProfile.periodization;
                 }
-                // Se não tem treinos no banco, usa os do padrão
                 if ((!rawData.workouts || rawData.workouts.length === 0) && defaultProfile.workouts && defaultProfile.workouts.length > 0) {
                     rawData.workouts = defaultProfile.workouts;
                 }
             }
             
             setSelectedStudent(rawData);
+            
+            // Restaurar Treino em Andamento se necessário
+            if ((window as any)._tempWorkoutId && rawData.workouts) {
+               const w = rawData.workouts.find(w => w.id === (window as any)._tempWorkoutId);
+               if (w) setSelectedWorkout(w); // Isso fará a UI renderizar o componente correto se a view for WORKOUTS
+               delete (window as any)._tempWorkoutId;
+            }
         }
       });
     }
@@ -431,6 +496,67 @@ export default function App() {
     // O aluno vê o que está selecionado (que vem do banco ou do merge)
     return selectedStudent;
   }, [selectedStudent, view, isCoach]);
+
+  // --- 3. CONTROLE DE VOLTAR (HARDWARE BACK BUTTON) ---
+  const handleBackNavigation = () => {
+      // Se for professor
+      if (isCoach) {
+          if (view === 'WORKOUT_EDITOR' || view === 'PERIODIZATION' || view === 'COACH_ASSESSMENT' || view === 'RUNTRACK_MANAGER' || view === 'ANALYTICS_COACH') {
+              setView('STUDENT_MGMT');
+          } else if (view === 'STUDENT_MGMT') {
+              setView('PROFESSOR_DASH');
+              setSelectedStudent(null);
+          } else if (view === 'PROFESSOR_DASH') {
+              // Já está na home do professor, talvez minimizar app (comportamento padrão)
+              // Mas aqui garantimos que não sai se estiver em sub-menus
+          } else {
+              setView('PROFESSOR_DASH'); // Fallback seguro
+          }
+      } 
+      // Se for aluno
+      else {
+          // Se estiver em qualquer sub-menu, volta pro Dashboard
+          if (view !== 'DASHBOARD' && view !== 'LOGIN') {
+              setView('DASHBOARD');
+          } else if (view === 'DASHBOARD' && isSidebarOpen) {
+              setIsSidebarOpen(false);
+          }
+      }
+  };
+
+  useEffect(() => {
+    // Adiciona um estado ao histórico sempre que a visualização muda (se não for login)
+    if (view !== 'LOGIN') {
+        window.history.pushState({ view }, '');
+    }
+
+    const onPopState = (event: PopStateEvent) => {
+        // Intercepta o evento "Voltar" do navegador/Android
+        event.preventDefault();
+        
+        if (view === 'LOGIN') return;
+
+        // Lógica inteligente de voltar
+        if (isCoach) {
+            if (view === 'PROFESSOR_DASH') {
+                // Se estiver na raiz, permite (ou segura, dependendo da UX desejada. Aqui seguramos para nao sair sem querer)
+                // window.history.back(); // Descomente para permitir sair
+            } else {
+                handleBackNavigation();
+            }
+        } else {
+            if (view === 'DASHBOARD') {
+                // Raiz do aluno
+            } else {
+                handleBackNavigation();
+            }
+        }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [view, isCoach, isSidebarOpen]);
+
 
   // Feed de Performance Global para o Professor
   const globalFeedHistory = useMemo(() => {
@@ -532,18 +658,6 @@ export default function App() {
 
   const showSidebar = view !== 'LOGIN';
   
-  const handleBackNavigation = () => {
-      if (isCoach) {
-          if (selectedStudent) {
-            setView('STUDENT_MGMT');
-          } else {
-            setView('PROFESSOR_DASH');
-          }
-      } else {
-          toggleSidebar();
-      }
-  };
-
   // DEFINIÇÃO DOS BOTÕES DO DASHBOARD DO ALUNO
   // Filtramos aqui com base em studentForView.disabledFeatures
   const allDashboardItems = [
@@ -552,6 +666,7 @@ export default function App() {
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
+    { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
@@ -629,6 +744,7 @@ export default function App() {
         {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onSave={handleSaveData} onToggleMenu={toggleSidebar} />}
+        {view === 'CORRE_RJ' && <CorreRJView onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} />}
         {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
         
