@@ -25,7 +25,7 @@ function SettingsView({ onBack }: { onBack: () => void }) {
     <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-black">
       <header className="flex items-center gap-4 mb-10">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors">
-          <Menu size={20}/>
+          <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Configurações Elite" />
