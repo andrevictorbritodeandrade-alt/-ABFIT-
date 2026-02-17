@@ -3,13 +3,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Activity, CalendarDays, Flame, Info, Plus, 
   Trash2, X, Brain, ChevronDown, Play, Zap, BarChart3,
-  ArrowLeft, Menu, Gauge
+  ArrowLeft, Menu, Gauge, TrendingUp, CheckCircle2, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { 
   collection, doc, onSnapshot, addDoc, deleteDoc 
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { Student } from '../types';
+import { Student, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle, Card, EliteFooter } from './Layout';
 
 // --- CONFIGURATION ---
@@ -109,39 +109,112 @@ const WorkoutLegend = () => (
     </div>
 );
 
-const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void }> = ({ workout, onDelete }) => {
-    
-    // Helper para formatar o display string "5' AQ"
+// --- LOGIC FOR PROGRESSION ---
+const calculateAdjustedWorkout = (workout: WorkoutModel) => {
+    if (!workout.createdAt) return { adjusted: workout, badge: null };
+
+    const created = new Date(workout.createdAt);
+    const now = new Date();
+    // Calculate difference in days
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let factor = 1.0;
+    let badge = null;
+
+    if (diffDays > 30) {
+        factor = 1.10; // +10% after 30 days
+        badge = "NÍVEL 3 (+10%)";
+    } else if (diffDays > 15) {
+        factor = 1.05; // +5% after 15 days
+        badge = "NÍVEL 2 (+5%)";
+    } else {
+        return { adjusted: workout, badge: null };
+    }
+
+    const adjusted = { ...workout };
+
+    // Apply progression to Speed
+    if (adjusted.speed) {
+        // Try to parse "8,5" or "8.5"
+        const speedNum = parseFloat(adjusted.speed.replace(',', '.'));
+        if (!isNaN(speedNum)) {
+            // Apply factor and format back to string with comma if needed
+            adjusted.speed = (speedNum * factor).toFixed(1).replace('.', ',');
+        }
+    }
+
+    // Apply progression to Stimulus Time if it's purely numeric
+    if (adjusted.stimulusTime) {
+        const stimNum = parseFloat(adjusted.stimulusTime);
+        // Only assume it's minutes/seconds to scale if it looks like a clean number
+        // If it's "400m", parseFloat gets 400. 
+        if (!isNaN(stimNum)) {
+             // For time/distance, we generally increase volume/distance or time.
+             // Round to nearest integer for simplicity in minutes/meters
+             if (stimNum < 10) {
+                 // Likely minutes (e.g. 2 min -> 2.1 min doesn't make sense, maybe strict check)
+                 // For small numbers, rounding might negate +5%. 
+                 // Let's keep 1 decimal place if < 10
+                 adjusted.stimulusTime = (stimNum * factor).toFixed(1).replace('.0', '');
+             } else {
+                 // Likely meters or seconds
+                 adjusted.stimulusTime = Math.ceil(stimNum * factor).toString();
+             }
+        }
+    }
+
+    return { adjusted, badge };
+};
+
+const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, isCompleted?: boolean, compact?: boolean }> = ({ workout, onDelete, isCompleted, compact }) => {
+    // Determine progression
+    const { adjusted, badge } = useMemo(() => calculateAdjustedWorkout(workout), [workout]);
+
+    // Helper para formatar tempo
     const formatTime = (val?: string) => {
         if (!val || val === '0') return null;
-        // Se for só numero, adiciona '. Se tiver letras (ex: 400m), mantem.
-        const isNumber = /^\d+$/.test(val);
+        const isNumber = /^\d+([.,]\d+)?$/.test(val);
         return isNumber ? `${val}'` : val;
     };
 
-    const warm = formatTime(workout.warmupTime) ? `${formatTime(workout.warmupTime)} AQ` : null;
+    // Montagem das partes da string usando os valores AJUSTADOS
+    const warmPart = formatTime(adjusted.warmupTime) ? `${formatTime(adjusted.warmupTime)} AQ` : null;
     
-    const sets = Number(workout.sets) || 1;
-    const reps = Number(workout.reps) || 1;
+    const sets = Number(adjusted.sets) || 1;
+    const reps = Number(adjusted.reps) || 1;
     const totalBlocks = sets * reps;
     
-    const stimRaw = workout.stimulusTime;
-    const stimTime = formatTime(stimRaw);
-    
-    // Mostra blocos se > 1 E se tiver estimulo definido
+    const stimTime = formatTime(adjusted.stimulusTime);
     const showBlocks = totalBlocks > 1 && !!stimTime;
     
-    const stim = stimTime ? `${stimTime} CO` : '';
-    const speed = workout.speed ? `${workout.speed}km/h` : '';
+    const stimPart = stimTime ? `${stimTime} CO` : '';
+    // Show new speed
+    const speedPart = adjusted.speed ? `${adjusted.speed}km/h` : '';
     
-    const recRaw = workout.recoveryTime;
-    const recTime = formatTime(recRaw);
-    const rec = recTime ? `${recTime} CA` : null;
+    const recTime = formatTime(adjusted.recoveryTime);
+    const recPart = recTime && recTime !== "0'" ? `${recTime} CA` : null;
     
-    const cool = formatTime(workout.cooldownTime) ? `${formatTime(workout.cooldownTime)} REC` : null;
+    const coolPart = formatTime(adjusted.cooldownTime) ? `${formatTime(adjusted.cooldownTime)} REC` : null;
+
+    if (compact) {
+        return (
+            <div className={`p-4 rounded-xl border transition-all ${isCompleted ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-zinc-900 border-zinc-800'}`}>
+                <div className="flex items-center justify-between mb-2">
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${isCompleted ? 'text-emerald-500' : 'text-zinc-500'}`}>
+                        {adjusted.type}
+                    </span>
+                    {isCompleted && <CheckCircle2 size={12} className="text-emerald-500" />}
+                </div>
+                <p className="text-xs font-black italic uppercase text-white leading-tight">
+                    {showBlocks && `${totalBlocks}x `}{stimPart} {speedPart && `@ ${speedPart}`}
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl relative group hover:border-red-600/30 transition-all">
+        <div className={`bg-zinc-900 border p-6 rounded-3xl relative group transition-all ${badge ? 'border-red-600/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]' : 'border-zinc-800 hover:border-red-600/30'}`}>
             {onDelete && (
                 <button onClick={onDelete} className="absolute top-6 right-6 text-zinc-500 hover:text-red-500 p-2 rounded-xl transition-all">
                     <Trash2 size={18} />
@@ -149,42 +222,53 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void }> = 
             )}
             
             <div className="flex flex-col mb-6">
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 flex items-center gap-2">
-                    <CalendarDays size={10} /> {workout.dayOfWeek}
-                </span>
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 flex items-center gap-2">
+                        <CalendarDays size={10} /> {adjusted.dayOfWeek}
+                    </span>
+                    {badge && (
+                        <span className="bg-red-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded-md flex items-center gap-1 animate-pulse">
+                            <TrendingUp size={10} /> {badge}
+                        </span>
+                    )}
+                </div>
                 <h4 className="text-2xl font-black italic uppercase text-white leading-none tracking-tighter">
-                    {workout.type}
+                    {adjusted.type}
                 </h4>
             </div>
 
-            {/* SINGLE BLOCK LAYOUT */}
-            <div className="bg-black/40 p-6 rounded-2xl border border-white/5 mb-6 flex items-center justify-center min-h-[100px]">
-                <p className="text-lg md:text-xl font-black italic uppercase text-white leading-relaxed tracking-wide text-center">
-                    {warm && (
+            {/* SINGLE BLOCK LAYOUT - UNIFIED TEXT */}
+            <div className="bg-black/40 p-6 rounded-2xl border border-white/5 mb-6 flex items-center justify-center text-center">
+                <p className="text-lg md:text-xl font-black italic uppercase text-white leading-relaxed tracking-wide">
+                    {/* AQUECIMENTO */}
+                    {warmPart && (
                         <>
-                            <span className="text-white">{warm}</span>
+                            <span>{warmPart}</span>
                             <span className="text-red-600 mx-2">+</span>
                         </>
                     )}
                     
+                    {/* BLOCOS E ESTIMULO */}
                     {showBlocks && (
-                        <span className="text-white">{totalBlocks} BLOCOS DE </span>
+                        <span>{totalBlocks} BLOCOS DE </span>
                     )}
                     
-                    <span className="text-white">{stim}</span>
-                    {speed && <span className="text-zinc-400 ml-2 text-[0.9em]">{speed}</span>}
+                    <span>{stimPart}</span>
+                    {speedPart && <span className="text-zinc-400 ml-2 text-[0.9em]">{speedPart}</span>}
                     
-                    {rec && (
+                    {/* RECUPERAÇÃO ENTRE TIROS */}
+                    {recPart && (
                         <>
                             <span className="text-red-600 mx-2">:</span>
-                            <span className="text-zinc-300">{rec}</span>
+                            <span className="text-zinc-300">{recPart}</span>
                         </>
                     )}
                     
-                    {cool && (
+                    {/* DESAQUECIMENTO */}
+                    {coolPart && (
                         <>
                             <span className="text-red-600 mx-2">+</span>
-                            <span className="text-white">{cool}</span>
+                            <span>{coolPart}</span>
                         </>
                     )}
                 </p>
@@ -318,6 +402,121 @@ function WorkoutBuilder({ studentId, onClose }: { studentId: string, onClose: ()
     );
 }
 
+// --- CALENDAR COMPONENTS ---
+
+const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+};
+
+const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+};
+
+const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[], history: WorkoutHistoryEntry[], onCheckIn: (date: string, workout: WorkoutModel) => void }) => {
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = new Date();
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
+    
+    // Mapa de nomes de dias para índices do JS (0 = Domingo, 1 = Segunda...)
+    const dayNameMap: Record<string, number> = {
+        'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6
+    };
+
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    const blanks = Array.from({ length: firstDay }, (_, i) => i);
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    const getWorkoutForDate = (day: number) => {
+        const date = new Date(year, month, day);
+        const dayOfWeek = date.getDay();
+        
+        // Find workout that matches this day of week
+        // Note: workout.dayOfWeek string (e.g. 'Segunda') needs to match current date's day index
+        return workouts.find(w => {
+            const wDayIndex = dayNameMap[w.dayOfWeek.toLowerCase().split('-')[0]];
+            return wDayIndex === dayOfWeek;
+        });
+    };
+
+    const isCompleted = (day: number, workoutId: string) => {
+        const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
+        return history.some(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+    };
+
+    const handleDayClick = (day: number, workout: WorkoutModel) => {
+        const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
+        onCheckIn(dateStr, workout);
+    };
+
+    const isToday = (day: number) => {
+        return day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    };
+
+    return (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 mb-8 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+                <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronLeft size={20}/></button>
+                <h3 className="text-sm font-black uppercase text-white tracking-widest">{monthNames[month]} {year}</h3>
+                <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronRight size={20}/></button>
+            </div>
+            
+            <div className="grid grid-cols-7 gap-2 mb-2">
+                {weekDays.map((d, i) => (
+                    <div key={i} className="text-center text-[10px] font-bold text-zinc-600 uppercase">{d}</div>
+                ))}
+            </div>
+            
+            <div className="grid grid-cols-7 gap-2">
+                {blanks.map(b => <div key={`blank-${b}`} className="aspect-square"></div>)}
+                {days.map(day => {
+                    const workout = getWorkoutForDate(day);
+                    const completed = workout ? isCompleted(day, workout.id) : false;
+                    const todayHighlight = isToday(day) ? "bg-zinc-800" : "bg-transparent";
+                    
+                    return (
+                        <div key={day} className="aspect-square relative">
+                            {workout ? (
+                                <button 
+                                    onClick={() => handleDayClick(day, workout)}
+                                    className={`w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all active:scale-95
+                                        ${completed 
+                                            ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                                            : `border-zinc-800 hover:border-red-600/50 ${todayHighlight}`
+                                        }
+                                    `}
+                                >
+                                    <span className={`text-[10px] font-black ${completed ? 'text-emerald-500' : 'text-white'}`}>{day}</span>
+                                    <div className={`w-1.5 h-1.5 rounded-full mt-1 ${completed ? 'bg-emerald-500' : 'bg-red-600'}`}></div>
+                                </button>
+                            ) : (
+                                <div className={`w-full h-full rounded-xl flex flex-col items-center justify-center border border-transparent text-zinc-700 ${todayHighlight}`}>
+                                    <span className="text-[10px] font-medium">{day}</span>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            
+            <div className="flex items-center gap-4 mt-6 justify-center">
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-600"></div>
+                    <span className="text-[8px] font-bold text-zinc-500 uppercase">Treino</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
+                    <span className="text-[8px] font-bold text-zinc-500 uppercase">Concluído</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- COACH VIEW ---
 
 export function RunTrackCoachView({ student, onBack }: { student: Student, onBack: () => void }) {
@@ -401,8 +600,33 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     const sortedWorkouts = workouts.sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek));
     const daysMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const todayName = daysMap[new Date().getDay()];
-    // Matching logic for day of week (partial match to handle 'Feira' etc)
     const todayWorkout = workouts.find(w => w.dayOfWeek.toLowerCase().includes(todayName.toLowerCase().split('-')[0]));
+
+    const handleCheckIn = (dateStr: string, workout: WorkoutModel) => {
+        // Toggle logic: If exists, remove. If not, add.
+        const currentHistory = student.workoutHistory || [];
+        const existingIndex = currentHistory.findIndex(h => h.date === dateStr && h.workoutId === workout.id && h.type === 'RUNNING');
+
+        let updatedHistory;
+        if (existingIndex > -1) {
+            // Remove check-in (Undo)
+            updatedHistory = currentHistory.filter((_, idx) => idx !== existingIndex);
+        } else {
+            // Add check-in
+            const newEntry: WorkoutHistoryEntry = {
+                id: Date.now().toString(),
+                workoutId: workout.id,
+                name: workout.type, // e.g. "Longão"
+                date: dateStr,
+                timestamp: Date.now(),
+                duration: workout.totalTime || '00:00', // Default or actual
+                type: 'RUNNING'
+            };
+            updatedHistory = [newEntry, ...currentHistory];
+        }
+
+        onSave(student.id, { workoutHistory: updatedHistory });
+    };
 
     return (
         <div className="p-6 space-y-8 animate-in fade-in duration-500 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
@@ -423,6 +647,13 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
             </div>
 
             <div className="max-w-md mx-auto space-y-10 pb-24">
+                {/* CALENDAR */}
+                <RunCalendar 
+                    workouts={workouts} 
+                    history={student.workoutHistory || []} 
+                    onCheckIn={handleCheckIn} 
+                />
+
                 {/* HERO CARD (TODAY) */}
                 {todayWorkout ? (
                     <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl">

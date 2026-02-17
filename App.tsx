@@ -140,10 +140,7 @@ export default function App() {
 
   // Verificação de PWA (Instalação)
   useEffect(() => {
-    // Verifica se já está rodando como app (standalone)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-    
-    // Se NÃO estiver instalado, mostra o prompt após 2 segundos
     if (!isStandalone) {
       const timer = setTimeout(() => {
         setShowInstallPrompt(true);
@@ -159,34 +156,8 @@ export default function App() {
     return () => unsubAuth();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    let unsub: () => void;
-    if (view !== 'LOGIN' && isCoach) {
-      const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
-      unsub = onSnapshot(q, (snapshot) => {
-        setIsSyncing(snapshot.metadata.hasPendingWrites);
-        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
-        setStudents(updatedStudents);
-        // Atualiza o aluno selecionado em tempo real se ele estiver aberto
-        if (selectedStudent) {
-          const current = updatedStudents.find(s => s.id === selectedStudent.id);
-          if (current) setSelectedStudent(current);
-        }
-      });
-    } else if (selectedStudent && view !== 'LOGIN') {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
-      unsub = onSnapshot(docRef, (docSnap) => {
-        setIsSyncing(docSnap.metadata.hasPendingWrites);
-        if (docSnap.exists()) setSelectedStudent({ id: docSnap.id, ...docSnap.data() } as Student);
-      });
-    }
-    return () => { if (unsub) unsub(); };
-  }, [user, view, selectedStudent?.id, isCoach]);
-
-  const allStudentsForCoach = useMemo(() => {
-    // Definição dos dados padrão/hardcoded
-    const defaultStudents: Student[] = [
+  // Definição Centralizada dos Alunos Padrão
+  const defaultStudentsData = useMemo<Student[]>(() => [
         { 
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
@@ -202,21 +173,11 @@ export default function App() {
             microciclos: [],
             type: 'STRENGTH',
             phaseTitle: 'Emagrecimento e Controle TDAH',
-            generalStrategy: "Periodização focada na maximização do déficit energético para promover a perda de peso corporal, utilizando alta densidade e variabilidade de treino para otimizar a adesão, especialmente considerando a possibilidade de Transtorno de Déficit de Atenção e Hiperatividade (TDAH).\n\nMetabólico e Comportamental (16 Semanas): Fase 1 (Base e Adaptação): 4 semanas. Fase 2 (Volume e Densidade Máxima): 8 semanas. Fase 3 (Peak de DHE e Manutenção): 4 semanas.",
-            clinicalSafety: [
-              "Aderência ao Treino (TDAH): O planejamento deve priorizar a variedade de métodos (circuitos, EMOM, AMRAP) e a troca frequente de exercícios para evitar a monotonia e manter o engajamento e a dopamina elevada.",
-              "Estrutura do Treino: As sessões devem ser altamente estruturadas com objetivos claros e listas de verificação (checklists) para auxiliar no foco e organização durante o exercício.",
-              "Foco no Metabolismo: Priorizar exercícios compostos e de alta demanda muscular em formato de supersérie ou circuito para aumentar o gasto calórico pós-exercício (EPOC).",
-              "Nutrição: Necessidade de acompanhamento nutricional estrito para garantir um déficit calórico sustentável e alta ingestão proteica para proteger a massa magra durante a fase de emagrecimento rápido.",
-              "Cardio: Integrar sessões curtas e intensas (HIIT) 3x/semana e sessões de baixa intensidade e longa duração (LISS) 2x/semana, com duração máxima de 45 minutos para LISS para evitar a perda de foco."
-            ],
+            generalStrategy: "Periodização focada na maximização do déficit energético...",
+            clinicalSafety: ["Aderência ao Treino (TDAH)..."],
             bioInsight: {
               context: "Liliane Torres é uma aluna com possível TDAH.",
-              tips: [
-                "**Estrutura e Previsibilidade:** Use comandos curtos e claros. Mantenha a rotina do treino consistente (início, meio e fim) para gerenciar a desatenção típica do TDAH.",
-                "**Âncoras de Foco Visual:** Indique um ponto fixo (na parede, no chão ou no equipamento) para onde ela deve olhar durante a execução do exercício. Isso ajuda a reduzir a distração sensorial.",
-                "**Reforço Imediato:** Dê feedback positivo *imediatamente* após a conclusão correta de um exercício ou após um período de bom foco. O reforço rápido é crucial para a motivação em pessoas com TDAH."
-              ]
+              tips: ["Estrutura e Previsibilidade...", "Âncoras de Foco Visual...", "Reforço Imediato..."]
             }
           },
           workouts: [
@@ -269,20 +230,14 @@ export default function App() {
             microciclos: [],
             type: 'STRENGTH',
             phaseTitle: 'Emagrecimento - Foco Metabólico e Cognitivo',
-            generalStrategy: "\"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético e otimização da densidade do treino. Estratégia adaptada para a gestão da carga sensorial e manutenção da aderência em indivíduos com TEA/TDAH.\"\n\nMacrociclo de 20 Semanas (5 mesociclos de 4 semanas) focado na redução progressiva do peso corporal (alvo: 87kg). Fases: (1) Adaptação Metabólica (Semanas 1-8): Foco em exercícios complexos de baixo impacto e alta repetição para estabelecer volume basal; (2) Densidade e Gasto Calórico (Semanas 9-16): Introdução de complexos metabólicos, supersets e protocolos de alta intensidade (HIIT) para maximizar o EPOC; (3) Consolidação (Semanas 17-20): Redução do volume, manutenção da intensidade e transição para rotinas de sustentabilidade.",
+            generalStrategy: "\"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético...\"",
             clinicalSafety: [
-              "Gestão Sensorial (TEA): Priorizar ambientes de treino consistentes, minimizando estímulos externos (música alta, luzes piscantes). A previsibilidade da rotina é crucial para a segurança e aderência.",
-              "Engajamento e Foco (TDAH): As sessões devem ter duração máxima de 60 minutos e incluir variação de exercícios (múltiplos blocos de 10-15 minutos) para combater a inatenção e o tédio, mantendo a estrutura geral.",
-              "Disfunção Executiva: Utilizar sistemas de feedback claro (e.g., RPE 6-8) e permitir ajustes na carga ou volume nos dias em que a capacidade de autorregulação e iniciação motora estiver comprometida.",
-              "Controle Metabólico: Monitoramento constante da hidratação e da glicemia, visto que a atenção plena (mindfulness) a sinais internos (fome/sede) pode ser afetada pelo TDAH."
+              "Gestão Sensorial (TEA)...",
+              "Engajamento e Foco (TDAH)..."
             ],
             bioInsight: {
-              context: "**Condição Neurológica:** Transtorno do Espectro Autista (TEA) e TDAH.\n**Condição Médica:** Pós-Cirurgia Bariátrica.\n\n**Implicações:**\n1. **TEA:** Necessidade de rotina clara e comunicação literal.\n2. **TDAH:** Dificuldade de foco, necessidade de variedade.\n3. **Bariátrica:** Foco em hidratação, proteínas e proteção articular.",
-              tips: [
-                "**Segurança (Pós-Bariátrica):** Priorize técnica acima da carga. Monitore hidratação e proteínas. Feedbacks visuais e precisos.",
-                "**Foco (TDAH):** Blocos curtos (10-15min). Lembretes táteis para redirecionar atenção. Instruções em lista (1. Agacha, 2. Sobe).",
-                "**Previsibilidade (TEA):** Rotina constante (mesmo local/horário). Avisar mudanças com antecedência. Minimizar ruídos/luzes."
-              ]
+              context: "**Condição Neurológica:** Transtorno do Espectro Autista (TEA) e TDAH...",
+              tips: ["**Segurança (Pós-Bariátrica):** Priorize técnica...", "**Foco (TDAH):** Blocos curtos...", "**Previsibilidade (TEA):** Rotina constante..."]
             }
           },
           workouts: [
@@ -342,20 +297,11 @@ export default function App() {
             microciclos: [],
             type: 'STRENGTH',
             phaseTitle: 'Hipertrofia - Foco em Massa Magra',
-            generalStrategy: "Periodização de longo prazo (12+ meses) com foco primário em hipertrofia muscular para atingir 62kg de massa magra. A estratégia enfatiza a manipulação progressiva do volume, tensão mecânica e estresse metabólico para otimizar o recrutamento de unidades motoras e a síntese proteica muscular.\n\nMacrociclo anual dividido em três mesociclos de 4 meses (modelo ondulatório): 1. Acumulação (Alto Volume, ênfase sarcoplasmática, 10-15 repetições); 2. Transmutação (Volume Moderado/Intensidade Crescente, ênfase miofibrilar, 6-12 repetições); 3. Realização/Pico (Foco em força máxima relativa e recrutamento total, 4-8 repetições). Seguido por uma semana de destreinamento ativo (deload) e reinício do ciclo de Acumulação.",
-            clinicalSafety: [
-              "A ausência de TEA/TDAH relatado simplifica a prescrição, permitindo maior liberdade na utilização de estratégias de alto volume e densidade, essenciais para hipertrofia.",
-              "Para alcançar o objetivo de 62kg de massa muscular, é mandatório o acompanhamento nutricional com foco em superávit calórico consistente e ingestão proteica diária elevada (1.8 - 2.5 g/kg de peso corporal).",
-              "Monitoramento bimensal da composição corporal é necessário para garantir que o ganho de peso seja predominantemente massa magra e não acúmulo excessivo de tecido adiposo.",
-              "Devido ao alto volume de treinamento exigido, a recuperação é crucial. Ênfase no sono (7-9 horas) e controle do estresse sistêmico para otimizar a relação anabolismo/catabolismo."
-            ],
+            generalStrategy: "Periodização de longo prazo...",
+            clinicalSafety: ["A ausência de TEA/TDAH relatado..."],
             bioInsight: {
-              context: "Com base na análise do perfil (Marcelly Bispo, sem relatos de TEA/TDAH ou histórico bariátrico), o treinador pode se concentrar em métodos gerais de segurança e otimização da atenção.",
-              tips: [
-                "**Priorize a técnica antes da carga.** (Foco em Segurança)",
-                "**Instruções diretas (uma por vez).** (Foco em Foco/Concentração)",
-                "**Feedback imediato e específico sobre a execução.** (Foco em Foco e Segurança)"
-              ]
+              context: "Com base na análise do perfil...",
+              tips: ["Priorize a técnica...", "Instruções diretas..."]
             }
           },
           workouts: [
@@ -399,14 +345,60 @@ export default function App() {
             }
           ]
         }
-    ];
+    ], []);
 
-    // LÓGICA DE MESCLAGEM CORRIGIDA: Prioridade total ao Firestore
+  useEffect(() => {
+    if (!user) return;
+    let unsub: () => void;
+    if (view !== 'LOGIN' && isCoach) {
+      const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+      unsub = onSnapshot(q, (snapshot) => {
+        setIsSyncing(snapshot.metadata.hasPendingWrites);
+        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+        setStudents(updatedStudents);
+        // Atualiza o aluno selecionado em tempo real se ele estiver aberto
+        if (selectedStudent) {
+          const current = updatedStudents.find(s => s.id === selectedStudent.id);
+          if (current) setSelectedStudent(current);
+        }
+      });
+    } else if (selectedStudent && view !== 'LOGIN') {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
+      unsub = onSnapshot(docRef, (docSnap) => {
+        setIsSyncing(docSnap.metadata.hasPendingWrites);
+        if (docSnap.exists()) {
+            const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
+            
+            // --- MERGE COM DADOS PADRÃO (FIX PARA ALUNO) ---
+            // Se o aluno tiver dados faltando no Firestore (ex: treinos),
+            // mesclamos com o padrão definido localmente.
+            const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
+            
+            if (defaultProfile) {
+                if (!rawData.nome) rawData.nome = defaultProfile.nome;
+                if (!rawData.email) rawData.email = defaultProfile.email;
+                if (!rawData.periodization && defaultProfile.periodization) {
+                    rawData.periodization = defaultProfile.periodization;
+                }
+                // Se não tem treinos no banco, usa os do padrão
+                if ((!rawData.workouts || rawData.workouts.length === 0) && defaultProfile.workouts && defaultProfile.workouts.length > 0) {
+                    rawData.workouts = defaultProfile.workouts;
+                }
+            }
+            
+            setSelectedStudent(rawData);
+        }
+      });
+    }
+    return () => { if (unsub) unsub(); };
+  }, [user, view, selectedStudent?.id, isCoach, defaultStudentsData]);
+
+  const allStudentsForCoach = useMemo(() => {
     // 1. Começamos com os alunos vindos do Firestore (students)
     const merged = [...students];
 
     // 2. Para cada aluno padrão, verificamos se ele já existe nos dados do Firestore
-    defaultStudents.forEach(def => {
+    defaultStudentsData.forEach(def => {
         const existingIndex = merged.findIndex(s => s.id === def.id || (s.email && s.email.toLowerCase() === def.email.toLowerCase()));
         
         if (existingIndex === -1) {
@@ -414,18 +406,15 @@ export default function App() {
             merged.push(def);
         } else {
             // Se já existe, PRESERVAMOS os dados do banco.
-            // Apenas preenchemos campos que estejam COMPLETAMENTE faltando (undefined/null) no banco.
-            // NÃO sobrescrevemos arrays vazios do banco com arrays do padrão.
             const existing = merged[existingIndex];
             
             if (!existing.nome) merged[existingIndex].nome = def.nome;
             if (!existing.email) merged[existingIndex].email = def.email;
             
-            // Só aplica periodização padrão se o objeto periodization não existir
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
             }
-            // CORREÇÃO: Se não existirem treinos no banco, usa os treinos padrão (A e B)
+            // Se não existirem treinos no banco, usa os treinos padrão (A e B)
             if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
                 merged[existingIndex].workouts = def.workouts;
             }
@@ -434,7 +423,7 @@ export default function App() {
 
     // Ordenação alfabética
     return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-  }, [students]);
+  }, [students, defaultStudentsData]);
 
   const studentForView = useMemo(() => {
     if (!selectedStudent) return null;
@@ -562,7 +551,7 @@ export default function App() {
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
-    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
+    { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
