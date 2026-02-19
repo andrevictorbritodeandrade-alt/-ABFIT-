@@ -4,7 +4,7 @@ import {
   User as UserIcon, Loader2, Dumbbell, 
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
-  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu
+  BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
@@ -13,7 +13,8 @@ import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
-import { InstallPrompt } from './components/InstallPrompt'; // Importação adicionada
+import { InstallPrompt } from './components/InstallPrompt'; 
+import { CorreRJView } from './components/CorreRJ';
 import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './services/firebase';
@@ -24,7 +25,7 @@ function SettingsView({ onBack }: { onBack: () => void }) {
     <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-black">
       <header className="flex items-center gap-4 mb-10">
         <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors">
-          <Menu size={20}/>
+          <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
           <HeaderTitle text="Configurações Elite" />
@@ -133,16 +134,61 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  
+  // SESSION RESTORE STATE
+  const [restoredSession, setRestoredSession] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSidebar = () => setIsSidebarOpen(true);
 
+  // --- 1. CONFIGURAÇÃO DE PERSISTÊNCIA E LOGIN AUTOMÁTICO ---
+  useEffect(() => {
+    const restoreSession = async () => {
+        const savedSession = localStorage.getItem('elite_session_v2');
+        if (savedSession) {
+            try {
+                const parsed = JSON.parse(savedSession);
+                if (parsed.isCoach !== undefined && parsed.view) {
+                    setIsCoach(parsed.isCoach);
+                    setView(parsed.view);
+                    // O aluno será selecionado quando os dados do Firestore carregarem
+                    if (parsed.selectedStudentId) {
+                        // Armazenamos temporariamente para usar no efeito de carga de dados
+                        (window as any)._tempStudentId = parsed.selectedStudentId;
+                    }
+                    if (parsed.selectedWorkoutId) {
+                        (window as any)._tempWorkoutId = parsed.selectedWorkoutId;
+                    }
+                    setRestoredSession(true);
+                }
+            } catch (e) {
+                console.error("Erro ao restaurar sessão", e);
+                localStorage.removeItem('elite_session_v2');
+            }
+        }
+    };
+    restoreSession();
+  }, []);
+
+  // --- 2. SALVAMENTO AUTOMÁTICO DE ESTADO (VIEW E SELEÇÃO) ---
+  useEffect(() => {
+    if (view === 'LOGIN') {
+        localStorage.removeItem('elite_session_v2');
+    } else {
+        const sessionData = {
+            isCoach,
+            view,
+            selectedStudentId: selectedStudent?.id,
+            selectedWorkoutId: selectedWorkout?.id
+        };
+        localStorage.setItem('elite_session_v2', JSON.stringify(sessionData));
+    }
+  }, [view, isCoach, selectedStudent, selectedWorkout]);
+
   // Verificação de PWA (Instalação)
   useEffect(() => {
-    // Verifica se já está rodando como app (standalone)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-    
-    // Se NÃO estiver instalado, mostra o prompt após 2 segundos
     if (!isStandalone) {
       const timer = setTimeout(() => {
         setShowInstallPrompt(true);
@@ -158,34 +204,8 @@ export default function App() {
     return () => unsubAuth();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    let unsub: () => void;
-    if (view !== 'LOGIN' && isCoach) {
-      const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
-      unsub = onSnapshot(q, (snapshot) => {
-        setIsSyncing(snapshot.metadata.hasPendingWrites);
-        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
-        setStudents(updatedStudents);
-        // Atualiza o aluno selecionado em tempo real se ele estiver aberto
-        if (selectedStudent) {
-          const current = updatedStudents.find(s => s.id === selectedStudent.id);
-          if (current) setSelectedStudent(current);
-        }
-      });
-    } else if (selectedStudent && view !== 'LOGIN') {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', selectedStudent.id);
-      unsub = onSnapshot(docRef, (docSnap) => {
-        setIsSyncing(docSnap.metadata.hasPendingWrites);
-        if (docSnap.exists()) setSelectedStudent({ id: docSnap.id, ...docSnap.data() } as Student);
-      });
-    }
-    return () => { if (unsub) unsub(); };
-  }, [user, view, selectedStudent?.id, isCoach]);
-
-  const allStudentsForCoach = useMemo(() => {
-    // Definição dos dados padrão/hardcoded
-    const defaultStudents: Student[] = [
+  // Definição Centralizada dos Alunos Padrão
+  const defaultStudentsData = useMemo<Student[]>(() => [
         { 
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
@@ -200,26 +220,154 @@ export default function App() {
             startDate: new Date().toISOString(),
             microciclos: [],
             type: 'STRENGTH',
-            phaseTitle: 'Fase de Adaptação Metabólica',
-            generalStrategy: 'Periodização estruturada em fases metabólicas.',
-            clinicalSafety: ['Monitoramento de carga.'],
+            phaseTitle: 'Emagrecimento e Controle TDAH',
+            generalStrategy: "Periodização focada na maximização do déficit energético...",
+            clinicalSafety: ["Aderência ao Treino (TDAH)..."],
             bioInsight: {
-              context: 'Liliane Torres apresenta traços de neurodivergência.',
-              tips: ['Estrutura Rígida', 'Linguagem Direta']
+              context: "Liliane Torres é uma aluna com possível TDAH.",
+              tips: ["Estrutura e Previsibilidade...", "Âncoras de Foco Visual...", "Reforço Imediato..."]
             }
           },
-          workouts: [] // Inicialmente vazio nos defaults para não sobrescrever
+          workouts: [
+            {
+              id: 'w-liliane-01',
+              title: 'Musculação A - Full Body',
+              projectedSessions: 24,
+              status: 'published',
+              exercises: [
+                { name: 'Agachamento Livre (HBC)', sets: '3', reps: '12', rest: '60', load: '8' },
+                { name: 'Supino Vertical Máquina', sets: '3', reps: '12', rest: '60', load: '15' },
+                { name: 'Puxada Frontal', sets: '3', reps: '12', rest: '60', load: '20' },
+                { name: 'Elevação Pélvica', sets: '3', reps: '15', rest: '45', load: '10' },
+                { name: 'Desenvolvimento Máquina', sets: '3', reps: '12', rest: '60', load: '5' },
+                { name: 'Prancha Abdominal', sets: '3', reps: '30s', rest: '45' }
+              ]
+            }
+          ]
         },
-        { id: 'fixed-andre', nome: 'André Brito', email: 'britodeandrade@gmail.com', physicalAssessments: [], workoutHistory: [], sexo: 'Masculino', workouts: [] }, 
-        { id: 'fixed-marcelly', nome: 'Marcelly Bispo', email: 'marcellybispo92@gmail.com', physicalAssessments: [], workoutHistory: [], workouts: [], sexo: 'Feminino' }
-    ];
+        { 
+          id: 'fixed-andre', 
+          nome: 'André Brito', 
+          email: 'britodeandrade@gmail.com', 
+          physicalAssessments: [], 
+          workoutHistory: [], 
+          sexo: 'Masculino', 
+          periodization: {
+            id: 'per-andre-01',
+            titulo: 'Relatório Científico',
+            startDate: new Date().toISOString(),
+            microciclos: [],
+            type: 'STRENGTH',
+            phaseTitle: 'Emagrecimento - Foco Metabólico e Cognitivo',
+            generalStrategy: "\"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético...\"",
+            clinicalSafety: [
+              "Gestão Sensorial (TEA)...",
+              "Engajamento e Foco (TDAH)..."
+            ],
+            bioInsight: {
+              context: "**Condição Neurológica:** Transtorno do Espectro Autista (TEA) e TDAH...",
+              tips: ["**Segurança (Pós-Bariátrica):** Priorize técnica...", "**Foco (TDAH):** Blocos curtos...", "**Previsibilidade (TEA):** Rotina constante..."]
+            }
+          },
+          workouts: []
+        }, 
+        { 
+          id: 'fixed-marcelly', 
+          nome: 'Marcelly Bispo', 
+          email: 'marcellybispo92@gmail.com', 
+          physicalAssessments: [], 
+          workoutHistory: [], 
+          sexo: 'Feminino',
+          periodization: {
+            id: 'per-marcelly-01',
+            titulo: 'Relatório Científico',
+            startDate: new Date().toISOString(),
+            microciclos: [],
+            type: 'STRENGTH',
+            phaseTitle: 'Hipertrofia - Foco em Massa Magra',
+            generalStrategy: "Periodização de longo prazo...",
+            clinicalSafety: ["A ausência de TEA/TDAH relatado..."],
+            bioInsight: {
+              context: "Com base na análise do perfil...",
+              tips: ["Priorize a técnica...", "Instruções diretas..."]
+            }
+          },
+          workouts: []
+        }
+    ], []);
 
-    // LÓGICA DE MESCLAGEM CORRIGIDA: Prioridade total ao Firestore
+  useEffect(() => {
+    if (!user) return;
+    let unsub: () => void;
+    if (view !== 'LOGIN' && isCoach) {
+      const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+      unsub = onSnapshot(q, (snapshot) => {
+        setIsSyncing(snapshot.metadata.hasPendingWrites);
+        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+        setStudents(updatedStudents);
+        // Atualiza o aluno selecionado em tempo real se ele estiver aberto
+        if (selectedStudent) {
+          const current = updatedStudents.find(s => s.id === selectedStudent.id);
+          if (current) setSelectedStudent(current);
+        }
+        // Restauração de aluno selecionado após refresh
+        if ((window as any)._tempStudentId && !selectedStudent) {
+            const saved = updatedStudents.find(s => s.id === (window as any)._tempStudentId);
+            if (saved) {
+                setSelectedStudent(saved);
+                // Limpa flag
+                delete (window as any)._tempStudentId;
+            }
+        }
+      });
+    } else if ((selectedStudent || (window as any)._tempStudentId) && view !== 'LOGIN') {
+      // Se tivermos um ID temporário restaurado ou um estudante já selecionado
+      const targetId = selectedStudent?.id || (window as any)._tempStudentId;
+      if (!targetId) return;
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', targetId);
+      unsub = onSnapshot(docRef, (docSnap) => {
+        setIsSyncing(docSnap.metadata.hasPendingWrites);
+        if (docSnap.exists()) {
+            const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
+            
+            // --- MERGE COM DADOS PADRÃO (FIX PARA ALUNO) ---
+            const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
+            
+            if (defaultProfile) {
+                if (!rawData.nome) rawData.nome = defaultProfile.nome;
+                if (!rawData.email) rawData.email = defaultProfile.email;
+                if (!rawData.periodization && defaultProfile.periodization) {
+                    rawData.periodization = defaultProfile.periodization;
+                }
+                // --- RESTAURAÇÃO CRÍTICA DE TREINOS SE O BANCO ESTIVER VAZIO ---
+                // Se o banco não tem treinos, mas o perfil padrão tem, usa o padrão.
+                // Isso previne que o treino "suma" se o DB for resetado ou falhar.
+                if ((!rawData.workouts || rawData.workouts.length === 0) && defaultProfile.workouts && defaultProfile.workouts.length > 0) {
+                    rawData.workouts = defaultProfile.workouts;
+                }
+            }
+            
+            setSelectedStudent(rawData);
+            
+            // Restaurar Treino em Andamento se necessário
+            if ((window as any)._tempWorkoutId && rawData.workouts) {
+               const w = rawData.workouts.find(w => w.id === (window as any)._tempWorkoutId);
+               if (w) setSelectedWorkout(w); // Isso fará a UI renderizar o componente correto se a view for WORKOUTS
+               delete (window as any)._tempWorkoutId;
+            }
+        }
+      });
+    }
+    return () => { if (unsub) unsub(); };
+  }, [user, view, selectedStudent?.id, isCoach, defaultStudentsData]);
+
+  const allStudentsForCoach = useMemo(() => {
     // 1. Começamos com os alunos vindos do Firestore (students)
     const merged = [...students];
 
     // 2. Para cada aluno padrão, verificamos se ele já existe nos dados do Firestore
-    defaultStudents.forEach(def => {
+    defaultStudentsData.forEach(def => {
         const existingIndex = merged.findIndex(s => s.id === def.id || (s.email && s.email.toLowerCase() === def.email.toLowerCase()));
         
         if (existingIndex === -1) {
@@ -227,23 +375,26 @@ export default function App() {
             merged.push(def);
         } else {
             // Se já existe, PRESERVAMOS os dados do banco.
-            // Apenas preenchemos campos que estejam COMPLETAMENTE faltando (undefined/null) no banco.
-            // NÃO sobrescrevemos arrays vazios do banco com arrays do padrão.
             const existing = merged[existingIndex];
             
             if (!existing.nome) merged[existingIndex].nome = def.nome;
             if (!existing.email) merged[existingIndex].email = def.email;
             
-            // Só aplica periodização padrão se o objeto periodization não existir
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
+            }
+            
+            // --- RESTAURAÇÃO CRÍTICA DE TREINOS (VIEW PROFESSOR) ---
+            // Se o DB está vazio de treinos para este aluno padrão, reinjeta o treino padrão.
+            if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
+                merged[existingIndex].workouts = def.workouts;
             }
         }
     });
 
     // Ordenação alfabética
     return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-  }, [students]);
+  }, [students, defaultStudentsData]);
 
   const studentForView = useMemo(() => {
     if (!selectedStudent) return null;
@@ -251,6 +402,66 @@ export default function App() {
     // O aluno vê o que está selecionado (que vem do banco ou do merge)
     return selectedStudent;
   }, [selectedStudent, view, isCoach]);
+
+  // --- 3. CONTROLE DE VOLTAR (HARDWARE BACK BUTTON) ---
+  const handleBackNavigation = () => {
+      // Se for professor
+      if (isCoach) {
+          if (view === 'WORKOUT_EDITOR' || view === 'PERIODIZATION' || view === 'COACH_ASSESSMENT' || view === 'RUNTRACK_MANAGER' || view === 'ANALYTICS_COACH') {
+              setView('STUDENT_MGMT');
+          } else if (view === 'STUDENT_MGMT') {
+              setView('PROFESSOR_DASH');
+              setSelectedStudent(null);
+          } else if (view === 'PROFESSOR_DASH') {
+              // Já está na home do professor
+          } else {
+              setView('PROFESSOR_DASH'); // Fallback seguro
+          }
+      } 
+      // Se for aluno
+      else {
+          // Se estiver em qualquer sub-menu, volta pro Dashboard
+          if (view !== 'DASHBOARD' && view !== 'LOGIN') {
+              setView('DASHBOARD');
+          } else if (view === 'DASHBOARD' && isSidebarOpen) {
+              setIsSidebarOpen(false);
+          }
+      }
+  };
+
+  useEffect(() => {
+    // Adiciona um estado ao histórico sempre que a visualização muda (se não for login)
+    if (view !== 'LOGIN') {
+        window.history.pushState({ view }, '');
+    }
+
+    const onPopState = (event: PopStateEvent) => {
+        // Intercepta o evento "Voltar" do navegador/Android
+        event.preventDefault();
+        
+        if (view === 'LOGIN') return;
+
+        // Lógica inteligente de voltar
+        if (isCoach) {
+            if (view === 'PROFESSOR_DASH') {
+                // Se estiver na raiz, permite (ou segura, dependendo da UX desejada. Aqui seguramos para nao sair sem querer)
+                // window.history.back(); // Descomente para permitir sair
+            } else {
+                handleBackNavigation();
+            }
+        } else {
+            if (view === 'DASHBOARD') {
+                // Raiz do aluno
+            } else {
+                handleBackNavigation();
+            }
+        }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [view, isCoach, isSidebarOpen]);
+
 
   // Feed de Performance Global para o Professor
   const globalFeedHistory = useMemo(() => {
@@ -352,18 +563,6 @@ export default function App() {
 
   const showSidebar = view !== 'LOGIN';
   
-  const handleBackNavigation = () => {
-      if (isCoach) {
-          if (selectedStudent) {
-            setView('STUDENT_MGMT');
-          } else {
-            setView('PROFESSOR_DASH');
-          }
-      } else {
-          toggleSidebar();
-      }
-  };
-
   // DEFINIÇÃO DOS BOTÕES DO DASHBOARD DO ALUNO
   // Filtramos aqui com base em studentForView.disabledFeatures
   const allDashboardItems = [
@@ -371,7 +570,8 @@ export default function App() {
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
-    { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
+    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
+    { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
@@ -449,6 +649,7 @@ export default function App() {
         {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'STUDENT_ASSESSMENT' && studentForView && <StudentAssessmentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'RUNTRACK_STUDENT' && studentForView && <RunTrackStudentView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onSave={handleSaveData} onToggleMenu={toggleSidebar} />}
+        {view === 'CORRE_RJ' && <CorreRJView onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} />}
         {view === 'ANALYTICS' && studentForView && <AnalyticsDashboard student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
         {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
         

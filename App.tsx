@@ -228,41 +228,7 @@ export default function App() {
               tips: ["Estrutura e Previsibilidade...", "Âncoras de Foco Visual...", "Reforço Imediato..."]
             }
           },
-          workouts: [
-            {
-              id: 'treino-a-liliane',
-              title: 'Treino A - Inferiores',
-              status: 'published',
-              projectedSessions: 20,
-              defaultSets: '3',
-              defaultReps: '12',
-              defaultRest: '60',
-              exercises: [
-                { id: 'la1', name: 'Agachamento Livre', sets: '4', reps: '10', rest: '90', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                { id: 'la2', name: 'Leg Press 45', sets: '4', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
-                { id: 'la3', name: 'Stiff com Halteres', sets: '3', reps: '12', rest: '60', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                { id: 'la4', name: 'Cadeira Extensora', sets: '3', reps: '15', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' }
-              ]
-            },
-            {
-              id: 'treino-b-liliane',
-              title: 'Treino B',
-              status: 'published',
-              projectedSessions: 20,
-              defaultSets: '3',
-              defaultReps: '15',
-              defaultRest: '30',
-              exercises: [
-                { id: 'lb1', name: 'Extensão de quadril no solo caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                { id: 'lb2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif' },
-                { id: 'lb3', name: 'Abdução de quadril em pé com caneleira', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                { id: 'lb4', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                { id: 'lb5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
-                { id: 'lb6', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
-                { id: 'lb7', name: 'Extensão de ombros no cross barra reta', sets: '3', reps: '15', rest: '30', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
-              ]
-            }
-          ]
+          workouts: []
         },
         { 
           id: 'fixed-andre', 
@@ -288,48 +254,7 @@ export default function App() {
               tips: ["**Segurança (Pós-Bariátrica):** Priorize técnica...", "**Foco (TDAH):** Blocos curtos...", "**Previsibilidade (TEA):** Rotina constante..."]
             }
           },
-          workouts: [
-            {
-              id: 'treino-a-andre',
-              title: 'Treino A',
-              status: 'published',
-              projectedSessions: 24,
-              defaultSets: '3',
-              defaultReps: '10-12',
-              defaultRest: '60',
-              exercises: [
-                { id: 'aa1', name: 'Supino Reto com HBL', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
-                { id: 'aa2', name: 'Supino inclinado com HBC', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
-                { id: 'aa3', name: 'Remada alta em pé no cross', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'aa4', name: 'Tríceps testa HBM banco reto', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
-                { id: 'aa5', name: 'Tríceps no cross with barra reta inverso', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' },
-                { id: 'aa6', name: 'Agachamento livre with HBL', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                { id: 'aa7', name: 'Agachamento livre with HBC', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                { id: 'aa8', name: 'Leg press horizontal', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
-                { id: 'aa9', name: 'Abdominal supra no solo', sets: '3', reps: '10-12', rest: '60', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }
-              ]
-            },
-            {
-              id: 'treino-b-andre',
-              title: 'Treino B',
-              status: 'published',
-              projectedSessions: 24,
-              defaultSets: '3',
-              defaultReps: '12',
-              defaultRest: '30',
-              exercises: [
-                { id: 'ab1', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'ab2', name: 'Remada fechada na máquina', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'ab3', name: 'Puxada com triângulo no pulley alto', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif' },
-                { id: 'ab4', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
-                { id: 'ab5', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
-                { id: 'ab6', name: 'Bíceps superman no cross unilateral', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif' },
-                { id: 'ab7', name: 'Extensão de quadril e joelho em pé caneleira', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif' },
-                { id: 'ab8', name: 'Stiff with HBC simultâneo', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                { id: 'ab9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '30', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' }
-              ]
-            }
-          ]
+          workouts: []
         }, 
         { 
           id: 'fixed-marcelly', 
@@ -352,46 +277,7 @@ export default function App() {
               tips: ["Priorize a técnica...", "Instruções diretas..."]
             }
           },
-          workouts: [
-            {
-              id: 'treino-a-marcelly',
-              title: 'Treino A',
-              status: 'published',
-              projectedSessions: 20,
-              defaultSets: '3',
-              defaultReps: '12',
-              defaultRest: '45',
-              exercises: [
-                { id: 'ma1', name: 'Cadeira extensora', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
-                { id: 'ma2', name: 'Cadeira extensora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif' },
-                { id: 'ma3', name: 'Flexão de quadril e joelho em decúbito dorsal no solo com caneleira', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' }, 
-                { id: 'ma4', name: 'Leg press horizontal unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif' },
-                { id: 'ma5', name: 'Abdominal diagonal no solo', sets: '3', reps: '20', rest: '60', thumb: 'https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif' },
-                { id: 'ma6', name: 'Prancha ventral no bosu em isometria', sets: '3', reps: '20s', rest: '30', thumb: 'https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif' },
-                { id: 'ma7', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif' },
-                { id: 'ma8', name: 'Abdução de ombros em pé com HBC pegada pronada', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif' }
-              ]
-            },
-            {
-              id: 'treino-b-marcelly',
-              title: 'Treino B',
-              status: 'published',
-              projectedSessions: 20,
-              defaultSets: '3',
-              defaultReps: '12',
-              defaultRest: '45',
-              exercises: [
-                { id: 'mb1', name: 'Cadeira flexora', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                { id: 'mb2', name: 'Cadeira flexora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                { id: 'mb3', name: 'Cadeira flexora unilateral', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif' },
-                { id: 'mb4', name: 'Agachamento sumô with HBM', sets: '4', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif' },
-                { id: 'mb5', name: 'Elevação de quadril em isometria no solo', sets: '3', reps: '30s', rest: '45', thumb: 'https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif' },
-                { id: 'mb6', name: 'Perdigueiro em isometria no solo', sets: '3', reps: '20s', rest: '45', thumb: 'https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif' },
-                { id: 'mb7', name: 'Crucifixo inverso na máquina', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' },
-                { id: 'mb8', name: 'Crucifixo inverso na máquina', sets: '3', reps: '12', rest: '45', thumb: 'https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif' }
-              ]
-            }
-          ]
+          workouts: []
         }
     ], []);
 
@@ -439,9 +325,6 @@ export default function App() {
                 if (!rawData.periodization && defaultProfile.periodization) {
                     rawData.periodization = defaultProfile.periodization;
                 }
-                if ((!rawData.workouts || rawData.workouts.length === 0) && defaultProfile.workouts && defaultProfile.workouts.length > 0) {
-                    rawData.workouts = defaultProfile.workouts;
-                }
             }
             
             setSelectedStudent(rawData);
@@ -479,10 +362,6 @@ export default function App() {
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
             }
-            // Se não existirem treinos no banco, usa os treinos padrão (A e B)
-            if ((!existing.workouts || existing.workouts.length === 0) && def.workouts && def.workouts.length > 0) {
-                merged[existingIndex].workouts = def.workouts;
-            }
         }
     });
 
@@ -507,8 +386,7 @@ export default function App() {
               setView('PROFESSOR_DASH');
               setSelectedStudent(null);
           } else if (view === 'PROFESSOR_DASH') {
-              // Já está na home do professor, talvez minimizar app (comportamento padrão)
-              // Mas aqui garantimos que não sai se estiver em sub-menus
+              // Já está na home do professor
           } else {
               setView('PROFESSOR_DASH'); // Fallback seguro
           }
@@ -665,7 +543,7 @@ export default function App() {
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
-    { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints, color: 'rose' },
+    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }

@@ -9,7 +9,7 @@ import { GoogleGenAI } from "@google/genai";
 import { db, appId } from '../services/firebase';
 
 // --- LINK ÚNICO DE INFORMAÇÕES ---
-const INFO_LINK = "https://www.riorunningtour.com.br/calendario-corridas-rio-de-janeiro";
+const INFO_LINK = "https://www.olympics.com/pt/noticias/corrida-de-rua-rio-de-janeiro-2026-calendario-provas";
 
 // --- IMAGENS DE FUNDO DINÂMICO ---
 const BG_IMAGES = [
@@ -61,31 +61,81 @@ const MonthArt = ({ month }: { month: string }) => {
   );
 };
 
-// --- DADOS TOTAIS (LISTA COMPLETA DE 23 CORRIDAS) ---
+// --- DADOS TOTAIS (LISTA COMPLETA 2026) ---
 const INITIAL_PREDICTIONS = [
-  { nome: "Run Experience Pão de Açúcar", data: "04/01", dataIso: "2026-01-04", cidade: "RJ", horario: "06:30", largada: "Praia Vermelha, Urca", link: INFO_LINK, valor: "R$ 189,00", info: "Trilha Morro da Urca + 5km Asfalto." },
-  { nome: "2ª Maricá Night Run", data: "10/01", dataIso: "2026-01-10", cidade: "Maricá", horario: "19:00", largada: "Itaipuaçu, Maricá", link: INFO_LINK, valor: "R$ 89,90", info: "Prova nocturna com medalha especial." },
-  { nome: "Run Experience Lagoa Rodrigo de Freitas", data: "11/01", dataIso: "2026-01-11", cidade: "RJ", horario: "07:30", largada: "Parque da Catacumba, Lagoa", link: INFO_LINK, valor: "R$ 179,00", info: "Run Experience com vista da Lagoa." },
-  { nome: "Circuito Oceânico Niterói - Piratininga", data: "11/01", dataIso: "2026-01-11", cidade: "Niterói", horario: "07:30", largada: "Praia de Piratininga, Niterói", link: INFO_LINK, valor: "R$ 95,00", info: "Tradicional prova da Região Oceânica." },
-  { nome: "Corrida de São Sebastião (5k)", data: "20/01", dataIso: "2026-01-20", cidade: "RJ", horario: "07:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 115,00", info: "Feriado do Padroeiro do Rio." },
-  { nome: "Circuito do Sol 2026", data: "01/02", dataIso: "2026-02-01", cidade: "RJ", horario: "06:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 119,00", info: "Prova de alta velocidade." },
-  { nome: "Run Experience Quinta da Boa Vista", data: "15/02", dataIso: "2026-02-15", cidade: "RJ", horario: "07:30", largada: "São Cristóvão", link: INFO_LINK, valor: "R$ 169,00", info: "Percurso histórico e arborizado." },
-  { nome: "Circuito das Estações - Outono", data: "08/03", dataIso: "2026-03-08", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 129,00", info: "Abertura do circuito nacional 2026." },
-  { nome: "Corrida das Poderosas (Etapa 1)", data: "15/03", dataIso: "2026-03-15", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 110,00", info: "Homenagem ao mês da mulher." },
-  { nome: "Run Experience Santa Teresa", data: "12/04", dataIso: "2026-04-12", cidade: "RJ", horario: "07:00", largada: "Largo do Curvelo, Santa Teresa", link: INFO_LINK, valor: "R$ 189,00", info: "Muitas subidas e vistas icónicas." },
-  { nome: "Meia do Porto - Etapa 5k", data: "26/04", dataIso: "2026-04-26", cidade: "RJ", horario: "07:00", largada: "Porto Maravilha", link: INFO_LINK, valor: "R$ 110,00", info: "Percurso plano no Boulevard Olímpico." },
-  { nome: "Meia Maratona de Niterói (5k)", data: "17/05", dataIso: "2026-05-17", cidade: "Niterói", horario: "07:00", largada: "Caminho Niemeyer, Niterói", link: INFO_LINK, valor: "R$ 105,00", info: "Arquitetura e corrida à beira-mar." },
-  { nome: "Circuito das Estações - Inverno", data: "31/05", dataIso: "2026-05-31", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 129,00", info: "Segunda etapa da temporada." },
-  { nome: "Maratona do Rio (Family Run 5k)", data: "04/06", dataIso: "2026-06-04", cidade: "RJ", horario: "08:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 160,00", info: "Feriado de Corpus Christi." },
-  { nome: "Run Experience Vidigal", data: "19/07", dataIso: "2026-07-19", cidade: "RJ", horario: "07:30", largada: "Base do Vidigal", link: INFO_LINK, valor: "R$ 199,00", info: "Desafio técnico com vista deslumbrante." },
-  { nome: "Meia Maratona Internacional do Rio (5k)", data: "16/08", dataIso: "2026-08-16", cidade: "RJ", horario: "07:00", largada: "Leblon", link: INFO_LINK, valor: "Em breve", info: "Uma das mais tradicionais da orla." },
-  { nome: "Run Experience Niterói - MAC", data: "23/08", dataIso: "2026-08-23", cidade: "Niterói", horario: "07:30", largada: "MAC Niterói", link: INFO_LINK, valor: "R$ 179,00", info: "Corrida pela orla de Niterói." },
-  { nome: "Circuito das Estações - Primavera", data: "20/09", dataIso: "2026-09-20", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 129,00", info: "Terceira etapa da temporada." },
-  { nome: "Pink Run RJ (Outubro Rosa)", data: "11/10", dataIso: "2026-10-11", cidade: "RJ", horario: "07:30", largada: "Copacabana", link: INFO_LINK, valor: "R$ 110,00", info: "Corrida solidária de prevenção." },
-  { nome: "Run Experience Cristo Redentor", data: "18/10", dataIso: "2026-10-18", cidade: "RJ", horario: "06:00", largada: "Parque Lage", link: INFO_LINK, valor: "R$ 219,00", info: "Subida épica aos pés do Cristo." },
-  { nome: "Run Experience Maricá - Ponta Negra", data: "08/11", dataIso: "2026-11-08", cidade: "Maricá", horario: "07:00", largada: "Farol de Ponta Negra", link: INFO_LINK, valor: "R$ 169,00", info: "Trilha e asfalto no litoral de Maricá." },
-  { nome: "Night Run RJ - Etapa 2", data: "21/11", dataIso: "2026-11-21", cidade: "RJ", horario: "20:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 135,00", info: "Corrida nocturna com festa." },
-  { nome: "Circuito das Estações - Verão", data: "13/12", dataIso: "2026-12-13", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 129,00", info: "Encerramento do circuito 2026." }
+  // JANEIRO
+  { nome: "6ª Gratidão Run", data: "20/01", dataIso: "2026-01-20", cidade: "RJ", horario: "07:30", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 89,90", info: "Corrida comemorativa no subúrbio carioca." },
+  { nome: "Corrida de São Sebastião", data: "20/01", dataIso: "2026-01-20T12:00:00", cidade: "RJ", horario: "07:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 115,00", info: "Tradicional prova do padroeiro da cidade." },
+  { nome: "Eclipse Night Run - Lua Nova", data: "24/01", dataIso: "2026-01-24", cidade: "RJ", horario: "19:00", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 129,00", info: "Prova noturna temática." },
+  { nome: "Porto Saúde T&F Experience", data: "24/01", dataIso: "2026-01-24T12:00:00", cidade: "RJ", horario: "07:00", largada: "Shopping Américas", link: INFO_LINK, valor: "R$ 90,00", info: "Treinão técnico Track&Field." },
+  { nome: "PTT Running", data: "24/01", dataIso: "2026-01-24T14:00:00", cidade: "RJ", horario: "07:00", largada: "Posto 10, Recreio", link: INFO_LINK, valor: "R$ 85,00", info: "Evento local no Recreio." },
+  { nome: "Corrida Mickey 1928", data: "25/01", dataIso: "2026-01-25", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 149,00", info: "Temática Disney Clássica." },
+  { nome: "Run Free", data: "25/01", dataIso: "2026-01-25T12:00:00", cidade: "RJ", horario: "07:00", largada: "A definir", link: INFO_LINK, valor: "Grátis", info: "Evento participativo." },
+  { nome: "Verão Carioca Run", data: "25/01", dataIso: "2026-01-25T14:00:00", cidade: "RJ", horario: "07:30", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 99,00", info: "Clássica de verão no Aterro." },
+
+  // FEVEREIRO
+  { nome: "Circuito do Sol", data: "01/02", dataIso: "2026-02-01", cidade: "RJ", horario: "07:00", largada: "Praia da Glória", link: INFO_LINK, valor: "R$ 119,00", info: "Abertura oficial do calendário de grandes provas." },
+  { nome: "Circuito Rio Maravilha - Verão", data: "01/02", dataIso: "2026-02-01T12:00:00", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 85,00", info: "Prova em local histórico." },
+  { nome: "Circuito Divas Run - Verão", data: "08/02", dataIso: "2026-02-08", cidade: "RJ", horario: "07:30", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 95,00", info: "Foco no público feminino." },
+  { nome: "Corrida de Carnaval", data: "08/02", dataIso: "2026-02-08T12:00:00", cidade: "RJ", horario: "08:00", largada: "Musal - Campo dos Afonsos", link: INFO_LINK, valor: "R$ 80,00", info: "Corrida festiva pré-carnaval." },
+  { nome: "Corrida Nostalgia Popeye", data: "08/02", dataIso: "2026-02-08T14:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 110,00", info: "Temática de personagens clássicos." },
+  { nome: "ATR Running 10ª Ed.", data: "22/02", dataIso: "2026-02-22", cidade: "RJ", horario: "07:00", largada: "Posto 12, Recreio", link: INFO_LINK, valor: "R$ 89,00", info: "Prova tradicional da zona oeste." },
+  { nome: "Circuito Elementos - Fogo", data: "28/02", dataIso: "2026-02-28", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 89,90", info: "Primeira etapa do circuito 4 elementos." },
+  { nome: "Corrida Kids Bíblica", data: "28/02", dataIso: "2026-02-28T14:00:00", cidade: "RJ", horario: "09:00", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 60,00", info: "Evento infantil temático." },
+
+  // MARÇO
+  { nome: "Cats Run 2026", data: "01/03", dataIso: "2026-03-01", cidade: "RJ", horario: "07:30", largada: "Parque das Figueiras", link: INFO_LINK, valor: "R$ 99,00", info: "Evento pet friendly." },
+  { nome: "Circuito Correndo pelo Rio", data: "01/03", dataIso: "2026-03-01T12:00:00", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 75,00", info: "Circuito popular acessível." },
+  { nome: "Fla Run 2026", data: "01/03", dataIso: "2026-03-01T14:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 120,00", info: "Corrida oficial do Flamengo." },
+  { nome: "Mulheres com Voz", data: "08/03", dataIso: "2026-03-08", cidade: "RJ", horario: "07:30", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 90,00", info: "Dia Internacional da Mulher." },
+  { nome: "Circuito All Running", data: "08/03", dataIso: "2026-03-08T10:00:00", cidade: "RJ", horario: "07:00", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 85,00", info: "Prova rápida na Barra." },
+  { nome: "Circuito das Estações - Outono", data: "08/03", dataIso: "2026-03-08T12:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Maior circuito de corridas do Brasil." },
+  { nome: "Contos Clássicos Mulan", data: "08/03", dataIso: "2026-03-08T14:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Temática Disney Princess." },
+  { nome: "Corrida Kids Daniel", data: "14/03", dataIso: "2026-03-14", cidade: "RJ", horario: "09:00", largada: "Campo Grande", link: INFO_LINK, valor: "R$ 55,00", info: "Infantil zona oeste." },
+  { nome: "Corrida das Poderosas", data: "15/03", dataIso: "2026-03-15", cidade: "RJ", horario: "07:00", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 110,00", info: "Homenagem ao mês da mulher." },
+  { nome: "Santander T&F Run Series", data: "15/03", dataIso: "2026-03-15T12:00:00", cidade: "RJ", horario: "07:00", largada: "Av. Lauro Sodré (Rio Sul)", link: INFO_LINK, valor: "R$ 159,00", info: "Etapa Shopping Rio Sul." },
+  { nome: "2ª Corrida das Águas", data: "22/03", dataIso: "2026-03-22", cidade: "RJ", horario: "07:30", largada: "Praça Pedro Bruno", link: INFO_LINK, valor: "R$ 80,00", info: "Evento Ilha de Paquetá (Provável)." },
+  { nome: "Mulher Maravilha RJ", data: "29/03", dataIso: "2026-03-29", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 139,00", info: "Prova feminina temática DC." },
+  { nome: "Corrida Solidária RH Raiz", data: "29/03", dataIso: "2026-03-29T12:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 70,00", info: "Evento beneficente." },
+
+  // ABRIL
+  { nome: "Corrida pela Inclusão", data: "05/04", dataIso: "2026-04-05", cidade: "RJ", horario: "07:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 90,00", info: "Evento social inclusivo." },
+  { nome: "Maratona Revezamento PZTEAM", data: "11/04", dataIso: "2026-04-11", cidade: "RJ", horario: "06:00", largada: "Grumari", link: INFO_LINK, valor: "R$ 180,00", info: "Desafio 45.9km em equipe ou solo." },
+  { nome: "Corrida Bob Esponja", data: "12/04", dataIso: "2026-04-12", cidade: "RJ", horario: "08:00", largada: "Posto 2, Copacabana", link: INFO_LINK, valor: "R$ 125,00", info: "Diversão para família." },
+  { nome: "RJ Half Marathon", data: "19/04", dataIso: "2026-04-19", cidade: "RJ", horario: "06:30", largada: "Leblon / Aterro", link: INFO_LINK, valor: "R$ 160,00", info: "Meia Maratona técnica." },
+  { nome: "Corrida Kids Páscoa", data: "21/04", dataIso: "2026-04-21", cidade: "RJ", horario: "09:00", largada: "Campo Grande", link: INFO_LINK, valor: "R$ 60,00", info: "Evento temático feriado." },
+  { nome: "Night Run - Etapa 1", data: "25/04", dataIso: "2026-04-25", cidade: "RJ", horario: "19:30", largada: "Sambódromo", link: INFO_LINK, valor: "R$ 139,00", info: "Maior corrida noturna do mundo." },
+  { nome: "Crônicas de Nárnia", data: "26/04", dataIso: "2026-04-26", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Corrida temática fantasia." },
+
+  // MAIO
+  { nome: "Mesa do Imperador", data: "17/05", dataIso: "2026-05-17", cidade: "RJ", horario: "07:00", largada: "Vista Chinesa", link: INFO_LINK, valor: "R$ 110,00", info: "Subida desafiadora na Floresta da Tijuca." },
+  { nome: "Fuzileiros Navais", data: "24/05", dataIso: "2026-05-24", cidade: "RJ", horario: "07:30", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 100,00", info: "Prova tradicional militar." },
+  { nome: "Circuito das Estações - Inverno", data: "31/05", dataIso: "2026-05-31", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Etapa focada em performance." },
+  { nome: "Corrida Betty Boop", data: "31/05", dataIso: "2026-05-31T12:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Corrida temática feminina." },
+  { nome: "Corrida da Copa 2026", data: "31/05", dataIso: "2026-05-31T14:00:00", cidade: "RJ", horario: "07:30", largada: "Praça Mauá", link: INFO_LINK, valor: "R$ 95,00", info: "Celebração do ano de Copa." },
+
+  // JUNHO
+  { nome: "Corrida Bela e a Fera", data: "28/06", dataIso: "2026-06-28", cidade: "RJ", horario: "08:00", largada: "Parque Radical Deodoro", link: INFO_LINK, valor: "R$ 115,00", info: "Temática Disney Casais/Duplas." },
+
+  // JULHO
+  { nome: "Asics Golden Run RJ", data: "12/07", dataIso: "2026-07-12", cidade: "RJ", horario: "06:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 180,00", info: "Uma das meias mais rápidas do país." },
+  { nome: "6 Milhas da Reserva", data: "26/07", dataIso: "2026-07-26", cidade: "RJ", horario: "07:00", largada: "Praia da Reserva", link: INFO_LINK, valor: "R$ 100,00", info: "Aproximadamente 10km plano." },
+
+  // AGOSTO
+  { nome: "Meia Internacional do Rio", data: "16/08", dataIso: "2026-08-16", cidade: "RJ", horario: "06:30", largada: "Leblon / Aterro", link: INFO_LINK, valor: "R$ 170,00", info: "Tradicionalíssima, percurso orla." },
+
+  // SETEMBRO
+  { nome: "Meia da Reserva (5k)", data: "19/09", dataIso: "2026-09-19", cidade: "RJ", horario: "07:00", largada: "Praça Tim Maia, Pontal", link: INFO_LINK, valor: "R$ 95,00", info: "Dia 1: Distância curta." },
+  { nome: "Meia da Reserva (21k)", data: "20/09", dataIso: "2026-09-20", cidade: "RJ", horario: "06:30", largada: "Praça Tim Maia, Pontal", link: INFO_LINK, valor: "R$ 120,00", info: "Dia 2: Distância principal." },
+  { nome: "Circuito das Estações - Primavera", data: "20/09", dataIso: "2026-09-20T12:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Etapa colorida e rápida." },
+
+  // OUTUBRO (Vazio conforme dados)
+
+  // NOVEMBRO
+  { nome: "Night Run - Etapa 2", data: "14/11", dataIso: "2026-11-14", cidade: "RJ", horario: "19:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 139,00", info: "Encerramento do circuito noturno." },
+
+  // DEZEMBRO
+  { nome: "Circuito das Estações - Verão", data: "06/12", dataIso: "2026-12-06", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Última grande prova do ano." }
 ];
 
 // --- CARD DE PROVA SLIM ---
@@ -198,7 +248,7 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-09-2025',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
             systemInstruction: systemInstruction
@@ -214,7 +264,7 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   };
 
   const handleGenerateRaceTips = (race: any) => {
-    callGemini(`Estratégia curta e direta para a corrida de 5km "${race.nome}" no Rio de Janeiro. Foque no percurso, altimetria estimada e dicas de ritmo.`, "Você é um especialista técnico em corridas de rua do Rio de Janeiro.", race);
+    callGemini(`Estratégia curta e direta para a corrida "${race.nome}" no Rio de Janeiro. Foque no percurso, altimetria estimada e dicas de ritmo.`, "Você é um especialista técnico em corridas de rua do Rio de Janeiro.", race);
   };
 
   const monthsOrder = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -222,6 +272,7 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
     const groups: Record<string, any[]> = {};
     races.forEach(r => {
       const date = new Date(r.dataIso + "T12:00:00Z");
+      // Ajuste fuso se necessário, ou pegue UTC Month
       const m = isNaN(date.getTime()) ? "A Definir" : monthsOrder[date.getUTCMonth()];
       if (!groups[m]) groups[m] = [];
       groups[m].push(r);

@@ -7,8 +7,7 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
-  MapPin, Cloud
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
@@ -17,59 +16,35 @@ import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-// BANCO DE DADOS DE IMAGENS (GIFS) EXTENDIDO
-// Mantido aqui para garantir que o EDITOR tenha acesso às URLs ao criar novos exercícios
+// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
 const GIF_DATABASE: Record<string, string> = {
-  // PERNAS / GLÚTEOS
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", // Exemplo genérico
   "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
   "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif", // Reuso para exemplo
+  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif", // Exemplo genérico
+  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
   "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
   "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
   "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
-  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
-  "extensão de quadril": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
-  "gluteo": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
-  "flexão de joelho": "https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif",
-  "step": "https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif",
-  "subida": "https://i.pinimg.com/originals/90/5e/cf/905ecf9b4862dc253e9c9dc216527502.gif",
-  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif", 
-
-  // SUPERIORES / COSTAS / PEITO
-  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "desenvolvimento": "https://i.pinimg.com/originals/e7/17/74/e71774e363b9bc298d022b7a9f7374b0.gif",
-  "elevação lateral": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif", // Generic arm/shoulder
-  
-  // BRAÇOS
-  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-
-  // ABDOMEN / CORE
-  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
-  "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
-  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
 };
-
-const EXERCISE_GROUPS_DATABASE: Record<string, string[]> = {
-  "Peito": ["Supino Reto", "Supino Inclinado", "Crucifixo", "Voador", "Flexão de Braço"],
-  "Costas": ["Puxada Alta", "Remada Curvada", "Remada Baixa", "Pulldown", "Barra Fixa"],
-  "Pernas": ["Agachamento Livre", "Leg Press 45", "Cadeira Extensora", "Mesa Flexora", "Stiff", "Afundo"],
-  "Ombros": ["Desenvolvimento", "Elevação Lateral", "Elevação Frontal", "Crucifixo Inverso"],
-  "Braços": ["Rosca Direta", "Rosca Martelo", "Tríceps Corda", "Tríceps Testa"],
-  "Abdomen": ["Abdominal Supra", "Abdominal Infra", "Prancha", "Abdominal Remador"]
-};
-
-// IMAGEM PADRÃO
-const DEFAULT_EXERCISE_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
   students: Student[], 
@@ -95,20 +70,13 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       <Logo size="text-5xl" subSize="text-[8px]" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
-        <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="grid grid-cols-1 mb-2">
           <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
             <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
               <Layout className="text-zinc-400" size={18} />
             </div>
             <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Feed Global</h3>
             <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Timeline de Atletas</p>
-          </Card>
-          <Card className="p-4 bg-yellow-950/20 border-yellow-600/20 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('CORRE_RJ')}>
-            <div className="p-2 bg-yellow-600 w-fit rounded-xl mb-3">
-              <MapPin className="text-white" size={18} />
-            </div>
-            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Corre RJ</h3>
-            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Calendário 2026</p>
           </Card>
         </div>
 
@@ -154,9 +122,9 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
 const FEATURE_LIST = [
   { id: 'FEED', label: 'Feed Performance', icon: LayoutGrid },
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
-  { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain },
+  { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain },
   { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler },
-  { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints },
+  { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints },
   { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3 },
   { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info },
 ];
@@ -165,7 +133,9 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
   const [publishing, setPublishing] = useState(false);
   const workoutsRef = useRef<HTMLDivElement>(null);
 
+  // Toggle de visibilidade do dashboard
   const toggleFeatureVisibility = async (featureId: string) => {
+    // Calcula o novo estado baseando-se no atual (garante que não usamos valor stale)
     const currentDisabled = student.disabledFeatures || [];
     let newDisabled;
     if (currentDisabled.includes(featureId)) {
@@ -173,6 +143,8 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
     } else {
       newDisabled = [...currentDisabled, featureId];
     }
+    
+    // Chama o onSave (que agora dispara o indicador de sync)
     await onSave(student.id, { disabledFeatures: newDisabled });
   };
 
@@ -185,6 +157,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
   const hasDrafts = student.workouts?.some(w => w.status === 'draft' || !w.status);
 
+  // Scroll suave para a lista de treinos
   const scrollToWorkouts = () => {
     workoutsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -210,7 +183,10 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
         )}
       </header>
 
+      {/* MENU VERTICAL COMPLETO (IDÊNTICO AO ALUNO) */}
       <div className="space-y-3 mb-10">
+        
+        {/* Planilhas Ativas - Scroll para lista abaixo */}
         <button onClick={scrollToWorkouts} className="w-full p-4 rounded-[2rem] bg-orange-950/20 border border-orange-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-orange-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-600/20">
@@ -221,16 +197,18 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Periodização PhD */}
         <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-4 rounded-[2rem] bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                  <Brain size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização</span>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização PhD</span>
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Avaliação Física */}
         <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full p-4 rounded-[2rem] bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
@@ -241,6 +219,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* ABFIT RUN */}
         <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
@@ -251,6 +230,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
+        {/* Análise de Dados */}
         <button onClick={() => onNavigate('ANALYTICS_COACH')} className="w-full p-4 rounded-[2rem] bg-blue-950/20 border border-blue-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-blue-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
@@ -260,8 +240,10 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            </div>
            <ChevronRight className="text-blue-600 group-hover:translate-x-1 transition-transform" />
         </button>
+
       </div>
 
+      {/* Planilhas Atuais - Lista Expansível / Atalho Rápido */}
       <div className="mt-8 space-y-4" ref={workoutsRef}>
          <div className="flex items-center justify-between px-2">
             <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gerenciar Planilhas</h3>
@@ -288,6 +270,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               </div>
             )}
             
+            {/* Botão de Criação Rápida */}
             <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
               <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
               <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
@@ -300,17 +283,16 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
 export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (sid: string, data: any) => void }) {
   const [title, setTitle] = useState(workoutToEdit?.title || '');
+  // Garante que projectedSessions seja um número
   const [projectedSessions, setProjectedSessions] = useState<number>(workoutToEdit?.projectedSessions || 12);
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Novos estados para padronização
   const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
   const [defaultReps, setDefaultReps] = useState(workoutToEdit?.defaultReps || '');
   const [defaultRest, setDefaultRest] = useState(workoutToEdit?.defaultRest || '');
-  
-  const [showManualInput, setShowManualInput] = useState(false);
-  const [manualMuscleGroup, setManualMuscleGroup] = useState("");
-  const [manualExerciseName, setManualExerciseName] = useState("");
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -326,30 +308,10 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     setExercises(updatedExercises);
   };
 
-  const handleAddManualExercise = () => {
-    if (!manualExerciseName) return;
-    
-    const matchKey = Object.keys(GIF_DATABASE).find(key => 
-      manualExerciseName.toLowerCase().includes(key.toLowerCase())
-    );
-
-    const newEx: Exercise = {
-        id: Date.now().toString() + Math.random(),
-        name: manualExerciseName,
-        sets: defaultSets || '3',
-        reps: defaultReps || '12',
-        rest: defaultRest || '60',
-        thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE
-    };
-
-    setExercises([...exercises, newEx]);
-    setManualExerciseName("");
-    setShowManualInput(false);
-  };
-
   const handleSaveWorkout = async () => {
     setSaveState('loading');
     
+    // Assegura que o valor seja um número válido antes de salvar
     const finalSessions = Number(projectedSessions);
     const safeSessions = isNaN(finalSessions) || finalSessions < 1 ? 12 : finalSessions;
 
@@ -357,7 +319,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       id: workoutToEdit?.id || Date.now().toString(),
       title: title || 'Novo Treino',
       exercises: exercises,
-      projectedSessions: safeSessions,
+      projectedSessions: safeSessions, // Usa o valor garantido
       status: 'draft',
       defaultSets: defaultSets,
       defaultReps: defaultReps,
@@ -373,14 +335,18 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     }
 
     try {
+      // Race condition para evitar que o loading fique infinito em caso de falha silenciosa
       const savePromise = onSave(student.id, { workouts: updatedWorkouts });
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save Timeout')), 10000));
+      
       await Promise.race([savePromise, timeoutPromise]);
+      
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
     } catch (e) {
       console.error("Save error:", e);
-      setSaveState('idle');
+      setSaveState('idle'); // Destrava o botão em caso de erro
+      // alert("Ocorreu um erro ao salvar. Verifique sua conexão.");
     }
   };
 
@@ -389,40 +355,37 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     if (file) {
       setIsAnalyzing(true);
       const reader = new FileReader();
-      
       reader.onloadend = async () => {
         const base64 = reader.result as string;
         try {
           const extractedExercises = await extractWorkoutFromImage(base64);
           
-          if (extractedExercises.length === 0) {
-             alert("Não consegui ler os exercícios. Tente cortar a imagem apenas na lista de treino.");
-          } else {
-             const enrichedExercises = extractedExercises.map(ex => {
-                const matchKey = Object.keys(GIF_DATABASE).find(key => 
-                  ex.name.toLowerCase().includes(key.toLowerCase())
-                );
-                
-                return {
-                  ...ex,
-                  id: Date.now().toString() + Math.random(),
-                  thumb: matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE,
-                  sets: ex.sets || defaultSets || '3',
-                  reps: ex.reps || defaultReps || '12',
-                  rest: ex.rest || defaultRest || '60'
-                };
-             });
-             setExercises(prev => [...prev, ...enrichedExercises]);
-          }
+          // Mapeia os exercícios extraídos com as imagens do banco usando o GIF_DATABASE
+          const enrichedExercises = extractedExercises.map(ex => {
+            // Busca simples por substring no banco de dados de GIFs (case insensitive)
+            const matchKey = Object.keys(GIF_DATABASE).find(key => 
+              ex.name.toLowerCase().includes(key.toLowerCase())
+            );
+            
+            return {
+              ...ex,
+              id: Date.now().toString() + Math.random(),
+              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
+              // Aplica defaults se disponíveis e não vierem da IA
+              sets: ex.sets || defaultSets || '3',
+              reps: ex.reps || defaultReps || '12',
+              rest: ex.rest || defaultRest || '60'
+            };
+          });
+
+          setExercises(prev => [...prev, ...enrichedExercises]);
         } catch (error) {
-          console.error("Erro na pipeline:", error);
-          alert("Erro ao processar imagem.");
+          console.error(error);
+          alert("Erro ao analisar imagem. Tente novamente.");
         } finally {
           setIsAnalyzing(false);
-          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       };
-      
       reader.readAsDataURL(file);
     }
   };
@@ -432,14 +395,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     updated[idx] = { ...updated[idx], rest: val };
     setExercises(updated);
   };
-
-  const selectedManualGif = useMemo(() => {
-    if (!manualExerciseName) return null;
-    const matchKey = Object.keys(GIF_DATABASE).find(key => 
-      manualExerciseName.toLowerCase().includes(key.toLowerCase())
-    );
-    return matchKey ? GIF_DATABASE[matchKey] : DEFAULT_EXERCISE_IMAGE;
-  }, [manualExerciseName]);
 
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
@@ -455,8 +410,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           disabled={saveState === 'loading'}
           className={`px-8 py-3 rounded-full font-black text-[10px] uppercase shadow-xl transition-all flex items-center gap-2 ${saveState === 'loading' ? 'bg-orange-600 animate-pulse' : saveState === 'saved' ? 'bg-emerald-600' : 'bg-red-600'}`}
         >
-          {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : (saveState === 'saved' ? <Cloud size={14} /> : <Save size={14} />)} 
-          {saveState === 'loading' ? 'Enviando...' : saveState === 'saved' ? 'Salvo na Nuvem' : 'Salvar na Nuvem'}
+          {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} 
+          {saveState === 'loading' ? 'Salvando...' : saveState === 'saved' ? 'Salvo!' : 'Salvar'}
         </button>
       </header>
 
@@ -473,6 +428,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              <p className="text-[8px] text-zinc-600 mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
            </div>
 
+           {/* NOVA ÁREA DE PADRONIZAÇÃO */}
            <div className="pt-4 border-t border-white/5">
              <div className="flex justify-between items-center mb-2">
                <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] block">Padronização de Carga</label>
@@ -501,111 +457,38 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         </Card>
 
         <div className="space-y-4">
+           {/* Cabeçalho da Lista + Botão Discreto de Importação */}
            <div className="flex items-center justify-between pl-2">
               <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
               
-              <div className="flex items-center gap-2">
-                  <button 
-                     onClick={() => setShowManualInput(!showManualInput)}
-                     className="flex items-center gap-1 bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-red-600/50 transition-colors"
-                  >
-                     <Edit3 size={12} className="text-zinc-400" />
-                     <span className="text-[8px] font-black uppercase text-zinc-400">Manual</span>
-                  </button>
-
-                  <div 
-                     onClick={() => !isAnalyzing && fileInputRef.current?.click()}
-                     className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-700 hover:border-red-600/50"
-                  >
-                      {isAnalyzing ? (
-                         <div className="flex items-center gap-1">
-                            <Loader2 size={12} className="text-orange-500 animate-spin" />
-                            <span className="text-[8px] font-black uppercase text-orange-500">Lendo...</span>
-                         </div>
-                      ) : (
-                         <div className="flex items-center gap-1">
-                            <Scan size={12} className="text-zinc-400" />
-                            <span className="text-[8px] font-black uppercase text-zinc-400">Importar Print</span>
-                         </div>
-                      )}
-                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  </div>
+              {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
+              <div 
+                 onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+                 className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
+              >
+                  {isAnalyzing ? (
+                     <div className="flex items-center gap-1">
+                        <Loader2 size={12} className="text-orange-500 animate-spin" />
+                        <span className="text-[8px] font-black uppercase text-orange-500">Lendo PrescreveAI...</span>
+                     </div>
+                  ) : (
+                     <>
+                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
+                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
+                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
+                        </div>
+                     </>
+                  )}
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
               </div>
            </div>
-
-           {showManualInput && (
-             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl animate-in slide-in-from-top-2 space-y-3 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                   <Dumbbell size={64} className="text-white" />
-                </div>
-                <div className="flex justify-between items-center">
-                   <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Banco de Dados PrescreveAI</p>
-                   <button onClick={() => setShowManualInput(false)} className="text-zinc-600 hover:text-white"><X size={14}/></button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="space-y-3">
-                      <select 
-                        className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none focus:border-red-600 transition-colors"
-                        value={manualMuscleGroup}
-                        onChange={(e) => setManualMuscleGroup(e.target.value)}
-                      >
-                         <option value="">Selecione Grupo Muscular</option>
-                         {Object.keys(EXERCISE_GROUPS_DATABASE).map(group => (
-                            <option key={group} value={group}>{group}</option>
-                         ))}
-                      </select>
-                      
-                      {manualMuscleGroup && (
-                         <select 
-                           className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-xs text-white outline-none focus:border-red-600 transition-colors"
-                           value={manualExerciseName}
-                           onChange={(e) => setManualExerciseName(e.target.value)}
-                         >
-                            <option value="">Selecione Exercício</option>
-                            {EXERCISE_GROUPS_DATABASE[manualMuscleGroup].map((ex, i) => (
-                               <option key={i} value={ex}>{ex}</option>
-                            ))}
-                         </select>
-                      )}
-                   </div>
-
-                   <div className="bg-black rounded-xl border border-zinc-800 h-32 flex items-center justify-center overflow-hidden relative">
-                      {selectedManualGif ? (
-                         <>
-                           <img src={selectedManualGif} className="w-full h-full object-cover opacity-80" alt="Preview" />
-                           <div className="absolute bottom-2 right-2 bg-red-600 px-2 py-0.5 rounded text-[7px] font-black uppercase text-white">GIF 8K Ativo</div>
-                         </>
-                      ) : (
-                         <div className="text-center opacity-30">
-                            <Video size={24} className="mx-auto mb-1 text-zinc-500" />
-                            <p className="text-[8px] font-black uppercase text-zinc-600">Preview</p>
-                         </div>
-                      )}
-                   </div>
-                </div>
-
-                <button 
-                  onClick={handleAddManualExercise}
-                  disabled={!manualExerciseName}
-                  className="w-full py-3 bg-red-600 rounded-xl text-[10px] font-black uppercase text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                   <Plus size={14} /> Adicionar à Série
-                </button>
-             </div>
-           )}
 
            {exercises.map((ex, i) => (
              <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 relative group">
+                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
                      {ex.thumb ? (
-                       <>
-                         <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                         <div className="absolute bottom-0 right-0 bg-red-600 w-3 h-3 flex items-center justify-center rounded-tl-md">
-                            <Video size={8} className="text-white" />
-                         </div>
-                       </>
+                       <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                      ) : (
                        <div className="w-full h-full flex items-center justify-center bg-zinc-800">
                          <Dumbbell size={16} className="text-zinc-600"/>
@@ -640,8 +523,9 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!weight || !bodyFat) return;
+    if (!weight || !bodyFat) return; // Simple validation
     setSaving(true);
+    
     const newAssessment = {
       id: Date.now().toString(),
       data: new Date().toISOString(),
@@ -649,12 +533,16 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       altura: height || (student.height as string) || '',
       bio_percentual_gordura: bodyFat
     };
+
     const updatedAssessments = [newAssessment, ...(student.physicalAssessments || [])];
+    
+    // Update assessments and current stats
     await onSave(student.id, { 
       physicalAssessments: updatedAssessments,
       weight: weight,
       height: height || student.height
     });
+    
     setSaving(false);
     onBack();
   };
@@ -671,21 +559,46 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       <Card className="p-8 bg-zinc-900/50 border-white/5 space-y-6">
         <div>
           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Peso Corporal (kg)</label>
-          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="0.0" className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+          <input 
+            type="number" 
+            value={weight} 
+            onChange={e => setWeight(e.target.value)} 
+            placeholder="0.0"
+            className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+          />
         </div>
         <div>
            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Altura (cm)</label>
-           <input type="number" value={height} onChange={e => setHeight(e.target.value)} placeholder={String(student.height || '')} className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+           <input 
+             type="number" 
+             value={height} 
+             onChange={e => setHeight(e.target.value)} 
+             placeholder={String(student.height || '')}
+             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+           />
         </div>
         <div>
            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Gordura Corporal (%)</label>
-           <input type="number" value={bodyFat} onChange={e => setBodyFat(e.target.value)} placeholder="0.0" className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+           <input 
+             type="number" 
+             value={bodyFat} 
+             onChange={e => setBodyFat(e.target.value)} 
+             placeholder="0.0"
+             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+           />
         </div>
-        <button onClick={handleSave} disabled={saving} className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2">
-          {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />} Salvar Avaliação
+
+        <button 
+          onClick={handleSave} 
+          disabled={saving}
+          className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+        >
+          {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+          Salvar Avaliação
         </button>
       </Card>
       
+      {/* History List */}
       <div className="mt-8 space-y-4">
         <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] pl-2">Histórico Recente</h3>
         {(student.physicalAssessments || []).map(a => (
@@ -703,6 +616,7 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
 
 export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave }: { student: Student, onBack: () => void, onProceedToWorkout: () => void, onSave: (id: string, data: any) => void }) {
    const p = student.periodization || {} as any;
+   
    const [phaseTitle, setPhaseTitle] = useState(p.phaseTitle || '');
    const [generalStrategy, setGeneralStrategy] = useState(p.generalStrategy || '');
    const [safetyNotes, setSafetyNotes] = useState(p.clinicalSafety ? p.clinicalSafety.join('\n') : '');
@@ -713,7 +627,9 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
    const handleAI = async () => {
       setGenerating(true);
       const insight = await generateBioInsight({ name: student.nome, phase: phaseTitle });
-      if (insight) setBioContext(insight);
+      if (insight) {
+          setBioContext(insight);
+      }
       setGenerating(false);
    };
 
@@ -731,6 +647,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
          },
          type: 'STRENGTH'
       };
+      
       onSave(student.id, { periodization: newPeriodization });
       onBack();
    };
@@ -741,7 +658,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
         <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
            <h2 className="text-xl font-black italic uppercase tracking-tighter">
-             <HeaderTitle text="Periodização" />
+             <HeaderTitle text="Periodização PhD" />
            </h2>
         </div>
         <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-zinc-500 hover:text-white flex items-center gap-1">

@@ -218,7 +218,7 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
 
   return (
     <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-1000 pointer-events-none select-none">
-      <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-zinc-900/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
+      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-zinc-900/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
         <div className="relative flex items-center justify-center w-5 h-5">
            {isSyncing ? (
              <RefreshCw size={18} className="text-orange-500 animate-spin" />
@@ -230,15 +230,6 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
            ) : (
              <WifiOff size={18} className="text-red-500" />
            )}
-        </div>
-        
-        <div className="flex flex-col">
-          <span className={`text-[9px] font-black uppercase tracking-[0.2em] leading-none ${isSyncing ? 'text-orange-400' : (online ? 'text-emerald-500' : 'text-red-400')}`}>
-            {isSyncing ? 'SINCRONIZANDO' : (online ? 'SISTEMA ONLINE' : 'DESCONECTADO')}
-          </span>
-          <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-wider leading-none mt-1">
-            {isSyncing ? 'SALVANDO DADOS...' : (online ? 'BASE ATUALIZADA' : 'MODO OFFLINE')}
-          </span>
         </div>
       </div>
     </div>
