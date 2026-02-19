@@ -46,6 +46,35 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
   }
 }
 
+export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const systemInstruction = `
+    Você é o PrescreveAI, um treinador PhD. 
+    Gere uma lista de exercícios baseada no pedido do usuário.
+    Retorne APENAS um JSON array.
+    Estrutura: [{"name": "Nome", "sets": "3", "reps": "12", "rest": "60", "method": "Normal", "load": ""}]
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_TEXT,
+      contents: prompt,
+      config: { 
+        responseMimeType: "application/json",
+        systemInstruction: systemInstruction
+      }
+    });
+
+    const text = response.text || "[]";
+    const json = JSON.parse(text);
+    return Array.isArray(json) ? json : [];
+  } catch (e) {
+    console.error("Erro ao gerar treino por texto:", e);
+    return [];
+  }
+}
+
 export async function generateRunningPlan(anamneseData: any): Promise<any> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `Gere planilha de corrida para: ${JSON.stringify(anamneseData)}. Responda JSON: {"workouts": [{"dayOfWeek": "Segunda", "type": "Tiro", "warmupTime": 10, "sets": 1, "reps": 8, "stimulusTime": "400m", "recoveryTime": 60, "cooldownTime": 5, "totalTime": 45, "pace": "4:30"}]}`;

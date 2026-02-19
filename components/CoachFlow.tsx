@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
-import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight } from '../services/gemini';
+import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight, generateWorkoutFromText } from '../services/gemini';
 import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
@@ -124,7 +124,7 @@ const FEATURE_LIST = [
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
   { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain },
   { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler },
-  { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints },
+  { id: 'RUNTRACK_STUDENT', label: 'RunTrack Elite', icon: Footprints },
   { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3 },
   { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info },
 ];
@@ -219,13 +219,13 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        {/* ABFIT RUN */}
+        {/* RunTrack Elite */}
         <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
                  <Footprints size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">ABFIT RUN</span>
+              <span className="font-black italic uppercase text-white tracking-wider text-sm">RunTrack Elite</span>
            </div>
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -288,6 +288,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAiInput, setShowAiInput] = useState(false);
   
   // Novos estados para padronização
   const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
@@ -306,6 +308,75 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       rest: defaultRest || ex.rest
     }));
     setExercises(updatedExercises);
+  };
+
+  const handleManualAdd = () => {
+    setExercises(prev => [...prev, {
+        id: Date.now().toString(),
+        name: '',
+        sets: defaultSets || '3',
+        reps: defaultReps || '12',
+        rest: defaultRest || '60',
+        load: '',
+        thumb: null
+    }]);
+  };
+
+  const handleGenerateFromText = async () => {
+    if(!aiPrompt.trim()) return;
+    setIsAnalyzing(true);
+    try {
+        const generated = await generateWorkoutFromText(aiPrompt);
+        // Enrich with images immediately if found in DB
+        const enriched = generated.map(ex => {
+            const matchKey = Object.keys(GIF_DATABASE).find(key => ex.name.toLowerCase().includes(key));
+            return {
+                ...ex,
+                id: Date.now().toString() + Math.random(),
+                thumb: matchKey ? GIF_DATABASE[matchKey] : null
+            };
+        });
+        setExercises(prev => [...prev, ...enriched]);
+        setShowAiInput(false);
+        setAiPrompt('');
+    } catch(e) {
+        console.error(e);
+        alert("Erro na geração IA.");
+    } finally {
+        setIsAnalyzing(false);
+    }
+  };
+
+  const handleGenerateSingleImage = async (index: number, exerciseName: string) => {
+    if (!exerciseName) return;
+    // Set a loading state specifically for this item if possible, or global
+    setIsAnalyzing(true); 
+    try {
+        const result = await analyzeExerciseAndGenerateImage(exerciseName);
+        if (result && result.imageUrl) {
+            setExercises(prev => prev.map((ex, i) => i === index ? { ...ex, thumb: result.imageUrl } : ex));
+        }
+    } catch(e) {
+        console.error(e);
+    } finally {
+        setIsAnalyzing(false);
+    }
+  };
+
+  const updateExerciseField = (index: number, field: keyof Exercise, value: string) => {
+    setExercises(prev => prev.map((ex, i) => {
+        if (i !== index) return ex;
+        const updated = { ...ex, [field]: value };
+        
+        // Auto-match image on name change if not set or if it was an auto-match
+        if (field === 'name') {
+            const matchKey = Object.keys(GIF_DATABASE).find(key => value.toLowerCase().includes(key));
+            if (matchKey) {
+                updated.thumb = GIF_DATABASE[matchKey];
+            }
+        }
+        return updated;
+    }));
   };
 
   const handleSaveWorkout = async () => {
@@ -390,12 +461,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     }
   };
 
-  const updateExerciseRest = (idx: number, val: string) => {
-    const updated = [...exercises];
-    updated[idx] = { ...updated[idx], rest: val };
-    setExercises(updated);
-  };
-
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
@@ -456,59 +521,135 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
            </div>
         </Card>
 
+        {/* AI Generator Box */}
+        {showAiInput && (
+            <div className="bg-gradient-to-br from-red-900/20 to-black p-4 rounded-3xl border border-red-600/30 animate-in slide-in-from-top-2">
+                <label className="text-[9px] font-black uppercase text-red-500 tracking-widest mb-2 block">Pedir ao PrescreveAI</label>
+                <div className="flex gap-2">
+                    <input 
+                        type="text" 
+                        value={aiPrompt} 
+                        onChange={e => setAiPrompt(e.target.value)} 
+                        placeholder="Ex: Treino de pernas completo com foco em glúteo" 
+                        className="flex-1 bg-black border border-zinc-800 p-3 rounded-xl text-white text-xs outline-none focus:border-red-600"
+                        onKeyDown={e => e.key === 'Enter' && handleGenerateFromText()}
+                    />
+                    <button onClick={handleGenerateFromText} disabled={isAnalyzing} className="bg-red-600 px-4 rounded-xl text-white disabled:opacity-50">
+                        {isAnalyzing ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
+                    </button>
+                </div>
+            </div>
+        )}
+
         <div className="space-y-4">
            {/* Cabeçalho da Lista + Botão Discreto de Importação */}
            <div className="flex items-center justify-between pl-2">
               <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
               
-              {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
-              <div 
-                 onClick={() => !isAnalyzing && fileInputRef.current?.click()}
-                 className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
-              >
-                  {isAnalyzing ? (
-                     <div className="flex items-center gap-1">
-                        <Loader2 size={12} className="text-orange-500 animate-spin" />
-                        <span className="text-[8px] font-black uppercase text-orange-500">Lendo PrescreveAI...</span>
-                     </div>
-                  ) : (
-                     <>
-                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
-                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
-                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
-                        </div>
-                     </>
-                  )}
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+              <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setShowAiInput(!showAiInput)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/10 border border-red-600/30 rounded-full text-[8px] font-black uppercase text-red-500 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <Scan size={10} /> PrescreveAI
+                  </button>
+
+                  <div 
+                     onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+                     className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
+                  >
+                      {isAnalyzing ? (
+                         <div className="flex items-center gap-1">
+                            <Loader2 size={12} className="text-orange-500 animate-spin" />
+                            <span className="text-[8px] font-black uppercase text-orange-500">Lendo Print...</span>
+                         </div>
+                      ) : (
+                         <>
+                            <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar</span>
+                            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
+                               <ImageIcon size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
+                            </div>
+                         </>
+                      )}
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </div>
               </div>
            </div>
 
            {exercises.map((ex, i) => (
-             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
+             <div key={i} className="flex flex-col gap-3 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2 group hover:border-red-600/20 transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 relative group/img cursor-pointer" onClick={() => !ex.thumb && handleGenerateSingleImage(i, ex.name)}>
                      {ex.thumb ? (
                        <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                      ) : (
-                       <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-                         <Dumbbell size={16} className="text-zinc-600"/>
+                       <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-800 gap-1">
+                         {isAnalyzing ? <Loader2 size={16} className="text-zinc-600 animate-spin"/> : <ImageIcon size={16} className="text-zinc-600"/>}
+                         <span className="text-[6px] font-black uppercase text-zinc-600">Gerar AI</span>
                        </div>
                      )}
                   </div>
-                  <div className="flex-1">
-                     <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
-                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method || 'Série Estável'}</p>
+                  
+                  <div className="flex-1 space-y-2">
+                     <input 
+                        type="text" 
+                        value={ex.name} 
+                        onChange={(e) => updateExerciseField(i, 'name', e.target.value)} 
+                        placeholder="NOME DO EXERCÍCIO" 
+                        className="w-full bg-transparent border-b border-zinc-800 pb-1 text-sm font-black uppercase italic text-white outline-none focus:border-red-600 placeholder:text-zinc-700"
+                     />
+                     <div className="flex gap-2">
+                        <div className="flex-1">
+                            <input 
+                                type="text" 
+                                value={ex.sets} 
+                                onChange={(e) => updateExerciseField(i, 'sets', e.target.value)} 
+                                placeholder="SÉRIES" 
+                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <input 
+                                type="text" 
+                                value={ex.reps} 
+                                onChange={(e) => updateExerciseField(i, 'reps', e.target.value)} 
+                                placeholder="REPS" 
+                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <input 
+                                type="text" 
+                                value={ex.load} 
+                                onChange={(e) => updateExerciseField(i, 'load', e.target.value)} 
+                                placeholder="KG" 
+                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
+                            />
+                        </div>
+                     </div>
                   </div>
-                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
+                  
+                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 p-2"><Trash2 size={16}/></button>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                   <label className="text-[8px] font-black uppercase text-zinc-600">Descanso:</label>
-                   <input type="text" value={ex.rest} onChange={(e) => updateExerciseRest(i, e.target.value)} className="bg-black border border-zinc-800 rounded px-2 py-1 text-[10px] text-white w-16 text-center outline-none focus:border-red-600" />
+                
+                <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                   <Clock size={12} className="text-zinc-600"/>
+                   <input 
+                        type="text" 
+                        value={ex.rest} 
+                        onChange={(e) => updateExerciseField(i, 'rest', e.target.value)} 
+                        className="bg-transparent text-[10px] text-zinc-400 w-10 outline-none border-b border-transparent focus:border-red-600 focus:text-white" 
+                        placeholder="60"
+                   />
+                   <span className="text-[9px] text-zinc-600 uppercase">Segundos de Descanso</span>
                 </div>
              </div>
            ))}
-           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] text-zinc-700 text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
-             Voltar
+
+           {/* Manual Add Button */}
+           <button onClick={handleManualAdd} className="w-full py-5 bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group shadow-lg">
+             <Plus size={18} className="group-hover:text-red-600 transition-colors" />
+             <span className="text-[10px] font-black uppercase tracking-widest">Adicionar Exercício</span>
            </button>
         </div>
       </div>
