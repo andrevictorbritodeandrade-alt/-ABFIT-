@@ -7,44 +7,385 @@ import {
   Image as ImageIcon, Save, Book, Ruler, Scale, Footprints,
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
-  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy
+  BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
+  CheckCircle2
 } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification } from '../types';
-import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight, generateWorkoutFromText } from '../services/gemini';
+import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight } from '../services/gemini';
 import { RunTrackCoachView } from './RunTrack';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
-// BANCO DE DADOS DE IMAGENS (GIFS) PARA MAPEAMENTO AUTOMÁTICO
+// --- PRESCREVE AI CONSTANTS & DATABASE ---
+const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+const IMAGEN_MODEL = "imagen-4.0-generate-001";
+
+// --- BANCO DE DADOS VISUAL (FALLBACK) ---
 const GIF_DATABASE: Record<string, string> = {
+  // PERNAS / GLÚTEOS
   "leg press": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press horizontal": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
-  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif", // Exemplo genérico
   "levantar e sentar": "https://i.pinimg.com/originals/18/31/39/183139366e60970220677270387439da.gif",
   "agachamento": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
-  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif", // Reuso para exemplo
-  "abdominal supra": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
-  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "prancha ventral": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
-  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "crucifixo aberto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
-  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif", // Exemplo genérico
-  "puxada alta": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
-  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
-  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
-  "polia": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
   "stiff": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
   "mesa flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
   "cadeira extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
-  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
+  "panturrilha": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "extensão de quadril": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "gluteo": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "flexão de joelho": "https://i.pinimg.com/originals/c5/b4/1b/c5b41b94239c1b3595462539a2632200.gif",
+  "abdução": "https://i.pinimg.com/originals/3e/23/e5/3e23e53625c2d32fb0d2ebf5d37df902.gif",
+  "elevação pélvica": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif", 
+  "elevação de quadril": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
+
+  // SUPERIORES / COSTAS / PEITO
+  "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
+  "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
+  "desenvolvimento": "https://i.pinimg.com/originals/e7/17/74/e71774e363b9bc298d022b7a9f7374b0.gif",
+  "elevação lateral": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "extensão de ombros": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  
+  // BRAÇOS
+  "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "bíceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "tríceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+
+  // ABDOMEN / CORE
+  "abdominal": "https://i.pinimg.com/originals/c9/26/50/c92650050893347c6920330424647306.gif",
+  "prancha": "https://i.pinimg.com/originals/7e/63/01/7e63013d396d74704047c870296700c2.gif",
+  "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "super-man": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
 };
+
+const EXERCISE_DATABASE: Record<string, string[]> = {
+  "Peito": [
+    "Crucifixo aberto alternado com HBC no banco declinado",
+    "Crucifixo aberto alternado com HBC no banco inclinado",
+    "Crucifixo aberto alternado com HBC no banco reto",
+    "Crucifixo aberto com HBC no banco declinado",
+    "Crucifixo aberto com HBC no banco inclinado",
+    "Crucifixo aberto com HBC no banco reto",
+    "Crucifixo aberto na máquina",
+    "Crucifixo alternado na máquina",
+    "Crucifixo em pé no cross polia alta",
+    "Crucifixo em pé no cross polia média",
+    "Crucifixo unilateral na máquina",
+    "Extensão de cotovelos no solo (Flexão de Braços)",
+    "PullUp na polia baixa pegada supinada",
+    "Supino aberto banco declinado no smith",
+    "Supino aberto banco inclinado no smith",
+    "Supino aberto no banco reto no smith",
+    "Supino alternado banco 45° fechado no crossover",
+    "Supino alternado banco 45° no crossover",
+    "Supino alternado banco 75° aberto no crossover",
+    "Supino alternado banco 75° fechado no crossover",
+    "Supino alternado banco reto aberto no crossover",
+    "Supino alternado banco reto fechado no crossover",
+    "Supino alternado deitado aberto na máquina",
+    "Supino alternado deitado fechado na máquina",
+    "Supino alternado inclinado aberto na máquina",
+    "Supino alternado inclinado fechado na máquina",
+    "Supino alternado sentado aberto na máquina",
+    "Supino alternado sentado fechado na máquina",
+    "Supino banco 45º aberto no crossover",
+    "Supino banco 45º fechado no crossover",
+    "Supino banco 75º aberto no crossover",
+    "Supino banco 75º fechado no crossover",
+    "Supino banco reto aberto no crossover",
+    "Supino banco reto fechado no crossover",
+    "Supino declinado alternado com HBC",
+    "Supino declinado com HBC",
+    "Supino declinado com HBL",
+    "Supino deitado aberto na máquina",
+    "Supino deitado fechado na máquina",
+    "Supino inclinado aberto na máquina",
+    "Supino inclinado alternado com HBC",
+    "Supino inclinado com HBC",
+    "Supino inclinado com HBL",
+    "Supino inclinado fechado na máquina",
+    "Supino Reto com HBL",
+    "Supino reto alternado com HBC",
+    "Supino reto com HBC",
+    "Supino sentado aberto na máquina",
+    "Supino sentado fechado na máquina",
+    "Supino unilateral deitado aberto na máquina",
+    "Supino unilateral deitado fechado na máquina",
+    "Supino unilateral inclinado aberto na máquina",
+    "Supino unilateral inclinado fechado na máquina",
+    "Supino unilateral sentado aberto na máquina",
+    "Supino unilateral sentado fechado na máquina",
+    "Voador peitoral"
+  ],
+  "Ombro": [
+    "Abdução de ombros banco 75º com HBC pegada neutra",
+    "Abdução de ombros banco 75º com HBC pegada pronada",
+    "Abdução de ombros em pé com HBC pegada neutra",
+    "Abdução de ombros em pé com HBC pegada pronada",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º HBC",
+    "Abdução de ombros unilateral em decúbito lateral no banco 45º no cross",
+    "Abdução de ombros unilateral no cross",
+    "Desenvolvimento aberto banco 75º no smith",
+    "Desenvolvimento aberto na máquina",
+    "Desenvolvimento banco 75º aberto com HBC",
+    "Desenvolvimento banco 75º aberto com HBM",
+    "Desenvolvimento banco 75º arnold com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBC",
+    "Desenvolvimento banco 75º fechado pronado com HBM",
+    "Desenvolvimento banco 75º fechado supinado com HBC",
+    "Desenvolvimento banco 75º fechado supinado com HBM",
+    "Desenvolvimento em pé aberto com HBC",
+    "Desenvolvimento em pé aberto com HBM",
+    "Desenvolvimento em pé arnold com HBC",
+    "Desenvolvimento em pé fechado pronado com HBC",
+    "Desenvolvimento em pé fechado pronado with HBM",
+    "Desenvolvimento em pé fechado supinado com HBC",
+    "Desenvolvimento em pé fechado supinado with HBM",
+    "Desenvolvimento fechado pronado banco 75º no smith",
+    "Desenvolvimento fechado supinado banco 75º no smith",
+    "Encolhimento de ombros com HBC",
+    "Encolhimento de ombros with HBM",
+    "Encolhimento de ombros no cross",
+    "Flexão de ombro with HBM pegada pronada",
+    "Flexão de ombro simultâneo com HBC pegada neutra",
+    "Flexão de ombro simultâneo com HBC pegada pronada",
+    "Flexão de ombro unilateral com HBC pegada neutra",
+    "Flexão de ombro unilateral com HBC pegada pronada",
+    "Flexão de ombro unilateral no cross",
+    "Remada alta banco 45º cross",
+    "Remada alta com HBM no banco 45º",
+    "Remada alta com Kettlebell",
+    "Remada alta em decúbito dorsal cross",
+    "Remada alta em pé com HBC",
+    "Remada alta em pé com HBL",
+    "Remada alta em pé com HBM",
+    "Remada alta em pé no cross"
+  ],
+  "Triceps": [
+    "Extensão de cotovelos fechados no solo (Flexão de braços)",
+    "Tríceps banco 75º francês com HBC simultâneo",
+    "Tríceps banco 75º francês com HBC unilateral",
+    "Tríceps coice curvado com HBC simultâneo",
+    "Tríceps coice curvado com HBC unilateral",
+    "Tríceps coice curvado no cross",
+    "Tríceps em pé francês com HBC simultâneo",
+    "Tríceps em pé francês com HBC unilateral",
+    "Tríceps francês no cross simultâneo",
+    "Tríceps francês no cross unilateral",
+    "Tríceps mergulho no banco reto",
+    "Tríceps no cross with barra reta",
+    "Tríceps no cross with barra reta inverso",
+    "Tríceps no cross with barra V",
+    "Tríceps no cross with barra W",
+    "Tríceps no cross with corda",
+    "Tríceps no cross inverso unilateral",
+    "Tríceps superman no cross segurando nos cabos",
+    "Tríceps supinado with HBM banco reto",
+    "Tríceps supinado no smith banco reto",
+    "Tríceps supinado pegada neutra with HBC",
+    "Tríceps testa HBM banco reto",
+    "Tríceps testa simultâneo HBC banco reto",
+    "Tríceps testa simultâneo no cross",
+    "Tríceps testa unilateral HBC banco reto",
+    "Tríceps testa unilateral no cross"
+  ],
+  "Costas e Cintura Escapular": [
+    "Crucifixo inverso na máquina",
+    "Crucifixo inverso simultâneo no cross polia média",
+    "Crucifixo inverso unilateral no cross polia média",
+    "Extensão de ombros no cross barra reta",
+    "Pullover no banco reto with HBC",
+    "Puxada aberta with barra reta no cross polia alta",
+    "Puxada aberta with barra romana pulley alto",
+    "Puxada aberta no pulley alto",
+    "Puxada com triângulo no pulley alto",
+    "Puxada supinada with barra reta no cross polia alta",
+    "Puxada supinada no pulley alto",
+    "Remada aberta with barra reta no cross polia média",
+    "Remada aberta with HBC decúbito ventral no banco 45°",
+    "Remada aberta alternada with HBC decúbito ventral no banco 45°",
+    "Remada aberta declinada no smith",
+    "Remada aberta na máquina",
+    "Remada baixa barra reta pegada supinada",
+    "Remada baixa with barra reta",
+    "Remada baixa com triângulo",
+    "Remada cavalo with HBL",
+    "Remada curvada aberta no cross",
+    "Remada curvada aberta no cross unilateral",
+    "Remada curvada aberta with HBC",
+    "Remada curvada aberta with HBM",
+    "Remada curvada supinada no cross",
+    "Remada curvada supinada no cross unilateral",
+    "Remada curvada supinada with HBC",
+    "Remada curvada supinada with HBM",
+    "Remada fechada alternada with HBC decubito ventral no banco 45°",
+    "Remada fechada with HBC decúbito ventral no banco 45°",
+    "Remada fechada na máquina",
+    "Remada no banco em 3 apoios pegada aberta with HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra with HBC unilateral",
+    "Remada no banco em 3 apoios pegada neutra no cross unilateral",
+    "Remada no banco em 3 apoios pegada supinada with HBC unilateral",
+    "Remada no banco em 3 apoios pegada supinada no cross unilateral",
+    "Remada supinada with barra reta no cross polia média"
+  ],
+  "Biceps": [
+    "Bíceps banco 45º with HBC pegada neutra simultâneo",
+    "Bíceps banco 45º with HBC pegada neutra unilateral",
+    "Bíceps banco 45º with HBC pegada pronada simultâneo",
+    "Bíceps banco 45º with HBC pegada pronada unilateral",
+    "Bíceps banco 45º with HBC pegada supinada simultâneo",
+    "Bíceps banco 45º with HBC pegada supinada unilateral",
+    "Bíceps banco 75º with HBC pegada neutra simultâneo",
+    "Bíceps banco 75º with HBC pegada neutra unilateral",
+    "Bíceps banco 75º with HBC pegada pronada simultâneo",
+    "Bíceps banco 75º with HBC pegada pronada unilateral",
+    "Bíceps banco 75º with HBC pegada supinada simultâneo",
+    "Bíceps banco 75º with HBC pegada supinada unilateral",
+    "Bíceps concentrado with HBC unilateral",
+    "Bíceps em pé with HBC pegada neutra alternado",
+    "Bíceps em pé with HBC pegada neutra simultâneo",
+    "Bíceps em pé with HBC pegada neutra unilateral",
+    "Bíceps em pé with HBC pegada pronada alternado",
+    "Bíceps em pé with HBC pegada pronada simultâneo",
+    "Bíceps em pé with HBC pegada pronada unilateral",
+    "Bíceps em pé with HBC pegada supinada alternado",
+    "Bíceps em pé with HBC pegada supinada simultâneo",
+    "Bíceps em pé with HBC pegada supinada unilateral",
+    "Bíceps em pé with HBM pegada pronada",
+    "Bíceps em pé with HBM pegada supinada",
+    "Bíceps no banco scott with HBC simultâneo",
+    "Bíceps no banco scott with HBC unilateral",
+    "Bíceps no banco scott with HBM pronado",
+    "Bíceps no banco scott with HBM supinado",
+    "Bíceps no banco scott with HBW simultâneo",
+    "Bíceps no cross barra reta",
+    "Bíceps no cross polia baixa unilateral",
+    "Bíceps superman no cross simultâneo",
+    "Bíceps superman no cross unilateral"
+  ],
+  "Core e Abdomen": [
+    "Abdominal diagonal na bola",
+    "Abdominal diagonal no bosu",
+    "Abdominal diagonal no solo",
+    "Abdominal infra no solo puxando as pernas",
+    "Abdominal infra pernas estendidas",
+    "Abdominal supra na bola",
+    "Abdominal supra no bosu",
+    "Abdominal supra no solo",
+    "Abdominal vela no solo",
+    "Prancha lateral na bola em isometria",
+    "Prancha lateral no bosu em isometria",
+    "Prancha lateral no solo em isometria",
+    "Prancha ventral na bola em isometria",
+    "Prancha ventral no bosu em isometria",
+    "Prancha ventral no solo em isometria"
+  ],
+  "Paravertebrais": [
+    "Elevação de quadril em isometria no solo",
+    "Mata-borrão isométrico no solo (super-man)",
+    "Perdigueiro em isometria no solo"
+  ],
+  "Quadríceps e Adutores": [
+    "Adução de quadril em decúbito dorsal",
+    "Adução de quadril em decúbito lateral no solo",
+    "Adução de quadril em pé no cross",
+    "Agachamento búlgaro",
+    "Agachamento em passada with HBC",
+    "Agachamento em passada with HBL",
+    "Agachamento em passada with HBM",
+    "Agachamento em passada with step a frente with HBC",
+    "Agachamento em passada with step a frente with HBL",
+    "Agachamento em passada with step a frente with HBM",
+    "Agachamento em passada com step a frente",
+    "Agachamento em passada with step atrás with HBC",
+    "Agachamento em passada with step atrás with HBL",
+    "Agachamento em passada with step atrás with HBM",
+    "Agachamento em passada com step atrás",
+    "Agachamento em passada no smith",
+    "Agachamento em passada com step a frente no smith",
+    "Agachamento em passada com step atrás no Smith",
+    "Agachamento livre with HBC",
+    "Agachamento livre with HBL barra sobre ombros",
+    "Agachamento livre with HBL",
+    "Agachamento livre with HBM barra sobre ombros",
+    "Agachamento livre",
+    "Agachamento no hack machine",
+    "Agachamento no sissy",
+    "Agachamento no Smith barra sobre os ombros",
+    "Agachamento no smith",
+    "Cadeira adutora",
+    "Cadeira extensora alternado",
+    "Cadeira extensora unilateral",
+    "Cadeira extensora",
+    "Flexão de quadril e joelho em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril e joelho em pé com caneleira",
+    "Flexão de quadril e joelho em pé no cross",
+    "Flexão de quadril em decúbito dorsal no solo com caneleira",
+    "Flexão de quadril em pé com caneleira",
+    "Flexão de quadril em pé no cross",
+    "Leg press horizontal unilateral",
+    "Leg press horizontal",
+    "Leg press inclinado unilateral",
+    "Leg press inclinado",
+    "Levantar e sentar do banco reto with HBM",
+    "Levantar e sentar no banco reto with HBC",
+    "Levantar e sentar no banco reto"
+  ],
+  "Glúteos e Posteriores": [
+    "Abdução de quadril decúbito lateral no solo caneleira",
+    "Abdução de quadril em pé com caneleira",
+    "Agachamento sumô with HBC",
+    "Agachamento sumô with HBM",
+    "Cadeira flexora alternado",
+    "Cadeira flexora unilateral",
+    "Cadeira flexora",
+    "Elevação de quadril no banco reto with HBM",
+    "Elevação de Quadril no solo com anilha",
+    "Extensão de quadril e joelho em pé caneleira",
+    "Extensão de quadril e joelho em pé no cross",
+    "Extensão de quadril e joelho no cross",
+    "Extensão de quadril e joelho no solo caneleira",
+    "Extensão de quadril em pé caneleira",
+    "Extensão de quadril em pé no cross",
+    "Extensão de quadril no cross",
+    "Extensão de quadril no solo caneleira",
+    "Flexão de joelho em 3 apoios com caneleira",
+    "Flexão de joelho em pé com caneleira",
+    "Flexão de joelho em pé no cross",
+    "Levantamento terra with HBC",
+    "Levantamento terra with HBL",
+    "Levantamento terra with HBM",
+    "Levantamento terra no cross",
+    "Levantamento terra romeno with HBM",
+    "Mesa flexora alternado",
+    "Mesa flexora unilateral",
+    "Mesa flexora",
+    "Stiff with HBC simultâneo",
+    "Stiff with HBC unilateral",
+    "Stiff with HBM simultâneo",
+    "Stiff “bom dia” with HBM",
+    "Subida no step"
+  ],
+  "Panturrilha": [
+    "Cadeira solear",
+    "Flexão plantar com Halteres.",
+    "Flexão plantar em pé na Máquina",
+    "Flexão plantar em pé Unilateral",
+    "Flexão plantar no Leg press inclinado",
+    "Flexão plantar no leg press horizontal"
+  ]
+};
+
+const MUSCLE_GROUPS = Object.keys(EXERCISE_DATABASE);
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
   students: Student[], 
@@ -119,6 +460,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
   );
 }
 
+// ... (StudentManagement component remains unchanged) ...
 const FEATURE_LIST = [
   { id: 'FEED', label: 'Feed Performance', icon: LayoutGrid },
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
@@ -281,6 +623,214 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
   );
 }
 
+// --- PRESCREVEAI WIDGET COMPONENT ---
+function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) => void }) {
+  const [selectedMuscle, setSelectedMuscle] = useState("");
+  const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [exerciseImage, setExerciseImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [exerciseConfig, setExerciseConfig] = useState({
+    sets: "3",
+    reps: "12",
+    rest: "60",
+    technique: "Normal",
+    observation: ""
+  });
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedMuscle) {
+      setExerciseOptions(EXERCISE_DATABASE[selectedMuscle] || []);
+    } else {
+      setExerciseOptions([]);
+    }
+  }, [selectedMuscle]);
+
+  const handleSelectExercise = async (name: string) => {
+    // Reset previous selection
+    setSelectedExercise({ name });
+    setExerciseImage(null);
+    setImageLoading(true);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
+      const brainPrompt = `Analise o exercício "${name}". 
+      Instruções biomecânicas:
+      - Se HBC: Haltere (Dumbbell). Nunca barra.
+      - Se HBL: Barra Longa.
+      - Se "alternado": Execução asimétrica.
+      
+      Forneça:
+      1. Descrição técnica curta (português).
+      2. 3 Benefícios (português).
+      3. PROMPT VISUAL INGLÊS 8k descrevendo atleta preto, biomecânica e luz de estúdio.`;
+
+      // 1. Text Analysis
+      const brainData = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: brainPrompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              description: { type: Type.STRING },
+              benefits: { type: Type.STRING },
+              visualPrompt: { type: Type.STRING }
+            }
+          }
+        }
+      });
+
+      const brainResult = JSON.parse(brainData.text || "{}");
+
+      // 2. Image Generation
+      if (brainResult.visualPrompt) {
+        const imagenResponse = await ai.models.generateImages({
+          model: IMAGEN_MODEL,
+          prompt: brainResult.visualPrompt,
+          config: {
+            numberOfImages: 1,
+            aspectRatio: '16:9',
+            outputMimeType: 'image/jpeg'
+          }
+        });
+
+        const base64Image = imagenResponse.generatedImages?.[0]?.image?.imageBytes;
+        if (base64Image) {
+          setExerciseImage(`data:image/jpeg;base64,${base64Image}`);
+        }
+      }
+
+      setSelectedExercise({
+        name: name,
+        description: brainResult.description,
+        benefits: brainResult.benefits
+      });
+
+    } catch (err) {
+      console.error("PrescreveAI Error:", err);
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!selectedExercise) return;
+    const newEx: Exercise = {
+      id: Date.now().toString(),
+      name: selectedExercise.name,
+      description: selectedExercise.description,
+      benefits: selectedExercise.benefits,
+      thumb: exerciseImage,
+      sets: exerciseConfig.sets,
+      reps: exerciseConfig.reps,
+      rest: exerciseConfig.rest,
+      method: exerciseConfig.technique,
+      load: ''
+    };
+    onAddExercise(newEx);
+    setIsOpen(false);
+    setSelectedExercise(null);
+    setExerciseImage(null);
+  };
+
+  if (!isOpen) {
+    return (
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="w-full py-5 bg-gradient-to-r from-red-600 to-red-900 rounded-[2rem] text-white font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
+      >
+        <Sparkles size={20} className="animate-pulse" />
+        Abrir PrescreveAI
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-900 border border-white/10 rounded-[2.5rem] p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95">
+      <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white"><X /></button>
+      
+      <div className="flex items-center gap-3 text-red-500 mb-4">
+        <Video size={24} />
+        <h3 className="text-xl font-black italic uppercase tracking-tighter">PrescreveAI Studio</h3>
+      </div>
+
+      {/* 1. SELEÇÃO */}
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Grupo Muscular</label>
+          <select 
+            value={selectedMuscle} 
+            onChange={(e) => setSelectedMuscle(e.target.value)}
+            className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none focus:border-red-600 appearance-none"
+          >
+            <option value="">Selecione...</option>
+            {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+
+        {selectedMuscle && (
+          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+            {exerciseOptions.map((exName, i) => (
+              <button 
+                key={i} 
+                onClick={() => handleSelectExercise(exName)}
+                className={`text-left px-4 py-3 rounded-xl text-[10px] font-bold transition-all border ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white' : 'bg-zinc-950 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+              >
+                {exName}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 2. VISUALIZAÇÃO E CONFIGURAÇÃO */}
+      {(selectedExercise || imageLoading) && (
+        <div className="space-y-6 pt-6 border-t border-white/5 animate-in slide-in-from-bottom-4">
+          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-white/10">
+            {imageLoading ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
+                <span className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Gerando Biomecânica 8K...</span>
+              </div>
+            ) : exerciseImage ? (
+              <>
+                <img src={exerciseImage} className="w-full h-full object-cover" />
+                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur px-2 py-1 rounded border border-white/10">
+                  <span className="text-[8px] font-black text-red-500 uppercase tracking-widest">AI GENERATED</span>
+                </div>
+              </>
+            ) : null}
+          </div>
+
+          {!imageLoading && selectedExercise && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-lg font-black uppercase italic text-white leading-none">{selectedExercise.name}</h4>
+                <p className="text-[10px] text-zinc-400 mt-2 leading-relaxed">{selectedExercise.description}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                 <input value={exerciseConfig.sets} onChange={e => setExerciseConfig({...exerciseConfig, sets: e.target.value})} placeholder="Séries" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
+                 <input value={exerciseConfig.reps} onChange={e => setExerciseConfig({...exerciseConfig, reps: e.target.value})} placeholder="Reps" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
+                 <input value={exerciseConfig.rest} onChange={e => setExerciseConfig({...exerciseConfig, rest: e.target.value})} placeholder="Rest (s)" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
+              </div>
+              <input value={exerciseConfig.technique} onChange={e => setExerciseConfig({...exerciseConfig, technique: e.target.value})} placeholder="Técnica (ex: Drop-set)" className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-white font-bold outline-none focus:border-red-600 text-xs" />
+
+              <button onClick={handleConfirm} className="w-full py-4 bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+                <CheckCircle2 size={18} /> Adicionar ao Treino
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { student: Student, workoutToEdit: Workout | null, onBack: () => void, onSave: (sid: string, data: any) => void }) {
   const [title, setTitle] = useState(workoutToEdit?.title || '');
   // Garante que projectedSessions seja um número
@@ -288,8 +838,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   const [exercises, setExercises] = useState<Exercise[]>(workoutToEdit?.exercises || []);
   const [saveState, setSaveState] = useState<'idle' | 'loading' | 'saved'>('idle');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [showAiInput, setShowAiInput] = useState(false);
   
   // Novos estados para padronização
   const [defaultSets, setDefaultSets] = useState(workoutToEdit?.defaultSets || '');
@@ -308,75 +856,6 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       rest: defaultRest || ex.rest
     }));
     setExercises(updatedExercises);
-  };
-
-  const handleManualAdd = () => {
-    setExercises(prev => [...prev, {
-        id: Date.now().toString(),
-        name: '',
-        sets: defaultSets || '3',
-        reps: defaultReps || '12',
-        rest: defaultRest || '60',
-        load: '',
-        thumb: null
-    }]);
-  };
-
-  const handleGenerateFromText = async () => {
-    if(!aiPrompt.trim()) return;
-    setIsAnalyzing(true);
-    try {
-        const generated = await generateWorkoutFromText(aiPrompt);
-        // Enrich with images immediately if found in DB
-        const enriched = generated.map(ex => {
-            const matchKey = Object.keys(GIF_DATABASE).find(key => ex.name.toLowerCase().includes(key));
-            return {
-                ...ex,
-                id: Date.now().toString() + Math.random(),
-                thumb: matchKey ? GIF_DATABASE[matchKey] : null
-            };
-        });
-        setExercises(prev => [...prev, ...enriched]);
-        setShowAiInput(false);
-        setAiPrompt('');
-    } catch(e) {
-        console.error(e);
-        alert("Erro na geração IA.");
-    } finally {
-        setIsAnalyzing(false);
-    }
-  };
-
-  const handleGenerateSingleImage = async (index: number, exerciseName: string) => {
-    if (!exerciseName) return;
-    // Set a loading state specifically for this item if possible, or global
-    setIsAnalyzing(true); 
-    try {
-        const result = await analyzeExerciseAndGenerateImage(exerciseName);
-        if (result && result.imageUrl) {
-            setExercises(prev => prev.map((ex, i) => i === index ? { ...ex, thumb: result.imageUrl } : ex));
-        }
-    } catch(e) {
-        console.error(e);
-    } finally {
-        setIsAnalyzing(false);
-    }
-  };
-
-  const updateExerciseField = (index: number, field: keyof Exercise, value: string) => {
-    setExercises(prev => prev.map((ex, i) => {
-        if (i !== index) return ex;
-        const updated = { ...ex, [field]: value };
-        
-        // Auto-match image on name change if not set or if it was an auto-match
-        if (field === 'name') {
-            const matchKey = Object.keys(GIF_DATABASE).find(key => value.toLowerCase().includes(key));
-            if (matchKey) {
-                updated.thumb = GIF_DATABASE[matchKey];
-            }
-        }
-        return updated;
-    }));
   };
 
   const handleSaveWorkout = async () => {
@@ -461,6 +940,12 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
     }
   };
 
+  const updateExerciseRest = (idx: number, val: string) => {
+    const updated = [...exercises];
+    updated[idx] = { ...updated[idx], rest: val };
+    setExercises(updated);
+  };
+
   return (
     <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
       <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
@@ -521,135 +1006,59 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
            </div>
         </Card>
 
-        {/* AI Generator Box */}
-        {showAiInput && (
-            <div className="bg-gradient-to-br from-red-900/20 to-black p-4 rounded-3xl border border-red-600/30 animate-in slide-in-from-top-2">
-                <label className="text-[9px] font-black uppercase text-red-500 tracking-widest mb-2 block">Pedir ao PrescreveAI</label>
-                <div className="flex gap-2">
-                    <input 
-                        type="text" 
-                        value={aiPrompt} 
-                        onChange={e => setAiPrompt(e.target.value)} 
-                        placeholder="Ex: Treino de pernas completo com foco em glúteo" 
-                        className="flex-1 bg-black border border-zinc-800 p-3 rounded-xl text-white text-xs outline-none focus:border-red-600"
-                        onKeyDown={e => e.key === 'Enter' && handleGenerateFromText()}
-                    />
-                    <button onClick={handleGenerateFromText} disabled={isAnalyzing} className="bg-red-600 px-4 rounded-xl text-white disabled:opacity-50">
-                        {isAnalyzing ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
-                    </button>
-                </div>
-            </div>
-        )}
-
         <div className="space-y-4">
            {/* Cabeçalho da Lista + Botão Discreto de Importação */}
            <div className="flex items-center justify-between pl-2">
               <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
               
-              <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setShowAiInput(!showAiInput)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/10 border border-red-600/30 rounded-full text-[8px] font-black uppercase text-red-500 hover:bg-red-600 hover:text-white transition-all"
-                  >
-                    <Scan size={10} /> PrescreveAI
-                  </button>
-
-                  <div 
-                     onClick={() => !isAnalyzing && fileInputRef.current?.click()}
-                     className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
-                  >
-                      {isAnalyzing ? (
-                         <div className="flex items-center gap-1">
-                            <Loader2 size={12} className="text-orange-500 animate-spin" />
-                            <span className="text-[8px] font-black uppercase text-orange-500">Lendo Print...</span>
-                         </div>
-                      ) : (
-                         <>
-                            <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar</span>
-                            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
-                               <ImageIcon size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
-                            </div>
-                         </>
-                      )}
-                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  </div>
+              {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
+              <div 
+                 onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+                 className="flex items-center gap-2 cursor-pointer group p-1 opacity-70 hover:opacity-100 transition-all"
+              >
+                  {isAnalyzing ? (
+                     <div className="flex items-center gap-1">
+                        <Loader2 size={12} className="text-orange-500 animate-spin" />
+                        <span className="text-[8px] font-black uppercase text-orange-500">Lendo PrescreveAI...</span>
+                     </div>
+                  ) : (
+                     <>
+                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
+                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
+                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
+                        </div>
+                     </>
+                  )}
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
               </div>
            </div>
 
            {exercises.map((ex, i) => (
-             <div key={i} className="flex flex-col gap-3 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2 group hover:border-red-600/20 transition-all">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10 relative group/img cursor-pointer" onClick={() => !ex.thumb && handleGenerateSingleImage(i, ex.name)}>
+             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
                      {ex.thumb ? (
                        <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                      ) : (
-                       <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-800 gap-1">
-                         {isAnalyzing ? <Loader2 size={16} className="text-zinc-600 animate-spin"/> : <ImageIcon size={16} className="text-zinc-600"/>}
-                         <span className="text-[6px] font-black uppercase text-zinc-600">Gerar AI</span>
+                       <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                         <Dumbbell size={16} className="text-zinc-600"/>
                        </div>
                      )}
                   </div>
-                  
-                  <div className="flex-1 space-y-2">
-                     <input 
-                        type="text" 
-                        value={ex.name} 
-                        onChange={(e) => updateExerciseField(i, 'name', e.target.value)} 
-                        placeholder="NOME DO EXERCÍCIO" 
-                        className="w-full bg-transparent border-b border-zinc-800 pb-1 text-sm font-black uppercase italic text-white outline-none focus:border-red-600 placeholder:text-zinc-700"
-                     />
-                     <div className="flex gap-2">
-                        <div className="flex-1">
-                            <input 
-                                type="text" 
-                                value={ex.sets} 
-                                onChange={(e) => updateExerciseField(i, 'sets', e.target.value)} 
-                                placeholder="SÉRIES" 
-                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <input 
-                                type="text" 
-                                value={ex.reps} 
-                                onChange={(e) => updateExerciseField(i, 'reps', e.target.value)} 
-                                placeholder="REPS" 
-                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <input 
-                                type="text" 
-                                value={ex.load} 
-                                onChange={(e) => updateExerciseField(i, 'load', e.target.value)} 
-                                placeholder="KG" 
-                                className="w-full bg-black border border-zinc-800 rounded px-2 py-2 text-[10px] font-bold text-white text-center outline-none focus:border-red-600" 
-                            />
-                        </div>
-                     </div>
+                  <div className="flex-1">
+                     <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
+                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method || 'Série Estável'}</p>
                   </div>
-                  
-                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600 p-2"><Trash2 size={16}/></button>
+                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
                 </div>
-                
-                <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                   <Clock size={12} className="text-zinc-600"/>
-                   <input 
-                        type="text" 
-                        value={ex.rest} 
-                        onChange={(e) => updateExerciseField(i, 'rest', e.target.value)} 
-                        className="bg-transparent text-[10px] text-zinc-400 w-10 outline-none border-b border-transparent focus:border-red-600 focus:text-white" 
-                        placeholder="60"
-                   />
-                   <span className="text-[9px] text-zinc-600 uppercase">Segundos de Descanso</span>
+                <div className="mt-2 flex items-center gap-2">
+                   <label className="text-[8px] font-black uppercase text-zinc-600">Descanso:</label>
+                   <input type="text" value={ex.rest} onChange={(e) => updateExerciseRest(i, e.target.value)} className="bg-black border border-zinc-800 rounded px-2 py-1 text-[10px] text-white w-16 text-center outline-none focus:border-red-600" />
                 </div>
              </div>
            ))}
-
-           {/* Manual Add Button */}
-           <button onClick={handleManualAdd} className="w-full py-5 bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group shadow-lg">
-             <Plus size={18} className="group-hover:text-red-600 transition-colors" />
-             <span className="text-[10px] font-black uppercase tracking-widest">Adicionar Exercício</span>
+           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] text-zinc-700 text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
+             Voltar
            </button>
         </div>
       </div>

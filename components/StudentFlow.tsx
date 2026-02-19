@@ -210,13 +210,13 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
   return (
     <div className={`relative bg-zinc-900/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
       ${allSetsCompleted 
-        ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)] bg-emerald-950/10' 
+        ? 'border-emerald-500 border-2 shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-emerald-950/20' 
         : 'border-white/5 hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
       }`}
     >
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1 cursor-pointer group flex items-start gap-4" onClick={() => onShowDetail(ex)}>
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-black relative">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-black relative shadow-lg">
              <ExerciseImage 
                ex={ex}
                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -242,7 +242,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center">
+        <div className="col-span-2 bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center shadow-inner">
           <div className="flex flex-wrap justify-center gap-3">
             {Array.from({ length: totalSets }).map((_, sIdx) => (
               <button 
@@ -263,19 +263,19 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
           </p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center">
+        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
           <span className="text-3xl font-black text-white italic leading-none tracking-tighter">{totalReps}</span>
           <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center">
+        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
           <div className="flex items-baseline gap-1">
             <input 
               type="number" 
               defaultValue={ex.load || ''}
               placeholder="--"
               onBlur={(e) => onUpdateLoad(ex.id!, e.target.value)}
-              className="bg-transparent border-none p-0 text-3xl font-black text-center text-white outline-none focus:ring-0 w-16 italic tracking-tighter"
+              className="bg-transparent border-none p-0 text-3xl font-black text-center text-white outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-zinc-800"
             />
             <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
           </div>
@@ -311,6 +311,15 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     const startDateDisplay = user.protocolStartDate ? new Date(user.protocolStartDate).toLocaleDateString('pt-BR') : 'Aguardando 1º Treino';
     return { completed, total, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
   }, [activeWorkout, user.workoutHistory, user.protocolStartDate]);
+
+  const allExercisesCompleted = useMemo(() => {
+    if (!activeWorkout) return false;
+    return activeWorkout.exercises.every(ex => {
+        const prog = exerciseProgress[ex.id || ''];
+        const totalSets = parseInt(ex.sets || '3') || 3;
+        return prog && prog.completedSets.length >= totalSets;
+    });
+  }, [activeWorkout, exerciseProgress]);
 
   useEffect(() => {
     const savedStart = localStorage.getItem(`workout_start_${user.id}`);
@@ -416,9 +425,9 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   if (isResting) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
         <p className="text-red-600 font-black uppercase tracking-[0.4em] mb-4 italic">Recuperação Biomecânica</p>
-        <div className="text-[14rem] font-black italic tracking-tighter leading-none text-white animate-pulse">{restCountdown}</div>
+        <div className="text-[14rem] font-black italic tracking-tighter leading-none text-white animate-pulse tabular-nums">{restCountdown}</div>
         <button onClick={() => setRestCountdown(0)} className="mt-16 flex items-center gap-2 bg-zinc-900 px-12 py-6 rounded-[2.5rem] border border-white/5 font-black uppercase tracking-widest text-xs hover:bg-red-600 shadow-2xl transition-all">Pular Descanso</button>
       </div>
     );
@@ -527,7 +536,13 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
              <Clock size={20} className="text-red-600 animate-pulse" />
              <span className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
            </div>
-           <button onClick={() => setShowCompletionModal(true)} className="bg-red-600 px-6 py-2 rounded-full font-black text-[9px] uppercase shadow-lg shadow-red-900/30 text-white tracking-widest active:scale-95 transition-all">FINALIZAR</button>
+           {allExercisesCompleted ? (
+             <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[9px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
+                SALVAR TREINO
+             </button>
+           ) : (
+             <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">EM ANDAMENTO</span>
+           )}
         </div>
       </header>
 
@@ -587,8 +602,11 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                      : [...prev.completedSets, sIdx];
                    return { ...p, [id]: { ...prev, completedSets: newSets } };
                  });
-                 setRestCountdown(parseInt(rest) || 60);
-                 setIsResting(true);
+                 // Inicia timer apenas se o set não estava marcado (está marcando agora)
+                 if (!progress.completedSets.includes(sIdx)) {
+                    setRestCountdown(parseInt(rest) || 60);
+                    setIsResting(true);
+                 }
               }}
               onUpdateLoad={(id, val) => onSave(user.id, { workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: w.exercises.map(e => e.id === id ? { ...e, load: val } : e) } : w) })}
               onUpdateUnit={(id, unit) => onSave(user.id, { workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: w.exercises.map(e => e.id === id ? { ...e, loadUnit: unit } : e) } : w) })}
@@ -597,6 +615,18 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
           );
         })}
       </div>
+
+      {/* FIXED BOTTOM ACTION BAR FOR COMPLETION */}
+      {allExercisesCompleted && (
+         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent z-50">
+            <button 
+               onClick={() => setShowCompletionModal(true)}
+               className="w-full py-6 bg-emerald-600 rounded-[2.5rem] font-black uppercase text-sm tracking-widest shadow-[0_0_40px_rgba(16,185,129,0.4)] animate-pulse hover:scale-[1.02] transition-transform text-white"
+            >
+               VOCÊ TERMINOU DE TREINAR?
+            </button>
+         </div>
+      )}
 
       {exerciseDetail && <PrescreveAIDetailModal ex={exerciseDetail} onClose={() => setExerciseDetail(null)} />}
       <EliteFooter />
