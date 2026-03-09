@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
@@ -137,7 +137,7 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
 }
 
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'DUMMY_KEY' });
   
   // Limpeza de header base64 caso exista
   const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
@@ -163,14 +163,32 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
   try {
     const response = await ai.models.generateContent({
       model: MODEL_TEXT,
-      contents: {
-        parts: [
-          { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-          { text: prompt }
-        ]
-      },
-      // FORÇA A RESPOSTA EM JSON PURO PARA EVITAR ERROS DE PARSE
-      config: { responseMimeType: "application/json" }
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+            { text: prompt }
+          ]
+        }
+      ],
+      config: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              sets: { type: Type.STRING },
+              reps: { type: Type.STRING },
+              rest: { type: Type.STRING },
+              method: { type: Type.STRING }
+            },
+            required: ["name"]
+          }
+        }
+      }
     });
 
     const text = response.text || "[]";

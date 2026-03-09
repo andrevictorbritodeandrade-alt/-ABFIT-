@@ -8,7 +8,7 @@ import {
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
   BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
-  CheckCircle2
+  CheckCircle2, MapPin
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Card, EliteFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
@@ -395,15 +395,15 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
   onNavigate: (view: string) => void
 }) {
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left flex flex-col items-center">
+    <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left flex flex-col items-center transition-colors">
       <header className="w-full flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <button onClick={onToggleMenu} className="p-3 bg-zinc-900 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+          <button onClick={onToggleMenu} className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
             <Menu size={20}/>
           </button>
           <WeatherWidget />
         </div>
-        <button onClick={onLogout} className="p-3 bg-zinc-900 rounded-full text-zinc-500 hover:text-red-600 transition-colors shadow-lg">
+        <button onClick={onLogout} className="p-3 bg-card rounded-full text-muted-foreground hover:text-red-600 transition-colors shadow-lg">
           <LogOut size={20} />
         </button>
       </header>
@@ -412,19 +412,19 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
         <div className="grid grid-cols-1 mb-2">
-          <Card className="p-4 bg-zinc-900/50 border-white/5 cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
-            <div className="p-2 bg-zinc-800 w-fit rounded-xl mb-3">
-              <Layout className="text-zinc-400" size={18} />
+          <Card className="p-4 bg-card/50 border-border cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
+            <div className="p-2 bg-secondary w-fit rounded-xl mb-3">
+              <Layout className="text-muted-foreground" size={18} />
             </div>
-            <h3 className="text-[10px] font-black uppercase italic text-white tracking-widest">Feed Global</h3>
-            <p className="text-[7px] text-zinc-500 font-bold uppercase mt-1">Timeline de Atletas</p>
+            <h3 className="text-[10px] font-black uppercase italic text-foreground tracking-widest">Feed Global</h3>
+            <p className="text-[7px] text-muted-foreground font-bold uppercase mt-1">Timeline de Atletas</p>
           </Card>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center gap-3 px-2 mb-2">
             <Users className="text-red-600" size={14} />
-            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gestão de Atletas ({students.length})</h3>
+            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] italic">Gestão de Atletas ({students.length})</h3>
           </div>
           
           <div className="grid grid-cols-1 gap-2.5">
@@ -432,24 +432,24 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
               <button 
                 key={s.id} 
                 onClick={() => onSelect(s)} 
-                className="w-full bg-zinc-900/50 p-4 rounded-[1.8rem] border border-white/5 hover:border-red-600/40 transition-all text-left shadow-lg flex items-center justify-between group active:scale-[0.98]"
+                className="w-full bg-card/50 p-4 rounded-[1.8rem] border border-border hover:border-red-600/40 transition-all text-left shadow-lg flex items-center justify-between group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-zinc-800 flex items-center justify-center overflow-hidden border border-white/5 shadow-inner">
+                  <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center overflow-hidden border border-border shadow-inner">
                     {s.photoUrl ? (
                       <img src={s.photoUrl} className="w-full h-full object-cover" alt={s.nome} />
                     ) : (
-                      <Activity className="text-zinc-700" size={18} />
+                      <Activity className="text-muted-foreground" size={18} />
                     )}
                   </div>
                   <div>
-                    <p className="font-black uppercase italic text-sm text-white leading-none tracking-tight">{s.nome}</p>
+                    <p className="font-black uppercase italic text-sm text-foreground leading-none tracking-tight">{s.nome}</p>
                     <div className="flex items-center gap-2 mt-1">
-                       <p className="text-[8px] text-zinc-500 uppercase font-bold truncate max-w-[120px]">{s.email}</p>
+                       <p className="text-[8px] text-muted-foreground uppercase font-bold truncate max-w-[120px]">{s.email}</p>
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="transition-all text-zinc-700 group-hover:text-red-600 group-hover:translate-x-1" size={16} />
+                <ChevronRight className="transition-all text-muted-foreground group-hover:text-red-600 group-hover:translate-x-1" size={16} />
               </button>
             ))}
           </div>
@@ -471,8 +471,11 @@ const FEATURE_LIST = [
   { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info },
 ];
 
+import { PrescreveAIModule } from './PrescreveAI';
+
 export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, onSave }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout | null) => void, onSave: (sid: string, data: any) => void }) {
   const [publishing, setPublishing] = useState(false);
+  const [abrirPrescritor, setAbrirPrescritor] = useState(false);
   const workoutsRef = useRef<HTMLDivElement>(null);
 
   // Toggle de visibilidade do dashboard
@@ -505,11 +508,11 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left transition-colors">
+      <header className="flex items-center justify-between mb-8 sticky top-0 bg-background/90 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-border">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
             <HeaderTitle text={student.nome} />
           </h2>
         </div>
@@ -517,7 +520,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <button 
             onClick={publishAllWorkouts} 
             disabled={publishing}
-            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 rounded-full font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 rounded-full font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all text-white"
            >
              {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} 
              Publicar
@@ -534,9 +537,20 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-600/20">
                  <Dumbbell size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Planilhas Ativas</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Planilhas Ativas</span>
            </div>
            <ChevronRight className="text-orange-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* ABFIT RUN */}
+        <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
+                 <Footprints size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">ABFIT RUN</span>
+           </div>
+           <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
         {/* Periodização PhD */}
@@ -545,7 +559,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                  <Brain size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Periodização PhD</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Periodização PhD</span>
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -556,20 +570,31 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
                  <Ruler size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Avaliação Física</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Avaliação Física</span>
            </div>
            <ChevronRight className="text-emerald-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        {/* RunTrack Elite */}
-        <button onClick={() => onNavigate('RUNTRACK_MANAGER')} className="w-full p-4 rounded-[2rem] bg-rose-950/20 border border-rose-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-rose-600/50">
+        {/* Corre RJ 2026 */}
+        <button onClick={() => onNavigate('CORRE_RJ')} className="w-full p-4 rounded-[2rem] bg-yellow-950/20 border border-yellow-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-yellow-600/50">
            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/20">
-                 <Footprints size={20} className="text-white" />
+              <div className="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-600/20">
+                 <MapPin size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">RunTrack Elite</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Corre RJ 2026</span>
            </div>
-           <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
+           <ChevronRight className="text-yellow-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Feed Performance */}
+        <button onClick={() => onNavigate('FEED')} className="w-full p-4 rounded-[2rem] bg-red-950/20 border border-red-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-red-600/50">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/20">
+                 <Layout size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Feed Performance</span>
+           </div>
+           <ChevronRight className="text-red-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
         {/* Análise de Dados */}
@@ -578,9 +603,20 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
                  <BarChart3 size={20} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-white tracking-wider text-sm">Análise de Dados</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Análise de Dados</span>
            </div>
            <ChevronRight className="text-blue-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Sobre a ABFIT */}
+        <button onClick={() => onNavigate('ABOUT_ABFIT')} className="w-full p-4 rounded-[2rem] bg-zinc-900 border border-zinc-800 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-zinc-700">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg shadow-zinc-800/20">
+                 <Info size={20} className="text-white" />
+              </div>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Sobre a ABFIT</span>
+           </div>
+           <ChevronRight className="text-zinc-500 group-hover:translate-x-1 transition-transform" />
         </button>
 
       </div>
@@ -588,12 +624,12 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
       {/* Planilhas Atuais - Lista Expansível / Atalho Rápido */}
       <div className="mt-8 space-y-4" ref={workoutsRef}>
          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] italic">Gerenciar Planilhas</h3>
-            <span className="text-[8px] font-black uppercase text-zinc-700 bg-zinc-900 px-2 py-1 rounded-md">{student.workouts?.length || 0} Ativas</span>
+            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] italic">Gerenciar Planilhas</h3>
+            <span className="text-[8px] font-black uppercase text-muted-foreground bg-card px-2 py-1 rounded-md">{student.workouts?.length || 0} Ativas</span>
          </div>
          <div className="space-y-3">
             {(student.workouts || []).map(w => (
-              <div key={w.id} className="p-6 rounded-[2rem] border border-white/5 bg-zinc-900/50 flex justify-between items-center group transition-all shadow-lg hover:border-orange-600/30">
+              <div key={w.id} className="p-6 rounded-[2rem] border border-border bg-card/50 flex justify-between items-center group transition-all shadow-lg hover:border-orange-600/30">
                  <div className="flex items-center gap-4">
                     <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
                     <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase italic ${w.status === 'published' ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20' : 'bg-orange-600/10 text-orange-500 border border-orange-600/20'}`}>
@@ -615,10 +651,24 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
             {/* Botão de Criação Rápida */}
             <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
               <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
-              <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino (Editor Padrão)</span>
+            </button>
+
+            {/* Botão PrescreveAI */}
+            <button onClick={() => setAbrirPrescritor(true)} className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 rounded-[2rem] text-white font-black uppercase tracking-widest hover:shadow-lg hover:shadow-red-600/20 transition-all flex items-center justify-center gap-2 group mt-4 active:scale-95">
+              <Sparkles size={16} className="text-white animate-pulse"/>
+              <span className="text-[10px]">CRIAR TREINO (PrescreveAI)</span>
             </button>
          </div>
       </div>
+
+      {/* Módulo PrescreveAI Encapsulado */}
+      {abrirPrescritor && (
+        <PrescreveAIModule 
+          studentName={student.nome} 
+          onClose={() => setAbrirPrescritor(false)} 
+        />
+      )}
     </div>
   );
 }
@@ -750,8 +800,8 @@ function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) =>
   }
 
   return (
-    <div className="bg-zinc-900 border border-white/10 rounded-[2.5rem] p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95">
-      <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white"><X /></button>
+    <div className="bg-card border border-border rounded-[2.5rem] p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95">
+      <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground"><X /></button>
       
       <div className="flex items-center gap-3 text-red-500 mb-4">
         <Video size={24} />
@@ -761,11 +811,11 @@ function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) =>
       {/* 1. SELEÇÃO */}
       <div className="space-y-4">
         <div>
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Grupo Muscular</label>
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Grupo Muscular</label>
           <select 
             value={selectedMuscle} 
             onChange={(e) => setSelectedMuscle(e.target.value)}
-            className="w-full bg-black border border-zinc-800 rounded-xl p-4 text-white font-bold outline-none focus:border-red-600 appearance-none"
+            className="w-full bg-background border border-border rounded-xl p-4 text-foreground font-bold outline-none focus:border-red-600 appearance-none"
           >
             <option value="">Selecione...</option>
             {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
@@ -778,7 +828,7 @@ function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) =>
               <button 
                 key={i} 
                 onClick={() => handleSelectExercise(exName)}
-                className={`text-left px-4 py-3 rounded-xl text-[10px] font-bold transition-all border ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white' : 'bg-zinc-950 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+                className={`text-left px-4 py-3 rounded-xl text-[10px] font-bold transition-all border ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white' : 'bg-secondary border-border text-muted-foreground hover:bg-card'}`}
               >
                 {exName}
               </button>
@@ -789,12 +839,12 @@ function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) =>
 
       {/* 2. VISUALIZAÇÃO E CONFIGURAÇÃO */}
       {(selectedExercise || imageLoading) && (
-        <div className="space-y-6 pt-6 border-t border-white/5 animate-in slide-in-from-bottom-4">
-          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-white/10">
+        <div className="space-y-6 pt-6 border-t border-border animate-in slide-in-from-bottom-4">
+          <div className="relative aspect-video bg-background rounded-2xl overflow-hidden border border-border">
             {imageLoading ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
-                <span className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Gerando Biomecânica 8K...</span>
+                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Gerando Biomecânica 8K...</span>
               </div>
             ) : exerciseImage ? (
               <>
@@ -809,18 +859,18 @@ function PrescreveAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) =>
           {!imageLoading && selectedExercise && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-black uppercase italic text-white leading-none">{selectedExercise.name}</h4>
-                <p className="text-[10px] text-zinc-400 mt-2 leading-relaxed">{selectedExercise.description}</p>
+                <h4 className="text-lg font-black uppercase italic text-foreground leading-none">{selectedExercise.name}</h4>
+                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{selectedExercise.description}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                 <input value={exerciseConfig.sets} onChange={e => setExerciseConfig({...exerciseConfig, sets: e.target.value})} placeholder="Séries" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
-                 <input value={exerciseConfig.reps} onChange={e => setExerciseConfig({...exerciseConfig, reps: e.target.value})} placeholder="Reps" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
-                 <input value={exerciseConfig.rest} onChange={e => setExerciseConfig({...exerciseConfig, rest: e.target.value})} placeholder="Rest (s)" className="bg-black border border-zinc-800 p-3 rounded-xl text-center text-white font-bold outline-none focus:border-red-600" />
+                 <input value={exerciseConfig.sets} onChange={e => setExerciseConfig({...exerciseConfig, sets: e.target.value})} placeholder="Séries" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
+                 <input value={exerciseConfig.reps} onChange={e => setExerciseConfig({...exerciseConfig, reps: e.target.value})} placeholder="Reps" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
+                 <input value={exerciseConfig.rest} onChange={e => setExerciseConfig({...exerciseConfig, rest: e.target.value})} placeholder="Rest (s)" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
               </div>
-              <input value={exerciseConfig.technique} onChange={e => setExerciseConfig({...exerciseConfig, technique: e.target.value})} placeholder="Técnica (ex: Drop-set)" className="w-full bg-black border border-zinc-800 p-3 rounded-xl text-white font-bold outline-none focus:border-red-600 text-xs" />
+              <input value={exerciseConfig.technique} onChange={e => setExerciseConfig({...exerciseConfig, technique: e.target.value})} placeholder="Técnica (ex: Drop-set)" className="w-full bg-background border border-border p-3 rounded-xl text-foreground font-bold outline-none focus:border-red-600 text-xs" />
 
-              <button onClick={handleConfirm} className="w-full py-4 bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+              <button onClick={handleConfirm} className="w-full py-4 bg-foreground text-background font-black uppercase tracking-widest rounded-xl hover:bg-muted-foreground transition-colors flex items-center justify-center gap-2">
                 <CheckCircle2 size={18} /> Adicionar ao Treino
               </button>
             </div>
@@ -947,18 +997,18 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left transition-colors">
+      <header className="flex items-center justify-between mb-10 sticky top-0 bg-background/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-border">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">
+          <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
             <HeaderTitle text="Editor de Treino" />
           </h2>
         </div>
         <button 
           onClick={handleSaveWorkout} 
           disabled={saveState === 'loading'}
-          className={`px-8 py-3 rounded-full font-black text-[10px] uppercase shadow-xl transition-all flex items-center gap-2 ${saveState === 'loading' ? 'bg-orange-600 animate-pulse' : saveState === 'saved' ? 'bg-emerald-600' : 'bg-red-600'}`}
+          className={`px-8 py-3 rounded-full font-black text-[10px] uppercase shadow-xl transition-all flex items-center gap-2 ${saveState === 'loading' ? 'bg-orange-600 animate-pulse text-white' : saveState === 'saved' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}
         >
           {saveState === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} 
           {saveState === 'loading' ? 'Salvando...' : saveState === 'saved' ? 'Salvo!' : 'Salvar'}
@@ -966,41 +1016,41 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
       </header>
 
       <div className="space-y-6 pb-32">
-        <Card className="p-6 bg-zinc-900/50 space-y-4">
+        <Card className="p-6 bg-card/50 space-y-4 border-border">
            <div>
-             <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Nome da Planilha</label>
-             <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
+             <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-1 block">Nome da Planilha</label>
+             <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TÍTULO DO TREINO" className="w-full bg-background border border-border p-5 rounded-2xl text-foreground font-black italic text-lg outline-none focus:border-red-600" />
            </div>
            
            <div>
-             <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-1 block">Validade (Sessões)</label>
-             <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(parseInt(e.target.value) || 0)} placeholder="Ex: 12" className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600" />
-             <p className="text-[8px] text-zinc-600 mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
+             <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-1 block">Validade (Sessões)</label>
+             <input type="number" value={projectedSessions} onChange={e => setProjectedSessions(parseInt(e.target.value) || 0)} placeholder="Ex: 12" className="w-full bg-background border border-border p-5 rounded-2xl text-foreground font-black italic text-lg outline-none focus:border-red-600" />
+             <p className="text-[8px] text-muted-foreground mt-2 uppercase tracking-wide">O contador inicia automaticamente após o primeiro treino concluído.</p>
            </div>
 
            {/* NOVA ÁREA DE PADRONIZAÇÃO */}
-           <div className="pt-4 border-t border-white/5">
+           <div className="pt-4 border-t border-border">
              <div className="flex justify-between items-center mb-2">
-               <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] block">Padronização de Carga</label>
+               <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] block">Padronização de Carga</label>
                <button 
                   onClick={handleApplyDefaults}
-                  className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-white transition-colors bg-red-600/10 px-2 py-1 rounded-md"
+                  className="flex items-center gap-1 text-[8px] font-black uppercase text-red-500 hover:text-foreground transition-colors bg-red-600/10 px-2 py-1 rounded-md"
                >
                   <Copy size={10} /> Aplicar Padrão a Todos
                </button>
              </div>
              <div className="grid grid-cols-3 gap-3">
                <div>
-                 <input type="text" value={defaultSets} onChange={e => setDefaultSets(e.target.value)} placeholder="SÉRIES" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
-                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Séries</p>
+                 <input type="text" value={defaultSets} onChange={e => setDefaultSets(e.target.value)} placeholder="SÉRIES" className="w-full bg-background border border-border p-4 rounded-xl text-foreground font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-muted-foreground uppercase text-center mt-1 font-bold">Séries</p>
                </div>
                <div>
-                 <input type="text" value={defaultReps} onChange={e => setDefaultReps(e.target.value)} placeholder="REPS" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
-                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Repetições</p>
+                 <input type="text" value={defaultReps} onChange={e => setDefaultReps(e.target.value)} placeholder="REPS" className="w-full bg-background border border-border p-4 rounded-xl text-foreground font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-muted-foreground uppercase text-center mt-1 font-bold">Repetições</p>
                </div>
                <div>
-                 <input type="text" value={defaultRest} onChange={e => setDefaultRest(e.target.value)} placeholder="SEG" className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-white font-black italic text-sm outline-none focus:border-red-600 text-center" />
-                 <p className="text-[7px] text-zinc-600 uppercase text-center mt-1 font-bold">Descanso (s)</p>
+                 <input type="text" value={defaultRest} onChange={e => setDefaultRest(e.target.value)} placeholder="SEG" className="w-full bg-background border border-border p-4 rounded-xl text-foreground font-black italic text-sm outline-none focus:border-red-600 text-center" />
+                 <p className="text-[7px] text-muted-foreground uppercase text-center mt-1 font-bold">Descanso (s)</p>
                </div>
              </div>
            </div>
@@ -1009,7 +1059,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
         <div className="space-y-4">
            {/* Cabeçalho da Lista + Botão Discreto de Importação */}
            <div className="flex items-center justify-between pl-2">
-              <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Exercícios ({exercises.length})</h3>
+              <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Exercícios ({exercises.length})</h3>
               
               {/* Botão Discreto IA - Principal acesso ao PrescreveAI */}
               <div 
@@ -1023,9 +1073,9 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                      </div>
                   ) : (
                      <>
-                        <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors mr-1 hidden sm:block">Importar Print</span>
-                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-zinc-800 transition-all shadow-lg">
-                           <Scan size={14} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
+                        <span className="text-[7px] font-black uppercase text-muted-foreground group-hover:text-foreground transition-colors mr-1 hidden sm:block">Importar Print</span>
+                        <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center group-hover:border-red-600/50 group-hover:bg-secondary transition-all shadow-lg">
+                           <Scan size={14} className="text-muted-foreground group-hover:text-red-600 transition-colors" />
                         </div>
                      </>
                   )}
@@ -1034,30 +1084,30 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
            </div>
 
            {exercises.map((ex, i) => (
-             <div key={i} className="flex flex-col gap-2 bg-zinc-900 p-4 rounded-2xl border border-white/5 animate-in slide-in-from-bottom-2">
+             <div key={i} className="flex flex-col gap-2 bg-card p-4 rounded-2xl border border-border animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-xl overflow-hidden shrink-0 border border-white/10">
+                  <div className="w-12 h-12 bg-background rounded-xl overflow-hidden shrink-0 border border-border">
                      {ex.thumb ? (
                        <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                      ) : (
-                       <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-                         <Dumbbell size={16} className="text-zinc-600"/>
+                       <div className="w-full h-full flex items-center justify-center bg-secondary">
+                         <Dumbbell size={16} className="text-muted-foreground"/>
                        </div>
                      )}
                   </div>
                   <div className="flex-1">
-                     <p className="text-xs font-black uppercase italic text-white leading-tight">{ex.name}</p>
-                     <p className="text-[10px] text-zinc-500 font-bold">{ex.sets}x{ex.reps} • {ex.method || 'Série Estável'}</p>
+                     <p className="text-xs font-black uppercase italic text-foreground leading-tight">{ex.name}</p>
+                     <p className="text-[10px] text-muted-foreground font-bold">{ex.sets}x{ex.reps} • {ex.method || 'Série Estável'}</p>
                   </div>
-                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-zinc-700 hover:text-red-600"><Trash2 size={16}/></button>
+                  <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-600"><Trash2 size={16}/></button>
                 </div>
                 <div className="mt-2 flex items-center gap-2">
-                   <label className="text-[8px] font-black uppercase text-zinc-600">Descanso:</label>
-                   <input type="text" value={ex.rest} onChange={(e) => updateExerciseRest(i, e.target.value)} className="bg-black border border-zinc-800 rounded px-2 py-1 text-[10px] text-white w-16 text-center outline-none focus:border-red-600" />
+                   <label className="text-[8px] font-black uppercase text-muted-foreground">Descanso:</label>
+                   <input type="text" value={ex.rest} onChange={(e) => updateExerciseRest(i, e.target.value)} className="bg-background border border-border rounded px-2 py-1 text-[10px] text-foreground w-16 text-center outline-none focus:border-red-600" />
                 </div>
              </div>
            ))}
-           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] text-zinc-700 text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
+           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-border rounded-[2rem] text-muted-foreground text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
              Voltar
            </button>
         </div>
@@ -1098,50 +1148,50 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
   };
 
   return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
-        <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">
+    <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left transition-colors">
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-background/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-border">
+        <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
           <HeaderTitle text="Nova Avaliação" />
         </h2>
       </header>
 
-      <Card className="p-8 bg-zinc-900/50 border-white/5 space-y-6">
+      <Card className="p-8 bg-card/50 border-border space-y-6">
         <div>
-          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Peso Corporal (kg)</label>
+          <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-2 block">Peso Corporal (kg)</label>
           <input 
             type="number" 
             value={weight} 
             onChange={e => setWeight(e.target.value)} 
             placeholder="0.0"
-            className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+            className="w-full bg-background border border-border p-4 rounded-2xl text-foreground font-black italic text-lg outline-none focus:border-red-600"
           />
         </div>
         <div>
-           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Altura (cm)</label>
+           <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-2 block">Altura (cm)</label>
            <input 
              type="number" 
              value={height} 
              onChange={e => setHeight(e.target.value)} 
              placeholder={String(student.height || '')}
-             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+             className="w-full bg-background border border-border p-4 rounded-2xl text-foreground font-black italic text-lg outline-none focus:border-red-600"
            />
         </div>
         <div>
-           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Gordura Corporal (%)</label>
+           <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-2 block">Gordura Corporal (%)</label>
            <input 
              type="number" 
              value={bodyFat} 
              onChange={e => setBodyFat(e.target.value)} 
              placeholder="0.0"
-             className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-black italic text-lg outline-none focus:border-red-600"
+             className="w-full bg-background border border-border p-4 rounded-2xl text-foreground font-black italic text-lg outline-none focus:border-red-600"
            />
         </div>
 
         <button 
           onClick={handleSave} 
           disabled={saving}
-          className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-white"
         >
           {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
           Salvar Avaliação
@@ -1150,12 +1200,12 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       
       {/* History List */}
       <div className="mt-8 space-y-4">
-        <h3 className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] pl-2">Histórico Recente</h3>
+        <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] pl-2">Histórico Recente</h3>
         {(student.physicalAssessments || []).map(a => (
-           <div key={a.id} className="flex justify-between items-center p-4 bg-zinc-900 rounded-2xl border border-white/5">
+           <div key={a.id} className="flex justify-between items-center p-4 bg-card rounded-2xl border border-border">
               <div>
-                 <p className="text-xs font-black text-white">{new Date(a.data).toLocaleDateString('pt-BR')}</p>
-                 <p className="text-[10px] text-zinc-500 mt-1">{a.peso}kg • {a.bio_percentual_gordura}% Gordura</p>
+                 <p className="text-xs font-black text-foreground">{new Date(a.data).toLocaleDateString('pt-BR')}</p>
+                 <p className="text-[10px] text-muted-foreground mt-1">{a.peso}kg • {a.bio_percentual_gordura}% Gordura</p>
               </div>
            </div>
         ))}
@@ -1203,28 +1253,28 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
    };
 
    return (
-    <div className="p-6 text-white bg-black h-screen overflow-y-auto custom-scrollbar text-left">
-      <header className="flex items-center justify-between mb-10 sticky top-0 bg-black/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left transition-colors">
+      <header className="flex items-center justify-between mb-10 sticky top-0 bg-background/90 backdrop-blur-md z-50 py-4 -mx-6 px-6 border-b border-border">
         <div className="flex items-center gap-4">
-           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
-           <h2 className="text-xl font-black italic uppercase tracking-tighter">
+           <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
+           <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
              <HeaderTitle text="Periodização PhD" />
            </h2>
         </div>
-        <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-zinc-500 hover:text-white flex items-center gap-1">
+        <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-muted-foreground hover:text-foreground flex items-center gap-1">
            Ir para Treinos <ChevronRight size={12} />
         </button>
       </header>
       
       <div className="space-y-6 pb-20">
-         <Card className="p-6 bg-zinc-900/50 border-white/5 space-y-4">
+         <Card className="p-6 bg-card/50 border-border space-y-4">
             <div>
-               <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Fase Atual</label>
-               <input type="text" value={phaseTitle} onChange={e => setPhaseTitle(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white font-bold text-sm outline-none focus:border-red-600" placeholder="Ex: Hipertrofia Metabólica" />
+               <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-2 block">Fase Atual</label>
+               <input type="text" value={phaseTitle} onChange={e => setPhaseTitle(e.target.value)} className="w-full bg-background border border-border p-4 rounded-2xl text-foreground font-bold text-sm outline-none focus:border-red-600" placeholder="Ex: Hipertrofia Metabólica" />
             </div>
             <div>
-               <label className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.2em] mb-2 block">Estratégia Geral</label>
-               <textarea rows={4} value={generalStrategy} onChange={e => setGeneralStrategy(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-2xl text-white text-sm outline-none focus:border-red-600 resize-none" placeholder="Descreva a estratégia macro..." />
+               <label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-2 block">Estratégia Geral</label>
+               <textarea rows={4} value={generalStrategy} onChange={e => setGeneralStrategy(e.target.value)} className="w-full bg-background border border-border p-4 rounded-2xl text-foreground text-sm outline-none focus:border-red-600 resize-none" placeholder="Descreva a estratégia macro..." />
             </div>
          </Card>
 
@@ -1233,10 +1283,10 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
                 <AlertCircle size={16} />
                 <h3 className="text-[10px] font-black uppercase tracking-widest">Segurança Clínica</h3>
              </div>
-             <textarea rows={3} value={safetyNotes} onChange={e => setSafetyNotes(e.target.value)} className="w-full bg-black/50 border border-red-900/30 p-4 rounded-2xl text-zinc-300 text-sm outline-none focus:border-red-600 resize-none" placeholder="Uma nota por linha..." />
+             <textarea rows={3} value={safetyNotes} onChange={e => setSafetyNotes(e.target.value)} className="w-full bg-background/50 border border-red-900/30 p-4 rounded-2xl text-muted-foreground text-sm outline-none focus:border-red-600 resize-none" placeholder="Uma nota por linha..." />
          </Card>
 
-         <Card className="p-6 bg-gradient-to-br from-indigo-950/20 to-black border-indigo-900/20 space-y-4">
+         <Card className="p-6 bg-gradient-to-br from-indigo-950/20 to-background border-indigo-900/20 space-y-4">
              <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2 text-indigo-500">
                    <Brain size={16} />
@@ -1246,11 +1296,11 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
                    {generating ? <Loader2 className="animate-spin" size={10} /> : <Sparkles size={10} />} Gerar
                 </button>
              </div>
-             <textarea rows={3} value={bioContext} onChange={e => setBioContext(e.target.value)} className="w-full bg-black/50 border border-indigo-900/30 p-4 rounded-2xl text-zinc-300 text-sm outline-none focus:border-indigo-600 resize-none" placeholder="Contexto científico..." />
-             <textarea rows={3} value={bioTips} onChange={e => setBioTips(e.target.value)} className="w-full bg-black/50 border border-indigo-900/30 p-4 rounded-2xl text-zinc-300 text-sm outline-none focus:border-indigo-600 resize-none" placeholder="Dicas práticas (uma por linha)..." />
+             <textarea rows={3} value={bioContext} onChange={e => setBioContext(e.target.value)} className="w-full bg-background/50 border border-indigo-900/30 p-4 rounded-2xl text-muted-foreground text-sm outline-none focus:border-indigo-600 resize-none" placeholder="Contexto científico..." />
+             <textarea rows={3} value={bioTips} onChange={e => setBioTips(e.target.value)} className="w-full bg-background/50 border border-indigo-900/30 p-4 rounded-2xl text-muted-foreground text-sm outline-none focus:border-indigo-600 resize-none" placeholder="Dicas práticas (uma por linha)..." />
          </Card>
 
-         <button onClick={handleSave} className="w-full py-5 bg-white text-black rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-zinc-200 transition-all">
+         <button onClick={handleSave} className="w-full py-5 bg-foreground text-background rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-muted-foreground transition-all">
             Salvar Periodização
          </button>
       </div>

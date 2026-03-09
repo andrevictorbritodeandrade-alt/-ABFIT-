@@ -9,6 +9,7 @@ import {
 import { AppNotification } from '../types';
 
 export function HeaderTitle({ text }: { text: string }) {
+  if (!text) return null;
   const words = text.trim().split(/\s+/);
   
   if (words.length === 1) {
@@ -16,7 +17,7 @@ export function HeaderTitle({ text }: { text: string }) {
     if (word.length <= 2) return <span className="text-red-600 uppercase italic tracking-tighter">{word}</span>;
     const splitIndex = word.length > 3 ? word.length - 3 : word.length - 2;
     return (
-      <span className="tracking-tighter uppercase italic">
+      <span className="tracking-tighter uppercase italic text-foreground">
         {word.substring(0, splitIndex)}
         <span className="text-red-600">{word.substring(splitIndex)}</span>
       </span>
@@ -25,29 +26,29 @@ export function HeaderTitle({ text }: { text: string }) {
   
   const lastWord = words.pop();
   return (
-    <span className="tracking-tighter uppercase italic">
+    <span className="tracking-tighter uppercase italic text-foreground">
       {words.join(' ')} <span className="text-red-600">{lastWord}</span>
     </span>
   );
 }
 
-export function Logo({ size = "text-6xl", subSize = "text-[10px]", collapsed = false }: { size?: string, subSize?: string, collapsed?: boolean }) {
+export function Logo({ size = "text-4xl", subSize = "text-[10px]", collapsed = false }: { size?: string, subSize?: string, collapsed?: boolean }) {
   if (collapsed) {
     return (
-      <div className="p-2 bg-zinc-900 rounded-xl border border-white/5 shadow-2xl">
+      <div className="p-2 bg-card rounded-xl border border-border shadow-2xl">
         <Dumbbell className="text-red-600 w-5 h-5" />
       </div>
     );
   }
   return (
     <div className="text-center group select-none flex flex-col items-center justify-center">
-      <div className="p-2 bg-zinc-900 rounded-[1.2rem] border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-3">
+      <div className="p-2 bg-card rounded-[1.2rem] border border-border shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-3">
         <Dumbbell className="text-red-600 w-5 h-5 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
       </div>
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-white uppercase leading-[0.9]`}>
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9]`}>
         AB<span className="text-red-600">FIT</span>
       </h1>
-      <p className={`${subSize} text-zinc-400 tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80`}>Assessoria em Treinamentos Físicos</p>
+      <p className={`${subSize} text-muted-foreground tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
 }
@@ -75,12 +76,12 @@ export function SideNav({
   // Mapeamento de cores idêntico ao Dashboard em App.tsx
   const studentItems: NavItem[] = [
     { id: 'DASHBOARD', label: 'Home Dashboard', icon: LayoutGrid, color: 'zinc' },
-    { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
+    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
     { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
-    { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
+    { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' },
     { id: 'SETTINGS', label: 'Configurações', icon: Settings2, color: 'zinc' },
@@ -95,22 +96,22 @@ export function SideNav({
   const items = isProfessor ? professorItems : studentItems;
 
   const getColorClasses = (color: string, isActive: boolean) => {
-    if (!isActive) return 'text-zinc-500 hover:text-white hover:bg-white/5';
+    if (!isActive) return 'text-muted-foreground hover:text-foreground hover:bg-secondary/50';
     
     switch(color) {
-      case 'red': return 'bg-red-600/10 text-white';
-      case 'orange': return 'bg-orange-600/10 text-white';
-      case 'indigo': return 'bg-indigo-600/10 text-white';
-      case 'emerald': return 'bg-emerald-600/10 text-white';
-      case 'rose': return 'bg-rose-600/10 text-white';
-      case 'blue': return 'bg-blue-600/10 text-white';
-      case 'yellow': return 'bg-yellow-600/10 text-white';
-      default: return 'bg-zinc-800 text-white';
+      case 'red': return 'bg-red-600/10 text-foreground';
+      case 'orange': return 'bg-orange-600/10 text-foreground';
+      case 'indigo': return 'bg-indigo-600/10 text-foreground';
+      case 'emerald': return 'bg-emerald-600/10 text-foreground';
+      case 'rose': return 'bg-rose-600/10 text-foreground';
+      case 'blue': return 'bg-blue-600/10 text-foreground';
+      case 'yellow': return 'bg-yellow-600/10 text-foreground';
+      default: return 'bg-secondary text-foreground';
     }
   };
 
   const getIconColor = (color: string, isActive: boolean) => {
-    if (!isActive) return 'group-hover:text-white transition-colors';
+    if (!isActive) return 'group-hover:text-foreground transition-colors';
     
     switch(color) {
       case 'red': return 'text-red-600';
@@ -120,7 +121,7 @@ export function SideNav({
       case 'rose': return 'text-rose-600';
       case 'blue': return 'text-blue-600';
       case 'yellow': return 'text-yellow-500';
-      default: return 'text-white';
+      default: return 'text-foreground';
     }
   };
 
@@ -133,24 +134,24 @@ export function SideNav({
       case 'rose': return 'bg-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.8)]';
       case 'blue': return 'bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.8)]';
       case 'yellow': return 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.8)]';
-      default: return 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.4)]';
+      default: return 'bg-foreground shadow-[0_0_15px_rgba(255,255,255,0.4)]';
     }
   };
 
   return (
     <>
       <div 
-        className={`fixed inset-0 z-[80] bg-black/80 backdrop-blur-md transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[80] bg-background/80 backdrop-blur-md transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
 
       <aside 
-        className={`fixed top-0 left-0 z-[90] h-screen bg-zinc-950 border-r border-white/5 transition-transform duration-500 transform w-[280px] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 z-[90] h-screen bg-background border-r border-border transition-transform duration-500 transform w-[280px] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-8 flex flex-col h-full">
           <div className="flex items-center justify-between mb-10">
             <Logo size="text-2xl" subSize="text-[8px]" />
-            <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-zinc-900 rounded-full border border-white/5">
+            <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground bg-card rounded-full border border-border">
               <X size={20} />
             </button>
           </div>
@@ -172,14 +173,14 @@ export function SideNav({
             })}
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-white/5">
+          <div className="mt-auto pt-6 border-t border-border">
              <div className="flex items-center gap-4 px-2">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center overflow-hidden shadow-inner">
-                   <User className="text-zinc-700" size={18} />
+                <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center overflow-hidden shadow-inner">
+                   <User className="text-muted-foreground" size={18} />
                 </div>
                 <div className="flex flex-col">
-                   <span className="text-[9px] font-black uppercase text-white italic leading-none mb-1">Elite Member</span>
-                   <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Status: Ativo</span>
+                   <span className="text-[9px] font-black uppercase text-foreground italic leading-none mb-1">Elite Member</span>
+                   <span className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Status: Ativo</span>
                 </div>
              </div>
           </div>
@@ -190,14 +191,14 @@ export function SideNav({
 }
 
 export function Card({ children, className = "", onClick }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key }) {
-  return <div onClick={onClick} className={`bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
+  return <div onClick={onClick} className={`bg-card border border-border rounded-[2.5rem] shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
 }
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden font-sans text-left">
-      <div className="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale scale-110 blur-sm pointer-events-none"></div>
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none"></div>
+    <div className="relative min-h-screen bg-background overflow-hidden font-sans text-left transition-colors">
+      <div className="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale scale-110 blur-sm pointer-events-none dark:opacity-20 opacity-5"></div>
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none"></div>
       <div className="relative z-10 h-full">{children}</div>
     </div>
   );
@@ -218,7 +219,7 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
 
   return (
     <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-1000 pointer-events-none select-none">
-      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-zinc-900/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
+      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-card/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
         <div className="relative flex items-center justify-center w-5 h-5">
            {isSyncing ? (
              <RefreshCw size={18} className="text-orange-500 animate-spin" />
@@ -241,9 +242,9 @@ export function NotificationBadge({ notifications, onClick }: { notifications: A
   if (unreadCount === 0) return null;
 
   return (
-    <button onClick={onClick} className="relative p-2 bg-zinc-900 border border-white/5 rounded-full text-zinc-400 hover:text-red-600 transition-colors">
+    <button onClick={onClick} className="relative p-2 bg-card border border-border rounded-full text-muted-foreground hover:text-red-600 transition-colors">
       <Bell size={20} />
-      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-[10px] font-black text-white flex items-center justify-center border-2 border-black animate-bounce">
+      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-[10px] font-black text-white flex items-center justify-center border-2 border-background animate-bounce">
         {unreadCount}
       </span>
     </button>
@@ -313,7 +314,7 @@ export function WeatherWidget() {
     if (!weather) return <Sun size={16} className="text-orange-500" />;
     const cond = weather.condition.toLowerCase();
     if (cond.includes('chuva') || cond.includes('tempestade')) return <CloudRain size={16} className="text-blue-500" />;
-    if (cond.includes('nublado') || cond.includes('nevoeiro')) return <Cloud size={16} className="text-zinc-400" />;
+    if (cond.includes('nublado') || cond.includes('nevoeiro')) return <Cloud size={16} className="text-muted-foreground" />;
     return <Sun size={16} className="text-orange-500" />;
   };
 
@@ -345,39 +346,39 @@ export function WeatherWidget() {
 
   if (error) {
     return (
-      <div className="flex items-center gap-3 bg-zinc-900/40 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+      <div className="flex items-center gap-3 bg-card/40 px-4 py-2 rounded-2xl border border-border backdrop-blur-sm">
         <MapPin className="text-red-600" size={16} />
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{error}</span>
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{error}</span>
       </div>
     );
   }
 
   if (loading || !weather) {
     return (
-      <div className="flex items-center gap-3 bg-zinc-900/40 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
-        <Loader2 className="text-zinc-600 animate-spin" size={16} />
-        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Carregando...</span>
+      <div className="flex items-center gap-3 bg-card/40 px-4 py-2 rounded-2xl border border-border backdrop-blur-sm">
+        <Loader2 className="text-muted-foreground animate-spin" size={16} />
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Carregando...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-4 bg-zinc-900/40 pl-4 pr-5 py-2.5 rounded-[1.2rem] border border-white/5 backdrop-blur-md shadow-lg group hover:bg-zinc-900/60 transition-colors cursor-default">
+    <div className="flex items-center gap-4 bg-card/40 pl-4 pr-5 py-2.5 rounded-[1.2rem] border border-border backdrop-blur-md shadow-lg group hover:bg-card/60 transition-colors cursor-default">
       {getIcon()}
       <div className="flex flex-col">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-black text-white italic leading-none">{weather.temp}°</span>
-          <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wide leading-none">
+          <span className="text-sm font-black text-foreground italic leading-none">{weather.temp}°</span>
+          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wide leading-none">
              Max {weather.max}° • Min {weather.min}°
           </span>
         </div>
         <div className="flex items-center gap-2 mt-1">
            <MapPin size={8} className="text-red-600" />
-           <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest truncate max-w-[100px]">{weather.location}</span>
-           <span className="text-[8px] text-zinc-600">|</span>
+           <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest truncate max-w-[100px]">{weather.location}</span>
+           <span className="text-[8px] text-muted-foreground">|</span>
            <div className="flex items-center gap-1">
              <Thermometer size={8} className="text-orange-500" />
-             <span className="text-[8px] font-bold text-zinc-500 uppercase">Sens {weather.feelsLike}°</span>
+             <span className="text-[8px] font-bold text-muted-foreground uppercase">Sens {weather.feelsLike}°</span>
            </div>
            {weather.rainProb > 0 && (
              <div className="flex items-center gap-1 ml-1">
@@ -393,20 +394,20 @@ export function WeatherWidget() {
 
 export function EliteFooter() {
   return (
-    <footer className="w-full py-12 mt-auto text-center border-t border-white/5">
+    <footer className="w-full py-12 mt-auto text-center border-t border-border">
       <div className="flex justify-center gap-6 mb-8">
-        <button className="p-3 bg-zinc-900 rounded-2xl text-zinc-600 hover:text-red-600 transition-all border border-white/5">
+        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-red-600 transition-all border border-border">
           <Mail size={18} />
         </button>
-        <button className="p-3 bg-zinc-900 rounded-2xl text-zinc-600 hover:text-emerald-600 transition-all border border-white/5">
+        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-emerald-600 transition-all border border-border">
           <MessageCircle size={18} />
         </button>
-        <button className="p-3 bg-zinc-900 rounded-2xl text-zinc-600 hover:text-blue-600 transition-all border border-white/5">
+        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-blue-600 transition-all border border-border">
           <Phone size={18} />
         </button>
       </div>
-      <p className="text-[8px] font-black text-zinc-700 uppercase tracking-[0.5em] mb-2">ABFIT Elite Performance v2.0</p>
-      <p className="text-[7px] font-bold text-zinc-800 uppercase tracking-widest">© 2025 PhD André Brito. All Rights Reserved.</p>
+      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">ABFIT Elite Performance v2.0</p>
+      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 PhD André Brito. All Rights Reserved.</p>
     </footer>
   );
 }

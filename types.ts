@@ -151,5 +151,18 @@ export interface Student {
   height?: string | number;
   goal?: string;
   anamneseComplete?: boolean;
-  protocolStartDate?: string; 
+  protocolStartDate?: string;
+  
+  // PrescreveAI Specific Fields
+  neurodivergence?: string;
+  medicalHistory?: string;
+  bariatric?: boolean;
+  medications?: string;
+  exercisePreference?: string;
+  otherActivities?: string;
+  trainingSchedule?: string;
+  sessionDuration?: string;
+  goalTimeline?: string;
+  weeklyFrequency?: string;
+  plannedSessions?: string;
 }

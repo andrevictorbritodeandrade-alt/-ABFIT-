@@ -135,54 +135,54 @@ const animationStyles = `
 /**
  * Modal Cinematográfico PrescreveAI
  */
-function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
+export function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar text-left">
+    <div className="fixed inset-0 z-[150] bg-background/95 backdrop-blur-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar text-left">
       <style>{animationStyles}</style>
       <header className="flex justify-between items-center mb-8 sticky top-0 z-50 py-2">
         <div className="flex flex-col">
           <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.4em] italic leading-none mb-2">PrescreveAI Elite</p>
-          <h2 className="text-4xl font-black italic uppercase text-white tracking-tighter leading-none max-w-[80%]">{ex.name}</h2>
+          <h2 className="text-2xl font-black italic uppercase text-foreground tracking-tighter leading-none max-w-[80%]">{ex.name}</h2>
         </div>
-        <button onClick={onClose} className="p-3 bg-zinc-900 rounded-full border border-white/10 text-zinc-500 hover:text-white transition-all shadow-2xl">
+        <button onClick={onClose} className="p-3 bg-card rounded-full border border-border text-muted-foreground hover:text-foreground transition-all shadow-2xl">
           <X size={24} />
         </button>
       </header>
 
       <div className="max-w-2xl mx-auto w-full space-y-8 pb-20">
-        <div className="relative aspect-video w-full bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-3xl group">
+        <div className="relative aspect-video w-full bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-3xl group">
           <ExerciseImage 
             ex={ex}
             className="w-full h-full object-cover video-motion-engine"
           />
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
             <div className="absolute top-0 left-0 w-full h-[2px] bg-red-600/30 animate-[scan_3s_infinite]"></div>
-            <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-600/30">
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-background/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-600/30">
                <Scan size={14} className="text-red-600 animate-pulse" />
-               <span className="text-[8px] font-black text-white uppercase tracking-widest">Análise Ativa</span>
+               <span className="text-[8px] font-black text-foreground uppercase tracking-widest">Análise Ativa</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-6 bg-zinc-900/50 border-white/5 space-y-4">
+          <Card className="p-6 bg-card/50 border-border space-y-4">
              <div className="flex items-center gap-3">
                 <Zap className="text-red-600" size={18} />
-                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest italic">Execução Técnica</h4>
+                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Execução Técnica</h4>
              </div>
-             <p className="text-xs text-zinc-300 font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
+             <p className="text-xs text-muted-foreground font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
                {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua durante a execução."}
              </p>
           </Card>
-          <Card className="p-6 bg-zinc-900/50 border-white/5 space-y-4">
+          <Card className="p-6 bg-card/50 border-border space-y-4">
              <div className="flex items-center gap-3">
                 <ShieldCheck className="text-emerald-500" size={18} />
-                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest italic">Hipertrofia Alvo</h4>
+                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Hipertrofia Alvo</h4>
              </div>
              <div className="flex flex-wrap gap-2">
-                {(ex.benefits || "Tensão Mecânica,Estresse Metabólico,Performance").split(',').map((b, i) => (
-                  <span key={i} className="text-[9px] font-black uppercase tracking-widest bg-black px-3 py-1.5 rounded-full text-zinc-500 border border-white/5 italic">{b.trim()}</span>
+                {(ex.benefits || "Tensão Mecânica,Estresse Metabólico,Performance").split(',').map((b: string, i: number) => (
+                  <span key={i} className="text-[9px] font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-full text-muted-foreground border border-border italic">{b.trim()}</span>
                 ))}
              </div>
           </Card>
@@ -192,7 +192,7 @@ function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => 
   );
 }
 
-function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail }: { 
+function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, currentReps }: { 
   ex: Exercise, 
   idx: number, 
   progress: { completedSets: number[], isFinished: boolean },
@@ -201,22 +201,23 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
   onUpdateLoad: (id: string, val: string) => void,
   onUpdateUnit: (id: string, unit: 'Kg' | 'Placas') => void,
   onShowDetail: (ex: Exercise) => void,
+  currentReps?: string | null,
   key?: React.Key
 }) {
   const totalSets = parseInt(ex.sets || '3') || 3;
-  const totalReps = ex.reps || '15';
+  const totalReps = currentReps || ex.reps || '15';
   const allSetsCompleted = progress.completedSets.length >= totalSets;
 
   return (
-    <div className={`relative bg-zinc-900/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
+    <div className={`relative bg-card/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
       ${allSetsCompleted 
         ? 'border-emerald-500 border-2 shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-emerald-950/20' 
-        : 'border-white/5 hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
+        : 'border-border hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
       }`}
     >
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1 cursor-pointer group flex items-start gap-4" onClick={() => onShowDetail(ex)}>
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-black relative shadow-lg">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-border shrink-0 bg-background relative shadow-lg">
              <ExerciseImage 
                ex={ex}
                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -226,12 +227,12 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-[10px] font-black italic uppercase tracking-widest leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>{idx + 1}º Exercício</span>
-              <Maximize2 size={10} className="text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Maximize2 size={10} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-white group-hover:text-red-600'}`}>
+            <h4 className={`text-xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground group-hover:text-red-600'}`}>
               {ex.name}
             </h4>
-            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
           </div>
         </div>
         {allSetsCompleted && (
@@ -242,7 +243,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center shadow-inner">
+        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center shadow-inner">
           <div className="flex flex-wrap justify-center gap-3">
             {Array.from({ length: totalSets }).map((_, sIdx) => (
               <button 
@@ -251,39 +252,68 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
                 className={`w-12 h-12 rounded-full flex items-center justify-center font-black italic text-sm transition-all border-2 
                   ${progress.completedSets.includes(sIdx) 
                     ? 'bg-red-600 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] scale-110' 
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-red-600/50 hover:text-white'
+                    : 'bg-card border-border text-muted-foreground hover:border-red-600/50 hover:text-foreground'
                   }`}
               >
                 {sIdx + 1}
               </button>
             ))}
           </div>
-          <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-3 italic">
+          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-3 italic">
             {allSetsCompleted ? <span className="text-emerald-500">SÉRIE CONCLUÍDA</span> : "Registro de Séries"}
           </p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
-          <span className="text-3xl font-black text-white italic leading-none tracking-tighter">{totalReps}</span>
-          <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Reps Alvo</p>
+        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+          <span className="text-2xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
+          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
           <div className="flex items-baseline gap-1">
             <input 
               type="number" 
               defaultValue={ex.load || ''}
               placeholder="--"
               onBlur={(e) => onUpdateLoad(ex.id!, e.target.value)}
-              className="bg-transparent border-none p-0 text-3xl font-black text-center text-white outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-zinc-800"
+              className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-muted-foreground"
             />
             <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
           </div>
-          <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-2 italic">Carga Atual</p>
+          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Carga Atual</p>
         </div>
       </div>
     </div>
   );
+}
+
+// Helper para calcular reps dinâmicas
+function getCurrentRepsForStudent(student: Student): string | null {
+  if (!student.periodization || !student.periodization.microciclos) return null;
+  
+  const startDate = student.protocolStartDate || student.periodization.startDate;
+  if (!startDate) return null;
+  
+  const start = new Date(startDate).getTime();
+  const now = Date.now();
+  const diffWeeks = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  
+  const currentMicro = student.periodization.microciclos.find((m: any) => {
+    const range = m.range || m.semanas;
+    if (!range) return false;
+    const numbers = range.match(/\d+/g);
+    if (!numbers) return false;
+    const startWeek = parseInt(numbers[0]);
+    const endWeek = numbers.length > 1 ? parseInt(numbers[1]) : startWeek;
+    return diffWeeks >= startWeek && diffWeeks <= endWeek;
+  });
+  
+  if (!currentMicro) return null;
+  if (currentMicro.reps) return currentMicro.reps;
+  
+  const volume = currentMicro.volume || currentMicro.volume_semanal || "";
+  const repsMatch = volume.match(/(\d+-\d+|\d+)\s*REPETIÇÕES/i) || volume.match(/(\d+-\d+|\d+)\s*reps/i);
+  return repsMatch ? repsMatch[1] : null;
 }
 
 export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
@@ -298,6 +328,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const [restCountdown, setRestCountdown] = useState<number | null>(null);
   const [isResting, setIsResting] = useState(false);
   const [exerciseProgress, setExerciseProgress] = useState<Record<string, { completedSets: number[], isFinished: boolean }>>({});
+
+  const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
   const timerRef = useRef<any>(null);
   const restTimerRef = useRef<any>(null);
@@ -425,26 +457,26 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   if (isResting) {
     return (
-      <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center p-6 text-foreground animate-in fade-in duration-300">
         <p className="text-red-600 font-black uppercase tracking-[0.4em] mb-4 italic">Recuperação Biomecânica</p>
-        <div className="text-[14rem] font-black italic tracking-tighter leading-none text-white animate-pulse tabular-nums">{restCountdown}</div>
-        <button onClick={() => setRestCountdown(0)} className="mt-16 flex items-center gap-2 bg-zinc-900 px-12 py-6 rounded-[2.5rem] border border-white/5 font-black uppercase tracking-widest text-xs hover:bg-red-600 shadow-2xl transition-all">Pular Descanso</button>
+        <div className="text-[6rem] font-black italic tracking-tighter leading-none text-foreground animate-pulse tabular-nums">{restCountdown}</div>
+        <button onClick={() => setRestCountdown(0)} className="mt-16 flex items-center gap-2 bg-card px-12 py-6 rounded-[2.5rem] border border-border font-black uppercase tracking-widest text-xs hover:bg-red-600 shadow-2xl transition-all">Pular Descanso</button>
       </div>
     );
   }
 
   if (showCompletionModal) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-500">
-        <Card className="w-full max-w-sm bg-zinc-900 border-red-600/30 p-10 text-center shadow-3xl animate-in zoom-in-95">
+      <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+        <Card className="w-full max-w-sm bg-card border-red-600/30 p-10 text-center shadow-3xl animate-in zoom-in-95">
           <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-red-600/30">
             <Trophy className="text-white" size={48} />
           </div>
-          <h3 className="text-3xl font-black italic uppercase text-white tracking-tighter leading-none mb-2">Protocolo Vencido!</h3>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-10">Sua performance foi gravada com sucesso.</p>
-          <div className="bg-black/60 p-6 rounded-3xl mb-10 border border-white/5 shadow-inner">
-             <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-2 italic">Tempo Total</p>
-             <p className="text-5xl font-black text-white italic tracking-tighter leading-none">{formatTime(elapsedTime)}</p>
+          <h3 className="text-xl font-black italic uppercase text-foreground tracking-tighter leading-none mb-2">Protocolo Vencido!</h3>
+          <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-10">Sua performance foi gravada com sucesso.</p>
+          <div className="bg-background/60 p-6 rounded-3xl mb-10 border border-border shadow-inner">
+             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 italic">Tempo Total</p>
+             <p className="text-2xl font-black text-foreground italic tracking-tighter leading-none">{formatTime(elapsedTime)}</p>
           </div>
           <button onClick={() => { setShowCompletionModal(false); setShowPhotoStep(true); }} className="w-full py-5 bg-red-600 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-red-700 transition-all">Gravar Selfie Elite</button>
         </Card>
@@ -454,23 +486,23 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   if (showPhotoStep) {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex flex-col p-6 text-white animate-in zoom-in duration-300 text-left">
+      <div className="fixed inset-0 z-50 bg-background flex flex-col p-6 text-foreground animate-in zoom-in duration-300 text-left">
         <header className="flex justify-between items-center mb-10">
           <h3 className="text-xl font-black italic uppercase tracking-tighter">Resumo da Missão</h3>
-          <button onClick={() => setShowPhotoStep(false)} className="p-2 bg-zinc-900 rounded-full shadow-lg"><X size={20}/></button>
+          <button onClick={() => setShowPhotoStep(false)} className="p-2 bg-card rounded-full shadow-lg"><X size={20}/></button>
         </header>
         <div className="flex-1 flex flex-col items-center justify-center space-y-8">
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="w-full max-sm aspect-square bg-zinc-900 rounded-[3rem] border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group shadow-2xl"
+            className="w-full max-sm aspect-square bg-card rounded-[3rem] border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group shadow-2xl"
           >
-            {selfieUrl ? <img src={selfieUrl} className="w-full h-full object-cover" /> : <><Camera size={48} className="text-red-600 mb-4 group-hover:scale-110 transition-transform" /><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Registrar Selfie de Elite</p></>}
+            {selfieUrl ? <img src={selfieUrl} className="w-full h-full object-cover" /> : <><Camera size={48} className="text-red-600 mb-4 group-hover:scale-110 transition-transform" /><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registrar Selfie de Elite</p></>}
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="user" onChange={capturePhoto} />
           </div>
           <div className="text-center">
-            <h4 className="text-4xl font-black italic uppercase text-white tracking-tighter">{activeWorkout?.title}</h4>
+            <h4 className="text-2xl font-black italic uppercase text-foreground tracking-tighter">{activeWorkout?.title}</h4>
             <div className="flex gap-4 justify-center mt-4">
-              <div className="flex flex-col"><span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Tempo</span><span className="text-lg font-black text-red-600 italic tabular-nums">{formatTime(elapsedTime)}</span></div>
+              <div className="flex flex-col"><span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Tempo</span><span className="text-lg font-black text-red-600 italic tabular-nums">{formatTime(elapsedTime)}</span></div>
             </div>
           </div>
         </div>
@@ -483,9 +515,9 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   if (!activeWorkout) {
     return (
-      <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in">
-        <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-white/5">
-          <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors shadow-xl">
+      <div className="p-6 pb-48 text-foreground overflow-y-auto h-screen text-left custom-scrollbar bg-background animate-in fade-in">
+        <header className="flex items-center gap-4 mb-10 sticky top-0 bg-background/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-border">
+          <button onClick={onBack} className="p-2 bg-card rounded-full shadow-lg text-foreground hover:bg-red-600 transition-colors shadow-xl">
             <ArrowLeft size={20}/>
           </button>
           <h2 className="text-xl font-black italic uppercase tracking-tighter">
@@ -495,20 +527,20 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         <div className="space-y-4">
           {(user.workouts || []).length > 0 ? (
             user.workouts!.map(w => (
-              <Card key={w.id} className="p-8 bg-zinc-900/50 border-white/5 flex justify-between items-center group cursor-pointer hover:border-red-600/20 shadow-2xl rounded-[3rem]" onClick={() => startSession(w)}>
+              <Card key={w.id} className="p-8 bg-card/50 border-border flex justify-between items-center group cursor-pointer hover:border-red-600/20 shadow-2xl rounded-[3rem]" onClick={() => startSession(w)}>
                 <div>
-                  <h4 className="text-3xl font-black italic uppercase text-white tracking-tighter group-hover:text-red-600 transition-colors">{w.title}</h4>
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{w.exercises.length} Exercícios Prescritos</p>
+                  <h4 className="text-xl font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors">{w.title}</h4>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">{w.exercises.length} Exercícios Prescritos</p>
                 </div>
-                <div className="p-4 bg-zinc-800 rounded-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">
+                <div className="p-4 bg-muted rounded-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">
                   <Play size={24} fill="currentColor" />
                 </div>
               </Card>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-zinc-900 rounded-[3rem]">
-               <Dumbbell size={48} className="text-zinc-800 mb-6" />
-               <p className="text-zinc-600 font-black uppercase text-xs italic tracking-widest">Nenhum treino publicado pelo professor.</p>
+            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-[3rem]">
+               <Dumbbell size={48} className="text-muted-foreground mb-6" />
+               <p className="text-muted-foreground font-black uppercase text-xs italic tracking-widest">Nenhum treino publicado pelo professor.</p>
             </div>
           )}
         </div>
@@ -517,64 +549,64 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   }
 
   return (
-    <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-black animate-in fade-in duration-500">
-      <header className="flex items-center justify-between mb-8 sticky top-0 bg-black/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-white/5">
+    <div className="p-6 pb-48 text-foreground overflow-y-auto h-screen text-left custom-scrollbar bg-background animate-in fade-in duration-500">
+      <header className="flex items-center justify-between mb-8 sticky top-0 bg-background/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-border">
         <div className="flex items-center gap-3">
-           <button onClick={onBack} className="p-3 bg-zinc-900 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+           <button onClick={onBack} className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
               <LayoutGrid size={20}/>
            </button>
-           <button onClick={cancelSession} className="p-3 bg-zinc-800 rounded-2xl text-zinc-500 hover:text-white transition-colors shadow-lg">
+           <button onClick={cancelSession} className="p-3 bg-muted rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
               <ArrowLeft size={20}/>
            </button>
            <div className="flex flex-col">
               <span className="text-[8px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">{activeWorkout.title}</h2>
+              <h2 className="text-lg font-black italic uppercase tracking-tighter text-foreground leading-none">{activeWorkout.title}</h2>
            </div>
         </div>
         <div className="flex flex-col items-end">
            <div className="flex items-center gap-2 mb-2">
              <Clock size={20} className="text-red-600 animate-pulse" />
-             <span className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
+             <span className="text-xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
            </div>
            {allExercisesCompleted ? (
              <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[9px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
                 SALVAR TREINO
              </button>
            ) : (
-             <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">EM ANDAMENTO</span>
+             <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">EM ANDAMENTO</span>
            )}
         </div>
       </header>
 
       {workoutStats && (
         <div className="mb-8 animate-in slide-in-from-top-4 duration-700">
-           <Card className="bg-zinc-900/40 border-white/5 p-4 flex items-center justify-between backdrop-blur-xl rounded-[2.5rem] shadow-3xl">
+           <Card className="bg-card/40 border-border p-4 flex items-center justify-between backdrop-blur-xl rounded-[2.5rem] shadow-3xl">
               <div className="flex items-center gap-3">
                  <div className="w-10 h-10 bg-red-600/10 rounded-2xl flex items-center justify-center border border-red-600/20 shrink-0">
                     <Calendar size={18} className="text-red-600" />
                  </div>
                  <div className="flex flex-col min-w-0">
-                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
-                    <span className={`font-black italic tracking-tighter leading-none truncate ${!workoutStats.rawStartDate ? 'text-zinc-700 text-[10px]' : 'text-white text-2xl'}`}>
+                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
+                    <span className={`font-black italic tracking-tighter leading-none truncate ${!workoutStats.rawStartDate ? 'text-muted-foreground text-[10px]' : 'text-foreground text-lg'}`}>
                       {!workoutStats.rawStartDate ? workoutStats.startDate : (
-                        <>{workoutStats.startDate.split('/')[0]}<span className="text-red-600 text-sm">/</span>{workoutStats.startDate.split('/')[1]}</>
+                        <>{(workoutStats.startDate || "").split('/')[0]}<span className="text-red-600 text-sm">/</span>{(workoutStats.startDate || "").split('/')[1]}</>
                       )}
                     </span>
                  </div>
               </div>
               <div className="flex gap-4 sm:gap-8 shrink-0">
                  <div className="text-center">
-                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Execuções</span>
+                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Execuções</span>
                     <div className="flex items-baseline gap-0.5">
-                       <span className="text-2xl font-black text-white italic tracking-tighter leading-none">{workoutStats.completed}</span>
-                       <span className="text-[8px] font-black text-zinc-700 italic">/{workoutStats.total}</span>
+                       <span className="text-lg font-black text-foreground italic tracking-tighter leading-none">{workoutStats.completed}</span>
+                       <span className="text-[8px] font-black text-muted-foreground italic">/{workoutStats.total}</span>
                     </div>
                  </div>
                  <div className="text-right hidden xs:block">
-                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest italic mb-1 block">Renovação</span>
+                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Renovação</span>
                     <div className="flex items-center gap-1 justify-end">
-                       <RefreshCw size={10} className={workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500 animate-spin" : "text-zinc-700"} />
-                       <span className={`text-xs font-black italic uppercase leading-none ${workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500" : "text-zinc-400"}`}>
+                       <RefreshCw size={10} className={workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500 animate-spin" : "text-muted-foreground"} />
+                       <span className={`text-xs font-black italic uppercase leading-none ${workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500" : "text-muted-foreground"}`}>
                           {workoutStats.completed >= workoutStats.total ? "EXCEDIDA" : "OK"}
                        </span>
                     </div>
@@ -593,6 +625,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               ex={ex} 
               idx={idx} 
               progress={progress} 
+              currentReps={currentReps}
               onToggleFinish={(id) => setExerciseProgress(p => ({ ...p, [id]: { ...p[id], isFinished: !p[id].isFinished } }))}
               onMarkSet={(id, sIdx, rest) => {
                  setExerciseProgress(p => {
@@ -616,9 +649,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         })}
       </div>
 
-      {/* FIXED BOTTOM ACTION BAR FOR COMPLETION */}
       {allExercisesCompleted && (
-         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent z-50">
+         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/90 to-transparent z-50">
             <button 
                onClick={() => setShowCompletionModal(true)}
                className="w-full py-6 bg-emerald-600 rounded-[2.5rem] font-black uppercase text-sm tracking-widest shadow-[0_0_40px_rgba(16,185,129,0.4)] animate-pulse hover:scale-[1.02] transition-transform text-white"
@@ -657,7 +689,7 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
           student.physicalAssessments.map(pa => (
             <Card key={pa.id} className="p-8 bg-zinc-900 border-zinc-800 rounded-[2.5rem] shadow-3xl">
                <div className="flex justify-between items-start mb-6">
-                  <h4 className="text-2xl font-black italic uppercase text-white tracking-tighter leading-none">
+                  <h4 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none">
                     <HeaderTitle text={new Date(pa.data).toLocaleDateString('pt-BR')} />
                   </h4>
                   <div className="bg-red-600 px-4 py-1.5 rounded-full text-[8px] font-black uppercase text-white tracking-widest shadow-lg">Validada</div>
@@ -665,11 +697,11 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                <div className="grid grid-cols-2 gap-4">
                   <div className="p-5 bg-black/60 rounded-3xl border border-white/5">
                     <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-2">Massa Corporal</p>
-                    <p className="text-4xl font-black text-red-600 italic tracking-tighter leading-none">{pa.peso}KG</p>
+                    <p className="text-2xl font-black text-red-600 italic tracking-tighter leading-none">{pa.peso}KG</p>
                   </div>
                   <div className="p-5 bg-black/60 rounded-3xl border border-white/5">
                     <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-2">Gordura Bio</p>
-                    <p className="text-4xl font-black text-red-600 italic tracking-tighter leading-none">{pa.bio_percentual_gordura}%</p>
+                    <p className="text-2xl font-black text-red-600 italic tracking-tighter leading-none">{pa.bio_percentual_gordura}%</p>
                   </div>
                </div>
             </Card>
@@ -747,7 +779,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
                  <div key={idx} className="flex gap-4">
                     <span className="text-rose-500 font-black italic text-lg">{idx + 1}.</span>
                     <p className="text-zinc-400 text-[11px] leading-relaxed">
-                      {tip.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white font-bold">{part}</strong> : part)}
+                      {(tip || "").split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white font-bold">{part}</strong> : part)}
                     </p>
                  </div>
                ))}
@@ -781,6 +813,54 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
               </div>
            </Card>
         </div>
+
+        {plan.microciclos && plan.microciclos.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-lg font-black uppercase tracking-tighter text-white mb-6">Cronograma de Microciclos</h3>
+            <div className="space-y-6">
+              {plan.microciclos.map((micro: any, idx: number) => (
+                <Card key={idx} className="p-6 bg-zinc-900/40 border-white/5">
+                  <div className="mb-6">
+                    <h4 className="text-red-500 font-black text-lg mb-1">Semanas {micro.range || micro.semanas}</h4>
+                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{micro.focus || micro.titulo}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
+                    <div>
+                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Método</p>
+                      <p className="text-sm text-white font-bold">{micro.method || micro.metodo}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Intensidade</p>
+                      <p className="text-sm text-white font-bold">{(micro.intensity || micro.intensidade || "").split(' ')[0]}</p>
+                      <p className="text-[10px] text-red-500 font-bold">{(micro.intensity || micro.intensidade || "").split(' ').slice(1).join(' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Volume</p>
+                      <p className="text-sm text-white font-bold">{(micro.volume || micro.volume_semanal || "").split(' ')[0]}</p>
+                      <p className="text-[10px] text-red-500 font-bold">{(micro.volume || micro.volume_semanal || "").split(' ').slice(1).join(' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Repetições</p>
+                      <p className="text-sm text-white font-bold">{micro.reps || (micro.volume || micro.volume_semanal || "").split(',')[1]?.trim() || "N/A"}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-black/50 p-4 rounded-xl border border-white/5 mb-4">
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-2">Volume Semanal (Séries)</p>
+                    <p className="text-xs text-zinc-300 font-mono">{micro.weeklyVolume || (micro.volume || micro.volume_semanal || "").split(',')[0] || "N/A"}</p>
+                  </div>
+
+                  {(micro.notes || micro.descricao) && (
+                    <div className="bg-black/50 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-zinc-400 italic">Obs: {micro.notes || micro.descricao}</p>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

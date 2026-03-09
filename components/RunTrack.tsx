@@ -519,7 +519,9 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
         const dayOfWeek = date.getDay();
         
         return workouts.find(w => {
-            const wDayIndex = dayNameMap[w.dayOfWeek.toLowerCase().split('-')[0]];
+            if (!w.dayOfWeek) return false;
+            const d = String(w.dayOfWeek).toLowerCase().split('-')[0];
+            const wDayIndex = dayNameMap[d];
             return wDayIndex === dayOfWeek;
         });
     };
@@ -717,7 +719,11 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     const sortedWorkouts = workouts.sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek));
     const daysMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const todayName = daysMap[new Date().getDay()];
-    const todayWorkout = workouts.find(w => w.dayOfWeek.toLowerCase().includes(todayName.toLowerCase().split('-')[0]));
+    const todayWorkout = workouts.find(w => {
+        if (!w.dayOfWeek) return false;
+        const d = String(w.dayOfWeek).toLowerCase().split('-')[0];
+        return d.includes(todayName.toLowerCase().split('-')[0]);
+    });
 
     const weeklyVolume = useMemo(() => {
         return workouts.reduce((acc, w) => acc + estimateWorkoutDuration(calculateAdjustedWorkout(w).adjusted), 0);
@@ -800,7 +806,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                                 <Play className="text-white fill-white" size={24} />
                             </div>
                             
-                            <h3 className="text-5xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
+                            <h3 className="text-3xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
                             <p className="text-zinc-400 font-medium text-sm line-clamp-2 mb-8">{todayWorkout.description || 'Foco na técnica.'}</p>
                             
                             <div className="grid grid-cols-2 gap-4">
@@ -857,8 +863,9 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
 // Helper
 function getDayIndex(day: string): number {
+    if (!day) return 99;
     const days = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
-    const d = day.toLowerCase().split('-')[0];
+    const d = String(day).toLowerCase().split('-')[0];
     const idx = days.findIndex(x => x === d);
     return idx === -1 ? 99 : idx;
 }

@@ -1,19 +1,19 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableIndexedDbPersistence } from 'firebase/firestore';
+import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 
 // ID do projeto atualizado para a nova configuração
-export const appId = 'chaveunica-225e0';
+export const appId = 'abfit-d5bff';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD_C_yn_RyBSopY7Tb9aqLW8akkXJR94Vg",
-  authDomain: "chaveunica-225e0.firebaseapp.com",
-  projectId: "chaveunica-225e0",
-  storageBucket: "chaveunica-225e0.firebasestorage.app",
-  messagingSenderId: "324211037832",
-  appId: "1:324211037832:web:362a46e6446ea37b85b13d",
-  measurementId: "G-MRBDJC3QXZ"
+  apiKey: "AIzaSyCZIP1JUTVXjVd6dMnd_DRTD1CLvQpqslc",
+  authDomain: "abfit-d5bff.firebaseapp.com",
+  projectId: "abfit-d5bff",
+  storageBucket: "abfit-d5bff.firebasestorage.app",
+  messagingSenderId: "565295481649",
+  appId: "1:565295481649:web:cdfe52ef679b85ab362610",
+  measurementId: "G-X2PK4MPTP9"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -24,11 +24,13 @@ export const db = initializeFirestore(app, {
   cacheSizeBytes: CACHE_SIZE_UNLIMITED
 });
 
-// Habilita a persistência offline para evitar perda de dados
-enableIndexedDbPersistence(db).catch((err) => {
+// Habilita a persistência multi-aba para evitar erros de acesso exclusivo
+enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code == 'failed-precondition') {
-        console.warn('Persistência offline falhou: Multiplas abas abertas.');
+        console.warn('Persistência offline falhou: Multiplas abas abertas sem suporte multi-aba.');
     } else if (err.code == 'unimplemented') {
         console.warn('Persistência offline não suportada neste navegador.');
+    } else {
+        console.error('Erro ao habilitar persistência:', err);
     }
 });
