@@ -7,8 +7,8 @@ import {
   BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin,
   Sun, Moon, AlertTriangle
 } from 'lucide-react';
-import { Logo, BackgroundWrapper, EliteFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
-import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager } from './components/CoachFlow';
+import { Logo, BackgroundWrapper, AppFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
+import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager, StudentWorkoutHistoryView } from './components/CoachFlow';
 import { WorkoutSessionView, StudentAssessmentView, StudentPeriodizationView, AboutView } from './components/StudentFlow';
 import { RunTrackStudentView } from './components/RunTrack';
 import { WorkoutFeed } from './components/WorkoutFeed';
@@ -31,54 +31,54 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           <ArrowLeft size={20}/>
         </button>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
-          <HeaderTitle text="Configurações Elite" />
+          <HeaderTitle text="Configurações ABFIT" />
         </h2>
       </header>
       <div className="max-w-2xl mx-auto space-y-6">
-         <Card className="p-8 bg-card border-border flex items-center justify-between">
+         <Card className="p-5 bg-card border-border flex items-center justify-between">
             <div className="flex items-center gap-4">
-               <div className="p-3 bg-red-600 rounded-2xl shadow-lg">
-                  <UserIcon className="text-white" size={24} />
+               <div className="p-2.5 bg-red-600 rounded-xl shadow-lg">
+                  <UserIcon className="text-white" size={20} />
                </div>
                <div>
-                  <h4 className="text-sm font-black uppercase italic text-foreground">Perfil do Atleta</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Edite seus dados pessoais</p>
+                  <h4 className="text-[13px] font-black uppercase italic text-foreground">Perfil do Atleta</h4>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Edite seus dados pessoais</p>
                </div>
             </div>
-            <ChevronRight className="text-muted-foreground" size={20} />
+            <ChevronRight className="text-muted-foreground" size={18} />
          </Card>
          
-         <Card className="p-8 bg-card border-border flex items-center justify-between cursor-pointer" onClick={toggleTheme}>
+         <Card className="p-5 bg-card border-border flex items-center justify-between cursor-pointer" onClick={toggleTheme}>
             <div className="flex items-center gap-4">
-               <div className="p-3 bg-zinc-800 dark:bg-zinc-700 rounded-2xl shadow-lg transition-colors">
-                  {theme === 'dark' ? <Moon className="text-white" size={24} /> : <Sun className="text-white" size={24} />}
+               <div className="p-2.5 bg-zinc-800 dark:bg-zinc-700 rounded-xl shadow-lg transition-colors">
+                  {theme === 'dark' ? <Moon className="text-white" size={20} /> : <Sun className="text-white" size={20} />}
                </div>
                <div>
-                  <h4 className="text-sm font-black uppercase italic text-foreground">Aparência</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Alternar para tema {theme === 'dark' ? 'claro' : 'escuro'}</p>
+                  <h4 className="text-[13px] font-black uppercase italic text-foreground">Aparência</h4>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Alternar para tema {theme === 'dark' ? 'claro' : 'escuro'}</p>
                </div>
             </div>
-            <div className={`w-12 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-zinc-700' : 'bg-emerald-500'}`}>
-               <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-1' : 'right-1'}`} />
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-zinc-700' : 'bg-emerald-500'}`}>
+               <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-0.5' : 'right-0.5'}`} />
             </div>
          </Card>
 
-         <Card className="p-8 bg-card border-border flex items-center justify-between">
+         <Card className="p-5 bg-card border-border flex items-center justify-between">
             <div className="flex items-center gap-4">
-               <div className="p-3 bg-blue-600 rounded-2xl shadow-lg">
-                  <Bell className="text-white" size={24} />
+               <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg">
+                  <Bell className="text-white" size={20} />
                </div>
                <div>
-                  <h4 className="text-sm font-black uppercase italic text-foreground">Notificações</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Alertas de treino e renovação</p>
+                  <h4 className="text-[13px] font-black uppercase italic text-foreground">Notificações</h4>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Alertas de treino e renovação</p>
                </div>
             </div>
-            <div className="w-12 h-6 bg-emerald-600 rounded-full relative">
-               <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+            <div className="w-10 h-5 bg-emerald-600 rounded-full relative">
+               <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full" />
             </div>
          </Card>
       </div>
-      <EliteFooter />
+      <AppFooter />
     </div>
   );
 }
@@ -119,28 +119,28 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
           {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
         </button>
       </div>
-      <div className="animate-in fade-in zoom-in duration-700 text-center"><Logo size="text-4xl" /></div>
+      <div className="animate-in fade-in zoom-in duration-700 text-center"><Logo size="text-5xl" /></div>
       <div className="w-full max-sm mt-8 space-y-4 animate-in slide-in-from-bottom-10 duration-1000 relative">
         <div className="text-left">
           <div className="relative" ref={dropdownRef}>
             <input type="text" placeholder="E-MAIL OU 'PROFESSOR'" className="w-full bg-input border border-border p-5 rounded-[2.5rem] text-foreground outline-none focus:border-red-600 transition-all text-center font-black tracking-tight uppercase placeholder:text-muted-foreground" value={input} autoComplete="off" onChange={e => setInput(e.target.value)} onClick={() => setShowDropdown(true)} onFocus={() => setShowDropdown(true)} />
             {showDropdown && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 max-h-80 overflow-y-auto custom-scrollbar">
-                <div className="p-3 border-b border-border bg-secondary/40 text-center sticky top-0 z-10"><p className="text-[8px] font-black text-muted-foreground uppercase text-center tracking-[0.2em]">Selecione um perfil</p></div>
+                <div className="p-3 border-b border-border bg-secondary/40 text-center sticky top-0 z-10"><p className="text-[11px] font-black text-muted-foreground uppercase text-center tracking-[0.2em]">Selecione um perfil</p></div>
                 {registeredOptions.map((opt, idx) => (
                   <button key={`opt-${idx}`} onClick={() => { setInput(opt.value); setShowDropdown(false); }} className="w-full p-4 hover:bg-red-600/10 text-left flex items-center justify-between border-b border-border transition-colors group">
-                    <div className="text-left"><p className="text-foreground text-xs font-black uppercase tracking-tight text-left">{opt.name}</p><p className="text-[9px] text-muted-foreground lowercase text-left">{opt.value}</p></div>
-                    <span className={`text-[8px] font-black px-2 py-1 rounded-full ${opt.type === 'COACH' ? 'bg-red-600 text-white' : 'bg-secondary text-muted-foreground'}`}>{opt.type}</span>
+                    <div className="text-left"><p className="text-foreground text-base font-black uppercase tracking-tight text-left">{opt.name}</p><p className="text-[12px] text-muted-foreground lowercase text-left">{opt.value}</p></div>
+                    <span className={`text-[11px] font-black px-2 py-1 rounded-full ${opt.type === 'COACH' ? 'bg-red-600 text-white' : 'bg-secondary text-muted-foreground'}`}>{opt.type}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
         </div>
-        {error && <p className="text-red-500 text-[10px] font-black uppercase py-2 tracking-widest text-center">{error}</p>}
+        {error && <p className="text-red-500 text-[13px] font-black uppercase py-2 tracking-widest text-center">{error}</p>}
         <button onClick={() => onLogin(input)} className="w-full bg-red-600 py-5 rounded-[2.5rem] font-black uppercase tracking-widest text-white active:scale-95 transition-all shadow-xl shadow-red-900/20 hover:bg-red-700">ENTRAR NO ECOSSISTEMA</button>
       </div>
-      <EliteFooter />
+      <AppFooter />
     </div>
   );
 }
@@ -260,10 +260,13 @@ export default function App() {
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
           email: 'lilicatorres@gmail.com', 
+          age: 35,
+          goal: 'health',
+          medicalHistory: '⚠️ Dores no joelho',
+          medications: 'Nenhuma',
           physicalAssessments: [], 
           workoutHistory: [], 
           sexo: 'Feminino', 
-          age: 35,
           periodization: {
             id: 'per-liliane-01',
             titulo: 'Relatório Científico',
@@ -401,35 +404,153 @@ export default function App() {
         { 
           id: 'fixed-andre', 
           nome: 'André Brito', 
-          email: 'britodeandrade@gmail.com', 
+          email: 'andrevictorbritodeandrade@gmail.com', 
+          age: 36,
+          goal: 'health',
+          medicalHistory: '⚠️ Patela esquerda já saiu do lugar 4 vezes em um intervalo de 14 meses.',
+          medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
           physicalAssessments: [], 
-          workoutHistory: [], 
+          workoutHistory: [
+            {
+              id: 'hist-andre-01',
+              workoutId: 'treino-a-andre',
+              name: 'TREINO A',
+              athleteName: 'André Brito',
+              duration: '60 min',
+              date: '2026-03-09',
+              timestamp: 1741536000000,
+              type: 'STRENGTH'
+            }
+          ], 
+          analytics: {
+            sessionsCompleted: 1,
+            streakDays: 1,
+            exercises: {},
+            lastSessionDate: '2026-03-09'
+          },
           sexo: 'Masculino', 
           periodization: {
             id: 'per-andre-01',
-            titulo: 'Relatório Científico',
-            startDate: new Date().toISOString(),
-            microciclos: [],
+            titulo: 'Periodização Científica',
+            startDate: '2026-03-09T16:00:06',
             type: 'STRENGTH',
-            phaseTitle: 'Emagrecimento - Foco Metabólico e Cognitivo',
-            generalStrategy: "\"Periodização Não Linear Flexível (UNDP) com ênfase no débito energético...\"",
+            phaseTitle: 'Mesociclo de Recomposição Corporal, Mitigação de Sarcopenia Pós-Bariátrica e Estabilização Patelofemoral - 12 Semanas',
+            generalStrategy: "O perfil do aluno Andre apresenta alta complexidade fisiologica devido ao status pos-cirurgia bariatrica, demandando foco absoluto na mitigacao da sarcopenia (retencao de massa magra) e estimulo a sintese proteica para suportar o deficit calorico continuo rumo aos 87kg. A instabilidade patelar cronica (4 luxacoes) exige prescricao biomecanica restritiva, priorizando o fortalecimento do Vasto Medial Obliquo (VMO) e gluteo medio em cadeia cinetica fechada para realinhamento patelofemoral. O espectro autista (TEA) combinado ao TDAH sugere a necessidade de previsibilidade macroestrutural ambiental para conforto cognitivo, aliada a microvariacoes nos estimulos (gamificacao de carga e metodo) para engajamento dopaminergico continuo.",
             clinicalSafety: [
-              "Gestão Sensorial (TEA)...",
-              "Engajamento e Foco (TDAH)..."
+              "Biomecanica Patelar: Substituir Cadeira Extensora tradicional com arco completo de movimento por variacoes em cadeia cinetica fechada (Leg Press com pes altos, Box Squat, Step-ups controlados) para reduzir forcas de cisalhamento. Fortalecimento de abdutores e rotadores externos do quadril e fundamental para evitar o valgo dinamico.",
+              "Fisiologia Pos-Bariatrica: Risco elevado de perda de densidade ossea, malabsorcao e sarcopenia. A hidratacao intra-treino deve ocorrer em pequenos goles constantes (100ml a cada 15 min) para evitar distensao gastrica ou dumping. Garantir com a equipe de nutricao aporte proteico peri-treino adequado.",
+              "Neurodivergencia (TEA e TDAH): Manter a ordem geral dos exercicios estritamente identica para evitar ansiedade antecipatoria (TEA), mas estipular quebra de micro-recordes (PRs de carga, repeticao ou qualidade de movimento) para garantir o pico de dopamina necessario ao foco (TDAH). Considerar o uso de fones com cancelamento de ruido para isolamento sensorial no ambiente de academia.",
+              "Recuperacao e Sono: O aluno necessita de higiene do sono rigorosa, pois o deficit calorico somado ao choque neuromuscular exigira otimizacao do GH e testosterona liberados predominantemente nas fases de sono profundo, cruciais para a manutencao da massa magra pos-bariatrica."
             ],
             bioInsight: {
-              context: "**Condição Neurológica:** Transtorno do Espectro Autista (TEA) e TDAH...",
-              tips: ["**Segurança (Pós-Bariátrica):** Priorize técnica...", "**Foco (TDAH):** Blocos curtos...", "**Previsibilidade (TEA):** Rotina constante..."]
-            }
+              context: "Referências Científicas: Schoenfeld, B. J. (2010). The mechanisms of muscle hypertrophy and their application to resistance training. Journal of Strength and Conditioning Research, 24(10), 2857-2872. | Escamilla, R. F., et al. (2009). Patellofemoral joint kinematics and kinetics during common lower extremity exercises. Sports Medicine, 39(1), 15-37. | Mechanick, J. I., et al. (2020). Clinical Practice Guidelines for the Perioperative Nutrition, Metabolic, and Nonsurgical Support of Patients Undergoing Bariatric Procedures. Surgery for Obesity and Related Diseases, 16(2), 175-247. | Ratey, J. J. (2008). Spark: The Revolutionary New Science of Exercise and the Brain. Little, Brown Spark. (Mecanismos neurobiologicos do exercicio no TDAH e TEA).",
+              tips: []
+            },
+            microciclos: [
+              {
+                id: 'm1',
+                semanas: '1-3',
+                titulo: 'ADAPTAÇÃO ANATÔMICA, ESTABILIDADE ARTICULAR E CONTROLE MOTOR',
+                metodo: 'Tempo Training (Cadência 4010)',
+                intensidade: '60-65% 1RM | RIR 3-4 | PSE 6',
+                volume: '10-12 series/musculo/semana | 12-15 repeticoes',
+                descricao: 'Obs: Foco na fase excentrica para adaptacao tendinea. Evitar flexao de joelho alem de 90 graus. Nos exercicios de extensao de joelho, utilizar apenas isometria nos 15 graus finais (terminal knee extension) para ativação específica de VMO sem cisalhamento excessivo. Ambiente de treino deve ser previsivel.'
+              },
+              {
+                id: 'm2',
+                semanas: '4-6',
+                titulo: 'HIPERTROFIA MIOFIBRILAR E DENSIDADE DE TREINO',
+                metodo: 'Superseries Agonista-Antagonista',
+                intensidade: '70-75% 1RM | RIR 2 | PSE 7-8',
+                volume: '12-14 series/musculo/semana | 8-12 repeticoes',
+                descricao: 'Obs: Progressao de carga linear. Uso de superseries para otimizar a sessao de 60 min, mantendo a frequencia cardiaca elevada (potencializando oxidacao lipidica). Fornecer feedbacks claros e objetivos (TEA). Monitorar fadiga abrupta e sinais de hipoglicemia reativa comum em pacientes bariatricos.'
+              },
+              {
+                id: 'm3',
+                semanas: '7-9',
+                titulo: 'FORÇA SUBMÁXIMA E RESISTÊNCIA METABÓLICA',
+                metodo: 'Cluster Sets (Superiores) e Circuito Fechado (Inferiores)',
+                intensidade: '80-85% 1RM | RIR 1-2 | PSE 8-9',
+                volume: '14-16 series/musculo/semana | 4-6 repeticoes (Cluster) e 15-20 (Circuito)',
+                descricao: 'Obs: Uso de Agachamento em Caixa (Box Squat) para garantir bloqueio biomecanico de amplitude e confianca na estabilidade patelar. O metodo Cluster Set permite o uso de cargas mais altas mantendo alta qualidade de execucao, fracionando a serie para modular o deficit de atencao (TDAH) atraves de pequenas metas sequenciais.'
+              },
+              {
+                id: 'm4',
+                semanas: '10-12',
+                titulo: 'CHOQUE METABÓLICO E MAXIMIZADO DE EPOC',
+                metodo: 'Rest-Pause',
+                intensidade: '75-80% 1RM | RIR 0-1 | PSE 9-10',
+                volume: '16-18 series/semana (Sem. 10-11) e 10 series (Sem. 12)',
+                descricao: 'Obs: Elevacao do estresse metabolico para maximizar o Consumo Excessivo de Oxigenio Pos-Exercicio (EPOC). Semana 12 servira como Tapering (reducao de 40% do volume) para dissipar fadiga acumulada e consolidar a recomposicao corporal. Atencao redobrada a tecnica sob fadiga para protecao patelofemoral.'
+              }
+            ]
           },
-          workouts: []
+          workouts: [
+            {
+              id: 'treino-a-andre',
+              title: 'TREINO A',
+              projectedSessions: 20,
+              defaultRest: '30s',
+              status: 'published',
+              exercises: [
+                { id: 'a1', name: 'Supino reto com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a2', name: 'Supino Reto com HBL', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a3', name: 'Remada alta em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a4', name: 'Tríceps francês simultâneo no cross polia baixa com barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a5', name: 'Tríceps no cross with barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a6', name: 'Agachamento em passada with HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a7', name: 'Agachamento livre', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a8', name: 'Leg press horizontal', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a9', name: 'Abdominal supra no solo', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+              ]
+            },
+            {
+              id: 'treino-b-andre',
+              title: 'TREINO B',
+              projectedSessions: 20,
+              defaultRest: '30s',
+              status: 'published',
+              exercises: [
+                { id: 'b1', name: 'Remada aberta na máquina', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b2', name: 'Puxada aberta with barra romana pulley alto', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b3', name: 'Voador peitoral', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b4', name: 'Bíceps banco 75º with HBC pegada neutra simultâneo', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b5', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b6', name: 'Agachamento sumô with HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b7', name: 'Subida no step', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b8', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+              ]
+            }
+          ]
         }, 
         { 
           id: 'fixed-marcelly', 
           nome: 'Marcelly Bispo', 
           email: 'marcellybispo92@gmail.com', 
+          age: 34,
+          goal: 'health',
+          medicalHistory: '⚠️ Nada',
+          medications: 'Nada',
           physicalAssessments: [], 
-          workoutHistory: [], 
+          workoutHistory: [
+            {
+              id: 'hist-marcelly-01',
+              workoutId: 'w-marcelly-01',
+              name: 'Treino A',
+              athleteName: 'Marcelly Bispo',
+              duration: '60 min',
+              date: '2026-03-09',
+              timestamp: 1741536000000,
+              type: 'STRENGTH'
+            }
+          ], 
+          analytics: {
+            sessionsCompleted: 1,
+            streakDays: 1,
+            exercises: {},
+            lastSessionDate: '2026-03-09'
+          },
           sexo: 'Feminino',
           periodization: {
             id: 'per-marcelly-01',
@@ -496,31 +617,33 @@ export default function App() {
             {
               id: 'w-marcelly-01',
               title: 'Treino A',
+              projectedSessions: 20,
               status: 'published',
               exercises: [
-                { id: 'ex-a1', name: 'AG. LIVRE COM HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a2', name: 'AG. SISSY', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a3', name: 'LEG PRESS ART.', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a4', name: 'ABDOMINAL DIAGONAL NO SOLO', sets: '3', reps: '20', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a5', name: 'PRANCHA LATERAL NO SOLO J. EST. ISO.', sets: '3', reps: '30s', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a6', name: 'SUPINO AB. BC. 30º HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a7', name: 'DES. AB. BC 75º HBC', sets: '3', reps: '10', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a8', name: 'TRÍCEPS FRANCÊS SIMUL. BC. 75º HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-a1', name: 'Agachamento livre with HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a2', name: 'Agachamento no sissy', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a3', name: 'Leg press horizontal', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a4', name: 'Abdominal diagonal no solo', sets: '3', reps: '20', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a5', name: 'Prancha lateral no solo em isometria', sets: '3', reps: '30s', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a6', name: 'Supino banco 45º aberto no crossover', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a7', name: 'Desenvolvimento banco 75º aberto com HBC', sets: '3', reps: '10', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a8', name: 'Tríceps banco 75º francês com HBC simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             },
             {
               id: 'w-marcelly-02',
               title: 'Treino B',
+              projectedSessions: 20,
               status: 'published',
               exercises: [
-                { id: 'ex-b1', name: 'EXT. QUAD. E JOELHO EM PÉ', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b2', name: 'FLEX. JOELHO EM PÉ CAN. APOIO STEP', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b3', name: 'ELEVAÇÃO QUAD. SOLO', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b4', name: 'EXTENSÃO MÁX. TRONCO NO APARELHO DIN.', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b5', name: 'MATA-BORRÃO DIN. EM D.V. NO SOLO', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b6', name: 'REMADA AB. MÁQ. ART.', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b7', name: 'PUXADA AB. PL. ALTO B. RETA', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b8', name: 'BÍCEPS BC 75º HBC PG. NT.', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-b1', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b3', name: 'Elevação de Quadril no solo com anilha', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b4', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b6', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b7', name: 'Puxada aberta with barra reta no cross polia alta', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b8', name: 'Bíceps banco 75º with HBC pegada neutra simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             }
           ]
@@ -530,6 +653,16 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     let unsub: () => void;
+    
+    // Safety timeout for student loading
+    const studentLoadTimeout = setTimeout(() => {
+      if (view !== 'LOGIN' && !isCoach && !selectedStudent && !(window as any)._tempStudentId) {
+          console.warn("Student loading timed out, redirecting to login");
+          setView('LOGIN');
+          localStorage.removeItem('elite_session_v2');
+      }
+    }, 8000);
+
     if (view !== 'LOGIN' && isCoach) {
       const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
       unsub = onSnapshot(q, (snapshot) => {
@@ -589,12 +722,41 @@ export default function App() {
                     if (!rawData.periodization || rawData.periodization.titulo !== 'Periodização Científica') {
                         rawData.periodization = defaultProfile.periodization;
                     }
+                    if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
+                        rawData.workoutHistory = defaultProfile.workoutHistory;
+                    }
+                    if (!rawData.analytics || rawData.analytics.sessionsCompleted === 0) {
+                        rawData.analytics = defaultProfile.analytics;
+                    }
                 }
 
                 // Forçar atualização de treinos e periodização se for a aluna Liliane
                 if (rawData.id === 'fixed-liliane' || (rawData.email && rawData.email.toLowerCase() === 'lilicatorres@gmail.com')) {
-                    rawData.workouts = defaultProfile.workouts;
-                    rawData.periodization = defaultProfile.periodization;
+                    const hasOldWorkouts = rawData.workouts?.some(w => w.exercises.length !== 7);
+                    if (!rawData.workouts || rawData.workouts.length === 0 || hasOldWorkouts) {
+                        rawData.workouts = defaultProfile.workouts;
+                    }
+                    if (!rawData.periodization) {
+                        rawData.periodization = defaultProfile.periodization;
+                    }
+                }
+
+                // Forçar atualização de treinos e periodização se for o aluno André
+                if (rawData.id === 'fixed-andre' || (rawData.email && rawData.email.toLowerCase() === 'andrevictorbritodeandrade@gmail.com')) {
+                    const hasOldWorkouts = rawData.workouts?.some(w => w.exercises.length !== 9);
+                    const hasSissy = rawData.workouts?.some(w => w.exercises.some(ex => ex.name.toLowerCase().includes('sissy')));
+                    if (!rawData.workouts || rawData.workouts.length === 0 || hasOldWorkouts || hasSissy) {
+                        rawData.workouts = defaultProfile.workouts;
+                    }
+                    if (!rawData.periodization) {
+                        rawData.periodization = defaultProfile.periodization;
+                    }
+                    if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
+                        rawData.workoutHistory = defaultProfile.workoutHistory;
+                    }
+                    if (!rawData.analytics || rawData.analytics.sessionsCompleted === 0) {
+                        rawData.analytics = defaultProfile.analytics;
+                    }
                 }
             }
             
@@ -623,7 +785,10 @@ export default function App() {
           localStorage.removeItem('elite_session_v2');
       });
     }
-    return () => { if (unsub) unsub(); };
+    return () => { 
+      if (unsub) unsub(); 
+      clearTimeout(studentLoadTimeout);
+    };
   }, [user, view, selectedStudent?.id, isCoach, defaultStudentsData]);
 
   const allStudentsForCoach = useMemo(() => {
@@ -657,12 +822,41 @@ export default function App() {
                 if (!existing.periodization || existing.periodization.titulo !== 'Periodização Científica') {
                     merged[existingIndex].periodization = def.periodization;
                 }
+                if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
+                    merged[existingIndex].workoutHistory = def.workoutHistory;
+                }
+                if (!existing.analytics || existing.analytics.sessionsCompleted === 0) {
+                    merged[existingIndex].analytics = def.analytics;
+                }
             }
 
             // Forçar atualização de treinos e periodização se for a aluna Liliane
             if (existing.id === 'fixed-liliane' || (existing.email && existing.email.toLowerCase() === 'lilicatorres@gmail.com')) {
-                merged[existingIndex].workouts = def.workouts;
-                merged[existingIndex].periodization = def.periodization;
+                const hasOldWorkouts = existing.workouts?.some(w => w.exercises.length !== 7);
+                if (!existing.workouts || existing.workouts.length === 0 || hasOldWorkouts) {
+                    merged[existingIndex].workouts = def.workouts;
+                }
+                if (!existing.periodization) {
+                    merged[existingIndex].periodization = def.periodization;
+                }
+            }
+
+            // Forçar atualização de treinos e periodização se for o aluno André
+            if (existing.id === 'fixed-andre' || (existing.email && existing.email.toLowerCase() === 'andrevictorbritodeandrade@gmail.com')) {
+                const hasOldWorkouts = existing.workouts?.some(w => w.exercises.length !== 9);
+                const hasSissy = existing.workouts?.some(w => w.exercises.some(ex => ex.name.toLowerCase().includes('sissy')));
+                if (!existing.workouts || existing.workouts.length === 0 || hasOldWorkouts || hasSissy) {
+                    merged[existingIndex].workouts = def.workouts;
+                }
+                if (!existing.periodization) {
+                    merged[existingIndex].periodization = def.periodization;
+                }
+                if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
+                    merged[existingIndex].workoutHistory = def.workoutHistory;
+                }
+                if (!existing.analytics || existing.analytics.sessionsCompleted === 0) {
+                    merged[existingIndex].analytics = def.analytics;
+                }
             }
         }
     });
@@ -682,7 +876,7 @@ export default function App() {
   const handleBackNavigation = () => {
       // Se for professor
       if (isCoach) {
-          if (view === 'WORKOUT_EDITOR' || view === 'PERIODIZATION' || view === 'COACH_ASSESSMENT' || view === 'RUNTRACK_MANAGER' || view === 'ANALYTICS_COACH') {
+          if (view === 'WORKOUT_EDITOR' || view === 'PERIODIZATION' || view === 'COACH_ASSESSMENT' || view === 'RUNTRACK_MANAGER' || view === 'ANALYTICS_COACH' || view === 'WORKOUT_HISTORY') {
               setView('STUDENT_MGMT');
           } else if (view === 'STUDENT_MGMT') {
               setView('PROFESSOR_DASH');
@@ -809,6 +1003,13 @@ export default function App() {
     }
   };
 
+  const handleAddPost = async (post: WorkoutHistoryEntry) => {
+    if (!studentForView) return;
+    const currentHistory = studentForView.workoutHistory || [];
+    const updatedHistory = [post, ...currentHistory];
+    await handleSaveData(studentForView.id, { workoutHistory: updatedHistory });
+  };
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && selectedStudent) {
@@ -899,7 +1100,7 @@ export default function App() {
               <WeatherWidget />
             </header>
             
-            <Logo size="text-5xl" subSize="text-[10px]" />
+            <Logo size="text-6xl" subSize="text-xs" />
             <div className="relative mt-8 mb-8">
                <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                  <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">
@@ -911,28 +1112,25 @@ export default function App() {
                </div>
                <div className="absolute -top-3 -right-4"> <NotificationBadge notifications={studentNotifications} /> </div>
             </div>
-            <p className="text-xs font-black text-white italic uppercase tracking-widest">{studentForView.nome}</p>
+            <p className="text-xl font-black text-white italic uppercase tracking-[0.3em] mt-2">{studentForView.nome}</p>
             
-            <div className="w-full mt-10 space-y-4 pb-20 text-left flex flex-col max-w-xl mx-auto">
+            <div className="w-full mt-6 space-y-4 pb-20 flex flex-col max-w-xl mx-auto">
               {visibleDashboardItems.map(item => (
-                <Card key={item.id} className={`p-6 bg-${item.color}-600/10 border-${item.color}-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl`} onClick={() => setView(item.id)}>
-                   <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2.5 bg-${item.color}-600 rounded-2xl shadow-lg`}> <item.icon className="text-white" size={22} /> </div>
-                        <h3 className="text-xs font-black uppercase text-white italic tracking-widest">{item.label}</h3>
-                      </div>
-                      <ChevronRight className={`text-${item.color}-600 group-hover:translate-x-1 transition-transform`} size={18} />
+                <Card key={item.id} className={`p-4 bg-${item.color}-600/10 border-${item.color}-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl flex flex-row items-center gap-4 rounded-3xl`} onClick={() => setView(item.id)}>
+                   <div className={`w-12 h-12 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform shrink-0`}> 
+                      <item.icon className="text-white" size={24} /> 
                    </div>
+                   <h3 className="text-sm font-black uppercase text-white italic tracking-[0.1em] text-left">{item.label}</h3>
                 </Card>
               ))}
-              <button onClick={() => { setUser(null); setView('LOGIN'); }} className="w-full mt-10 py-6 bg-zinc-900 border border-zinc-800 rounded-[2.5rem] flex items-center justify-center gap-3 text-zinc-600 hover:text-red-600 transition-all active:scale-95 shadow-xl group">
-                <LogOut size={18} /> <span className="text-[10px] font-black uppercase tracking-[0.4em]">Finalizar Sessão</span>
+              <button onClick={() => { setUser(null); setView('LOGIN'); }} className="w-full mt-4 py-4 bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-row items-center justify-center gap-4 text-zinc-600 hover:text-red-600 transition-all active:scale-95 shadow-xl group">
+                <LogOut size={20} /> <span className="text-[11px] font-black uppercase tracking-[0.3em]">Finalizar Sessão</span>
               </button>
             </div>
-            <EliteFooter />
+            <AppFooter />
           </div>
         )}
-        {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} isProfessor={isCoach} />}
+        {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} isProfessor={isCoach} onAddPost={!isCoach ? handleAddPost : undefined} />}
         {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} />}
         {view === 'COACH_AI' && <AICoach onBack={isCoach ? handleBackNavigation : undefined} />}
         {view === 'SETTINGS' && <SettingsView onBack={isCoach ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
@@ -950,6 +1148,7 @@ export default function App() {
         {view === 'PERIODIZATION' && selectedStudent && <PeriodizationView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onProceedToWorkout={() => setView('WORKOUT_EDITOR')} onSave={handleSaveData} />}
         {view === 'RUNTRACK_MANAGER' && selectedStudent && <RunTrackManager student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
         {view === 'ANALYTICS_COACH' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onToggleMenu={undefined} />}
+        {view === 'WORKOUT_HISTORY' && selectedStudent && <StudentWorkoutHistoryView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
       </main>
     </BackgroundWrapper>
   );

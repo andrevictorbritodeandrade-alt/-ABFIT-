@@ -32,7 +32,7 @@ export function HeaderTitle({ text }: { text: string }) {
   );
 }
 
-export function Logo({ size = "text-4xl", subSize = "text-[10px]", collapsed = false }: { size?: string, subSize?: string, collapsed?: boolean }) {
+export function Logo({ size = "text-4xl", subSize = "text-xs", collapsed = false }: { size?: string, subSize?: string, collapsed?: boolean }) {
   if (collapsed) {
     return (
       <div className="p-2 bg-card rounded-xl border border-border shadow-2xl">
@@ -167,7 +167,7 @@ export function SideNav({
                 >
                   {isActive && <div className={`absolute left-0 top-0 bottom-0 w-1 ${getIndicatorColor(item.color)}`} />}
                   <item.icon size={18} className={getIconColor(item.color, isActive)} />
-                  <span className="text-[10px] font-black uppercase italic tracking-widest">{item.label}</span>
+                  <span className="text-[13px] font-black uppercase italic tracking-widest">{item.label}</span>
                 </button>
               );
             })}
@@ -179,7 +179,7 @@ export function SideNav({
                    <User className="text-muted-foreground" size={18} />
                 </div>
                 <div className="flex flex-col">
-                   <span className="text-[9px] font-black uppercase text-foreground italic leading-none mb-1">Elite Member</span>
+                   <span className="text-[9px] font-black uppercase text-foreground italic leading-none mb-1">ABFIT Member</span>
                    <span className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Status: Ativo</span>
                 </div>
              </div>
@@ -191,7 +191,7 @@ export function SideNav({
 }
 
 export function Card({ children, className = "", onClick }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key }) {
-  return <div onClick={onClick} className={`bg-card border border-border rounded-[2.5rem] shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
+  return <div onClick={onClick} className={`bg-card border border-border rounded-3xl shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
 }
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
@@ -348,7 +348,7 @@ export function WeatherWidget() {
     return (
       <div className="flex items-center gap-3 bg-card/40 px-4 py-2 rounded-2xl border border-border backdrop-blur-sm">
         <MapPin className="text-red-600" size={16} />
-        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{error}</span>
+        <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest">{error}</span>
       </div>
     );
   }
@@ -357,7 +357,7 @@ export function WeatherWidget() {
     return (
       <div className="flex items-center gap-3 bg-card/40 px-4 py-2 rounded-2xl border border-border backdrop-blur-sm">
         <Loader2 className="text-muted-foreground animate-spin" size={16} />
-        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Carregando...</span>
+        <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest">Carregando...</span>
       </div>
     );
   }
@@ -392,7 +392,7 @@ export function WeatherWidget() {
   );
 }
 
-export function EliteFooter() {
+export function AppFooter() {
   return (
     <footer className="w-full py-12 mt-auto text-center border-t border-border">
       <div className="flex justify-center gap-6 mb-8">
@@ -406,8 +406,8 @@ export function EliteFooter() {
           <Phone size={18} />
         </button>
       </div>
-      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">ABFIT Elite Performance v2.0</p>
-      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 PhD André Brito. All Rights Reserved.</p>
+      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">ABFIT Performance v2.0</p>
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 PhD André Brito. All Rights Reserved.</p>
     </footer>
   );
 }

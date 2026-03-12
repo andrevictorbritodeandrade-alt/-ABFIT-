@@ -1,10 +1,6 @@
-
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
-
-// ID do projeto atualizado para a nova configuração
-export const appId = 'abfit-d5bff';
+import { initializeApp } from "firebase/app";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCZIP1JUTVXjVd6dMnd_DRTD1CLvQpqslc",
@@ -17,20 +13,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-// Inicializa o Firestore com cache ilimitado para suportar funcionamento offline robusto
-export const db = initializeFirestore(app, {
-  cacheSizeBytes: CACHE_SIZE_UNLIMITED
-});
-
-// Habilita a persistência multi-aba para evitar erros de acesso exclusivo
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-        console.warn('Persistência offline falhou: Multiplas abas abertas sem suporte multi-aba.');
-    } else if (err.code == 'unimplemented') {
-        console.warn('Persistência offline não suportada neste navegador.');
-    } else {
-        console.error('Erro ao habilitar persistência:', err);
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      // Multiple tabs open, persistence can only be enabled in one tab at a time.
+      console.warn('Firestore persistence failed: multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      // The current browser does not support all of the features required to enable persistence
+      console.warn('Firestore persistence is not supported by this browser');
     }
-});
+  });
+}
+
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;

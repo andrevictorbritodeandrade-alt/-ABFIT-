@@ -4,14 +4,14 @@ import {
   Activity, CalendarDays, Flame, Info, Plus, 
   Trash2, X, Brain, ChevronDown, Play, Zap, BarChart3,
   ArrowLeft, Menu, Gauge, TrendingUp, CheckCircle2, ChevronRight, ChevronLeft,
-  Timer, Calculator, Edit3
+  Timer, Calculator, Edit3, Circle
 } from 'lucide-react';
 import { 
-  collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc 
+  collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, getDocs 
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Student, WorkoutHistoryEntry } from '../types';
-import { HeaderTitle, Card, EliteFooter } from './Layout';
+import { HeaderTitle, Card, AppFooter } from './Layout';
 
 // --- CONFIGURATION ---
 const RUN_COLLECTION = 'runtrack-elite-v4';
@@ -224,7 +224,7 @@ const calculateAdjustedWorkout = (workout: WorkoutModel) => {
     return { adjusted, badge };
 };
 
-const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean }> = ({ workout, onDelete, onEdit, isCompleted, compact }) => {
+const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean, isToday?: boolean }> = ({ workout, onDelete, onEdit, isCompleted, compact, isToday }) => {
     const { adjusted, badge } = useMemo(() => calculateAdjustedWorkout(workout), [workout]);
     const totalDuration = useMemo(() => estimateWorkoutDuration(adjusted), [adjusted]);
 
@@ -255,11 +255,14 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
 
     if (compact) {
         return (
-            <div className={`p-4 rounded-xl border transition-all ${isCompleted ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-zinc-900 border-zinc-800'}`}>
+            <div className={`p-4 rounded-xl border transition-all ${isToday ? 'border-red-600 ring-1 ring-red-600/20' : ''} ${isCompleted ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-zinc-900 border-zinc-800'}`}>
                 <div className="flex items-center justify-between mb-2">
-                    <span className={`text-[8px] font-black uppercase tracking-widest ${isCompleted ? 'text-emerald-500' : 'text-zinc-500'}`}>
-                        {adjusted.type}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${isCompleted ? 'text-emerald-500' : 'text-zinc-500'}`}>
+                            {adjusted.type}
+                        </span>
+                        {isToday && <span className="text-[6px] font-black bg-red-600 text-white px-1 rounded">HOJE</span>}
+                    </div>
                     {isCompleted && <CheckCircle2 size={12} className="text-emerald-500" />}
                 </div>
                 <p className="text-xs font-black italic uppercase text-white leading-tight">
@@ -273,7 +276,12 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
     }
 
     return (
-        <div className={`bg-zinc-900 border p-6 rounded-3xl relative group transition-all ${badge ? 'border-red-600/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]' : 'border-zinc-800 hover:border-red-600/30'}`}>
+        <div className={`bg-zinc-900 border p-6 rounded-3xl relative group transition-all ${isToday ? 'border-red-600 ring-2 ring-red-600/20' : badge ? 'border-red-600/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]' : 'border-zinc-800 hover:border-red-600/30'} ${isCompleted ? 'opacity-60' : ''}`}>
+            {isToday && (
+                <div className="absolute -top-3 left-6 bg-red-600 text-white text-[8px] font-black px-3 py-1 rounded-full shadow-lg z-10 animate-bounce">
+                    TREINO DE HOJE
+                </div>
+            )}
             <div className="absolute top-6 right-6 flex items-center gap-2">
                 {onEdit && (
                     <button onClick={onEdit} className="text-zinc-500 hover:text-white p-2 rounded-xl transition-all bg-zinc-800 hover:bg-zinc-700">
@@ -497,6 +505,7 @@ const getFirstDayOfMonth = (year: number, month: number) => {
 };
 
 const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[], history: WorkoutHistoryEntry[], onCheckIn: (date: string, workout: WorkoutModel) => void }) => {
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -505,8 +514,17 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
     
+    const normalizeDay = (d: any) => {
+        if (!d) return "";
+        return String(d).toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .split('-')[0]
+            .trim();
+    };
+
     const dayNameMap: Record<string, number> = {
-        'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6
+        'domingo': 0, 'segunda': 1, 'terca': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sabado': 6
     };
 
     const daysInMonth = getDaysInMonth(year, month);
@@ -520,7 +538,7 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
         
         return workouts.find(w => {
             if (!w.dayOfWeek) return false;
-            const d = String(w.dayOfWeek).toLowerCase().split('-')[0];
+            const d = normalizeDay(String(w.dayOfWeek));
             const wDayIndex = dayNameMap[d];
             return wDayIndex === dayOfWeek;
         });
@@ -532,6 +550,10 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
     };
 
     const handleDayClick = (day: number, workout: WorkoutModel) => {
+        setSelectedDay(day === selectedDay ? null : day);
+    };
+
+    const handleToggleComplete = (day: number, workout: WorkoutModel) => {
         const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
         onCheckIn(dateStr, workout);
     };
@@ -540,62 +562,96 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
         return day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     };
 
+    const selectedWorkout = selectedDay ? getWorkoutForDate(selectedDay) : null;
+
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 mb-8 shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-                <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronLeft size={20}/></button>
-                <h3 className="text-sm font-black uppercase text-white tracking-widest">{monthNames[month]} {year}</h3>
-                <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronRight size={20}/></button>
-            </div>
-            
-            <div className="grid grid-cols-7 gap-2 mb-2">
-                {weekDays.map((d, i) => (
-                    <div key={i} className="text-center text-[10px] font-bold text-zinc-600 uppercase">{d}</div>
-                ))}
-            </div>
-            
-            <div className="grid grid-cols-7 gap-2">
-                {blanks.map(b => <div key={`blank-${b}`} className="aspect-square"></div>)}
-                {days.map(day => {
-                    const workout = getWorkoutForDate(day);
-                    const completed = workout ? isCompleted(day, workout.id) : false;
-                    const todayHighlight = isToday(day) ? "bg-zinc-800" : "bg-transparent";
-                    
-                    return (
-                        <div key={day} className="aspect-square relative">
-                            {workout ? (
-                                <button 
-                                    onClick={() => handleDayClick(day, workout)}
-                                    className={`w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all active:scale-95
-                                        ${completed 
-                                            ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
-                                            : `border-zinc-800 hover:border-red-600/50 ${todayHighlight}`
-                                        }
-                                    `}
-                                >
-                                    <span className={`text-[10px] font-black ${completed ? 'text-emerald-500' : 'text-white'}`}>{day}</span>
-                                    <div className={`w-1.5 h-1.5 rounded-full mt-1 ${completed ? 'bg-emerald-500' : 'bg-red-600'}`}></div>
-                                </button>
-                            ) : (
-                                <div className={`w-full h-full rounded-xl flex flex-col items-center justify-center border border-transparent text-zinc-700 ${todayHighlight}`}>
-                                    <span className="text-[10px] font-medium">{day}</span>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-            
-            <div className="flex items-center gap-4 mt-6 justify-center">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-600"></div>
-                    <span className="text-[8px] font-bold text-zinc-500 uppercase">Treino</span>
+        <div className="space-y-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 shadow-xl">
+                <div className="flex justify-between items-center mb-6">
+                    <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronLeft size={20}/></button>
+                    <h3 className="text-sm font-black uppercase text-white tracking-widest">{monthNames[month]} {year}</h3>
+                    <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><ChevronRight size={20}/></button>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
-                    <span className="text-[8px] font-bold text-zinc-500 uppercase">Concluído</span>
+                
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                    {weekDays.map((d, i) => (
+                        <div key={i} className="text-center text-[10px] font-bold text-zinc-600 uppercase">{d}</div>
+                    ))}
+                </div>
+                
+                <div className="grid grid-cols-7 gap-2">
+                    {blanks.map(b => <div key={`blank-${b}`} className="aspect-square"></div>)}
+                    {days.map(day => {
+                        const workout = getWorkoutForDate(day);
+                        const completed = workout ? isCompleted(day, workout.id) : false;
+                        const todayHighlight = isToday(day) ? "bg-zinc-800" : "bg-transparent";
+                        const isSelected = selectedDay === day;
+                        
+                        return (
+                            <div key={day} className="aspect-square relative">
+                                {workout ? (
+                                    <button 
+                                        onClick={() => handleDayClick(day, workout)}
+                                        className={`w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all active:scale-95 relative overflow-hidden
+                                            ${completed 
+                                                ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                                                : isSelected
+                                                    ? 'border-red-600 bg-red-600/10'
+                                                    : `border-zinc-800 hover:border-red-600/50 ${todayHighlight}`
+                                            }
+                                        `}
+                                    >
+                                        <span className={`text-[10px] font-black z-10 ${completed ? 'text-emerald-500' : 'text-white'}`}>{day}</span>
+                                        <span className="text-[6px] font-black uppercase tracking-tighter opacity-40 absolute bottom-1">
+                                            {workout.type.substring(0, 3)}
+                                        </span>
+                                        <div className={`w-1 h-1 rounded-full absolute top-1 right-1 ${completed ? 'bg-emerald-500' : 'bg-red-600'}`}></div>
+                                    </button>
+                                ) : (
+                                    <div className={`w-full h-full rounded-xl flex flex-col items-center justify-center border border-transparent text-zinc-700 ${todayHighlight}`}>
+                                        <span className="text-[10px] font-medium">{day}</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                
+                <div className="flex items-center gap-4 mt-6 justify-center">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-600"></div>
+                        <span className="text-[8px] font-bold text-zinc-500 uppercase">Treino</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
+                        <span className="text-[8px] font-bold text-zinc-500 uppercase">Concluído</span>
+                    </div>
                 </div>
             </div>
+
+            {/* SELECTED DAY DETAILS */}
+            {selectedDay && selectedWorkout && (
+                <div className="animate-in slide-in-from-top-4 duration-300">
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest">
+                            Treino de {selectedDay} de {monthNames[month]}
+                        </h4>
+                        <button 
+                            onClick={() => handleToggleComplete(selectedDay, selectedWorkout)}
+                            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-2
+                                ${isCompleted(selectedDay, selectedWorkout.id)
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                                }
+                            `}
+                        >
+                            {isCompleted(selectedDay, selectedWorkout.id) ? <CheckCircle2 size={14}/> : <Circle size={14}/>}
+                            {isCompleted(selectedDay, selectedWorkout.id) ? 'Concluído' : 'Marcar Concluído'}
+                        </button>
+                    </div>
+                    <WorkoutCard workout={selectedWorkout} isCompleted={isCompleted(selectedDay, selectedWorkout.id)} />
+                </div>
+            )}
         </div>
     );
 };
@@ -607,6 +663,39 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
     const [isCreating, setIsCreating] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<WorkoutModel | null>(null);
     
+    useEffect(() => {
+        if (!student.id) return;
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v6`);
+        if (!hasSeeded) {
+            const checkAndSeed = async () => {
+                try {
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    // Query firestore directly to avoid closure stale state
+                    const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+                    const snap = await getDocs(q);
+                    const currentWorkouts = snap.docs
+                        .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
+                        .filter(w => w.studentId === student.id);
+
+                    if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
+                        if (currentWorkouts.length < 5) {
+                            for (const w of currentWorkouts) {
+                                await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
+                            }
+                            await seedWorkouts(student.id);
+                        }
+                    }
+                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                } catch (err) {
+                    console.error("Seeding error:", err);
+                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                }
+            };
+            checkAndSeed();
+        }
+    }, [student.id]);
+
     useEffect(() => {
         const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
         const unsub = onSnapshot(q, (snap) => {
@@ -685,7 +774,7 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
                         <p className="font-bold text-zinc-600 uppercase text-xs tracking-widest">SEM TREINOS PRESCRITOS</p>
                     </div>
                 ) : (
-                   workouts.sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek)).map(w => (
+                   [...workouts].sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek)).map(w => (
                        <WorkoutCard 
                            key={w.id} 
                            workout={w} 
@@ -705,6 +794,39 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
 
 export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void, onToggleMenu?: () => void }) {
     const [workouts, setWorkouts] = useState<WorkoutModel[]>([]);
+    const [loggingWorkout, setLoggingWorkout] = useState<WorkoutModel | null>(null);
+
+    useEffect(() => {
+        if (!student.id) return;
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v6`);
+        if (!hasSeeded) {
+            const checkAndSeed = async () => {
+                try {
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+                    const snap = await getDocs(q);
+                    const currentWorkouts = snap.docs
+                        .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
+                        .filter(w => w.studentId === student.id);
+
+                    if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
+                        if (currentWorkouts.length < 5) {
+                            for (const w of currentWorkouts) {
+                                await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
+                            }
+                            await seedWorkouts(student.id);
+                        }
+                    }
+                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                } catch (err) {
+                    console.error("Seeding error:", err);
+                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                }
+            };
+            checkAndSeed();
+        }
+    }, [student.id]);
 
     useEffect(() => {
         if (!student.id) return;
@@ -716,64 +838,117 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
         return () => unsub();
     }, [student.id]);
 
-    const sortedWorkouts = workouts.sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek));
+    const sortedWorkouts = [...workouts].sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek));
     const daysMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const todayName = daysMap[new Date().getDay()];
     const todayWorkout = workouts.find(w => {
         if (!w.dayOfWeek) return false;
-        const d = String(w.dayOfWeek).toLowerCase().split('-')[0];
-        return d.includes(todayName.toLowerCase().split('-')[0]);
+        const d = normalizeDay(String(w.dayOfWeek));
+        return d.includes(normalizeDay(todayName));
     });
 
     const weeklyVolume = useMemo(() => {
         return workouts.reduce((acc, w) => acc + estimateWorkoutDuration(calculateAdjustedWorkout(w).adjusted), 0);
     }, [workouts]);
 
-    const handleCheckIn = (dateStr: string, workout: WorkoutModel) => {
+    const handleCheckIn = (dateStr: string, workout: WorkoutModel, stats?: any) => {
         // Toggle logic: If exists, remove. If not, add.
         const currentHistory = student.workoutHistory || [];
         const existingIndex = currentHistory.findIndex(h => h.date === dateStr && h.workoutId === workout.id && h.type === 'RUNNING');
 
         let updatedHistory;
-        if (existingIndex > -1) {
-            // Remove check-in (Undo)
+        let isAdding = false;
+        
+        if (existingIndex > -1 && !stats) {
+            // Remove check-in (Undo) - only if no stats provided (simple toggle)
             updatedHistory = currentHistory.filter((_, idx) => idx !== existingIndex);
         } else {
-            // Add check-in
+            // Add or Update check-in
+            isAdding = existingIndex === -1;
             const newEntry: WorkoutHistoryEntry = {
-                id: Date.now().toString(),
+                id: existingIndex > -1 ? currentHistory[existingIndex].id : Date.now().toString(),
                 workoutId: workout.id,
                 name: workout.type, // e.g. "Longão"
                 date: dateStr,
                 timestamp: Date.now(),
-                duration: workout.totalTime || '00:00', // Default or actual
-                type: 'RUNNING'
+                duration: stats?.duration || workout.totalTime || formatDuration(estimateWorkoutDuration(calculateAdjustedWorkout(workout).adjusted)),
+                type: 'RUNNING',
+                runningStats: stats
             };
-            updatedHistory = [newEntry, ...currentHistory];
+
+            if (existingIndex > -1) {
+                updatedHistory = currentHistory.map((h, idx) => idx === existingIndex ? newEntry : h);
+            } else {
+                updatedHistory = [newEntry, ...currentHistory];
+            }
         }
 
-        onSave(student.id, { workoutHistory: updatedHistory });
+        const currentAnalytics = student.analytics || { sessionsCompleted: 0, streakDays: 0, exercises: {} };
+        let updatedAnalytics = { ...currentAnalytics };
+
+        if (isAdding) {
+            const now = new Date();
+            let newStreak = currentAnalytics.streakDays;
+            const lastDateStr = currentAnalytics.lastSessionDate;
+            const todayStr = now.toLocaleDateString('pt-BR');
+            
+            if (lastDateStr) {
+                const [lastDay, lastMonth, lastYear] = lastDateStr.split('/');
+                const lastDate = new Date(parseInt(lastYear), parseInt(lastMonth) - 1, parseInt(lastDay));
+                const diffTime = Math.abs(now.getTime() - lastDate.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 1) {
+                    newStreak += 1;
+                } else if (diffDays > 1) {
+                    newStreak = 1;
+                }
+            } else {
+                newStreak = 1;
+            }
+
+            updatedAnalytics = {
+                ...currentAnalytics,
+                sessionsCompleted: currentAnalytics.sessionsCompleted + 1,
+                streakDays: newStreak,
+                lastSessionDate: todayStr
+            };
+        } else if (existingIndex > -1 && !stats) {
+            // If removing, we could decrement sessionsCompleted, but streak is hard to recalculate.
+            // For simplicity, just decrement sessionsCompleted.
+            updatedAnalytics = {
+                ...currentAnalytics,
+                sessionsCompleted: Math.max(0, currentAnalytics.sessionsCompleted - 1)
+            };
+        }
+
+        onSave(student.id, { workoutHistory: updatedHistory, analytics: updatedAnalytics });
+        setLoggingWorkout(null);
     };
 
     return (
-        <div className="p-6 space-y-8 animate-in fade-in duration-500 text-left h-screen overflow-y-auto custom-scrollbar bg-black">
-            <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                   {onToggleMenu && (
-                     <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
-                       <Menu size={20}/>
-                     </button>
-                   )}
-                   <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
-                     <ArrowLeft size={20}/>
-                   </button>
+        <div className="animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-black flex flex-col">
+            {/* STICKY HEADER */}
+            <header className="p-6 pb-4 border-b border-white/5 bg-black/80 backdrop-blur-md z-50">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                       {onToggleMenu && (
+                         <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+                           <Menu size={20}/>
+                         </button>
+                       )}
+                       <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
+                         <ArrowLeft size={20}/>
+                       </button>
+                    </div>
+                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
+                      <HeaderTitle text="ABFIT RUN" />
+                    </h2>
                 </div>
-                <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
-                  <HeaderTitle text="ABFIT RUN" />
-                </h2>
-            </div>
+            </header>
 
-            {/* WEEKLY VOLUME SUMMARY */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                {/* WEEKLY VOLUME SUMMARY */}
             <div className="bg-gradient-to-r from-zinc-900 to-black border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-xl mb-4">
                 <div className="flex flex-col">
                     <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -798,12 +973,18 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
                 {/* HERO CARD (TODAY) */}
                 {todayWorkout ? (
-                    <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl">
+                    <div 
+                        onClick={() => setLoggingWorkout(todayWorkout)}
+                        className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl cursor-pointer active:scale-[0.98] transition-all"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
                         <div className="relative z-10 p-8">
                             <div className="flex justify-between items-start mb-12">
                                 <span className="bg-red-600 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest">Treino de Hoje</span>
-                                <Play className="text-white fill-white" size={24} />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Clique para registrar</span>
+                                    <Play className="text-white fill-white" size={24} />
+                                </div>
                             </div>
                             
                             <h3 className="text-3xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
@@ -849,23 +1030,190 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                         <BarChart3 size={20} className="text-red-600"/>
                         <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">Semana</h3>
                     </div>
-                    {sortedWorkouts.map(w => (
-                        <WorkoutCard key={w.id} workout={w} />
-                    ))}
+                    {sortedWorkouts.map(w => {
+                        const isTodayWorkout = normalizeDay(w.dayOfWeek).includes(normalizeDay(todayName));
+                        return (
+                            <div key={w.id} onClick={() => setLoggingWorkout(w)} className="cursor-pointer">
+                                <WorkoutCard 
+                                    workout={w} 
+                                    isToday={isTodayWorkout}
+                                    isCompleted={student.workoutHistory?.some(h => h.workoutId === w.id && h.date === new Date().toLocaleDateString('pt-BR'))}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <WorkoutLegend />
             </div>
-            <EliteFooter />
+            <AppFooter />
+
+            {loggingWorkout && (
+                <LogWorkoutModal 
+                    workout={loggingWorkout} 
+                    onClose={() => setLoggingWorkout(null)} 
+                    onSave={(stats) => handleCheckIn(new Date().toLocaleDateString('pt-BR'), loggingWorkout, stats)}
+                />
+            )}
         </div>
+    </div>
     )
 }
 
-// Helper
-function getDayIndex(day: string): number {
+const LogWorkoutModal = ({ workout, onClose, onSave }: { workout: WorkoutModel, onClose: () => void, onSave: (stats: any) => void }) => {
+    const [stats, setStats] = useState({
+        distance: '',
+        avgPace: '',
+        avgHR: '',
+        calories: '',
+        duration: ''
+    });
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                <header className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
+                    <div>
+                        <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">Registrar Treino</h3>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{workout.type} - {workout.dayOfWeek}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
+                </header>
+
+                <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Distância (km)</label>
+                            <input 
+                                type="text" 
+                                placeholder="Ex: 5.2"
+                                value={stats.distance}
+                                onChange={e => setStats({...stats, distance: e.target.value})}
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Duração (min)</label>
+                            <input 
+                                type="text" 
+                                placeholder="Ex: 30"
+                                value={stats.duration}
+                                onChange={e => setStats({...stats, duration: e.target.value})}
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Ritmo Médio (Pace)</label>
+                            <input 
+                                type="text" 
+                                placeholder="Ex: 5:45"
+                                value={stats.avgPace}
+                                onChange={e => setStats({...stats, avgPace: e.target.value})}
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">FC Média (bpm)</label>
+                            <input 
+                                type="text" 
+                                placeholder="Ex: 145"
+                                value={stats.avgHR}
+                                onChange={e => setStats({...stats, avgHR: e.target.value})}
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Calorias (kcal)</label>
+                        <input 
+                            type="text" 
+                            placeholder="Ex: 450"
+                            value={stats.calories}
+                            onChange={e => setStats({...stats, calories: e.target.value})}
+                            className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                        />
+                    </div>
+
+                    <div className="p-4 bg-red-600/5 border border-red-600/20 rounded-2xl">
+                        <p className="text-[10px] text-zinc-400 font-medium leading-relaxed italic">
+                            "Insira os dados da esteira ou do seu smartwatch (Galaxy Watch, Apple Watch, Garmin) para acompanhar sua evolução."
+                        </p>
+                    </div>
+                </div>
+
+                <footer className="p-6 border-t border-white/5 bg-zinc-900/50">
+                    <button 
+                        onClick={() => onSave(stats)}
+                        className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+                    >
+                        Salvar Treino
+                    </button>
+                </footer>
+            </div>
+        </div>
+    );
+};
+
+// --- HELPERS ---
+
+const normalizeDay = (d: any) => {
+    if (!d) return "";
+    return String(d).toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .split('-')[0]
+        .trim();
+};
+
+const getDayIndex = (day: string): number => {
     if (!day) return 99;
-    const days = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
-    const d = String(day).toLowerCase().split('-')[0];
+    const days = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+    const d = normalizeDay(day);
     const idx = days.findIndex(x => x === d);
     return idx === -1 ? 99 : idx;
-}
+};
+
+const seedWorkouts = async (studentId: string) => {
+    const payloadMap: Record<string, any[]> = {
+        'fixed-andre': [
+            { studentId: 'fixed-andre', type: 'Regenerativo', dayOfWeek: 'Segunda', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '9', recoveryTime: '2', cooldownTime: '10', description: '' },
+            { studentId: 'fixed-andre', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '30', speed: '6', recoveryTime: '0', cooldownTime: '10', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-andre', type: 'Ritmo / Tempo', dayOfWeek: 'Quarta', warmupTime: '10', sets: '6', reps: '1', stimulusTime: '3', speed: '8', recoveryTime: '3', cooldownTime: '10', description: '' },
+            { studentId: 'fixed-andre', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '30', speed: '6', recoveryTime: '0', cooldownTime: '10', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-andre', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '8', reps: '1', stimulusTime: '2', speed: '8', recoveryTime: '1', cooldownTime: '10', description: '' }
+        ],
+        'fixed-liliane': [
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' },
+            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '20', speed: '6,0', recoveryTime: '0', cooldownTime: '10', description: 'O aquecimento e desaquecimento com velocidade baixa / Fazer caminhada contínua' },
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' },
+            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '20', speed: '6,0', recoveryTime: '0', cooldownTime: '10', description: 'O aquecimento e desaquecimento com velocidade baixa / Fazer caminhada contínua' },
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' }
+        ],
+        'fixed-marcelly': [
+            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' },
+            { studentId: 'fixed-marcelly', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '6', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' },
+            { studentId: 'fixed-marcelly', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '6', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' }
+        ]
+    };
+
+    const payload = payloadMap[studentId];
+    if (!payload) return;
+
+    // Use Promise.all to ensure all are added before finishing
+    await Promise.all(payload.map(w => 
+        addDoc(collection(db, 'artifacts', RUN_COLLECTION, 'workouts'), { 
+            ...w, 
+            createdAt: new Date().toISOString() 
+        })
+    ));
+    
+    localStorage.setItem(`seeded_${studentId}_run_v6`, 'true');
+};

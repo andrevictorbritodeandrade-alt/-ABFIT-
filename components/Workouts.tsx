@@ -14,7 +14,7 @@ const Workouts: React.FC = () => {
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Treinos Disponíveis</h2>
-                <span className="text-xs font-bold text-red-500 uppercase tracking-widest">Elite Series</span>
+                <span className="text-xs font-bold text-red-500 uppercase tracking-widest">ABFIT Series</span>
             </div>
 
             <div className="space-y-4">

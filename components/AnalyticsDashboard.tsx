@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu } from 'lucide-react';
-import { Card, EliteFooter, HeaderTitle } from './Layout';
+import { Card, AppFooter, HeaderTitle } from './Layout';
 import { Student } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts';
 
@@ -192,8 +192,34 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
                )}
             </div>
          </div>
+
+         {/* HISTÓRICO DE TREINOS */}
+         <div className="space-y-4">
+            <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-widest pl-2 flex items-center gap-3 italic">
+              <Activity size={14} className="text-red-600"/> Histórico de Treinos
+            </h3>
+            <div className="space-y-3">
+               {history.length > 0 ? (
+                 history.slice().sort((a, b) => b.timestamp - a.timestamp).map((entry, idx) => (
+                   <div key={entry.id || idx} className="bg-zinc-900/50 rounded-[2rem] p-5 border border-white/5 flex items-center justify-between">
+                      <div>
+                         <p className="text-sm font-black italic uppercase text-white">{entry.name}</p>
+                         <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mt-1">{entry.date} • {entry.duration}</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-red-950/30 border border-red-900/50 flex items-center justify-center text-red-500">
+                         <CheckCircle2 size={18} />
+                      </div>
+                   </div>
+                 ))
+               ) : (
+                 <div className="bg-zinc-900/50 rounded-[2rem] p-6 border border-white/5">
+                    <EmptyState message="Nenhum treino registrado" />
+                 </div>
+               )}
+            </div>
+         </div>
       </div>
-      <EliteFooter />
+      <AppFooter />
     </div>
   );
 }

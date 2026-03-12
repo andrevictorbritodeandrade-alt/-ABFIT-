@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'gemini-2.5-flash-image';
+const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 
 export async function analyzeExerciseAndGenerateImage(exerciseName: string, studentProfile?: any): Promise<any> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -13,7 +13,7 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
     - Se HBL: Barra Longa Olímpica.
     - Se "alternado": Execução assimétrica.
     
-    Forneça JSON puro: {"description": "descrição curta", "benefits": "3 benefícios principais", "visualPrompt": "Detailed 8k gym prompt for imagen of a black athlete"}`;
+    Forneça JSON puro: {"description": "descrição curta", "benefits": "3 benefícios principais", "visualPrompt": "Detailed 4k gym prompt for imagen of a black athlete"}`;
 
     const brainResponse = await ai.models.generateContent({
       model: MODEL_TEXT,
@@ -23,10 +23,15 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
 
     const brainResult = JSON.parse(brainResponse.text || "{}");
     
-    // Usando gemini-2.5-flash-image com generateContent (mais estável)
     const imageResponse = await ai.models.generateContent({
       model: MODEL_IMAGE,
-      contents: brainResult.visualPrompt || `Professional athlete performing ${exerciseName}, gym setting, 8k resolution`,
+      contents: brainResult.visualPrompt || `Professional athlete performing ${exerciseName}, gym setting, 4k resolution`,
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1",
+          imageSize: "4K"
+        }
+      }
     });
     
     let imageUrl = null;
@@ -50,7 +55,7 @@ export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const systemInstruction = `
-    Você é o PrescreveAI, um treinador PhD. 
+    Você é o ABFIT AI, um treinador PhD. 
     Gere uma lista de exercícios baseada no pedido do usuário.
     Retorne APENAS um JSON array.
     Estrutura: [{"name": "Nome", "sets": "3", "reps": "12", "rest": "60", "method": "Normal", "load": ""}]

@@ -8,7 +8,7 @@ import {
   AlertTriangle, CheckCircle2, Download, Lightbulb, ShieldCheck, X, Menu, ArrowLeft, Plus
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { EliteFooter } from './Layout';
+import { AppFooter } from './Layout';
 
 // Using recommended models as per guidelines
 const MODEL_TEXT = 'gemini-3-flash-preview';
@@ -106,7 +106,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         model: MODEL_TEXT,
         contents: userMsg,
         config: {
-          systemInstruction: "Você é o Elite Coach AI da ABFIT. Você é um especialista PhD em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE)),
+          systemInstruction: "Você é o Coach AI da ABFIT. Você é um especialista PhD em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE)),
         }
       });
 
@@ -133,7 +133,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           <BrainCircuit className="text-white" size={24} />
         </div>
         <div>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">PrescreveAI Elite</h2>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">ABFIT AI</h2>
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Consultoria PhD em Biomecânica</p>
         </div>
       </header>
@@ -178,7 +178,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           {loading ? <Loader2 size={18} className="animate-spin" /> : <ChevronRight size={18} />}
         </button>
       </div>
-      <EliteFooter />
+      <AppFooter />
     </div>
   );
 };

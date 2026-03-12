@@ -53,8 +53,9 @@ export interface WorkoutHistoryEntry {
   date: string;
   timestamp: number;
   photoUrl?: string;
+  text?: string;
   runningStats?: RunningStats;
-  type: 'STRENGTH' | 'RUNNING';
+  type: 'STRENGTH' | 'RUNNING' | 'POST';
 }
 
 export interface PeriodizationPlan {
@@ -153,7 +154,7 @@ export interface Student {
   anamneseComplete?: boolean;
   protocolStartDate?: string;
   
-  // PrescreveAI Specific Fields
+  // ABFIT AI Specific Fields
   neurodivergence?: string;
   medicalHistory?: string;
   bariatric?: boolean;

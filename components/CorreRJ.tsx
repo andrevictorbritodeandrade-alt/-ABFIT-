@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { 
   Trophy, MapPin, Clock, ExternalLink, Bell, ArrowLeft, 
   DollarSign, TrendingUp, Zap, X, Info, CheckCircle 
@@ -48,8 +48,44 @@ const MonthArt = ({ month }: { month: string }) => {
             alt={month} 
             className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
              <h3 className="text-4xl font-poppins font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{month}</h3>
+             {month === "Janeiro" && (
+               <span className="text-sm font-black text-orange-400 uppercase tracking-widest drop-shadow-md mt-1">Verão & Férias ☀️🌴</span>
+             )}
+             {month === "Fevereiro" && (
+               <span className="text-sm font-black text-pink-400 uppercase tracking-widest drop-shadow-md mt-1">Carnaval 🎉🏃‍♂️</span>
+             )}
+             {month === "Março" && (
+               <span className="text-sm font-black text-purple-400 uppercase tracking-widest drop-shadow-md mt-1">Mês da Mulher 👩🏽‍🦱💪</span>
+             )}
+             {month === "Abril" && (
+               <span className="text-sm font-black text-amber-400 uppercase tracking-widest drop-shadow-md mt-1">Páscoa 🐰🍫</span>
+             )}
+             {month === "Maio" && (
+               <span className="text-sm font-black text-rose-400 uppercase tracking-widest drop-shadow-md mt-1">Dia das Mães 👩‍👧‍👦❤️</span>
+             )}
+             {month === "Junho" && (
+               <span className="text-sm font-black text-yellow-400 uppercase tracking-widest drop-shadow-md mt-1">Festas Juninas 🌽🔥</span>
+             )}
+             {month === "Julho" && (
+               <span className="text-sm font-black text-yellow-500 uppercase tracking-widest drop-shadow-md mt-1">Festas Julinas 🥜🎉</span>
+             )}
+             {month === "Agosto" && (
+               <span className="text-sm font-black text-blue-300 uppercase tracking-widest drop-shadow-md mt-1">Inverno ❄️⛄</span>
+             )}
+             {month === "Setembro" && (
+               <span className="text-sm font-black text-pink-300 uppercase tracking-widest drop-shadow-md mt-1">Primavera 🌸🌻</span>
+             )}
+             {month === "Outubro" && (
+               <span className="text-sm font-black text-cyan-400 uppercase tracking-widest drop-shadow-md mt-1">Dia das Crianças 🧸🎈</span>
+             )}
+             {month === "Novembro" && (
+               <span className="text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-md mt-1">Proclamação da República 🇧🇷</span>
+             )}
+             {month === "Dezembro" && (
+               <span className="text-sm font-black text-red-500 uppercase tracking-widest drop-shadow-md mt-1">Natal 🎄🎅</span>
+             )}
           </div>
         </>
       ) : (
@@ -64,78 +100,79 @@ const MonthArt = ({ month }: { month: string }) => {
 // --- DADOS TOTAIS (LISTA COMPLETA 2026) ---
 const INITIAL_PREDICTIONS = [
   // JANEIRO
-  { nome: "6ª Gratidão Run", data: "20/01", dataIso: "2026-01-20", cidade: "RJ", horario: "07:30", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 89,90", info: "Corrida comemorativa no subúrbio carioca." },
-  { nome: "Corrida de São Sebastião", data: "20/01", dataIso: "2026-01-20T12:00:00", cidade: "RJ", horario: "07:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 115,00", info: "Tradicional prova do padroeiro da cidade." },
-  { nome: "Eclipse Night Run - Lua Nova", data: "24/01", dataIso: "2026-01-24", cidade: "RJ", horario: "19:00", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 129,00", info: "Prova noturna temática." },
-  { nome: "Porto Saúde T&F Experience", data: "24/01", dataIso: "2026-01-24T12:00:00", cidade: "RJ", horario: "07:00", largada: "Shopping Américas", link: INFO_LINK, valor: "R$ 90,00", info: "Treinão técnico Track&Field." },
-  { nome: "PTT Running", data: "24/01", dataIso: "2026-01-24T14:00:00", cidade: "RJ", horario: "07:00", largada: "Posto 10, Recreio", link: INFO_LINK, valor: "R$ 85,00", info: "Evento local no Recreio." },
-  { nome: "Corrida Mickey 1928", data: "25/01", dataIso: "2026-01-25", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 149,00", info: "Temática Disney Clássica." },
-  { nome: "Run Free", data: "25/01", dataIso: "2026-01-25T12:00:00", cidade: "RJ", horario: "07:00", largada: "A definir", link: INFO_LINK, valor: "Grátis", info: "Evento participativo." },
-  { nome: "Verão Carioca Run", data: "25/01", dataIso: "2026-01-25T14:00:00", cidade: "RJ", horario: "07:30", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 99,00", info: "Clássica de verão no Aterro." },
+  { nome: "6ª Gratidão Run", data: "20/01", dataIso: "2026-01-20", cidade: "RJ", horario: "A definir", largada: "Parque Madureira", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Corrida de São Sebastião", data: "20/01", dataIso: "2026-01-20T12:00:00", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Eclipse Night Run - Lua Nova", data: "24/01", dataIso: "2026-01-24", cidade: "RJ", horario: "A definir", largada: "Parque Olímpico", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Porto Saúde T&F Experience", data: "24/01", dataIso: "2026-01-24T12:00:00", cidade: "RJ", horario: "A definir", largada: "Shopping Américas", link: INFO_LINK, valor: "A consultar", info: "Treinão de Corrida. Distância: 5k" },
+  { nome: "PTT Running", data: "24/01", dataIso: "2026-01-24T14:00:00", cidade: "RJ", horario: "A definir", largada: "Parque Olímpico", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "PTT Running (Posto 10)", data: "24/01", dataIso: "2026-01-24T16:00:00", cidade: "RJ", horario: "A definir", largada: "Posto 10", link: INFO_LINK, valor: "A consultar", info: "Distâncias: A definir" },
+  { nome: "Corrida Mickey 1928", data: "25/01", dataIso: "2026-01-25", cidade: "RJ", horario: "A definir", largada: "Parque Madureira", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Run Free", data: "25/01", dataIso: "2026-01-25T12:00:00", cidade: "RJ", horario: "A definir", largada: "A definir", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Verão Carioca Run", data: "25/01", dataIso: "2026-01-25T14:00:00", cidade: "RJ", horario: "A definir", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
 
   // FEVEREIRO
-  { nome: "Circuito do Sol", data: "01/02", dataIso: "2026-02-01", cidade: "RJ", horario: "07:00", largada: "Praia da Glória", link: INFO_LINK, valor: "R$ 119,00", info: "Abertura oficial do calendário de grandes provas." },
-  { nome: "Circuito Rio Maravilha - Verão", data: "01/02", dataIso: "2026-02-01T12:00:00", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 85,00", info: "Prova em local histórico." },
-  { nome: "Circuito Divas Run - Verão", data: "08/02", dataIso: "2026-02-08", cidade: "RJ", horario: "07:30", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 95,00", info: "Foco no público feminino." },
-  { nome: "Corrida de Carnaval", data: "08/02", dataIso: "2026-02-08T12:00:00", cidade: "RJ", horario: "08:00", largada: "Musal - Campo dos Afonsos", link: INFO_LINK, valor: "R$ 80,00", info: "Corrida festiva pré-carnaval." },
-  { nome: "Corrida Nostalgia Popeye", data: "08/02", dataIso: "2026-02-08T14:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 110,00", info: "Temática de personagens clássicos." },
-  { nome: "ATR Running 10ª Ed.", data: "22/02", dataIso: "2026-02-22", cidade: "RJ", horario: "07:00", largada: "Posto 12, Recreio", link: INFO_LINK, valor: "R$ 89,00", info: "Prova tradicional da zona oeste." },
-  { nome: "Circuito Elementos - Fogo", data: "28/02", dataIso: "2026-02-28", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 89,90", info: "Primeira etapa do circuito 4 elementos." },
-  { nome: "Corrida Kids Bíblica", data: "28/02", dataIso: "2026-02-28T14:00:00", cidade: "RJ", horario: "09:00", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 60,00", info: "Evento infantil temático." },
+  { nome: "Circuito do Sol", data: "01/02", dataIso: "2026-02-01", cidade: "RJ", horario: "A definir", largada: "Praia da Glória", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k, 10k e 15k" },
+  { nome: "Circuito Rio Maravilha - Verão", data: "01/02", dataIso: "2026-02-01T12:00:00", cidade: "RJ", horario: "A definir", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Circuito Divas Run - Verão", data: "08/02", dataIso: "2026-02-08", cidade: "RJ", horario: "A definir", largada: "Parque Olímpico", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Corrida de Carnaval", data: "08/02", dataIso: "2026-02-08T12:00:00", cidade: "RJ", horario: "A definir", largada: "Musal - Campo dos Afonsos", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 3k e 5k" },
+  { nome: "Corrida Nostalgia Popeye", data: "08/02", dataIso: "2026-02-08T14:00:00", cidade: "RJ", horario: "A definir", largada: "Parque Madureira", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "ATR Running 10ª Ed.", data: "22/02", dataIso: "2026-02-22", cidade: "RJ", horario: "A definir", largada: "Posto 12, Recreio", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Circuito Elementos - Fogo", data: "28/02", dataIso: "2026-02-28", cidade: "RJ", horario: "A definir", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Corrida Kids Bíblica", data: "28/02", dataIso: "2026-02-28T14:00:00", cidade: "RJ", horario: "A definir", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "A consultar", info: "Distâncias: A definir" },
 
   // MARÇO
-  { nome: "Cats Run 2026", data: "01/03", dataIso: "2026-03-01", cidade: "RJ", horario: "07:30", largada: "Parque das Figueiras", link: INFO_LINK, valor: "R$ 99,00", info: "Evento pet friendly." },
-  { nome: "Circuito Correndo pelo Rio", data: "01/03", dataIso: "2026-03-01T12:00:00", cidade: "RJ", horario: "07:30", largada: "Quinta da Boa Vista", link: INFO_LINK, valor: "R$ 75,00", info: "Circuito popular acessível." },
-  { nome: "Fla Run 2026", data: "01/03", dataIso: "2026-03-01T14:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 120,00", info: "Corrida oficial do Flamengo." },
-  { nome: "Mulheres com Voz", data: "08/03", dataIso: "2026-03-08", cidade: "RJ", horario: "07:30", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 90,00", info: "Dia Internacional da Mulher." },
-  { nome: "Circuito All Running", data: "08/03", dataIso: "2026-03-08T10:00:00", cidade: "RJ", horario: "07:00", largada: "Parque Olímpico", link: INFO_LINK, valor: "R$ 85,00", info: "Prova rápida na Barra." },
-  { nome: "Circuito das Estações - Outono", data: "08/03", dataIso: "2026-03-08T12:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Maior circuito de corridas do Brasil." },
-  { nome: "Contos Clássicos Mulan", data: "08/03", dataIso: "2026-03-08T14:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Temática Disney Princess." },
-  { nome: "Corrida Kids Daniel", data: "14/03", dataIso: "2026-03-14", cidade: "RJ", horario: "09:00", largada: "Campo Grande", link: INFO_LINK, valor: "R$ 55,00", info: "Infantil zona oeste." },
-  { nome: "Corrida das Poderosas", data: "15/03", dataIso: "2026-03-15", cidade: "RJ", horario: "07:00", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 110,00", info: "Homenagem ao mês da mulher." },
-  { nome: "Santander T&F Run Series", data: "15/03", dataIso: "2026-03-15T12:00:00", cidade: "RJ", horario: "07:00", largada: "Av. Lauro Sodré (Rio Sul)", link: INFO_LINK, valor: "R$ 159,00", info: "Etapa Shopping Rio Sul." },
-  { nome: "2ª Corrida das Águas", data: "22/03", dataIso: "2026-03-22", cidade: "RJ", horario: "07:30", largada: "Praça Pedro Bruno", link: INFO_LINK, valor: "R$ 80,00", info: "Evento Ilha de Paquetá (Provável)." },
-  { nome: "Mulher Maravilha RJ", data: "29/03", dataIso: "2026-03-29", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 139,00", info: "Prova feminina temática DC." },
-  { nome: "Corrida Solidária RH Raiz", data: "29/03", dataIso: "2026-03-29T12:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 70,00", info: "Evento beneficente." },
+  { nome: "Cats Run 2026", data: "01/03", dataIso: "2026-03-01", cidade: "RJ", horario: "A definir", largada: "Parque das Figueiras", link: INFO_LINK, valor: "A consultar", info: "Distância: 7,5k" },
+  { nome: "Circuito Correndo pelo Rio - 1ª Etapa", data: "01/03", dataIso: "2026-03-01T12:00:00", cidade: "RJ", horario: "A definir", largada: "Quintal da Boa Vista", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Fla Run 2026", data: "01/03", dataIso: "2026-03-01T14:00:00", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 3k, 5k e 10k" },
+  { nome: "2ª Corrida e Caminhada do Mulheres com Voz", data: "08/03", dataIso: "2026-03-08", cidade: "RJ", horario: "A definir", largada: "Parque Olímpico da Barra", link: INFO_LINK, valor: "A consultar", info: "Distância: A definir" },
+  { nome: "Circuito All Running - 1ª Etapa", data: "08/03", dataIso: "2026-03-08T10:00:00", cidade: "RJ", horario: "A definir", largada: "Parque Olímpico da Barra", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Circuito das Estações - Outono", data: "08/03", dataIso: "2026-03-08T12:00:00", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k, 10k e 13k" },
+  { nome: "Corrida e Caminhada Contos Clássicos Mulan", data: "08/03", dataIso: "2026-03-08T14:00:00", cidade: "RJ", horario: "A definir", largada: "Parque de Madureira - Arcos Olímpicos", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Corrida Kids Daniel na Cova do Leão", data: "14/03", dataIso: "2026-03-14", cidade: "RJ", horario: "A definir", largada: "Rua Walter Barbosa - Campo Grande", link: INFO_LINK, valor: "A consultar", info: "Distâncias: A definir" },
+  { nome: "Corrida das Poderosas - 1º etapa", data: "15/03", dataIso: "2026-03-15", cidade: "RJ", horario: "A definir", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Santander Track&Fields Run Series", data: "15/03", dataIso: "2026-03-15T12:00:00", cidade: "RJ", horario: "A definir", largada: "Avenida Lauro Sodré, 116", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "2ª Corrida das Águas", data: "22/03", dataIso: "2026-03-22", cidade: "RJ", horario: "A definir", largada: "Praça Pedro Bruno", link: INFO_LINK, valor: "A consultar", info: "Distância: 6k" },
+  { nome: "32ª Corrida Mulher Maravilha Rio de Janeiro", data: "29/03", dataIso: "2026-03-29", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Corrida Solidária RH Raiz", data: "29/03", dataIso: "2026-03-29T12:00:00", cidade: "RJ", horario: "A definir", largada: "Parque de Madureira - Arcos Olímpicos", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
 
   // ABRIL
-  { nome: "Corrida pela Inclusão", data: "05/04", dataIso: "2026-04-05", cidade: "RJ", horario: "07:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 90,00", info: "Evento social inclusivo." },
-  { nome: "Maratona Revezamento PZTEAM", data: "11/04", dataIso: "2026-04-11", cidade: "RJ", horario: "06:00", largada: "Grumari", link: INFO_LINK, valor: "R$ 180,00", info: "Desafio 45.9km em equipe ou solo." },
-  { nome: "Corrida Bob Esponja", data: "12/04", dataIso: "2026-04-12", cidade: "RJ", horario: "08:00", largada: "Posto 2, Copacabana", link: INFO_LINK, valor: "R$ 125,00", info: "Diversão para família." },
-  { nome: "RJ Half Marathon", data: "19/04", dataIso: "2026-04-19", cidade: "RJ", horario: "06:30", largada: "Leblon / Aterro", link: INFO_LINK, valor: "R$ 160,00", info: "Meia Maratona técnica." },
-  { nome: "Corrida Kids Páscoa", data: "21/04", dataIso: "2026-04-21", cidade: "RJ", horario: "09:00", largada: "Campo Grande", link: INFO_LINK, valor: "R$ 60,00", info: "Evento temático feriado." },
-  { nome: "Night Run - Etapa 1", data: "25/04", dataIso: "2026-04-25", cidade: "RJ", horario: "19:30", largada: "Sambódromo", link: INFO_LINK, valor: "R$ 139,00", info: "Maior corrida noturna do mundo." },
-  { nome: "Crônicas de Nárnia", data: "26/04", dataIso: "2026-04-26", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Corrida temática fantasia." },
+  { nome: "Corrida e Caminhada pela Inclusão 2026", data: "05/04", dataIso: "2026-04-05", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Maratona de Revezamento PZTEAM", data: "11/04", dataIso: "2026-04-11", cidade: "RJ", horario: "A definir", largada: "Grumari", link: INFO_LINK, valor: "A consultar", info: "Distância: 45,9k" },
+  { nome: "Corrida Bob Esponja 2026", data: "12/04", dataIso: "2026-04-12", cidade: "RJ", horario: "A definir", largada: "Em frente ao Posto 2", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Rj Half Marathon 2026", data: "19/04", dataIso: "2026-04-19", cidade: "RJ", horario: "A definir", largada: "A definir", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 21k" },
+  { nome: "Corrida Kids Páscoa é Ressureição", data: "21/04", dataIso: "2026-04-21", cidade: "RJ", horario: "A definir", largada: "Rua Walter Barbosa - Campo Grande", link: INFO_LINK, valor: "A consultar", info: "Distâncias: A definir" },
+  { nome: "Night Run 2026 - Etapa 1", data: "25/04", dataIso: "2026-04-25", cidade: "RJ", horario: "A definir", largada: "Sambódromo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Corrida e Caminhada Contos Clássicos Crônicas de Nárnia", data: "26/04", dataIso: "2026-04-26", cidade: "RJ", horario: "A definir", largada: "Parque de Madureira - Arcos Olímpicos", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
 
   // MAIO
-  { nome: "Mesa do Imperador", data: "17/05", dataIso: "2026-05-17", cidade: "RJ", horario: "07:00", largada: "Vista Chinesa", link: INFO_LINK, valor: "R$ 110,00", info: "Subida desafiadora na Floresta da Tijuca." },
-  { nome: "Fuzileiros Navais", data: "24/05", dataIso: "2026-05-24", cidade: "RJ", horario: "07:30", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "R$ 100,00", info: "Prova tradicional militar." },
-  { nome: "Circuito das Estações - Inverno", data: "31/05", dataIso: "2026-05-31", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Etapa focada em performance." },
-  { nome: "Corrida Betty Boop", data: "31/05", dataIso: "2026-05-31T12:00:00", cidade: "RJ", horario: "08:00", largada: "Parque Madureira", link: INFO_LINK, valor: "R$ 115,00", info: "Corrida temática feminina." },
-  { nome: "Corrida da Copa 2026", data: "31/05", dataIso: "2026-05-31T14:00:00", cidade: "RJ", horario: "07:30", largada: "Praça Mauá", link: INFO_LINK, valor: "R$ 95,00", info: "Celebração do ano de Copa." },
+  { nome: "4ª Corrida da Mesa do Imperador", data: "17/05", dataIso: "2026-05-17", cidade: "RJ", horario: "A definir", largada: "Estrada da Vista Chinesa, 120", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "Corrida Corpo de Fuzileiros Navais e Intendentes da Marinha", data: "24/05", dataIso: "2026-05-24", cidade: "RJ", horario: "A definir", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" },
+  { nome: "Circuito das Estações - Inverno", data: "31/05", dataIso: "2026-05-31", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k, 10k e 15k" },
+  { nome: "Corrida Betty Boop", data: "31/05", dataIso: "2026-05-31T12:00:00", cidade: "RJ", horario: "A definir", largada: "Parque Madureira - Arcos Olímpicos", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
+  { nome: "Corrida e Caminhada da Copa 2026", data: "31/05", dataIso: "2026-05-31T14:00:00", cidade: "RJ", horario: "A definir", largada: "Praça Mauá - Em frente ao Museu de Arte do Rio", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
 
   // JUNHO
-  { nome: "Corrida Bela e a Fera", data: "28/06", dataIso: "2026-06-28", cidade: "RJ", horario: "08:00", largada: "Parque Radical Deodoro", link: INFO_LINK, valor: "R$ 115,00", info: "Temática Disney Casais/Duplas." },
+  { nome: "Corrida da Bela e da Fera", data: "28/06", dataIso: "2026-06-28", cidade: "RJ", horario: "A definir", largada: "Parque Radical de Deodoro", link: INFO_LINK, valor: "A consultar", info: "Distância: 4k" },
 
   // JULHO
-  { nome: "Asics Golden Run RJ", data: "12/07", dataIso: "2026-07-12", cidade: "RJ", horario: "06:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 180,00", info: "Uma das meias mais rápidas do país." },
-  { nome: "6 Milhas da Reserva", data: "26/07", dataIso: "2026-07-26", cidade: "RJ", horario: "07:00", largada: "Praia da Reserva", link: INFO_LINK, valor: "R$ 100,00", info: "Aproximadamente 10km plano." },
+  { nome: "Asics Golden Run RJ", data: "12/07", dataIso: "2026-07-12", cidade: "RJ", horario: "A definir", largada: "Monumento aos Pracinhas", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 10k e 21k" },
+  { nome: "6 Milhas da Reserva", data: "26/07", dataIso: "2026-07-26", cidade: "RJ", horario: "A definir", largada: "Praia da Reserva", link: INFO_LINK, valor: "A consultar", info: "Distância: 6 milhas" },
 
   // AGOSTO
-  { nome: "Meia Internacional do Rio", data: "16/08", dataIso: "2026-08-16", cidade: "RJ", horario: "06:30", largada: "Leblon / Aterro", link: INFO_LINK, valor: "R$ 170,00", info: "Tradicionalíssima, percurso orla." },
+  { nome: "28ª Meia Maratona Internacional do Rio de Janeiro", data: "16/08", dataIso: "2026-08-16", cidade: "RJ", horario: "A definir", largada: "A definir", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k, 10k e 21k" },
 
   // SETEMBRO
-  { nome: "Meia da Reserva (5k)", data: "19/09", dataIso: "2026-09-19", cidade: "RJ", horario: "07:00", largada: "Praça Tim Maia, Pontal", link: INFO_LINK, valor: "R$ 95,00", info: "Dia 1: Distância curta." },
-  { nome: "Meia da Reserva (21k)", data: "20/09", dataIso: "2026-09-20", cidade: "RJ", horario: "06:30", largada: "Praça Tim Maia, Pontal", link: INFO_LINK, valor: "R$ 120,00", info: "Dia 2: Distância principal." },
-  { nome: "Circuito das Estações - Primavera", data: "20/09", dataIso: "2026-09-20T12:00:00", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Etapa colorida e rápida." },
+  { nome: "7ª Meia Maratona da Reserva - Desafio", data: "19/09", dataIso: "2026-09-19", cidade: "RJ", horario: "A definir", largada: "Posto 12 - Praça Tim Maia", link: INFO_LINK, valor: "A consultar", info: "Distância: 5k" },
+  { nome: "7ª Meia Maratona da Reserva - Desafio", data: "20/09", dataIso: "2026-09-20", cidade: "RJ", horario: "A definir", largada: "Posto 12 - Praça Tim Maia", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 10k e 21k" },
+  { nome: "Circuito das Estações - Primavera", data: "20/09", dataIso: "2026-09-20T12:00:00", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k, 10k e 18k" },
 
   // OUTUBRO (Vazio conforme dados)
 
   // NOVEMBRO
-  { nome: "Night Run - Etapa 2", data: "14/11", dataIso: "2026-11-14", cidade: "RJ", horario: "19:30", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 139,00", info: "Encerramento do circuito noturno." },
+  { nome: "Night Run 2026 - Etapa 2", data: "14/11", dataIso: "2026-11-14", cidade: "RJ", horario: "A definir", largada: "A definir", link: INFO_LINK, valor: "A consultar", info: "Distância: 7k" },
 
   // DEZEMBRO
-  { nome: "Circuito das Estações - Verão", data: "06/12", dataIso: "2026-12-06", cidade: "RJ", horario: "07:00", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "R$ 149,00", info: "Última grande prova do ano." }
+  { nome: "Circuito das Estações - Verão", data: "06/12", dataIso: "2026-12-06", cidade: "RJ", horario: "A definir", largada: "Aterro do Flamengo", link: INFO_LINK, valor: "A consultar", info: "Distâncias: 5k e 10k" }
 ];
 
 // --- CARD DE PROVA SLIM ---
@@ -206,9 +243,9 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
     const unsubscribe = onSnapshot(racesRef, (snapshot) => {
       const raceList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Verifica se a quantidade de corridas no banco é menor que o esperado e se o seeding já não está rodando
-      if (raceList.length < INITIAL_PREDICTIONS.length && !seedingRef.current) {
-        console.log("Detectadas provas faltando. Iniciando sincronização...");
+      // Verifica se a quantidade de corridas no banco é diferente do esperado e se o seeding já não está rodando
+      if (raceList.length !== INITIAL_PREDICTIONS.length && !seedingRef.current) {
+        console.log("Detectadas provas faltando ou sobrando. Iniciando sincronização...");
         seedingRef.current = true;
         seedInitialData(raceList).then(() => {
             // Opcional: poderíamos resetar o ref, mas para essa sessão o seeding roda uma vez.
@@ -226,19 +263,28 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   }, []);
 
   const seedInitialData = async (existingData: any[]) => {
-    const existingIds = new Set(existingData.map(d => d.id));
+    const expectedIds = new Set(INITIAL_PREDICTIONS.map(race => 
+      `seed_${race.dataIso}_${race.nome.toLowerCase().replace(/\s/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`
+    ));
+
+    // Deleta as corridas que não estão mais na lista de predições
+    for (const data of existingData) {
+      if (!expectedIds.has(data.id)) {
+        try {
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'races', data.id));
+        } catch (e) {
+          console.error("Error deleting old data:", e);
+        }
+      }
+    }
     
+    // Insere ou atualiza as corridas da lista
     for (const race of INITIAL_PREDICTIONS) {
-      // Gera ID determinístico baseado na data e nome
       const raceId = `seed_${race.dataIso}_${race.nome.toLowerCase().replace(/\s/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`;
-      
-      // Só grava se o ID não existir no banco
-      if (!existingIds.has(raceId)) {
-          try {
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'races', raceId), { ...race, lastScrape: new Date().toISOString() }, { merge: true });
-          } catch (e) {
-            console.error("Error seeding data:", e);
-          }
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'races', raceId), { ...race, lastScrape: new Date().toISOString() }, { merge: true });
+      } catch (e) {
+        console.error("Error seeding data:", e);
       }
     }
   };

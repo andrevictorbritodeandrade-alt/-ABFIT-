@@ -61,9 +61,9 @@ export function InstallPrompt({ onClose }: { onClose: () => void }) {
                 <Smartphone size={40} className="text-white" />
              </div>
              
-             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Instalar App Elite</h3>
+             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-2">Instalar App ABFIT</h3>
              <p className="text-sm text-zinc-400 font-medium leading-relaxed px-4 mb-8">
-                Instale o <strong className="text-white">ABFIT Elite</strong> para performance máxima, acesso offline e modo Tela Cheia Nativo.
+                Instale o <strong className="text-white">ABFIT</strong> para performance máxima, acesso offline e modo Tela Cheia Nativo.
              </p>
 
              {/* INSTRUÇÕES IOS */}

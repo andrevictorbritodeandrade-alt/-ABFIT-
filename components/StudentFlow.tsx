@@ -7,8 +7,17 @@ import {
   Trophy, AlertCircle, Info, ChevronDown, ChevronUp,
   Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu, Sparkles, AlertTriangle, LayoutGrid
 } from 'lucide-react';
-import { Card, EliteFooter, HeaderTitle } from './Layout';
+import { Card, AppFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
+
+const formatReps = (reps: any): string | null => {
+  if (!reps) return null;
+  const strReps = String(reps);
+  const rangeMatch = strReps.match(/(\d+)\s*(?:-|a|to)\s*(\d+)/i);
+  if (rangeMatch) return rangeMatch[2];
+  const numberMatch = strReps.match(/(\d+)/);
+  return numberMatch ? numberMatch[0] : strReps;
+};
 
 // --- BANCO DE DADOS VISUAL (FALLBACK) ---
 const GIF_DATABASE: Record<string, string> = {
@@ -87,7 +96,7 @@ function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) 
   }, [ex]);
 
   const handleError = () => {
-    // Se falhar na tentativa 0 (thumb do banco/prescreveAI)
+    // Se falhar na tentativa 0 (thumb do banco/ABFIT AI)
     if (attempt === 0) {
         const dbMatch = findInDb(ex.name);
         // Só muda se o DB match for diferente do atual (pra evitar loop se thumb == dbMatch)
@@ -133,15 +142,15 @@ const animationStyles = `
 `;
 
 /**
- * Modal Cinematográfico PrescreveAI
+ * Modal Cinematográfico ABFIT
  */
-export function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
+export function ABFITDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[150] bg-background/95 backdrop-blur-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar text-left">
       <style>{animationStyles}</style>
       <header className="flex justify-between items-center mb-8 sticky top-0 z-50 py-2">
         <div className="flex flex-col">
-          <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.4em] italic leading-none mb-2">PrescreveAI Elite</p>
+          <p className="text-[13px] font-black text-red-600 uppercase tracking-[0.4em] italic leading-none mb-2">ABFIT</p>
           <h2 className="text-2xl font-black italic uppercase text-foreground tracking-tighter leading-none max-w-[80%]">{ex.name}</h2>
         </div>
         <button onClick={onClose} className="p-3 bg-card rounded-full border border-border text-muted-foreground hover:text-foreground transition-all shadow-2xl">
@@ -160,7 +169,7 @@ export function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose:
             <div className="absolute top-0 left-0 w-full h-[2px] bg-red-600/30 animate-[scan_3s_infinite]"></div>
             <div className="absolute top-4 left-4 flex items-center gap-2 bg-background/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-600/30">
                <Scan size={14} className="text-red-600 animate-pulse" />
-               <span className="text-[8px] font-black text-foreground uppercase tracking-widest">Análise Ativa</span>
+               <span className="text-[11px] font-black text-foreground uppercase tracking-widest">Análise Ativa</span>
             </div>
           </div>
         </div>
@@ -169,7 +178,7 @@ export function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose:
           <Card className="p-6 bg-card/50 border-border space-y-4">
              <div className="flex items-center gap-3">
                 <Zap className="text-red-600" size={18} />
-                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Execução Técnica</h4>
+                <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-widest italic">Execução Técnica</h4>
              </div>
              <p className="text-xs text-muted-foreground font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
                {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua durante a execução."}
@@ -178,11 +187,11 @@ export function PrescreveAIDetailModal({ ex, onClose }: { ex: Exercise, onClose:
           <Card className="p-6 bg-card/50 border-border space-y-4">
              <div className="flex items-center gap-3">
                 <ShieldCheck className="text-emerald-500" size={18} />
-                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Hipertrofia Alvo</h4>
+                <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-widest italic">Hipertrofia Alvo</h4>
              </div>
              <div className="flex flex-wrap gap-2">
                 {(ex.benefits || "Tensão Mecânica,Estresse Metabólico,Performance").split(',').map((b: string, i: number) => (
-                  <span key={i} className="text-[9px] font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-full text-muted-foreground border border-border italic">{b.trim()}</span>
+                  <span key={i} className="text-[12px] font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-full text-muted-foreground border border-border italic">{b.trim()}</span>
                 ))}
              </div>
           </Card>
@@ -198,14 +207,20 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
   progress: { completedSets: number[], isFinished: boolean },
   onToggleFinish: (id: string) => void,
   onMarkSet: (id: string, idx: number, rest: string) => void,
-  onUpdateLoad: (id: string, val: string) => void,
+  onUpdateLoad: (id: string, val: string, skipSave?: boolean) => void,
   onUpdateUnit: (id: string, unit: 'Kg' | 'Placas') => void,
   onShowDetail: (ex: Exercise) => void,
   currentReps?: string | null,
   key?: React.Key
 }) {
+  const [localLoad, setLocalLoad] = useState(ex.load || '');
+
+  useEffect(() => {
+    setLocalLoad(ex.load || '');
+  }, [ex.load]);
+
   const totalSets = parseInt(ex.sets || '3') || 3;
-  const totalReps = currentReps || ex.reps || '15';
+  const totalReps = formatReps(currentReps || ex.reps || '15');
   const allSetsCompleted = progress.completedSets.length >= totalSets;
 
   return (
@@ -215,43 +230,48 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
         : 'border-border hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
       }`}
     >
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex-1 cursor-pointer group flex items-start gap-4" onClick={() => onShowDetail(ex)}>
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-border shrink-0 bg-background relative shadow-lg">
+      <div className="flex flex-col items-center text-center mb-8">
+        <div className="relative mb-6">
+          <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-border bg-background relative shadow-2xl cursor-pointer group" onClick={() => onShowDetail(ex)}>
              <ExerciseImage 
                ex={ex}
                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
              />
              <div className="absolute inset-0 bg-red-600/10 mix-blend-overlay"></div>
+             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                <Maximize2 size={24} className="text-white" />
+             </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-[10px] font-black italic uppercase tracking-widest leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>{idx + 1}º Exercício</span>
-              <Maximize2 size={10} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <h4 className={`text-xl font-black italic uppercase tracking-tighter leading-none transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground group-hover:text-red-600'}`}>
-              {ex.name}
-            </h4>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-2 italic">{ex.method || 'Protocolo PhD Padrão'}</p>
-          </div>
+          {allSetsCompleted && (
+             <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300 z-10 border-4 border-background">
+               <Check size={20} />
+             </div>
+          )}
         </div>
-        {allSetsCompleted && (
-           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300">
-             <Check size={20} />
-           </div>
-        )}
+        
+        <div className="space-y-3">
+          <span className={`text-xs font-black italic uppercase tracking-[0.3em] leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>
+            {idx + 1}º Exercício
+          </span>
+          <h4 className={`text-3xl font-black italic uppercase tracking-tighter leading-tight transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground'}`}>
+            {ex.name}
+          </h4>
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] italic">
+            {ex.method || 'Protocolo PhD Padrão'}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center shadow-inner">
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center shadow-inner">
+          <div className="flex flex-wrap justify-center gap-4">
             {Array.from({ length: totalSets }).map((_, sIdx) => (
               <button 
                 key={sIdx}
-                onClick={() => onMarkSet(ex.id || '', sIdx, ex.rest || '60')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-black italic text-sm transition-all border-2 
+                onClick={() => onMarkSet(ex.id || '', sIdx, ex.rest || '30')}
+                className={`w-14 h-14 rounded-full flex items-center justify-center font-black italic text-lg transition-all border-2 
                   ${progress.completedSets.includes(sIdx) 
-                    ? 'bg-red-600 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] scale-110' 
+                    ? 'bg-red-600 border-red-600 text-white shadow-[0_0_25px_rgba(220,38,38,0.6)] scale-110' 
                     : 'bg-card border-border text-muted-foreground hover:border-red-600/50 hover:text-foreground'
                   }`}
               >
@@ -259,28 +279,32 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
               </button>
             ))}
           </div>
-          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-3 italic">
+          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-4 italic">
             {allSetsCompleted ? <span className="text-emerald-500">SÉRIE CONCLUÍDA</span> : "Registro de Séries"}
           </p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
-          <span className="text-2xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
-          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
+        <div className="bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner">
+          <span className="text-3xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
+          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+        <div className="bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner">
           <div className="flex items-baseline gap-1">
             <input 
               type="number" 
-              defaultValue={ex.load || ''}
+              value={localLoad}
               placeholder="--"
-              onBlur={(e) => onUpdateLoad(ex.id!, e.target.value)}
-              className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-muted-foreground"
+              onChange={(e) => {
+                setLocalLoad(e.target.value);
+                onUpdateLoad(ex.id!, e.target.value, true);
+              }}
+              onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
+              className="bg-transparent border-none p-0 text-3xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
             />
-            <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
+            <span className="text-xs font-black text-red-600 uppercase italic">KG</span>
           </div>
-          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Carga Atual</p>
+          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Carga Atual</p>
         </div>
       </div>
     </div>
@@ -299,7 +323,7 @@ function getCurrentRepsForStudent(student: Student): string | null {
   const diffWeeks = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
   
   const currentMicro = student.periodization.microciclos.find((m: any) => {
-    const range = m.range || m.semanas;
+    const range = String(m.range || m.semanas || "");
     if (!range) return false;
     const numbers = range.match(/\d+/g);
     if (!numbers) return false;
@@ -309,11 +333,11 @@ function getCurrentRepsForStudent(student: Student): string | null {
   });
   
   if (!currentMicro) return null;
-  if (currentMicro.reps) return currentMicro.reps;
+  if (currentMicro.reps) return formatReps(currentMicro.reps);
   
-  const volume = currentMicro.volume || currentMicro.volume_semanal || "";
+  const volume = String(currentMicro.volume || currentMicro.volume_semanal || "");
   const repsMatch = volume.match(/(\d+-\d+|\d+)\s*REPETIÇÕES/i) || volume.match(/(\d+-\d+|\d+)\s*reps/i);
-  return repsMatch ? repsMatch[1] : null;
+  return repsMatch ? formatReps(repsMatch[1]) : null;
 }
 
 export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
@@ -356,21 +380,37 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   useEffect(() => {
     const savedStart = localStorage.getItem(`workout_start_${user.id}`);
     const savedId = localStorage.getItem(`active_workout_id_${user.id}`);
-    if (savedStart && savedId) {
+    const savedProgress = localStorage.getItem(`workout_progress_${user.id}`);
+    
+    if (savedStart && savedId && !activeWorkout) {
       const start = parseInt(savedStart);
       setSessionStartTime(start);
       setElapsedTime(Math.floor((Date.now() - start) / 1000));
       const workout = user.workouts?.find(w => w.id === savedId);
       if (workout) {
         setActiveWorkout(workout);
-        const initialProgress: Record<string, { completedSets: number[], isFinished: boolean }> = {};
-        workout.exercises.forEach(ex => {
-          initialProgress[ex.id || ''] = { completedSets: [], isFinished: false };
-        });
-        setExerciseProgress(initialProgress);
+        if (savedProgress) {
+          try {
+            setExerciseProgress(JSON.parse(savedProgress));
+          } catch (e) {
+            console.error("Failed to parse saved progress", e);
+          }
+        } else {
+          const initialProgress: Record<string, { completedSets: number[], isFinished: boolean }> = {};
+          workout.exercises.forEach(ex => {
+            initialProgress[ex.id || ''] = { completedSets: [], isFinished: false };
+          });
+          setExerciseProgress(initialProgress);
+        }
       }
     }
-  }, [user.id, user.workouts]);
+  }, [user.id, user.workouts, activeWorkout]);
+
+  useEffect(() => {
+    if (activeWorkout && Object.keys(exerciseProgress).length > 0) {
+      localStorage.setItem(`workout_progress_${user.id}`, JSON.stringify(exerciseProgress));
+    }
+  }, [exerciseProgress, activeWorkout, user.id]);
 
   useEffect(() => {
     if (sessionStartTime) {
@@ -401,6 +441,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     setActiveWorkout(workout);
     localStorage.setItem(`workout_start_${user.id}`, now.toString());
     localStorage.setItem(`active_workout_id_${user.id}`, workout.id);
+    localStorage.removeItem(`workout_progress_${user.id}`);
     const initialProgress: Record<string, { completedSets: number[], isFinished: boolean }> = {};
     workout.exercises.forEach(ex => {
       initialProgress[ex.id || ''] = { completedSets: [], isFinished: false };
@@ -409,7 +450,11 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   };
 
   const cancelSession = () => {
+    localStorage.removeItem(`workout_start_${user.id}`);
+    localStorage.removeItem(`active_workout_id_${user.id}`);
+    localStorage.removeItem(`workout_progress_${user.id}`);
     setActiveWorkout(null);
+    setSessionStartTime(null);
   };
 
   const capturePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -426,27 +471,90 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const finishSession = async () => {
     if (!activeWorkout) return;
     setIsFinishing(true);
-    const now = new Date();
-    const entry: WorkoutHistoryEntry = {
-      id: Date.now().toString(),
-      workoutId: activeWorkout.id,
-      name: activeWorkout.title,
-      duration: formatTime(elapsedTime),
-      date: now.toLocaleDateString('pt-BR'),
-      timestamp: Date.now(),
-      photoUrl: selfieUrl || undefined,
-      type: 'STRENGTH'
-    };
-    const updatedProtocolDate = user.protocolStartDate || now.toISOString();
-    const updatedHistory = [entry, ...(user.workoutHistory || [])];
-    await onSave(user.id, { workoutHistory: updatedHistory, protocolStartDate: updatedProtocolDate });
-    localStorage.removeItem(`workout_start_${user.id}`);
-    localStorage.removeItem(`active_workout_id_${user.id}`);
-    setSessionStartTime(null);
-    setActiveWorkout(null);
-    setIsFinishing(false);
-    setShowPhotoStep(false);
-    onBack();
+    try {
+      const now = new Date();
+      const entry: WorkoutHistoryEntry = {
+        id: Date.now().toString(),
+        workoutId: activeWorkout.id,
+        name: activeWorkout.title,
+        duration: formatTime(elapsedTime),
+        date: now.toLocaleDateString('pt-BR'),
+        timestamp: Date.now(),
+        photoUrl: selfieUrl || undefined,
+        type: 'STRENGTH'
+      };
+      const updatedProtocolDate = user.protocolStartDate || now.toISOString();
+      const updatedHistory = [entry, ...(user.workoutHistory || [])];
+      
+      // Update analytics
+      const currentAnalytics = user.analytics || { sessionsCompleted: 0, streakDays: 0, exercises: {} };
+      const newExercises = { ...currentAnalytics.exercises };
+      
+      activeWorkout.exercises.forEach(ex => {
+        const prog = exerciseProgress[ex.id || ''];
+        const totalSets = parseInt(ex.sets || '3') || 3;
+        const isCompleted = prog && prog.completedSets.length >= totalSets;
+        
+        if (!newExercises[ex.name]) {
+          newExercises[ex.name] = { completed: 0, skipped: 0 };
+        }
+        
+        if (isCompleted) {
+          newExercises[ex.name].completed += 1;
+        } else {
+          newExercises[ex.name].skipped += 1;
+        }
+      });
+
+      // Calculate streak
+      let newStreak = currentAnalytics.streakDays;
+      const lastDateStr = currentAnalytics.lastSessionDate;
+      const todayStr = now.toLocaleDateString('pt-BR');
+      
+      if (lastDateStr) {
+        const [lastDay, lastMonth, lastYear] = lastDateStr.split('/');
+        const lastDate = new Date(parseInt(lastYear), parseInt(lastMonth) - 1, parseInt(lastDay));
+        const diffTime = Math.abs(now.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          newStreak += 1;
+        } else if (diffDays > 1) {
+          newStreak = 1;
+        }
+      } else {
+        newStreak = 1;
+      }
+
+      const updatedAnalytics = {
+        ...currentAnalytics,
+        sessionsCompleted: currentAnalytics.sessionsCompleted + 1,
+        streakDays: newStreak,
+        lastSessionDate: todayStr,
+        exercises: newExercises
+      };
+
+      // Salva o histórico e a data do protocolo
+      await onSave(user.id, { 
+        workoutHistory: updatedHistory, 
+        protocolStartDate: updatedProtocolDate,
+        analytics: updatedAnalytics
+      });
+
+      // Limpa o estado local
+      localStorage.removeItem(`workout_start_${user.id}`);
+      localStorage.removeItem(`active_workout_id_${user.id}`);
+      localStorage.removeItem(`workout_progress_${user.id}`);
+      setSessionStartTime(null);
+      setActiveWorkout(null);
+      setIsFinishing(false);
+      setShowPhotoStep(false);
+      onBack();
+    } catch (error) {
+      console.error("Erro ao finalizar sessão:", error);
+      alert("Erro ao salvar o treino. Verifique sua conexão e tente novamente.");
+      setIsFinishing(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -457,10 +565,19 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   if (isResting) {
     return (
-      <div className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center p-6 text-foreground animate-in fade-in duration-300">
-        <p className="text-red-600 font-black uppercase tracking-[0.4em] mb-4 italic">Recuperação Biomecânica</p>
-        <div className="text-[6rem] font-black italic tracking-tighter leading-none text-foreground animate-pulse tabular-nums">{restCountdown}</div>
-        <button onClick={() => setRestCountdown(0)} className="mt-16 flex items-center gap-2 bg-card px-12 py-6 rounded-[2.5rem] border border-border font-black uppercase tracking-widest text-xs hover:bg-red-600 shadow-2xl transition-all">Pular Descanso</button>
+      <div className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center p-6 text-foreground animate-in fade-in duration-300 text-center">
+        <p className="text-red-600 font-black uppercase tracking-[0.4em] mb-8 italic text-2xl max-w-xs mx-auto leading-tight">
+          Recuperação<br/>Biomecânica
+        </p>
+        <div className="text-[12rem] font-black italic tracking-tighter leading-none text-foreground animate-pulse tabular-nums mb-12">
+          {restCountdown}
+        </div>
+        <button 
+          onClick={() => setRestCountdown(0)} 
+          className="mt-8 flex items-center gap-2 bg-card px-10 py-5 rounded-3xl border border-border font-black uppercase tracking-widest text-base hover:bg-red-600 shadow-2xl transition-all active:scale-95"
+        >
+          Pular Descanso
+        </button>
       </div>
     );
   }
@@ -468,17 +585,17 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   if (showCompletionModal) {
     return (
       <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-500">
-        <Card className="w-full max-w-sm bg-card border-red-600/30 p-10 text-center shadow-3xl animate-in zoom-in-95">
-          <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-red-600/30">
-            <Trophy className="text-white" size={48} />
+        <Card className="w-full max-w-xs bg-card border-red-600/30 p-6 text-center shadow-3xl animate-in zoom-in-95">
+          <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-600/30">
+            <Trophy className="text-white" size={40} />
           </div>
           <h3 className="text-xl font-black italic uppercase text-foreground tracking-tighter leading-none mb-2">Protocolo Vencido!</h3>
-          <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-10">Sua performance foi gravada com sucesso.</p>
-          <div className="bg-background/60 p-6 rounded-3xl mb-10 border border-border shadow-inner">
-             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 italic">Tempo Total</p>
-             <p className="text-2xl font-black text-foreground italic tracking-tighter leading-none">{formatTime(elapsedTime)}</p>
+          <p className="text-muted-foreground text-[11px] font-black uppercase tracking-widest mb-8">Sua performance foi gravada com sucesso.</p>
+          <div className="bg-background/60 p-4 rounded-2xl mb-8 border border-border shadow-inner">
+             <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-1 italic">Tempo Total</p>
+             <p className="text-xl font-black text-foreground italic tracking-tighter leading-none">{formatTime(elapsedTime)}</p>
           </div>
-          <button onClick={() => { setShowCompletionModal(false); setShowPhotoStep(true); }} className="w-full py-5 bg-red-600 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-red-700 transition-all">Gravar Selfie Elite</button>
+          <button onClick={() => { setShowCompletionModal(false); setShowPhotoStep(true); }} className="w-full py-4 bg-red-600 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-red-700 transition-all">Gravar Selfie ABFIT</button>
         </Card>
       </div>
     );
@@ -494,19 +611,22 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         <div className="flex-1 flex flex-col items-center justify-center space-y-8">
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="w-full max-sm aspect-square bg-card rounded-[3rem] border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group shadow-2xl"
+            className="w-full max-sm aspect-square bg-card rounded-3xl border-2 border-dashed border-red-600/30 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group shadow-2xl"
           >
-            {selfieUrl ? <img src={selfieUrl} className="w-full h-full object-cover" /> : <><Camera size={48} className="text-red-600 mb-4 group-hover:scale-110 transition-transform" /><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registrar Selfie de Elite</p></>}
+            {selfieUrl ? <img src={selfieUrl} className="w-full h-full object-cover" /> : <><Camera size={40} className="text-red-600 mb-4 group-hover:scale-110 transition-transform" /><p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Registrar Selfie ABFIT</p></>}
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="user" onChange={capturePhoto} />
           </div>
           <div className="text-center">
             <h4 className="text-2xl font-black italic uppercase text-foreground tracking-tighter">{activeWorkout?.title}</h4>
-            <div className="flex gap-4 justify-center mt-4">
-              <div className="flex flex-col"><span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Tempo</span><span className="text-lg font-black text-red-600 italic tabular-nums">{formatTime(elapsedTime)}</span></div>
+            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-2 px-8 leading-relaxed">
+              Quase lá! Clique abaixo para finalizar e salvar seu treino no histórico.
+            </p>
+            <div className="flex gap-4 justify-center mt-6">
+              <div className="flex flex-col"><span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Tempo Total</span><span className="text-2xl font-black text-red-600 italic tabular-nums">{formatTime(elapsedTime)}</span></div>
             </div>
           </div>
         </div>
-        <button onClick={finishSession} disabled={isFinishing} className="w-full py-6 bg-red-600 rounded-[2.5rem] font-black uppercase tracking-widest text-sm shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all flex items-center justify-center gap-3 mb-8">
+        <button onClick={finishSession} disabled={isFinishing} className="w-full py-5 bg-red-600 rounded-3xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all flex items-center justify-center gap-3 mb-8">
           {isFinishing ? <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> SALVANDO...</span> : <><CheckCircle2 /> SALVAR NO FEED</>}
         </button>
       </div>
@@ -527,13 +647,13 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         <div className="space-y-4">
           {(user.workouts || []).length > 0 ? (
             user.workouts!.map(w => (
-              <Card key={w.id} className="p-8 bg-card/50 border-border flex justify-between items-center group cursor-pointer hover:border-red-600/20 shadow-2xl rounded-[3rem]" onClick={() => startSession(w)}>
-                <div>
-                  <h4 className="text-xl font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors">{w.title}</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">{w.exercises.length} Exercícios Prescritos</p>
+              <Card key={w.id} className="p-4 bg-card/50 border-border flex flex-row items-center gap-4 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-3xl transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
+                <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all shadow-lg shrink-0">
+                  <Play size={20} fill="currentColor" />
                 </div>
-                <div className="p-4 bg-muted rounded-2xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">
-                  <Play size={24} fill="currentColor" />
+                <div className="text-left">
+                  <h4 className="text-lg font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none mb-1">{w.title}</h4>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{w.exercises.length} Exercícios Prescritos</p>
                 </div>
               </Card>
             ))
@@ -559,7 +679,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               <ArrowLeft size={20}/>
            </button>
            <div className="flex flex-col">
-              <span className="text-[8px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
+              <span className="text-[11px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
               <h2 className="text-lg font-black italic uppercase tracking-tighter text-foreground leading-none">{activeWorkout.title}</h2>
            </div>
         </div>
@@ -569,11 +689,11 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
              <span className="text-xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
            </div>
            {allExercisesCompleted ? (
-             <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[9px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
+             <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[12px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
                 SALVAR TREINO
              </button>
            ) : (
-             <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">EM ANDAMENTO</span>
+             <span className="text-[11px] font-black uppercase text-muted-foreground tracking-widest">EM ANDAMENTO</span>
            )}
         </div>
       </header>
@@ -586,7 +706,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                     <Calendar size={18} className="text-red-600" />
                  </div>
                  <div className="flex flex-col min-w-0">
-                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
+                    <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 leading-none">Início Protocolo</span>
                     <span className={`font-black italic tracking-tighter leading-none truncate ${!workoutStats.rawStartDate ? 'text-muted-foreground text-[10px]' : 'text-foreground text-lg'}`}>
                       {!workoutStats.rawStartDate ? workoutStats.startDate : (
                         <>{(workoutStats.startDate || "").split('/')[0]}<span className="text-red-600 text-sm">/</span>{(workoutStats.startDate || "").split('/')[1]}</>
@@ -596,14 +716,14 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               </div>
               <div className="flex gap-4 sm:gap-8 shrink-0">
                  <div className="text-center">
-                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Execuções</span>
+                    <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Execuções</span>
                     <div className="flex items-baseline gap-0.5">
                        <span className="text-lg font-black text-foreground italic tracking-tighter leading-none">{workoutStats.completed}</span>
-                       <span className="text-[8px] font-black text-muted-foreground italic">/{workoutStats.total}</span>
+                       <span className="text-[11px] font-black text-muted-foreground italic">/{workoutStats.total}</span>
                     </div>
                  </div>
                  <div className="text-right hidden xs:block">
-                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Renovação</span>
+                    <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Renovação</span>
                     <div className="flex items-center gap-1 justify-end">
                        <RefreshCw size={10} className={workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500 animate-spin" : "text-muted-foreground"} />
                        <span className={`text-xs font-black italic uppercase leading-none ${workoutStats.completed >= workoutStats.total - 2 ? "text-amber-500" : "text-muted-foreground"}`}>
@@ -637,12 +757,28 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                  });
                  // Inicia timer apenas se o set não estava marcado (está marcando agora)
                  if (!progress.completedSets.includes(sIdx)) {
-                    setRestCountdown(parseInt(rest) || 60);
+                    setRestCountdown(parseInt(rest) || 30);
                     setIsResting(true);
                  }
               }}
-              onUpdateLoad={(id, val) => onSave(user.id, { workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: w.exercises.map(e => e.id === id ? { ...e, load: val } : e) } : w) })}
-              onUpdateUnit={(id, unit) => onSave(user.id, { workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: w.exercises.map(e => e.id === id ? { ...e, loadUnit: unit } : e) } : w) })}
+              onUpdateLoad={(id, val, skipSave = false) => {
+                if (!activeWorkout) return;
+                const updatedExercises = activeWorkout.exercises.map(e => e.id === id ? { ...e, load: val } : e);
+                setActiveWorkout({ ...activeWorkout, exercises: updatedExercises });
+                if (!skipSave) {
+                  onSave(user.id, { 
+                    workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: updatedExercises } : w) 
+                  });
+                }
+              }}
+              onUpdateUnit={(id, unit) => {
+                if (!activeWorkout) return;
+                const updatedExercises = activeWorkout.exercises.map(e => e.id === id ? { ...e, loadUnit: unit } : e);
+                setActiveWorkout({ ...activeWorkout, exercises: updatedExercises });
+                onSave(user.id, { 
+                  workouts: user.workouts?.map(w => w.id === activeWorkout.id ? { ...w, exercises: updatedExercises } : w) 
+                });
+              }}
               onShowDetail={setExerciseDetail}
             />
           );
@@ -660,8 +796,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
          </div>
       )}
 
-      {exerciseDetail && <PrescreveAIDetailModal ex={exerciseDetail} onClose={() => setExerciseDetail(null)} />}
-      <EliteFooter />
+      {exerciseDetail && <ABFITDetailModal ex={exerciseDetail} onClose={() => setExerciseDetail(null)} />}
+      <AppFooter />
     </div>
   );
 }
@@ -687,27 +823,27 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
       <div className="space-y-6">
         {student.physicalAssessments && student.physicalAssessments.length > 0 ? (
           student.physicalAssessments.map(pa => (
-            <Card key={pa.id} className="p-8 bg-zinc-900 border-zinc-800 rounded-[2.5rem] shadow-3xl">
-               <div className="flex justify-between items-start mb-6">
+            <Card key={pa.id} className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-xl">
+               <div className="flex justify-between items-start mb-4">
                   <h4 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none">
                     <HeaderTitle text={new Date(pa.data).toLocaleDateString('pt-BR')} />
                   </h4>
-                  <div className="bg-red-600 px-4 py-1.5 rounded-full text-[8px] font-black uppercase text-white tracking-widest shadow-lg">Validada</div>
+                  <div className="bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase text-white tracking-widest shadow-lg">Validada</div>
                </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="p-5 bg-black/60 rounded-3xl border border-white/5">
-                    <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-2">Massa Corporal</p>
-                    <p className="text-2xl font-black text-red-600 italic tracking-tighter leading-none">{pa.peso}KG</p>
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5">
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic mb-1">Massa Corporal</p>
+                    <p className="text-xl font-black text-red-600 italic tracking-tighter leading-none">{pa.peso}KG</p>
                   </div>
-                  <div className="p-5 bg-black/60 rounded-3xl border border-white/5">
-                    <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest italic mb-2">Gordura Bio</p>
-                    <p className="text-2xl font-black text-red-600 italic tracking-tighter leading-none">{pa.bio_percentual_gordura}%</p>
+                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5">
+                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic mb-1">Gordura Bio</p>
+                    <p className="text-xl font-black text-red-600 italic tracking-tighter leading-none">{pa.bio_percentual_gordura}%</p>
                   </div>
                </div>
             </Card>
           ))
         ) : (
-          <p className="text-center text-zinc-700 italic py-12 border-2 border-dashed border-zinc-900 rounded-[3rem] uppercase font-black text-[10px] tracking-widest">Aguardando Avaliação Presencial</p>
+          <p className="text-center text-zinc-700 italic py-12 border-2 border-dashed border-zinc-900 rounded-[3rem] uppercase font-black text-[13px] tracking-widest">Aguardando Avaliação Presencial</p>
         )}
       </div>
     </div>
@@ -763,14 +899,14 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
 
       <div className="space-y-6">
         {plan.bioInsight && (
-          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-950/40 to-black border border-rose-600/20 shadow-lg relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-6 opacity-20"><Sparkles className="text-rose-500" size={64}/></div>
-             <div className="flex items-center gap-3 mb-6 relative z-10">
-                <Sparkles className="text-rose-500" size={20} />
-                <h3 className="text-lg font-black uppercase italic text-rose-500 tracking-widest">Bio-Insight</h3>
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-rose-950/40 to-black border border-rose-600/20 shadow-lg relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-20"><Sparkles className="text-rose-500" size={48}/></div>
+             <div className="flex items-center gap-3 mb-4 relative z-10">
+                <Sparkles className="text-rose-500" size={18} />
+                <h3 className="text-base font-black uppercase italic text-rose-500 tracking-widest">Bio-Insight</h3>
              </div>
              
-             <p className="text-zinc-300 text-xs italic leading-relaxed mb-8 relative z-10 font-medium">
+             <p className="text-zinc-300 text-[11px] italic leading-relaxed mb-6 relative z-10 font-medium">
                {plan.bioInsight.context}
              </p>
 
@@ -778,7 +914,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
                {plan.bioInsight.tips.map((tip, idx) => (
                  <div key={idx} className="flex gap-4">
                     <span className="text-rose-500 font-black italic text-lg">{idx + 1}.</span>
-                    <p className="text-zinc-400 text-[11px] leading-relaxed">
+                    <p className="text-zinc-400 text-[14px] leading-relaxed">
                       {(tip || "").split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-white font-bold">{part}</strong> : part)}
                     </p>
                  </div>
@@ -787,27 +923,27 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <Card className="p-8 bg-zinc-900/50 border-white/5 h-full">
-              <h3 className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-4 italic">Estratégia Geral</h3>
-              <p className="text-white text-sm italic font-medium leading-relaxed mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <Card className="p-6 bg-zinc-900/50 border-white/5 h-full">
+              <h3 className="text-[11px] font-black uppercase text-red-600 tracking-widest mb-3 italic">Estratégia Geral</h3>
+              <p className="text-white text-[13px] italic font-medium leading-relaxed mb-4">
                 "{plan.generalStrategy}"
               </p>
               {plan.phaseTitle && (
-                <div className="pt-6 border-t border-white/5">
-                   <p className="text-[9px] text-zinc-500 uppercase tracking-widest mb-1">Fase Atual</p>
-                   <p className="text-xs text-white font-bold uppercase">{plan.phaseTitle}</p>
+                <div className="pt-4 border-t border-white/5">
+                   <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Fase Atual</p>
+                   <p className="text-[11px] text-white font-bold uppercase">{plan.phaseTitle}</p>
                 </div>
               )}
            </Card>
 
-           <Card className="p-8 bg-red-950/10 border-red-900/20 h-full">
-              <h3 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-6 italic">Segurança Clínica</h3>
-              <div className="space-y-5">
+           <Card className="p-6 bg-red-950/10 border-red-900/20 h-full">
+              <h3 className="text-[11px] font-black uppercase text-red-500 tracking-widest mb-4 italic">Segurança Clínica</h3>
+              <div className="space-y-4">
                  {(plan.clinicalSafety || []).map((item, idx) => (
                    <div key={idx} className="flex gap-3">
-                      <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">{item}</p>
+                      <AlertTriangle size={14} className="text-red-600 shrink-0 mt-0.5" />
+                      <p className="text-[13px] text-zinc-400 leading-relaxed font-medium">{item}</p>
                    </div>
                  ))}
               </div>
@@ -818,37 +954,37 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
           <div className="mt-12">
             <h3 className="text-lg font-black uppercase tracking-tighter text-white mb-6">Cronograma de Microciclos</h3>
             <div className="space-y-6">
-              {plan.microciclos.map((micro: any, idx: number) => (
+              {(plan.microciclos || []).map((micro: any, idx: number) => (
                 <Card key={idx} className="p-6 bg-zinc-900/40 border-white/5">
                   <div className="mb-6">
                     <h4 className="text-red-500 font-black text-lg mb-1">Semanas {micro.range || micro.semanas}</h4>
-                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{micro.focus || micro.titulo}</p>
+                    <p className="text-[13px] text-zinc-500 font-black uppercase tracking-widest">{micro.focus || micro.titulo}</p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
                     <div>
-                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Método</p>
+                      <p className="text-[12px] text-zinc-500 font-black uppercase tracking-widest mb-1">Método</p>
                       <p className="text-sm text-white font-bold">{micro.method || micro.metodo}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Intensidade</p>
-                      <p className="text-sm text-white font-bold">{(micro.intensity || micro.intensidade || "").split(' ')[0]}</p>
-                      <p className="text-[10px] text-red-500 font-bold">{(micro.intensity || micro.intensidade || "").split(' ').slice(1).join(' ')}</p>
+                      <p className="text-[12px] text-zinc-500 font-black uppercase tracking-widest mb-1">Intensidade</p>
+                      <p className="text-sm text-white font-bold">{String(micro.intensity || micro.intensidade || "").split(' ')[0]}</p>
+                      <p className="text-[13px] text-red-500 font-bold">{String(micro.intensity || micro.intensidade || "").split(' ').slice(1).join(' ')}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Volume</p>
-                      <p className="text-sm text-white font-bold">{(micro.volume || micro.volume_semanal || "").split(' ')[0]}</p>
-                      <p className="text-[10px] text-red-500 font-bold">{(micro.volume || micro.volume_semanal || "").split(' ').slice(1).join(' ')}</p>
+                      <p className="text-[12px] text-zinc-500 font-black uppercase tracking-widest mb-1">Volume</p>
+                      <p className="text-sm text-white font-bold">{String(micro.volume || micro.volume_semanal || "").split(' ')[0]}</p>
+                      <p className="text-[13px] text-red-500 font-bold">{String(micro.volume || micro.volume_semanal || "").split(' ').slice(1).join(' ')}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-1">Repetições</p>
-                      <p className="text-sm text-white font-bold">{micro.reps || (micro.volume || micro.volume_semanal || "").split(',')[1]?.trim() || "N/A"}</p>
+                      <p className="text-[12px] text-zinc-500 font-black uppercase tracking-widest mb-1">Repetições</p>
+                      <p className="text-sm text-white font-bold">{formatReps(micro.reps || String(micro.volume || micro.volume_semanal || "").split(',')[1]?.trim()) || "N/A"}</p>
                     </div>
                   </div>
 
                   <div className="bg-black/50 p-4 rounded-xl border border-white/5 mb-4">
-                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mb-2">Volume Semanal (Séries)</p>
-                    <p className="text-xs text-zinc-300 font-mono">{micro.weeklyVolume || (micro.volume || micro.volume_semanal || "").split(',')[0] || "N/A"}</p>
+                    <p className="text-[12px] text-zinc-500 font-black uppercase tracking-widest mb-2">Volume Semanal (Séries)</p>
+                    <p className="text-xs text-zinc-300 font-mono">{micro.weeklyVolume || String(micro.volume || micro.volume_semanal || "").split(',')[0] || "N/A"}</p>
                   </div>
 
                   {(micro.notes || micro.descricao) && (
@@ -879,12 +1015,12 @@ export function AboutView({ onBack }: { onBack: () => void }) {
       </header>
       <div className="space-y-12">
         <div className="text-center">
-          <h3 className="text-5xl font-black italic uppercase text-red-600 tracking-tighter leading-none">Elite Performance</h3>
-          <p className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.4em] mt-2 italic">PhD André Brito</p>
+          <h3 className="text-5xl font-black italic uppercase text-red-600 tracking-tighter leading-none">ABFIT Performance</h3>
+          <p className="text-[13px] font-black uppercase text-zinc-500 tracking-[0.4em] mt-2 italic">PhD André Brito</p>
         </div>
         <div className="space-y-6">
-          <Card className="p-8 bg-zinc-900/40 border-white/5">
-            <h4 className="text-sm font-black uppercase italic text-white mb-4">Nossa Missão</h4>
+          <Card className="p-6 bg-zinc-900/40 border-white/5">
+            <h4 className="text-sm font-black uppercase italic text-white mb-3">Nossa Missão</h4>
             <p className="text-xs text-zinc-400 leading-relaxed italic">
               Proporcionar treinamento de alto nível fundamentado em Ciência do Exercício e Biomecânica, 
               utilizando tecnologia de ponta para otimizar resultados e garantir a segurança do atleta.
@@ -893,11 +1029,11 @@ export function AboutView({ onBack }: { onBack: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-zinc-900 rounded-3xl border border-white/5 text-center">
                <Award className="text-red-600 mx-auto mb-2" size={24} />
-               <p className="text-[10px] font-black uppercase text-white leading-none">Certificação PhD</p>
+               <p className="text-[13px] font-black uppercase text-white leading-none">Certificação PhD</p>
             </div>
             <div className="p-4 bg-zinc-900 rounded-3xl border border-white/5 text-center">
                <Shield className="text-red-600 mx-auto mb-2" size={24} />
-               <p className="text-[10px] font-black uppercase text-white leading-none">Segurança PBE</p>
+               <p className="text-[13px] font-black uppercase text-white leading-none">Segurança PBE</p>
             </div>
           </div>
         </div>

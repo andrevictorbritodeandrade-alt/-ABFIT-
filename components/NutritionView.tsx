@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeft, ChefHat, Plus, Activity, Utensils, Zap, Loader2, Save } from 'lucide-react';
-import { Card, EliteFooter } from './Layout';
+import { Card, AppFooter } from './Layout';
 import { Student, NutritionProfile, MealPlan, MacroNutrients } from '../types';
 import { generateAIMealPlan, estimateFoodMacros } from '../services/gemini';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -96,7 +96,7 @@ export function NutritionView({ student, onBack, onSave }: NutritionProps) {
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full shadow-lg text-white hover:bg-red-600 transition-colors"><ArrowLeft size={20}/></button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Nutrição Elite</h2>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Nutrição ABFIT</h2>
         </div>
       </header>
 
@@ -280,7 +280,7 @@ export function NutritionView({ student, onBack, onSave }: NutritionProps) {
            )}
         </div>
       )}
-      <EliteFooter />
+      <AppFooter />
     </div>
   );
 }

@@ -413,12 +413,12 @@ const INITIAL_DB: AppDatabase = {
 };
 
 // --- COMPONENTE PRINCIPAL ENCAPSULADO ---
-interface PrescreveAIProps {
+interface ABFITAIProps {
   studentName: string;
   onClose: () => void;
 }
 
-export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onClose }) => {
+export const ABFITAIModule: React.FC<ABFITAIProps> = ({ studentName, onClose }) => {
   const [db, setDb] = useState<AppDatabase>(INITIAL_DB);
   const [activeSeries, setActiveSeries] = useState("A");
   const [activeTab, setActiveTab] = useState<'periodization' | 'workouts'>('workouts');
@@ -439,7 +439,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
 
   // Lógica de Inicialização Automática para o Aluno vindo do abfit
   useEffect(() => {
-    const savedData = localStorage.getItem('prescreveai-data-v2');
+    const savedData = localStorage.getItem('abfit-ai-data-v2');
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
@@ -480,7 +480,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
   // Salvar sempre que o banco de dados for alterado
   useEffect(() => {
     try {
-      localStorage.setItem('prescreveai-data-v2', JSON.stringify(db));
+      localStorage.setItem('abfit-ai-data-v2', JSON.stringify(db));
     } catch (e) {
       console.error("Falha ao salvar dados", e);
     }
@@ -698,7 +698,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
   };
 
   return (
-    <div id="prescreveai-container" className="fixed inset-0 z-[9999] bg-black text-white overflow-y-auto font-sans">
+    <div id="abfit-ai-container" className="fixed inset-0 z-[9999] bg-black text-white overflow-y-auto font-sans">
       {/* Botão de Fechar e Voltar para o abfit */}
       <div className="absolute top-4 right-4 z-[10000]">
         <button 
@@ -712,7 +712,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
       <div className="max-w-7xl mx-auto px-6 py-12">
         <header className="mb-10 border-b border-white/10 pb-6">
           <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-            Prescreve<span className="text-red-500">AI</span>
+            ABFIT <span className="text-red-500">AI</span>
           </h1>
           <p className="text-neutral-400">Prescrevendo para: <span className="text-white font-bold">{studentName}</span></p>
         </header>
@@ -996,7 +996,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
 
       {/* --- ESTILOS PROTEGIDOS (CSS SCOPE) --- */}
       <style>{`
-        #prescreveai-container {
+        #abfit-ai-container {
           all: unset;
           display: block;
           position: fixed;
@@ -1007,7 +1007,7 @@ export const PrescreveAIModule: React.FC<PrescreveAIProps> = ({ studentName, onC
           font-family: 'Inter', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
-        #prescreveai-container button { cursor: pointer; }
+        #abfit-ai-container button { cursor: pointer; }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #18181b; }

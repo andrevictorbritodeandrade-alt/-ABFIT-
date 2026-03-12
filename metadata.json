@@ -1,8 +1,5 @@
 {
-  "name": "💪ABFIT🎯",
-  "description": "A high-performance fitness assessment and workout management system for coaches and athletes, featuring AI-powered workout prescription and biomechanical analysis.",
-  "requestFramePermissions": [
-    "geolocation",
-    "camera"
-  ]
+  "name": "✍️PrescreveAI",
+  "description": "An AI-powered exercise prescription and biomechanics analysis application for fitness professionals.",
+  "requestFramePermissions": []
 }
