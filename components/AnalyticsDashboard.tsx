@@ -1,9 +1,10 @@
 
 import React, { useMemo } from 'react';
-import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu } from 'lucide-react';
+import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu, Layers } from 'lucide-react';
 import { Card, AppFooter, HeaderTitle } from './Layout';
 import { Student } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, Cell } from 'recharts';
+import { EXERCISE_DATABASE } from '../constants/exercises';
 
 interface AnalyticsProps {
   student: Student;
@@ -47,6 +48,74 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
       };
     });
   }, [history]);
+
+  // 3. Análise de Volume por Grupo Muscular (Prescrito vs Alvo)
+  const volumeAnalysis = useMemo(() => {
+    const prescribedVolume: Record<string, number> = {};
+    const workouts = student.workouts || [];
+    const targetVolume = student.periodization?.targetVolume || {};
+
+    // Helper para extrair número de séries
+    const parseSets = (setsStr: string | undefined): number => {
+      if (!setsStr) return 0;
+      const match = setsStr.match(/(\d+)/);
+      return match ? parseInt(match[0]) : 0;
+    };
+
+    // Mapeamento reverso do banco de exercícios: Nome -> Grupo
+    const exerciseToGroup: Record<string, string> = {};
+    Object.entries(EXERCISE_DATABASE).forEach(([group, exercises]) => {
+      exercises.forEach(ex => {
+        exerciseToGroup[ex.toLowerCase()] = group;
+      });
+    });
+
+    // Contabiliza volume prescrito
+    workouts.forEach(workout => {
+      workout.exercises.forEach(ex => {
+        let group = exerciseToGroup[ex.name.toLowerCase()];
+        
+        // Fallback: busca por substring se não houver match exato
+        if (!group) {
+          const lowerName = ex.name.toLowerCase();
+          for (const [dbEx, dbGroup] of Object.entries(exerciseToGroup)) {
+            if (lowerName.includes(dbEx) || dbEx.includes(lowerName)) {
+              group = dbGroup;
+              break;
+            }
+          }
+        }
+
+        if (group) {
+          const sets = parseSets(ex.sets);
+          prescribedVolume[group] = (prescribedVolume[group] || 0) + sets;
+        }
+      });
+    });
+
+    // Grupos relevantes para exibição (os que têm alvo ou prescrição)
+    const allGroups = Array.from(new Set([...Object.keys(targetVolume), ...Object.keys(prescribedVolume)]));
+    
+    return allGroups.map(group => {
+      const prescribed = prescribedVolume[group] || 0;
+      const target = targetVolume[group] || 0;
+      return {
+        group: group.length > 15 ? group.substring(0, 13) + '..' : group,
+        fullGroup: group,
+        prescribed,
+        target,
+        percent: target ? Math.round((prescribed / target) * 100) : 0
+      };
+    }).sort((a, b) => b.prescribed - a.prescribed);
+  }, [student.workouts, student.periodization]);
+
+  const totalPrescribed = useMemo(() => 
+    volumeAnalysis.reduce((acc, curr) => acc + curr.prescribed, 0)
+  , [volumeAnalysis]);
+
+  const totalTarget = useMemo(() => 
+    volumeAnalysis.reduce((acc, curr) => acc + curr.target, 0)
+  , [volumeAnalysis]);
 
   // Componente de Estado Vazio
   const EmptyState = ({ message }: { message: string }) => (
@@ -93,6 +162,74 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
       </div>
 
       <div className="space-y-10">
+         {/* ANÁLISE DE VOLUME (NOVO) */}
+         <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+               <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-widest flex items-center gap-3 italic">
+                 <Layers size={14} className="text-red-600"/> Volume Prescrito vs Alvo
+               </h3>
+               {totalTarget > 0 && (
+                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                   Total: {totalPrescribed}/{totalTarget}
+                 </span>
+               )}
+            </div>
+            <div className="bg-zinc-900/30 rounded-[2.5rem] border border-white/5 p-6 shadow-inner space-y-6">
+               {volumeAnalysis.length > 0 ? (
+                 <>
+                   <div className="h-64 w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={volumeAnalysis}>
+                           <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                           <XAxis 
+                            dataKey="group" 
+                            stroke="#444" 
+                            fontSize={8} 
+                            tickLine={false} 
+                            axisLine={false}
+                            fontFamily="monospace"
+                           />
+                           <YAxis hide />
+                           <Tooltip 
+                            contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', fontSize: '10px' }}
+                            itemStyle={{ fontWeight: 'bold' }}
+                           />
+                           <Bar dataKey="prescribed" name="Prescrito" fill="#dc2626" radius={[4, 4, 0, 0]} barSize={15} />
+                           <Bar dataKey="target" name="Alvo" fill="#444" radius={[4, 4, 0, 0]} barSize={15} />
+                        </BarChart>
+                     </ResponsiveContainer>
+                   </div>
+                   
+                   <div className="grid grid-cols-1 gap-3">
+                      {volumeAnalysis.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-zinc-900/50 rounded-2xl border border-white/5">
+                           <div>
+                              <p className="text-[10px] font-black uppercase text-white italic">{item.fullGroup}</p>
+                              <p className="text-[9px] text-zinc-500 font-bold uppercase mt-0.5">
+                                {item.prescribed} / {item.target} séries
+                              </p>
+                           </div>
+                           <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                 <p className={`text-[11px] font-black italic ${item.percent >= 100 ? 'text-emerald-500' : item.percent >= 80 ? 'text-yellow-500' : 'text-red-600'}`}>
+                                    {item.percent}%
+                                 </p>
+                              </div>
+                              <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                 <div 
+                                    className={`h-full ${item.percent >= 100 ? 'bg-emerald-500' : item.percent >= 80 ? 'bg-yellow-500' : 'bg-red-600'}`}
+                                    style={{ width: `${Math.min(item.percent, 100)}%` }}
+                                 ></div>
+                              </div>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                 </>
+               ) : <EmptyState message="Defina o volume alvo na periodização" />}
+            </div>
+         </div>
+
          {/* GRÁFICO DE FREQUÊNCIA */}
          <div className="space-y-4">
             <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-widest pl-2 flex items-center gap-3 italic">
@@ -223,3 +360,4 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
     </div>
   );
 }
+

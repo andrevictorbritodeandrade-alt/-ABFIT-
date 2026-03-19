@@ -37,9 +37,12 @@ const GIF_DATABASE: Record<string, string> = {
   "elevação de quadril": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
 
   // SUPERIORES / COSTAS / PEITO
+  "desenvolvimento aberto banco hbc": "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop",
+  "supino aberto hbc": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop",
   "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
+  "voador dorsal": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
   "puxada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
   "remada": "https://i.pinimg.com/originals/f3/06/18/f30618012675713df8302f354f923b71.gif",
   "desenvolvimento": "https://i.pinimg.com/originals/e7/17/74/e71774e363b9bc298d022b7a9f7374b0.gif",
@@ -50,6 +53,8 @@ const GIF_DATABASE: Record<string, string> = {
   "rosca": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
   "bíceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
   "biceps": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "bíceps neutro": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "bíceps em pé": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
   "tríceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
   "triceps": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
   "corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
@@ -73,6 +78,16 @@ function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) 
 
   const findInDb = (name: string) => {
     const nameLower = name.toLowerCase();
+    // Requisito especial: Supino Aberto HBC
+    if (nameLower.includes("supino") && nameLower.includes("aberto") && nameLower.includes("hbc")) {
+      return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop";
+    }
+    // Requisito especial: Desenvolvimento Aberto Banco HBC
+    const devWords = ["desenvolvimento", "aberto", "banco", "hbc"];
+    const devMatchCount = devWords.filter(w => nameLower.includes(w)).length;
+    if (devMatchCount >= 3) {
+      return "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop";
+    }
     const match = Object.keys(GIF_DATABASE).find(key => nameLower.includes(key));
     return match ? GIF_DATABASE[match] : null;
   };
@@ -595,7 +610,10 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-1 italic">Tempo Total</p>
              <p className="text-xl font-black text-foreground italic tracking-tighter leading-none">{formatTime(elapsedTime)}</p>
           </div>
-          <button onClick={() => { setShowCompletionModal(false); setShowPhotoStep(true); }} className="w-full py-4 bg-red-600 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-red-700 transition-all">Gravar Selfie ABFIT</button>
+          <div className="flex flex-col gap-3">
+            <button onClick={() => { setShowCompletionModal(false); setShowPhotoStep(true); }} className="w-full py-4 bg-red-600 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-red-700 transition-all">Gravar Selfie ABFIT</button>
+            <button onClick={() => { setShowCompletionModal(false); finishSession(); }} className="w-full py-4 bg-card border border-border rounded-xl font-black uppercase text-xs tracking-widest hover:bg-muted transition-all">Finalizar sem Foto</button>
+          </div>
         </Card>
       </div>
     );
@@ -626,9 +644,16 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
             </div>
           </div>
         </div>
-        <button onClick={finishSession} disabled={isFinishing} className="w-full py-5 bg-red-600 rounded-3xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all flex items-center justify-center gap-3 mb-8">
-          {isFinishing ? <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> SALVANDO...</span> : <><CheckCircle2 /> SALVAR NO FEED</>}
-        </button>
+        <div className="flex flex-col gap-3 mb-8">
+          <button onClick={finishSession} disabled={isFinishing} className="w-full py-5 bg-red-600 rounded-3xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-red-600/30 hover:bg-red-700 transition-all flex items-center justify-center gap-3">
+            {isFinishing ? <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> SALVANDO...</span> : <><CheckCircle2 /> SALVAR NO FEED</>}
+          </button>
+          {!selfieUrl && (
+            <button onClick={finishSession} disabled={isFinishing} className="w-full py-4 bg-card border border-border rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-muted transition-all">
+              Pular Foto e Finalizar
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -646,17 +671,24 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         </header>
         <div className="space-y-4">
           {(user.workouts || []).length > 0 ? (
-            user.workouts!.map(w => (
-              <Card key={w.id} className="p-4 bg-card/50 border-border flex flex-row items-center gap-4 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-3xl transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
-                <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all shadow-lg shrink-0">
-                  <Play size={20} fill="currentColor" />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-lg font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none mb-1">{w.title}</h4>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{w.exercises.length} Exercícios Prescritos</p>
-                </div>
-              </Card>
-            ))
+            user.workouts!.map(w => {
+              const completed = (user.workoutHistory || []).filter(h => h.workoutId === w.id).length;
+              const total = w.projectedSessions || 20;
+              return (
+                <Card key={w.id} className="p-4 bg-card/50 border-border flex flex-row items-center gap-4 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-3xl transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
+                  <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all shadow-lg shrink-0">
+                    <Play size={20} fill="currentColor" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-lg font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none mb-1">{w.title}</h4>
+                      <span className="text-[10px] font-black italic text-red-600 uppercase tracking-widest">{completed}/{total}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{w.exercises.length} Exercícios Prescritos</p>
+                  </div>
+                </Card>
+              );
+            })
           ) : (
             <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-[3rem]">
                <Dumbbell size={48} className="text-muted-foreground mb-6" />

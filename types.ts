@@ -65,6 +65,7 @@ export interface PeriodizationPlan {
   modelo_teorico?: string;
   objetivo_longo_prazo?: string;
   microciclos: any[];
+  targetVolume?: Record<string, number>;
   notas_phd?: string;
   type: 'STRENGTH' | 'RUNNING';
   // Novos campos do Relatório Científico

@@ -1,0 +1,27 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Athlete profile containing workouts, history, and personal data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoUrl": { "type": "string" },
+        "workouts": { "type": "array" },
+        "workoutHistory": { "type": "array" },
+        "periodization": { "type": "object" },
+        "analytics": { "type": "object" },
+        "lastUpdateTimestamp": { "type": "number" }
+      },
+      "required": ["id", "nome"]
+    }
+  },
+  "firestore": {
+    "artifacts/{appId}/public/data/students/{studentId}": {
+      "schema": "Student",
+      "description": "Collection of student profiles."
+    }
+  }
+}

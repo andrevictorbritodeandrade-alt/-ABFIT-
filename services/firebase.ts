@@ -1,9 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCZIP1JUTVXjVd6dMnd_DRTD1CLvQpqslc",
+  apiKey: "AIzaSyCgaNtlAWxfh_jAK3y9GM476_WpbhFlLUo",
   authDomain: "abfit-d5bff.firebaseapp.com",
   projectId: "abfit-d5bff",
   storageBucket: "abfit-d5bff.firebasestorage.app",
@@ -14,6 +15,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const appId = firebaseConfig.projectId;
 
 if (typeof window !== 'undefined') {
   enableIndexedDbPersistence(db).catch((err) => {

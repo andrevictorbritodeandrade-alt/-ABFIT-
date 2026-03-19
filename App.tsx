@@ -155,7 +155,14 @@ export default function App() {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+
+  useEffect(() => {
+    if (syncStatus === 'synced' || syncStatus === 'error') {
+      const timer = setTimeout(() => setSyncStatus('idle'), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [syncStatus]);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
@@ -266,6 +273,12 @@ export default function App() {
           medications: 'Nenhuma',
           physicalAssessments: [], 
           workoutHistory: [], 
+          analytics: {
+            sessionsCompleted: 0,
+            streakDays: 0,
+            exercises: {},
+            lastSessionDate: ''
+          },
           sexo: 'Feminino', 
           periodization: {
             id: 'per-liliane-01',
@@ -282,6 +295,16 @@ export default function App() {
             bioInsight: {
               context: "Liliane Torres é uma aluna com possível TDAH.",
               tips: ["Estrutura e Previsibilidade...", "Âncoras de Foco Visual...", "Reforço Imediato..."]
+            },
+            targetVolume: {
+              "Quadríceps e Adutores": 6,
+              "Glúteos e Posteriores": 6,
+              "Peito": 2,
+              "Costas e Cintura Escapular": 3,
+              "Ombro": 3,
+              "Biceps": 1,
+              "Triceps": 1,
+              "Core e Abdomen": 8
             },
             microciclos: [
               {
@@ -412,21 +435,61 @@ export default function App() {
           physicalAssessments: [], 
           workoutHistory: [
             {
+              id: 'hist-andre-04',
+              workoutId: 'treino-b-andre',
+              name: 'TREINO B',
+              athleteName: 'André Brito',
+              duration: '50 min',
+              date: '12/03/2026',
+              timestamp: 1741795200000,
+              type: 'STRENGTH'
+            },
+            {
+              id: 'hist-andre-03',
+              workoutId: 'treino-b-andre',
+              name: 'TREINO B',
+              athleteName: 'André Brito',
+              duration: '55 min',
+              date: '10/03/2026',
+              timestamp: 1741622400000,
+              type: 'STRENGTH'
+            },
+            {
+              id: 'hist-andre-02',
+              workoutId: 'treino-a-andre',
+              name: 'TREINO A',
+              athleteName: 'André Brito',
+              duration: '58 min',
+              date: '11/03/2026',
+              timestamp: 1741708800000,
+              type: 'STRENGTH'
+            },
+            {
               id: 'hist-andre-01',
               workoutId: 'treino-a-andre',
               name: 'TREINO A',
               athleteName: 'André Brito',
               duration: '60 min',
-              date: '2026-03-09',
+              date: '09/03/2026',
               timestamp: 1741536000000,
               type: 'STRENGTH'
             }
           ], 
           analytics: {
-            sessionsCompleted: 1,
-            streakDays: 1,
-            exercises: {},
-            lastSessionDate: '2026-03-09'
+            sessionsCompleted: 4,
+            streakDays: 2,
+            exercises: {
+              'Remada aberta na máquina': { completed: 1, skipped: 0 },
+              'Puxada aberta com barra romana pulley alto': { completed: 1, skipped: 0 },
+              'Voador dorsal': { completed: 1, skipped: 0 },
+              'Bíceps neutro com HBC banco 75 graus': { completed: 1, skipped: 0 },
+              'Bíceps em pé com HBM pegada supinada': { completed: 1, skipped: 0 },
+              'Agachamento sumô com HBC': { completed: 1, skipped: 0 },
+              'Subida no step': { completed: 1, skipped: 0 },
+              'Extensão de quadril e joelho em pé no cross': { completed: 1, skipped: 0 },
+              'Mata-borrão isométrico no solo (super-man)': { completed: 1, skipped: 0 }
+            } as Record<string, { completed: number; skipped: number }>,
+            lastSessionDate: '12/03/2026'
           },
           sexo: 'Masculino', 
           periodization: {
@@ -445,6 +508,16 @@ export default function App() {
             bioInsight: {
               context: "Referências Científicas: Schoenfeld, B. J. (2010). The mechanisms of muscle hypertrophy and their application to resistance training. Journal of Strength and Conditioning Research, 24(10), 2857-2872. | Escamilla, R. F., et al. (2009). Patellofemoral joint kinematics and kinetics during common lower extremity exercises. Sports Medicine, 39(1), 15-37. | Mechanick, J. I., et al. (2020). Clinical Practice Guidelines for the Perioperative Nutrition, Metabolic, and Nonsurgical Support of Patients Undergoing Bariatric Procedures. Surgery for Obesity and Related Diseases, 16(2), 175-247. | Ratey, J. J. (2008). Spark: The Revolutionary New Science of Exercise and the Brain. Little, Brown Spark. (Mecanismos neurobiologicos do exercicio no TDAH e TEA).",
               tips: []
+            },
+            targetVolume: {
+              "Peito": 11,
+              "Costas e Cintura Escapular": 11,
+              "Ombro": 11,
+              "Biceps": 11,
+              "Triceps": 11,
+              "Quadríceps e Adutores": 11,
+              "Glúteos e Posteriores": 11,
+              "Core e Abdomen": 11
             },
             microciclos: [
               {
@@ -497,8 +570,8 @@ export default function App() {
                 { id: 'a2', name: 'Supino Reto com HBL', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'a3', name: 'Remada alta em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'a4', name: 'Tríceps francês simultâneo no cross polia baixa com barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a5', name: 'Tríceps no cross with barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a6', name: 'Agachamento em passada with HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a5', name: 'Tríceps no cross com barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'a6', name: 'Agachamento em passada com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'a7', name: 'Agachamento livre', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'a8', name: 'Leg press horizontal', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'a9', name: 'Abdominal supra no solo', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
@@ -512,11 +585,11 @@ export default function App() {
               status: 'published',
               exercises: [
                 { id: 'b1', name: 'Remada aberta na máquina', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b2', name: 'Puxada aberta with barra romana pulley alto', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b3', name: 'Voador peitoral', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b4', name: 'Bíceps banco 75º with HBC pegada neutra simultâneo', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b5', name: 'Bíceps em pé with HBM pegada pronada', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b6', name: 'Agachamento sumô with HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b2', name: 'Puxada aberta com barra romana pulley alto', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b3', name: 'Voador dorsal', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b4', name: 'Bíceps neutro com HBC banco 75 graus', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b5', name: 'Bíceps em pé com HBM pegada supinada', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'b6', name: 'Agachamento sumô com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'b7', name: 'Subida no step', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'b8', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'b9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
@@ -535,21 +608,41 @@ export default function App() {
           physicalAssessments: [], 
           workoutHistory: [
             {
+              id: 'hist-marcelly-03',
+              workoutId: 'w-marcelly-02',
+              name: 'Treino B',
+              athleteName: 'Marcelly Bispo',
+              duration: '50 min',
+              date: '10/03/2026',
+              timestamp: 1741622400000,
+              type: 'STRENGTH'
+            },
+            {
+              id: 'hist-marcelly-02',
+              workoutId: 'w-marcelly-01',
+              name: 'Treino A',
+              athleteName: 'Marcelly Bispo',
+              duration: '52 min',
+              date: '11/03/2026',
+              timestamp: 1741708800000,
+              type: 'STRENGTH'
+            },
+            {
               id: 'hist-marcelly-01',
               workoutId: 'w-marcelly-01',
               name: 'Treino A',
               athleteName: 'Marcelly Bispo',
               duration: '60 min',
-              date: '2026-03-09',
+              date: '09/03/2026',
               timestamp: 1741536000000,
               type: 'STRENGTH'
             }
           ], 
           analytics: {
-            sessionsCompleted: 1,
+            sessionsCompleted: 3,
             streakDays: 1,
             exercises: {},
-            lastSessionDate: '2026-03-09'
+            lastSessionDate: '11/03/2026'
           },
           sexo: 'Feminino',
           periodization: {
@@ -573,6 +666,16 @@ export default function App() {
                 "Semanas 9-11: Estresse Metabólico e Overreaching Funcional. Intensidade: 65-75% 1RM (RIR 0 - Falha Momentânea). Volume: 18-20 séries semanais por grupamento, 12-15 repetições. Método: Bi-sets agonista-antagonista e cluster sets.",
                 "Semana 12: Supercompensação e Dissipação de Fadiga (Deload). Intensidade: 50-60% 1RM (RIR 3-4). Volume: 8-10 séries semanais por grupamento, 10-12 repetições. Método: Séries tradicionais com foco em conexão mente-músculo."
               ]
+            },
+            targetVolume: {
+              "Peito": 13,
+              "Costas e Cintura Escapular": 13,
+              "Ombro": 13,
+              "Biceps": 13,
+              "Triceps": 13,
+              "Quadríceps e Adutores": 13,
+              "Glúteos e Posteriores": 13,
+              "Core e Abdomen": 13
             },
             microciclos: [
               {
@@ -620,7 +723,7 @@ export default function App() {
               projectedSessions: 20,
               status: 'published',
               exercises: [
-                { id: 'ex-a1', name: 'Agachamento livre with HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-a1', name: 'Agachamento livre com HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-a2', name: 'Agachamento no sissy', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-a3', name: 'Leg press horizontal', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-a4', name: 'Abdominal diagonal no solo', sets: '3', reps: '20', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
@@ -642,8 +745,8 @@ export default function App() {
                 { id: 'ex-b4', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-b5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-b6', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b7', name: 'Puxada aberta with barra reta no cross polia alta', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b8', name: 'Bíceps banco 75º with HBC pegada neutra simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-b7', name: 'Puxada aberta com barra reta no cross polia alta', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b8', name: 'Bíceps banco 75º com HBC pegada neutra simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             }
           ]
@@ -666,7 +769,11 @@ export default function App() {
     if (view !== 'LOGIN' && isCoach) {
       const q = collection(db, 'artifacts', appId, 'public', 'data', 'students');
       unsub = onSnapshot(q, (snapshot) => {
-        setIsSyncing(snapshot.metadata.hasPendingWrites);
+        if (snapshot.metadata.hasPendingWrites) {
+          setSyncStatus('syncing');
+        } else {
+          setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
+        }
         const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
         setStudents(updatedStudents);
         // Atualiza o aluno selecionado em tempo real se ele estiver aberto
@@ -699,7 +806,11 @@ export default function App() {
 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', targetId);
       unsub = onSnapshot(docRef, (docSnap) => {
-        setIsSyncing(docSnap.metadata.hasPendingWrites);
+        if (docSnap.metadata.hasPendingWrites) {
+          setSyncStatus('syncing');
+        } else {
+          setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
+        }
         if (docSnap.exists()) {
             const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
             
@@ -711,6 +822,8 @@ export default function App() {
                 if (!rawData.email) rawData.email = defaultProfile.email;
                 if (!rawData.periodization && defaultProfile.periodization) {
                     rawData.periodization = defaultProfile.periodization;
+                } else if (rawData.periodization && defaultProfile.periodization) {
+                    rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
                 }
                 // Forçar atualização de treinos e periodização se for o aluno Marcelly
                 if (rawData.id === 'fixed-marcelly' || (rawData.email && rawData.email.toLowerCase() === 'marcellybispo92@gmail.com')) {
@@ -751,10 +864,10 @@ export default function App() {
                     if (!rawData.periodization) {
                         rawData.periodization = defaultProfile.periodization;
                     }
-                    if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
+                    if (!rawData.workoutHistory || rawData.workoutHistory.length < 4) {
                         rawData.workoutHistory = defaultProfile.workoutHistory;
                     }
-                    if (!rawData.analytics || rawData.analytics.sessionsCompleted === 0) {
+                    if (!rawData.analytics || rawData.analytics.sessionsCompleted < 4) {
                         rawData.analytics = defaultProfile.analytics;
                     }
                 }
@@ -811,6 +924,8 @@ export default function App() {
             
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
+            } else if (existing.periodization && def.periodization && merged[existingIndex].periodization) {
+                merged[existingIndex].periodization!.targetVolume = def.periodization.targetVolume;
             }
 
             // Forçar atualização de treinos e periodização se for o aluno Marcelly
@@ -851,10 +966,10 @@ export default function App() {
                 if (!existing.periodization) {
                     merged[existingIndex].periodization = def.periodization;
                 }
-                if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
+                if (!existing.workoutHistory || existing.workoutHistory.length < 4) {
                     merged[existingIndex].workoutHistory = def.workoutHistory;
                 }
-                if (!existing.analytics || existing.analytics.sessionsCompleted === 0) {
+                if (!existing.analytics || existing.analytics.sessionsCompleted < 4) {
                     merged[existingIndex].analytics = def.analytics;
                 }
             }
@@ -992,14 +1107,14 @@ export default function App() {
 
   const handleSaveData = async (sid: string, data: any) => {
     // Dispara o indicador de sync
-    setIsSyncing(true);
+    setSyncStatus('syncing');
     try { 
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', sid);
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
-      // O isSyncing voltará a false automaticamente via onSnapshot quando a escrita confirmar
+      // O syncStatus voltará a 'synced' automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       console.error("Erro ao salvar:", e.message); 
-      setIsSyncing(false); // Força false em erro
+      setSyncStatus('error');
     }
   };
 
@@ -1060,7 +1175,7 @@ export default function App() {
 
   return (
     <BackgroundWrapper>
-      <GlobalSyncIndicator isSyncing={isSyncing} />
+      <GlobalSyncIndicator status={syncStatus} />
       
       {showSidebar && (
         <SideNav 

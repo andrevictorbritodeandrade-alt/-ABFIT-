@@ -4,7 +4,7 @@ import {
   CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, 
   Mail, Phone, Loader2, MapPin, MessageCircle, Menu, X, 
   LayoutGrid, Bot, Settings2, User, Layout, Brain, Ruler, 
-  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets
+  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets, AlertTriangle
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
@@ -204,7 +204,7 @@ export function BackgroundWrapper({ children }: { children?: React.ReactNode }) 
   );
 }
 
-export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
+export function GlobalSyncIndicator({ status }: { status: 'idle' | 'syncing' | 'synced' | 'error' }) {
   const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -217,19 +217,33 @@ export function GlobalSyncIndicator({ isSyncing }: { isSyncing: boolean }) {
     };
   }, []);
 
+  const getStatusColor = () => {
+    if (!online) return 'bg-red-950/90 border-red-500/50';
+    switch (status) {
+      case 'syncing': return 'bg-orange-950/90 border-orange-500/50 scale-105 shadow-[0_0_20px_rgba(234,88,12,0.4)]';
+      case 'synced': return 'bg-emerald-950/90 border-emerald-500/50 scale-100 shadow-[0_0_20px_rgba(16,185,129,0.4)]';
+      case 'error': return 'bg-red-950/90 border-red-500/50';
+      default: return 'bg-card/90 border-border/30';
+    }
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-1000 pointer-events-none select-none">
-      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${isSyncing ? 'bg-orange-950/90 border-orange-500/50 scale-105' : (online ? 'bg-card/90 border-emerald-900/30' : 'bg-red-950/90 border-red-500/50')}`}>
+      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${getStatusColor()}`}>
         <div className="relative flex items-center justify-center w-5 h-5">
-           {isSyncing ? (
-             <RefreshCw size={18} className="text-orange-500 animate-spin" />
-           ) : online ? (
-             <>
-               <Wifi size={18} className="text-emerald-500 relative z-10" />
-               <div className="absolute inset-0 bg-emerald-500/30 rounded-full animate-ping opacity-75"></div>
-             </>
-           ) : (
+           {!online ? (
              <WifiOff size={18} className="text-red-500" />
+           ) : status === 'syncing' ? (
+             <RefreshCw size={18} className="text-orange-500 animate-spin" />
+           ) : status === 'synced' ? (
+             <div className="flex items-center justify-center">
+                <Wifi size={18} className="text-emerald-500 relative z-10" />
+                <div className="absolute inset-0 bg-emerald-500/30 rounded-full animate-ping opacity-75"></div>
+             </div>
+           ) : status === 'error' ? (
+             <AlertTriangle size={18} className="text-red-500" />
+           ) : (
+             <Wifi size={18} className="text-muted-foreground/40" />
            )}
         </div>
       </div>
