@@ -50,8 +50,6 @@ const GIF_DATABASE: Record<string, string> = {
   "elevação de quadril": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
 
   // SUPERIORES / COSTAS / PEITO
-  "desenvolvimento aberto banco hbc": "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop",
-  "supino aberto hbc": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop",
   "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
@@ -474,35 +472,6 @@ function ABFITAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) => voi
   }, [selectedMuscle]);
 
   const handleSelectExercise = async (name: string) => {
-    const nameLower = name.toLowerCase();
-    // Requisito especial: Supino Aberto HBC
-    if (nameLower.includes("supino") && nameLower.includes("aberto") && nameLower.includes("hbc")) {
-      const fixedImage = "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop";
-      setSelectedExercise({ 
-        name, 
-        description: "Exercício de peitoral realizado com halteres em banco plano, com pegada aberta para maximizar o alongamento das fibras musculares.",
-        benefits: "Maior amplitude de movimento, ativação intensa do peitoral maior, estabilização escapular."
-      });
-      setExerciseImage(fixedImage);
-      setImageLoading(false);
-      return;
-    }
-
-    // Requisito especial: Desenvolvimento Aberto Banco HBC
-    const devWords = ["desenvolvimento", "aberto", "banco", "hbc"];
-    const devMatchCount = devWords.filter(w => nameLower.includes(w)).length;
-    if (devMatchCount >= 3) {
-      const fixedImage = "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop";
-      setSelectedExercise({ 
-        name, 
-        description: "Exercício de ombros realizado sentado no banco com halteres, com foco na porção lateral e anterior do deltoide.",
-        benefits: "Aumento da força nos ombros, melhora da estabilidade articular, hipertrofia do deltoide."
-      });
-      setExerciseImage(fixedImage);
-      setImageLoading(false);
-      return;
-    }
-
     // Reset previous selection
     setSelectedExercise({ name });
     setExerciseImage(null);
@@ -767,27 +736,15 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
           
           // Mapeia os exercícios extraídos com as imagens do banco usando o GIF_DATABASE
           const enrichedExercises = extractedExercises.map(ex => {
-            const nameLower = ex.name.toLowerCase();
-            let thumb = undefined;
-
-            // Requisito especial: Desenvolvimento Aberto Banco HBC
-            const devWords = ["desenvolvimento", "aberto", "banco", "hbc"];
-            const devMatchCount = devWords.filter(w => nameLower.includes(w)).length;
-            if (nameLower.includes("supino") && nameLower.includes("aberto") && nameLower.includes("hbc")) {
-              thumb = "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop";
-            } else if (devMatchCount >= 3) {
-              thumb = "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop";
-            } else {
-              const matchKey = Object.keys(GIF_DATABASE).find(key => 
-                nameLower.includes(key.toLowerCase())
-              );
-              thumb = matchKey ? GIF_DATABASE[matchKey] : undefined;
-            }
+            // Busca simples por substring no banco de dados de GIFs (case insensitive)
+            const matchKey = Object.keys(GIF_DATABASE).find(key => 
+              ex.name.toLowerCase().includes(key.toLowerCase())
+            );
             
             return {
               ...ex,
               id: Date.now().toString() + Math.random(),
-              thumb,
+              thumb: matchKey ? GIF_DATABASE[matchKey] : undefined,
               // Aplica defaults se disponíveis e não vierem da IA
               sets: ex.sets || defaultSets || '3',
               reps: ex.reps || defaultReps || '12',

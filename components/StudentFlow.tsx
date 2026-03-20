@@ -37,8 +37,6 @@ const GIF_DATABASE: Record<string, string> = {
   "elevação de quadril": "https://i.pinimg.com/originals/60/0a/85/600a8523c0356191942730628e469d72.gif",
 
   // SUPERIORES / COSTAS / PEITO
-  "desenvolvimento aberto banco hbc": "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop",
-  "supino aberto hbc": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop",
   "supino": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
   "crucifixo inverso": "https://i.pinimg.com/originals/3c/69/34/3c6934c933fa76964a22b07d6776b772.gif",
@@ -78,16 +76,6 @@ function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) 
 
   const findInDb = (name: string) => {
     const nameLower = name.toLowerCase();
-    // Requisito especial: Supino Aberto HBC
-    if (nameLower.includes("supino") && nameLower.includes("aberto") && nameLower.includes("hbc")) {
-      return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop";
-    }
-    // Requisito especial: Desenvolvimento Aberto Banco HBC
-    const devWords = ["desenvolvimento", "aberto", "banco", "hbc"];
-    const devMatchCount = devWords.filter(w => nameLower.includes(w)).length;
-    if (devMatchCount >= 3) {
-      return "https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1920&auto=format&fit=crop";
-    }
     const match = Object.keys(GIF_DATABASE).find(key => nameLower.includes(key));
     return match ? GIF_DATABASE[match] : null;
   };

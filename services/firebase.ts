@@ -4,7 +4,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCgaNtlAWxfh_jAK3y9GM476_WpbhFlLUo",
+  apiKey: "AIzaSyCZIP1JUTVXjVd6dMnd_DRTD1CLvQpqslc",
   authDomain: "abfit-d5bff.firebaseapp.com",
   projectId: "abfit-d5bff",
   storageBucket: "abfit-d5bff.firebasestorage.app",
