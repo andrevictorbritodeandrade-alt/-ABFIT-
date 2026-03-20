@@ -296,6 +296,16 @@ export default function App() {
               context: "Liliane Torres é uma aluna com possível TDAH.",
               tips: ["Estrutura e Previsibilidade...", "Âncoras de Foco Visual...", "Reforço Imediato..."]
             },
+            targetVolume: {
+              "Quadríceps e Adutores": 6,
+              "Glúteos e Posteriores": 6,
+              "Peito": 2,
+              "Costas e Cintura Escapular": 3,
+              "Ombro": 3,
+              "Biceps": 1,
+              "Triceps": 1,
+              "Core e Abdomen": 8
+            },
             microciclos: [
               {
                 range: "Semana 1-2",
@@ -499,6 +509,16 @@ export default function App() {
               context: "Referências Científicas: Schoenfeld, B. J. (2010). The mechanisms of muscle hypertrophy and their application to resistance training. Journal of Strength and Conditioning Research, 24(10), 2857-2872. | Escamilla, R. F., et al. (2009). Patellofemoral joint kinematics and kinetics during common lower extremity exercises. Sports Medicine, 39(1), 15-37. | Mechanick, J. I., et al. (2020). Clinical Practice Guidelines for the Perioperative Nutrition, Metabolic, and Nonsurgical Support of Patients Undergoing Bariatric Procedures. Surgery for Obesity and Related Diseases, 16(2), 175-247. | Ratey, J. J. (2008). Spark: The Revolutionary New Science of Exercise and the Brain. Little, Brown Spark. (Mecanismos neurobiologicos do exercicio no TDAH e TEA).",
               tips: []
             },
+            targetVolume: {
+              "Peito": 11,
+              "Costas e Cintura Escapular": 11,
+              "Ombro": 11,
+              "Biceps": 11,
+              "Triceps": 11,
+              "Quadríceps e Adutores": 11,
+              "Glúteos e Posteriores": 11,
+              "Core e Abdomen": 11
+            },
             microciclos: [
               {
                 id: 'm1',
@@ -647,6 +667,16 @@ export default function App() {
                 "Semana 12: Supercompensação e Dissipação de Fadiga (Deload). Intensidade: 50-60% 1RM (RIR 3-4). Volume: 8-10 séries semanais por grupamento, 10-12 repetições. Método: Séries tradicionais com foco em conexão mente-músculo."
               ]
             },
+            targetVolume: {
+              "Peito": 13,
+              "Costas e Cintura Escapular": 13,
+              "Ombro": 13,
+              "Biceps": 13,
+              "Triceps": 13,
+              "Quadríceps e Adutores": 13,
+              "Glúteos e Posteriores": 13,
+              "Core e Abdomen": 13
+            },
             microciclos: [
               {
                 id: 'm1',
@@ -792,6 +822,8 @@ export default function App() {
                 if (!rawData.email) rawData.email = defaultProfile.email;
                 if (!rawData.periodization && defaultProfile.periodization) {
                     rawData.periodization = defaultProfile.periodization;
+                } else if (rawData.periodization && defaultProfile.periodization) {
+                    rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
                 }
                 // Forçar atualização de treinos e periodização se for o aluno Marcelly
                 if (rawData.id === 'fixed-marcelly' || (rawData.email && rawData.email.toLowerCase() === 'marcellybispo92@gmail.com')) {
@@ -892,6 +924,8 @@ export default function App() {
             
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
+            } else if (existing.periodization && def.periodization && merged[existingIndex].periodization) {
+                merged[existingIndex].periodization!.targetVolume = def.periodization.targetVolume;
             }
 
             // Forçar atualização de treinos e periodização se for o aluno Marcelly
