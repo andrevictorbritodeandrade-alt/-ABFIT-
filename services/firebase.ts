@@ -4,13 +4,13 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCZIP1JUTVXjVd6dMnd_DRTD1CLvQpqslc",
-  authDomain: "abfit-d5bff.firebaseapp.com",
-  projectId: "abfit-d5bff",
-  storageBucket: "abfit-d5bff.firebasestorage.app",
-  messagingSenderId: "565295481649",
-  appId: "1:565295481649:web:cdfe52ef679b85ab362610",
-  measurementId: "G-X2PK4MPTP9"
+  apiKey: "AIzaSyAxFmQtAjWqNoXpcGRnmAA_ouXsgw3RvT8",
+  authDomain: "meus-apps---cerebro.firebaseapp.com",
+  projectId: "meus-apps---cerebro",
+  storageBucket: "meus-apps---cerebro.firebasestorage.app",
+  messagingSenderId: "980266889768",
+  appId: "1:980266889768:web:e15e1a6ac46df2faa53b1d",
+  measurementId: "G-2C4DNZ5FM7"
 };
 
 const app = initializeApp(firebaseConfig);

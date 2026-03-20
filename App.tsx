@@ -154,7 +154,6 @@ export default function App() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState('');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
 
   useEffect(() => {
@@ -237,7 +236,6 @@ export default function App() {
         await signInAnonymously(auth); 
       } catch (err: any) { 
         console.error("Auth error:", err);
-        setAuthError(err.message);
         setLoading(false); 
       } 
     };
@@ -1190,16 +1188,7 @@ export default function App() {
       <main className="transition-all duration-500">
         {view === 'LOGIN' && <LoginScreen onLogin={handleLogin} error={loginError} students={allStudentsForCoach} />}
         
-        {authError && view !== 'LOGIN' && (
-          <div className="h-screen flex flex-col items-center justify-center text-muted-foreground p-6 text-center">
-            <AlertTriangle className="text-red-600 mb-4" size={48} />
-            <p className="text-xs font-black uppercase tracking-widest mb-2">Erro de Autenticação</p>
-            <p className="text-[10px]">{authError}</p>
-            <button onClick={() => setView('LOGIN')} className="mt-6 px-6 py-3 bg-red-600 text-white rounded-full font-black uppercase text-[10px] tracking-widest">Voltar ao Login</button>
-          </div>
-        )}
-
-        {!authError && view !== 'LOGIN' && !isCoach && !studentForView && (
+        {view !== 'LOGIN' && !isCoach && !studentForView && (
           <div className="h-screen flex flex-col items-center justify-center text-muted-foreground">
             <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
             <p className="text-xs font-black uppercase tracking-widest">Carregando perfil...</p>

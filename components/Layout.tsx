@@ -341,13 +341,13 @@ export function WeatherWidget() {
           },
           (err) => {
             console.error("GPS Error", err);
-            setError("GPS Inativo");
-            setLoading(false);
+            // Fallback to Rio de Janeiro
+            fetchWeather(-22.9068, -43.1729);
           }
         );
       } else {
-        setError("GPS N/A");
-        setLoading(false);
+        // Fallback to Rio de Janeiro
+        fetchWeather(-22.9068, -43.1729);
       }
     };
 

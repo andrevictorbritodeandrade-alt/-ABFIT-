@@ -597,7 +597,7 @@ function ABFITAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) => voi
         </div>
 
         {selectedMuscle && (
-          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
             {exerciseOptions.map((exName, i) => (
               <button 
                 key={i} 

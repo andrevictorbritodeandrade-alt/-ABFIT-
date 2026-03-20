@@ -709,7 +709,7 @@ export const ABFITAIModule: React.FC<ABFITAIProps> = ({ studentName, onClose }) 
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-12 pb-32">
         <header className="mb-10 border-b border-white/10 pb-6">
           <h1 className="text-4xl font-black uppercase italic tracking-tighter">
             ABFIT <span className="text-red-500">AI</span>
@@ -740,9 +740,9 @@ export const ABFITAIModule: React.FC<ABFITAIProps> = ({ studentName, onClose }) 
              <div className="lg:col-span-4 space-y-4">
                 <div className="bg-neutral-900/40 p-6 rounded-[2.5rem] border border-white/5">
                    <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-6">Grupos Musculares</h3>
-                   <div className="space-y-2">
+                   <div className="flex overflow-x-auto lg:flex-col gap-2 pb-2 lg:pb-0 custom-scrollbar">
                      {MUSCLE_GROUPS.map(m => (
-                       <button key={m} onClick={() => setSelectedMuscle(m)} className={`w-full text-left px-5 py-3 rounded-xl transition-colors ${selectedMuscle === m ? 'bg-red-500 text-black font-bold' : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400'}`}>
+                       <button key={m} onClick={() => setSelectedMuscle(m)} className={`shrink-0 lg:w-full text-left px-5 py-3 rounded-xl transition-colors ${selectedMuscle === m ? 'bg-red-500 text-black font-bold' : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400'}`}>
                          {m}
                        </button>
                      ))}
@@ -754,7 +754,7 @@ export const ABFITAIModule: React.FC<ABFITAIProps> = ({ studentName, onClose }) 
              <div className="lg:col-span-8">
                 {selectedMuscle ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {exerciseOptions.map((exName, i) => (
                             <button key={i} onClick={() => { setSelectedExercise({ name: exName }); handleOpenConfigAdd(); }} className="text-left px-5 py-4 rounded-2xl bg-neutral-950 border border-white/5 hover:border-red-500/50 hover:bg-neutral-900 transition-all group flex items-center justify-between">
                                 <span className="text-sm font-bold text-neutral-300 group-hover:text-white">{exName}</span>
@@ -1006,6 +1006,7 @@ export const ABFITAIModule: React.FC<ABFITAIProps> = ({ studentName, onClose }) 
           z-index: 9999;
           font-family: 'Inter', sans-serif;
           -webkit-font-smoothing: antialiased;
+          overflow-y: auto;
         }
         #abfit-ai-container button { cursor: pointer; }
         
