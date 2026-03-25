@@ -5,7 +5,7 @@ import {
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
   BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin,
-  Sun, Moon, AlertTriangle
+  Sun, Moon, AlertTriangle, Sparkles
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, AppFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager, StudentWorkoutHistoryView } from './components/CoachFlow';
@@ -144,6 +144,8 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
     </div>
   );
 }
+
+import { PrescreveAI } from './components/PrescreveAI';
 
 export default function App() {
   const [view, setView] = useState('LOGIN');
@@ -1207,6 +1209,7 @@ export default function App() {
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
+    { id: 'PRESCREVE_AI', label: 'PrescreveAI', icon: Sparkles, color: 'cyan' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
 
@@ -1298,6 +1301,7 @@ export default function App() {
         {view === 'RUNTRACK_MANAGER' && selectedStudent && <RunTrackManager student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
         {view === 'ANALYTICS_COACH' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onToggleMenu={undefined} />}
         {view === 'WORKOUT_HISTORY' && selectedStudent && <StudentWorkoutHistoryView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
+        {view === 'PRESCREVE_AI' && <PrescreveAI onBack={() => setView(isCoach ? 'PROFESSOR_DASH' : 'DASHBOARD')} />}
       </main>
     </BackgroundWrapper>
   );

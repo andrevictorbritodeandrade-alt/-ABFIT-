@@ -8,6 +8,7 @@ import {
   Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu, Sparkles, AlertTriangle, LayoutGrid
 } from 'lucide-react';
 import { Card, AppFooter, HeaderTitle } from './Layout';
+import { PrescreveAI } from './PrescreveAI';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -267,7 +268,7 @@ export function ABFITDetailModal({ ex, dbExercise, onClose }: { ex: Exercise, db
   );
 }
 
-function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, currentReps }: { 
+function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, onShowPrescreveAI, currentReps }: { 
   ex: Exercise, 
   dbExercise?: any,
   idx: number, 
@@ -277,6 +278,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   onUpdateLoad: (id: string, val: string, skipSave?: boolean) => void,
   onUpdateUnit: (id: string, unit: 'Kg' | 'Placas') => void,
   onShowDetail: (ex: Exercise) => void,
+  onShowPrescreveAI?: () => void,
   currentReps?: string | null,
   key?: React.Key
 }) {
@@ -374,6 +376,17 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
           </div>
           <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Carga Atual</p>
         </div>
+        
+        {onShowPrescreveAI && (
+          <div className="col-span-2 mt-2">
+            <button 
+              onClick={onShowPrescreveAI}
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-2xl font-black uppercase text-xs tracking-widest text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+            >
+              <Sparkles size={16} /> Ver Biomecânica AI
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -421,6 +434,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const [isResting, setIsResting] = useState(false);
   const [exerciseProgress, setExerciseProgress] = useState<Record<string, { completedSets: number[], isFinished: boolean }>>({});
   const [dbExercises, setDbExercises] = useState<Record<string, any>>({});
+  const [prescreveAIExercise, setPrescreveAIExercise] = useState<string | null>(null);
 
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
@@ -672,6 +686,10 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     );
   }
 
+  if (prescreveAIExercise) {
+    return <PrescreveAI onBack={() => setPrescreveAIExercise(null)} initialExerciseName={prescreveAIExercise} />;
+  }
+
   if (showCompletionModal) {
     return (
       <div className="fixed inset-0 z-[100] bg-background/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-500">
@@ -888,6 +906,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                 });
               }}
               onShowDetail={setExerciseDetail}
+              onShowPrescreveAI={() => setPrescreveAIExercise(ex.name)}
             />
           );
         })}

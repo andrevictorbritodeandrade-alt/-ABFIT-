@@ -101,13 +101,20 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       <Logo size="text-5xl" subSize="text-[9px] sm:text-xs" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
-        <div className="grid grid-cols-1 mb-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <Card className="p-4 bg-card/50 border-border cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('FEED')}>
             <div className="p-2 bg-secondary w-fit rounded-xl mb-3">
               <Layout className="text-muted-foreground" size={18} />
             </div>
             <h3 className="text-[13px] font-black uppercase italic text-foreground tracking-widest">Feed Global</h3>
             <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Timeline de Atletas</p>
+          </Card>
+          <Card className="p-4 bg-card/50 border-border cursor-pointer active:scale-95 transition-all" onClick={() => onNavigate('PRESCREVE_AI')}>
+            <div className="p-2 bg-secondary w-fit rounded-xl mb-3">
+              <Sparkles className="text-blue-500" size={18} />
+            </div>
+            <h3 className="text-[13px] font-black uppercase italic text-foreground tracking-widest">PrescreveAI</h3>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Gerador de Biomecânica</p>
           </Card>
         </div>
 

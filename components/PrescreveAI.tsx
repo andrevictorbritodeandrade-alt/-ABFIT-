@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Sparkles, BrainCircuit, ShieldAlert } from 'lucide-react';
 
-const apiKey = ""; // A chave da API será injetada automaticamente
+const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
 
 // ==========================================
 // CONSTANTES DE CONFIGURAÇÃO
@@ -40,7 +40,7 @@ const EXERCISE_CATALOG = {
 // ==========================================
 // UTILS & API HELPERS
 // ==========================================
-const fetchWithRetry = async (url, options, retries = 5, delay = 1000) => {
+const fetchWithRetry = async (url: string, options: any, retries = 5, delay = 1000) => {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, options);
@@ -57,27 +57,27 @@ const fetchWithRetry = async (url, options, retries = 5, delay = 1000) => {
   }
 };
 
-export default function App() {
+export function PrescreveAI({ onBack, initialExerciseName }: { onBack?: () => void, initialExerciseName?: string }) {
   const [environment, setEnvironment] = useState('ACADEMIA');
   const [selectedModel, setSelectedModel] = useState('MULHER');
   const [selectedJersey, setSelectedJersey] = useState('ÁFRICA DO SUL 26');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialExerciseName || '');
   const [activeFilter, setActiveFilter] = useState('TODOS');
-  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [selectedExercise, setSelectedExercise] = useState<{group: string, name: string} | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedData, setGeneratedData] = useState(null);
-  const [error, setError] = useState(null);
+  const [generatedData, setGeneratedData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
-  const [performanceInsight, setPerformanceInsight] = useState(null);
+  const [performanceInsight, setPerformanceInsight] = useState<any>(null);
 
-  const searchRef = useRef(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) setShowDropdown(false);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) setShowDropdown(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -89,6 +89,15 @@ export default function App() {
     );
   }, []);
 
+  useEffect(() => {
+    if (initialExerciseName) {
+      const found = fullExerciseList.find(ex => ex.name.toLowerCase() === initialExerciseName.toLowerCase());
+      if (found) {
+        setSelectedExercise(found);
+      }
+    }
+  }, [initialExerciseName, fullExerciseList]);
+
   const filteredExercises = useMemo(() => {
     let list = fullExerciseList;
     if (activeFilter !== 'TODOS') list = list.filter(ex => ex.group === activeFilter);
@@ -96,7 +105,7 @@ export default function App() {
     return list.slice(0, 500); 
   }, [searchTerm, activeFilter, fullExerciseList]);
 
-  const handleFilterClick = (tag) => {
+  const handleFilterClick = (tag: string) => {
     setActiveFilter(tag);
     setSearchTerm(''); 
     setSelectedExercise(null);
@@ -112,7 +121,7 @@ export default function App() {
     setShowDropdown(false);
 
     try {
-      const jerseyPrompt = JERSEYS_DATA[selectedJersey];
+      const jerseyPrompt = JERSEYS_DATA[selectedJersey as keyof typeof JERSEYS_DATA];
       
       const modelSpecs = selectedModel === 'HOMEM' 
         ? "Full-body hyper-realistic professional photography of a powerful muscular athletic black man, 1.85m tall, short hair. Very detailed skin texture with pores and natural sweat."
@@ -175,7 +184,7 @@ REGRAS JSON:
             }
           }
         })
-      }).then(res => JSON.parse(res.candidates[0].content.parts[0].text));
+      }).then((res: any) => JSON.parse(res.candidates[0].content.parts[0].text));
 
       const imgResult = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
         method: 'POST',
@@ -220,7 +229,7 @@ REGRAS JSON:
             }
           }
         })
-      }).then(res => JSON.parse(res.candidates[0].content.parts[0].text));
+      }).then((res: any) => JSON.parse(res.candidates[0].content.parts[0].text));
 
       setPerformanceInsight(insightData);
     } catch (err) {
@@ -231,10 +240,15 @@ REGRAS JSON:
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased p-4 sm:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased p-4 sm:p-8 flex flex-col items-center overflow-y-auto">
       
       {/* HEADER PREMIUM - LOGOTIPO ALINHADO CENTRALMENTE AO NOME */}
-      <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-4">
+      <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-4 relative">
+        {onBack && (
+          <button onClick={onBack} className="absolute -top-4 left-0 p-2 text-slate-500 hover:text-slate-900 transition-colors">
+            &larr; Voltar
+          </button>
+        )}
         <div className="bg-gradient-to-tr from-blue-600 to-emerald-400 p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl shrink-0">
           <Dumbbell size={52} className="text-white" strokeWidth={2.5} />
         </div>
@@ -401,7 +415,7 @@ REGRAS JSON:
                     <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Guia de Execução</h2>
                  </div>
                  <div className="space-y-4">
-                    {generatedData.guiaPassos.map((passo, idx) => (
+                    {generatedData.guiaPassos.map((passo: string, idx: number) => (
                       <div key={idx} className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all group">
                         <span className="text-2xl font-black text-emerald-300 group-hover:text-emerald-500 leading-none">{idx+1}</span>
                         <p className="text-sm font-bold text-slate-600 leading-snug">{passo.replace(/^\d+ [-.]? /, '')}</p>
