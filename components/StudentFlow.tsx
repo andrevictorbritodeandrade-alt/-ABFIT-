@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { Card, AppFooter, HeaderTitle } from './Layout';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 const formatReps = (reps: any): string | null => {
   if (!reps) return null;
@@ -72,9 +74,9 @@ const GIF_DATABASE: Record<string, string> = {
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
 
 // Componente de Imagem Inteligente com Fallback
-function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) {
+function ExerciseImage({ ex, dbExercise, className }: { ex: Exercise, dbExercise?: any, className?: string }) {
   const [src, setSrc] = useState<string>("");
-  const [attempt, setAttempt] = useState(0); // 0: ex.thumb, 1: DB match, 2: Default
+  const [attempt, setAttempt] = useState(0); // 0: dbExercise.imageUrl, 1: ex.thumb, 2: DB match, 3: Default
 
   const findInDb = (name: string) => {
     const nameLower = name.toLowerCase();
@@ -95,40 +97,52 @@ function ExerciseImage({ ex, className }: { ex: Exercise, className?: string }) 
   useEffect(() => {
     // Reset state when exercise changes
     setAttempt(0);
-    if (ex.thumb && ex.thumb.length > 10) {
+    if (dbExercise?.imageUrl) {
+      setSrc(dbExercise.imageUrl);
+    } else if (ex.thumb && ex.thumb.length > 10) {
       setSrc(ex.thumb);
+      setAttempt(1);
     } else {
       // Try DB immediately if no thumb
       const dbMatch = findInDb(ex.name);
       if (dbMatch) {
         setSrc(dbMatch);
-        setAttempt(1);
+        setAttempt(2);
       } else {
         setSrc(DEFAULT_IMAGE);
-        setAttempt(2);
+        setAttempt(3);
       }
     }
-  }, [ex]);
+  }, [ex, dbExercise]);
 
   const handleError = () => {
-    // Se falhar na tentativa 0 (thumb do banco/ABFIT AI)
     if (attempt === 0) {
+      if (ex.thumb && ex.thumb.length > 10) {
+        setSrc(ex.thumb);
+        setAttempt(1);
+      } else {
         const dbMatch = findInDb(ex.name);
-        // Só muda se o DB match for diferente do atual (pra evitar loop se thumb == dbMatch)
+        if (dbMatch) {
+          setSrc(dbMatch);
+          setAttempt(2);
+        } else {
+          setSrc(DEFAULT_IMAGE);
+          setAttempt(3);
+        }
+      }
+    } else if (attempt === 1) {
+        const dbMatch = findInDb(ex.name);
         if (dbMatch && dbMatch !== src) {
             setSrc(dbMatch);
-            setAttempt(1);
+            setAttempt(2);
         } else {
             setSrc(DEFAULT_IMAGE);
-            setAttempt(2);
+            setAttempt(3);
         }
-    } 
-    // Se falhar na tentativa 1 (DB), vai pro default
-    else if (attempt === 1) {
+    } else if (attempt === 2) {
         setSrc(DEFAULT_IMAGE);
-        setAttempt(2);
+        setAttempt(3);
     }
-    // Se falhar na tentativa 2 (Default), não faz nada (mantém imagem quebrada ou tenta reload)
   };
 
   return (
@@ -159,7 +173,28 @@ const animationStyles = `
 /**
  * Modal Cinematográfico ABFIT
  */
-export function ABFITDetailModal({ ex, onClose }: { ex: Exercise, onClose: () => void }) {
+export function ABFITDetailModal({ ex, dbExercise, onClose }: { ex: Exercise, dbExercise?: any, onClose: () => void }) {
+  const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname.includes('youtube.com') || parsedUrl.hostname.includes('youtu.be')) {
+        let videoId = '';
+        if (parsedUrl.hostname.includes('youtu.be')) {
+          videoId = parsedUrl.pathname.slice(1);
+        } else {
+          videoId = parsedUrl.searchParams.get('v') || '';
+        }
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+      }
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
+  const embedUrl = dbExercise?.videoUrl ? getEmbedUrl(dbExercise.videoUrl) : '';
+
   return (
     <div className="fixed inset-0 z-[150] bg-background/95 backdrop-blur-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar text-left">
       <style>{animationStyles}</style>
@@ -175,10 +210,20 @@ export function ABFITDetailModal({ ex, onClose }: { ex: Exercise, onClose: () =>
 
       <div className="max-w-2xl mx-auto w-full space-y-8 pb-20">
         <div className="relative aspect-video w-full bg-card rounded-[2.5rem] overflow-hidden border border-border shadow-3xl group">
-          <ExerciseImage 
-            ex={ex}
-            className="w-full h-full object-cover video-motion-engine"
-          />
+          {embedUrl ? (
+            <iframe 
+              src={embedUrl} 
+              className="w-full h-full object-cover"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            />
+          ) : (
+            <ExerciseImage 
+              ex={ex}
+              dbExercise={dbExercise}
+              className="w-full h-full object-cover video-motion-engine"
+            />
+          )}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
             <div className="absolute top-0 left-0 w-full h-[2px] bg-red-600/30 animate-[scan_3s_infinite]"></div>
@@ -196,18 +241,24 @@ export function ABFITDetailModal({ ex, onClose }: { ex: Exercise, onClose: () =>
                 <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-widest italic">Execução Técnica</h4>
              </div>
              <p className="text-xs text-muted-foreground font-medium leading-relaxed italic border-l-2 border-red-600 pl-4">
-               {ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua durante a execução."}
+               {dbExercise?.biomechanics || ex.description || "Mantenha a estabilidade do core e controle a fase excêntrica do movimento. Respire de forma contínua durante a execução."}
              </p>
           </Card>
           <Card className="p-6 bg-card/50 border-border space-y-4">
              <div className="flex items-center gap-3">
                 <ShieldCheck className="text-emerald-500" size={18} />
-                <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-widest italic">Hipertrofia Alvo</h4>
+                <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-widest italic">Laudo Clínico</h4>
              </div>
-             <div className="flex flex-wrap gap-2">
-                {(ex.benefits || "Tensão Mecânica,Estresse Metabólico,Performance").split(',').map((b: string, i: number) => (
-                  <span key={i} className="text-[12px] font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-full text-muted-foreground border border-border italic">{b.trim()}</span>
-                ))}
+             <div className="text-xs text-muted-foreground font-medium leading-relaxed italic border-l-2 border-emerald-500 pl-4">
+                {dbExercise?.clinicalNotes ? (
+                  <p>{dbExercise.clinicalNotes}</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(ex.benefits || "Tensão Mecânica,Estresse Metabólico,Performance").split(',').map((b: string, i: number) => (
+                      <span key={i} className="text-[12px] font-black uppercase tracking-widest bg-background px-3 py-1.5 rounded-full text-muted-foreground border border-border italic">{b.trim()}</span>
+                    ))}
+                  </div>
+                )}
              </div>
           </Card>
         </div>
@@ -216,8 +267,9 @@ export function ABFITDetailModal({ ex, onClose }: { ex: Exercise, onClose: () =>
   );
 }
 
-function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, currentReps }: { 
+function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, currentReps }: { 
   ex: Exercise, 
+  dbExercise?: any,
   idx: number, 
   progress: { completedSets: number[], isFinished: boolean },
   onToggleFinish: (id: string) => void,
@@ -250,6 +302,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
           <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-border bg-background relative shadow-2xl cursor-pointer group" onClick={() => onShowDetail(ex)}>
              <ExerciseImage 
                ex={ex}
+               dbExercise={dbExercise}
                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
              />
              <div className="absolute inset-0 bg-red-600/10 mix-blend-overlay"></div>
@@ -272,7 +325,7 @@ function ExerciseCard({ ex, idx, progress, onToggleFinish, onMarkSet, onUpdateLo
             {ex.name}
           </h4>
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] italic">
-            {ex.method || 'Protocolo PhD Padrão'}
+            {ex.method || 'Protocolo Mestre Padrão'}
           </p>
         </div>
       </div>
@@ -367,12 +420,34 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const [restCountdown, setRestCountdown] = useState<number | null>(null);
   const [isResting, setIsResting] = useState(false);
   const [exerciseProgress, setExerciseProgress] = useState<Record<string, { completedSets: number[], isFinished: boolean }>>({});
+  const [dbExercises, setDbExercises] = useState<Record<string, any>>({});
 
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
   const timerRef = useRef<any>(null);
   const restTimerRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (activeWorkout) {
+      const fetchDbExercises = async () => {
+        const newDbExercises: Record<string, any> = {};
+        for (const ex of activeWorkout.exercises) {
+          const docId = ex.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+          try {
+            const docSnap = await getDoc(doc(db, 'exercise_database', docId));
+            if (docSnap.exists()) {
+              newDbExercises[ex.name] = docSnap.data();
+            }
+          } catch (e) {
+            console.error("Error fetching exercise from DB:", e);
+          }
+        }
+        setDbExercises(newDbExercises);
+      };
+      fetchDbExercises();
+    }
+  }, [activeWorkout]);
 
   const workoutStats = useMemo(() => {
     if (!activeWorkout) return null;
@@ -775,6 +850,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
             <ExerciseCard 
               key={ex.id || idx} 
               ex={ex} 
+              dbExercise={dbExercises[ex.name]}
               idx={idx} 
               progress={progress} 
               currentReps={currentReps}
@@ -828,7 +904,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
          </div>
       )}
 
-      {exerciseDetail && <ABFITDetailModal ex={exerciseDetail} onClose={() => setExerciseDetail(null)} />}
+      {exerciseDetail && <ABFITDetailModal ex={exerciseDetail} dbExercise={dbExercises[exerciseDetail.name]} onClose={() => setExerciseDetail(null)} />}
       <AppFooter />
     </div>
   );
@@ -849,7 +925,7 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
            </button>
         </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Avaliação PhD" />
+          <HeaderTitle text="Avaliação Mestre" />
         </h2>
       </header>
       <div className="space-y-6">
@@ -905,7 +981,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
         </header>
         <div className="flex flex-col items-center justify-center py-20">
           <Brain className="text-zinc-800 mb-6" size={64} />
-          <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Aguardando configuração de macrociclo<br/>pelo seu treinador PhD.</p>
+          <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Aguardando configuração de macrociclo<br/>pelo seu treinador Mestre.</p>
         </div>
       </div>
     );
@@ -1048,7 +1124,7 @@ export function AboutView({ onBack }: { onBack: () => void }) {
       <div className="space-y-12">
         <div className="text-center">
           <h3 className="text-5xl font-black italic uppercase text-red-600 tracking-tighter leading-none">ABFIT Performance</h3>
-          <p className="text-[13px] font-black uppercase text-zinc-500 tracking-[0.4em] mt-2 italic">PhD André Brito</p>
+          <p className="text-[13px] font-black uppercase text-zinc-500 tracking-[0.4em] mt-2 italic">Me. André Brito</p>
         </div>
         <div className="space-y-6">
           <Card className="p-6 bg-zinc-900/40 border-white/5">
@@ -1061,7 +1137,7 @@ export function AboutView({ onBack }: { onBack: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-zinc-900 rounded-3xl border border-white/5 text-center">
                <Award className="text-red-600 mx-auto mb-2" size={24} />
-               <p className="text-[13px] font-black uppercase text-white leading-none">Certificação PhD</p>
+               <p className="text-[13px] font-black uppercase text-white leading-none">Mestrado UERJ</p>
             </div>
             <div className="p-4 bg-zinc-900 rounded-3xl border border-white/5 text-center">
                <Shield className="text-red-600 mx-auto mb-2" size={24} />

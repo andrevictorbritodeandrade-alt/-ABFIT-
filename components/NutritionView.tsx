@@ -240,7 +240,7 @@ export function NutritionView({ student, onBack, onSave }: NutritionProps) {
               <div className="flex justify-between items-start mb-6">
                  <div>
                     <h3 className="text-lg font-black uppercase italic text-white">Plano Alimentar AI</h3>
-                    <p className="text-[9px] text-zinc-500">Gerado pelo PhD ABFIT</p>
+                    <p className="text-[9px] text-zinc-500">Gerado pelo Mestre ABFIT</p>
                  </div>
                  <ChefHat className="text-red-600" />
               </div>

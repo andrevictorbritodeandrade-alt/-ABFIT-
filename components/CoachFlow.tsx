@@ -98,7 +98,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
         </button>
       </header>
       
-      <Logo size="text-5xl" subSize="text-xs" />
+      <Logo size="text-5xl" subSize="text-[9px] sm:text-xs" />
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
         <div className="grid grid-cols-1 mb-2">
@@ -154,7 +154,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
 const FEATURE_LIST = [
   { id: 'FEED', label: 'Feed Performance', icon: LayoutGrid },
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
-  { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain },
+  { id: 'STUDENT_PERIODIZATION', label: 'Periodização Mestre', icon: Brain },
   { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler },
   { id: 'RUNTRACK_STUDENT', label: 'RunTrack ABFIT', icon: Footprints },
   { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3 },
@@ -316,13 +316,13 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        {/* Periodização PhD */}
+        {/* Periodização Mestre */}
         <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-3.5 rounded-3xl bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
            <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                  <Brain size={18} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Periodização PhD</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Periodização Mestre</span>
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -442,214 +442,6 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
           studentName={student.nome} 
           onClose={() => setAbrirPrescritor(false)} 
         />
-      )}
-    </div>
-  );
-}
-
-// --- PRESCREVEAI WIDGET COMPONENT ---
-function ABFITAIWidget({ onAddExercise }: { onAddExercise: (ex: Exercise) => void }) {
-  const [selectedMuscle, setSelectedMuscle] = useState("");
-  const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState<any>(null);
-  const [exerciseImage, setExerciseImage] = useState<string | null>(null);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [exerciseConfig, setExerciseConfig] = useState({
-    sets: "3",
-    reps: "12",
-    rest: "60",
-    technique: "Normal",
-    observation: ""
-  });
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (selectedMuscle) {
-      setExerciseOptions(EXERCISE_DATABASE[selectedMuscle] || []);
-    } else {
-      setExerciseOptions([]);
-    }
-  }, [selectedMuscle]);
-
-  const handleSelectExercise = async (name: string) => {
-    // Reset previous selection
-    setSelectedExercise({ name });
-    setExerciseImage(null);
-    setImageLoading(true);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
-      const brainPrompt = `Analise o exercício "${name}". 
-      Instruções biomecânicas:
-      - Se HBC: Haltere (Dumbbell). Nunca barra.
-      - Se HBL: Barra Longa.
-      - Se "alternado": Execução asimétrica.
-      
-      Forneça:
-      1. Descrição técnica curta (português).
-      2. 3 Benefícios (português).
-      3. PROMPT VISUAL INGLÊS 8k descrevendo atleta preto, biomecânica e luz de estúdio.`;
-
-      // 1. Text Analysis
-      const brainData = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: brainPrompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              description: { type: Type.STRING },
-              benefits: { type: Type.STRING },
-              visualPrompt: { type: Type.STRING }
-            }
-          }
-        }
-      });
-
-      const brainResult = JSON.parse(brainData.text || "{}");
-
-      // 2. Image Generation
-      if (brainResult.visualPrompt) {
-        const imagenResponse = await ai.models.generateImages({
-          model: IMAGEN_MODEL,
-          prompt: brainResult.visualPrompt,
-          config: {
-            numberOfImages: 1,
-            aspectRatio: '16:9',
-            outputMimeType: 'image/jpeg'
-          }
-        });
-
-        const base64Image = imagenResponse.generatedImages?.[0]?.image?.imageBytes;
-        if (base64Image) {
-          setExerciseImage(`data:image/jpeg;base64,${base64Image}`);
-        }
-      }
-
-      setSelectedExercise({
-        name: name,
-        description: brainResult.description,
-        benefits: brainResult.benefits
-      });
-
-    } catch (err) {
-      console.error("ABFIT AI Error:", err);
-    } finally {
-      setImageLoading(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (!selectedExercise) return;
-    const newEx: Exercise = {
-      id: Date.now().toString(),
-      name: selectedExercise.name,
-      description: selectedExercise.description,
-      benefits: selectedExercise.benefits,
-      thumb: exerciseImage,
-      sets: exerciseConfig.sets,
-      reps: exerciseConfig.reps,
-      rest: exerciseConfig.rest,
-      method: exerciseConfig.technique,
-      load: ''
-    };
-    onAddExercise(newEx);
-    setIsOpen(false);
-    setSelectedExercise(null);
-    setExerciseImage(null);
-  };
-
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="w-full py-5 bg-gradient-to-r from-red-600 to-red-900 rounded-[2rem] text-white font-black uppercase tracking-widest shadow-lg flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
-      >
-        <Sparkles size={20} className="animate-pulse" />
-        Abrir ABFIT AI
-      </button>
-    );
-  }
-
-  return (
-    <div className="bg-card border border-border rounded-[2.5rem] p-6 space-y-6 shadow-2xl relative animate-in zoom-in-95">
-      <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground"><X /></button>
-      
-      <div className="flex items-center gap-3 text-red-500 mb-4">
-        <Video size={24} />
-        <h3 className="text-xl font-black italic uppercase tracking-tighter">ABFIT Studio</h3>
-      </div>
-
-      {/* 1. SELEÇÃO */}
-      <div className="space-y-4">
-        <div>
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Grupo Muscular</label>
-          <select 
-            value={selectedMuscle} 
-            onChange={(e) => setSelectedMuscle(e.target.value)}
-            className="w-full bg-background border border-border rounded-xl p-4 text-foreground font-bold outline-none focus:border-red-600 appearance-none"
-          >
-            <option value="">Selecione...</option>
-            {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-
-        {selectedMuscle && (
-          <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-            {exerciseOptions.map((exName, i) => (
-              <button 
-                key={i} 
-                onClick={() => handleSelectExercise(exName)}
-                className={`text-left px-4 py-3 rounded-xl text-[10px] font-bold transition-all border ${selectedExercise?.name === exName ? 'bg-red-600 border-red-600 text-white' : 'bg-secondary border-border text-muted-foreground hover:bg-card'}`}
-              >
-                {exName}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 2. VISUALIZAÇÃO E CONFIGURAÇÃO */}
-      {(selectedExercise || imageLoading) && (
-        <div className="space-y-6 pt-6 border-t border-border animate-in slide-in-from-bottom-4">
-          <div className="relative aspect-video bg-background rounded-2xl overflow-hidden border border-border">
-            {imageLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Gerando Biomecânica 8K...</span>
-              </div>
-            ) : exerciseImage ? (
-              <>
-                <img src={exerciseImage} className="w-full h-full object-cover" />
-                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur px-2 py-1 rounded border border-white/10">
-                  <span className="text-[8px] font-black text-red-500 uppercase tracking-widest">AI GENERATED</span>
-                </div>
-              </>
-            ) : null}
-          </div>
-
-          {!imageLoading && selectedExercise && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-lg font-black uppercase italic text-foreground leading-none">{selectedExercise.name}</h4>
-                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{selectedExercise.description}</p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                 <input value={exerciseConfig.sets} onChange={e => setExerciseConfig({...exerciseConfig, sets: e.target.value})} placeholder="Séries" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
-                 <input value={exerciseConfig.reps} onChange={e => setExerciseConfig({...exerciseConfig, reps: e.target.value})} placeholder="Reps" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
-                 <input value={exerciseConfig.rest} onChange={e => setExerciseConfig({...exerciseConfig, rest: e.target.value})} placeholder="Rest (s)" className="bg-background border border-border p-3 rounded-xl text-center text-foreground font-bold outline-none focus:border-red-600" />
-              </div>
-              <input value={exerciseConfig.technique} onChange={e => setExerciseConfig({...exerciseConfig, technique: e.target.value})} placeholder="Técnica (ex: Drop-set)" className="w-full bg-background border border-border p-3 rounded-xl text-foreground font-bold outline-none focus:border-red-600 text-xs" />
-
-              <button onClick={handleConfirm} className="w-full py-4 bg-foreground text-background font-black uppercase tracking-widest rounded-xl hover:bg-muted-foreground transition-colors flex items-center justify-center gap-2">
-                <CheckCircle2 size={18} /> Adicionar ao Treino
-              </button>
-            </div>
-          )}
-        </div>
       )}
     </div>
   );
@@ -1086,7 +878,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
         <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
            <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
-             <HeaderTitle text="Periodização PhD" />
+             <HeaderTitle text="Periodização Mestre" />
            </h2>
         </div>
         <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-muted-foreground hover:text-foreground flex items-center gap-1">

@@ -123,7 +123,7 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
       <div className="w-full max-sm mt-8 space-y-4 animate-in slide-in-from-bottom-10 duration-1000 relative">
         <div className="text-left">
           <div className="relative" ref={dropdownRef}>
-            <input type="text" placeholder="E-MAIL OU 'PROFESSOR'" className="w-full bg-input border border-border p-5 rounded-[2.5rem] text-foreground outline-none focus:border-red-600 transition-all text-center font-black tracking-tight uppercase placeholder:text-muted-foreground" value={input} autoComplete="off" onChange={e => setInput(e.target.value)} onClick={() => setShowDropdown(true)} onFocus={() => setShowDropdown(true)} />
+            <input type="text" name="login-email-no-autofill" id="login-email-no-autofill" placeholder="E-MAIL OU 'PROFESSOR'" className="w-full bg-input border border-border p-5 rounded-[2.5rem] text-foreground outline-none focus:border-red-600 transition-all text-center font-black tracking-tight uppercase placeholder:text-muted-foreground" value={input} autoComplete="new-password" onChange={e => setInput(e.target.value)} onClick={() => setShowDropdown(true)} onFocus={() => setShowDropdown(true)} />
             {showDropdown && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 max-h-80 overflow-y-auto custom-scrollbar">
                 <div className="p-3 border-b border-border bg-secondary/40 text-center sticky top-0 z-10"><p className="text-[11px] font-black text-muted-foreground uppercase text-center tracking-[0.2em]">Selecione um perfil</p></div>
@@ -235,7 +235,11 @@ export default function App() {
       try { 
         await signInAnonymously(auth); 
       } catch (err: any) { 
-        console.error("Auth error:", err);
+        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
+          console.warn("Anonymous auth not enabled. Using offline/default mode.");
+        } else {
+          console.warn("Auth warning:", err.message);
+        }
         setLoading(false); 
       } 
     };
@@ -251,13 +255,26 @@ export default function App() {
         setUser(u); 
         setLoading(false); 
         clearTimeout(timeout);
-      } 
+      } else {
+        setUser(null);
+        setLoading(false);
+        clearTimeout(timeout);
+      }
     });
     return () => {
       unsubAuth();
       clearTimeout(timeout);
     };
   }, []);
+
+  // Removed strict auth redirect to allow offline/unauthenticated access to default data
+  // useEffect(() => {
+  //   if (!loading && !user && view !== 'LOGIN') {
+  //     setView('LOGIN');
+  //     localStorage.removeItem('elite_session_v2');
+  //     delete (window as any)._tempStudentId;
+  //   }
+  // }, [loading, user, view]);
 
   // Definição Centralizada dos Alunos Padrão
   const defaultStudentsData = useMemo<Student[]>(() => [
@@ -432,6 +449,23 @@ export default function App() {
           medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
           physicalAssessments: [], 
           workoutHistory: [
+            {
+              id: 'hist-andre-run-01',
+              workoutId: 'andre-workout-0',
+              name: 'Intervalado',
+              athleteName: 'André Brito',
+              duration: '32 min',
+              date: '22/03/2026',
+              timestamp: 1742601600000,
+              type: 'RUNNING',
+              runningStats: {
+                distance: 4.5,
+                duration: '32 min',
+                avgPace: "7'06\"",
+                avgHR: 142,
+                calories: 380
+              }
+            },
             {
               id: 'hist-andre-04',
               workoutId: 'treino-b-andre',
@@ -752,15 +786,15 @@ export default function App() {
     ], []);
 
   useEffect(() => {
-    if (!user) return;
     let unsub: () => void;
     
     // Safety timeout for student loading
     const studentLoadTimeout = setTimeout(() => {
-      if (view !== 'LOGIN' && !isCoach && !selectedStudent && !(window as any)._tempStudentId) {
+      if (view !== 'LOGIN' && !isCoach && !selectedStudent) {
           console.warn("Student loading timed out, redirecting to login");
           setView('LOGIN');
           localStorage.removeItem('elite_session_v2');
+          delete (window as any)._tempStudentId;
       }
     }, 8000);
 
@@ -789,9 +823,15 @@ export default function App() {
             }
         }
       }, (error) => {
-        console.error("Firestore error:", error);
-        setView('LOGIN');
-        localStorage.removeItem('elite_session_v2');
+        console.warn("Firestore warning:", error.message);
+        setStudents([]);
+        if ((window as any)._tempStudentId && !selectedStudent) {
+            const saved = defaultStudentsData.find(s => s.id === (window as any)._tempStudentId);
+            if (saved) {
+                setSelectedStudent(saved);
+                delete (window as any)._tempStudentId;
+            }
+        }
       });
     } else if (view !== 'LOGIN' && !isCoach) {
       // Se tivermos um ID temporário restaurado ou um estudante já selecionado
@@ -891,9 +931,14 @@ export default function App() {
             }
         }
       }, (error) => {
-          console.error("Firestore error:", error);
-          setView('LOGIN');
-          localStorage.removeItem('elite_session_v2');
+          console.warn("Firestore warning:", error.message);
+          const defaultProfile = defaultStudentsData.find(d => d.id === targetId);
+          if (defaultProfile) {
+              setSelectedStudent(defaultProfile);
+          } else {
+              setView('LOGIN');
+              localStorage.removeItem('elite_session_v2');
+          }
       });
     }
     return () => { 
@@ -1157,7 +1202,7 @@ export default function App() {
   const allDashboardItems = [
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
-    { id: 'STUDENT_PERIODIZATION', label: 'Periodização PhD', icon: Brain, color: 'indigo' },
+    { id: 'STUDENT_PERIODIZATION', label: 'Periodização Mestre', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
@@ -1204,7 +1249,7 @@ export default function App() {
               <WeatherWidget />
             </header>
             
-            <Logo size="text-6xl" subSize="text-xs" />
+            <Logo size="text-6xl" subSize="text-[9px] sm:text-xs" />
             <div className="relative mt-8 mb-8">
                <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                  <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">

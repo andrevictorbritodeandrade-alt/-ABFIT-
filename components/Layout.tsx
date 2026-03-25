@@ -48,7 +48,7 @@ export function Logo({ size = "text-4xl", subSize = "text-xs", collapsed = false
       <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9]`}>
         AB<span className="text-red-600">FIT</span>
       </h1>
-      <p className={`${subSize} text-muted-foreground tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80`}>Assessoria em Treinamentos Físicos</p>
+      <p className={`${subSize} text-muted-foreground tracking-widest sm:tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80 whitespace-nowrap`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
 }
@@ -421,7 +421,7 @@ export function AppFooter() {
         </button>
       </div>
       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">ABFIT Performance v2.0</p>
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 PhD André Brito. All Rights Reserved.</p>
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 Me. André Brito. All Rights Reserved.</p>
     </footer>
   );
 }

@@ -8,7 +8,7 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const brainPrompt = `Analise o exercício "${exerciseName}". 
-    Instruções biomecânicas de PhD:
+    Instruções biomecânicas de Mestre:
     - Se HBC: Haltere (Dumbbell).
     - Se HBL: Barra Longa Olímpica.
     - Se "alternado": Execução assimétrica.
@@ -55,7 +55,7 @@ export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const systemInstruction = `
-    Você é o ABFIT AI, um treinador PhD. 
+    Você é o ABFIT AI, um treinador Mestre. 
     Gere uma lista de exercícios baseada no pedido do usuário.
     Retorne APENAS um JSON array.
     Estrutura: [{"name": "Nome", "sets": "3", "reps": "12", "rest": "60", "method": "Normal", "load": ""}]
@@ -98,7 +98,7 @@ export async function generateTechnicalCue(exerciseName: string) {
   try {
     const res = await ai.models.generateContent({
       model: MODEL_TEXT,
-      contents: `Dica biomecânica rápida de PhD para ${exerciseName}.`
+      contents: `Dica biomecânica rápida de Mestre para ${exerciseName}.`
     });
     return res.text;
   } catch (e) { return "Mantenha a estabilidade do core."; }

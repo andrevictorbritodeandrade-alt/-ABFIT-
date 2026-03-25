@@ -106,7 +106,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         model: MODEL_TEXT,
         contents: userMsg,
         config: {
-          systemInstruction: "Você é o Coach AI da ABFIT. Você é um especialista PhD em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE)),
+          systemInstruction: "Você é o Coach AI da ABFIT. Você é um especialista Mestre em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE)),
         }
       });
 
@@ -134,7 +134,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         </div>
         <div>
           <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">ABFIT AI</h2>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Consultoria PhD em Biomecânica</p>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Consultoria Mestre em Biomecânica</p>
         </div>
       </header>
 

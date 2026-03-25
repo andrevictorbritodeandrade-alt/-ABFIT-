@@ -224,7 +224,7 @@ const calculateAdjustedWorkout = (workout: WorkoutModel) => {
     return { adjusted, badge };
 };
 
-const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean, isToday?: boolean }> = ({ workout, onDelete, onEdit, isCompleted, compact, isToday }) => {
+const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean, isToday?: boolean, stats?: any }> = ({ workout, onDelete, onEdit, isCompleted, compact, isToday, stats }) => {
     const { adjusted, badge } = useMemo(() => calculateAdjustedWorkout(workout), [workout]);
     const totalDuration = useMemo(() => estimateWorkoutDuration(adjusted), [adjusted]);
 
@@ -353,8 +353,48 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
             </div>
 
             {workout.description && (
-                <div className="p-4 rounded-xl border-l-2 border-red-600 bg-red-600/5">
+                <div className="p-4 rounded-xl border-l-2 border-red-600 bg-red-600/5 mb-6">
                     <p className="text-xs text-zinc-300 font-medium leading-relaxed italic">"{workout.description}"</p>
+                </div>
+            )}
+
+            {stats && !stats.empty && (
+                <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
+                    <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3 flex items-center gap-2">
+                        <Activity size={12} /> Dados do Galaxy Watch
+                    </h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {stats.distance && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Distância</div>
+                                <div className="text-sm font-black text-white">{stats.distance} km</div>
+                            </div>
+                        )}
+                        {stats.duration && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Duração</div>
+                                <div className="text-sm font-black text-white">{stats.duration}</div>
+                            </div>
+                        )}
+                        {stats.avgPace && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Pace Médio</div>
+                                <div className="text-sm font-black text-white">{stats.avgPace}</div>
+                            </div>
+                        )}
+                        {stats.avgHR && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-bold">BPM Médio</div>
+                                <div className="text-sm font-black text-white">{stats.avgHR} bpm</div>
+                            </div>
+                        )}
+                        {stats.calories && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Calorias</div>
+                                <div className="text-sm font-black text-white">{stats.calories} kcal</div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
@@ -504,9 +544,17 @@ const getFirstDayOfMonth = (year: number, month: number) => {
     return new Date(year, month, 1).getDay();
 };
 
-const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[], history: WorkoutHistoryEntry[], onCheckIn: (date: string, workout: WorkoutModel) => void }) => {
+const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: WorkoutModel[], history: WorkoutHistoryEntry[], onCheckIn: (date: string, workout: WorkoutModel, stats?: any) => void, studentId?: string }) => {
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [showStatsModal, setShowStatsModal] = useState(false);
+    const [statsForm, setStatsForm] = useState({
+        distance: '',
+        duration: '',
+        avgPace: '',
+        avgHR: '',
+        calories: ''
+    });
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const today = new Date();
@@ -536,6 +584,72 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
         const date = new Date(year, month, day);
         const dayOfWeek = date.getDay();
         
+        if (studentId === 'fixed-andre') {
+            const march22 = new Date(2026, 2, 22); // Month is 0-indexed, 2 = March
+            const march25 = new Date(2026, 2, 25);
+            
+            // Normalize dates to midnight for accurate day difference calculation
+            const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+            const m22Norm = new Date(march22.getFullYear(), march22.getMonth(), march22.getDate()).getTime();
+            const m25Norm = new Date(march25.getFullYear(), march25.getMonth(), march25.getDate()).getTime();
+
+            if (dNorm === m22Norm) {
+                return {
+                    id: 'andre-workout-0',
+                    studentId: 'fixed-andre',
+                    type: 'Intervalado',
+                    dayOfWeek: 'Domingo',
+                    warmupTime: '10',
+                    sets: '6',
+                    reps: '1',
+                    stimulusTime: '2',
+                    speed: '8',
+                    recoveryTime: '1',
+                    cooldownTime: '10',
+                    description: '6 blocos de 2\' de corrida : 1\' caminhada de recuperação'
+                } as WorkoutModel;
+            }
+            
+            const diffTime = dNorm - m25Norm;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays >= 0 && diffDays < 28) { // 4 weeks
+                if (diffDays % 2 === 0) {
+                    return {
+                        id: 'andre-workout-a',
+                        studentId: 'fixed-andre',
+                        type: 'Intervalado',
+                        dayOfWeek: '',
+                        warmupTime: '10',
+                        sets: '10',
+                        reps: '1',
+                        stimulusTime: '1',
+                        speed: '8', // moderada
+                        recoveryTime: '1', // caminhada forte
+                        cooldownTime: '10',
+                        description: '10 blocos de 1\' corrida moderada : 1\' caminhada forte'
+                    } as WorkoutModel;
+                } else {
+                    return {
+                        id: 'andre-workout-b',
+                        studentId: 'fixed-andre',
+                        type: 'Intervalado',
+                        dayOfWeek: '',
+                        warmupTime: '10',
+                        sets: '10', // Assuming 10 blocks based on standard pattern
+                        reps: '1',
+                        stimulusTime: '1',
+                        speed: '10', // forte
+                        recoveryTime: '2', // caminhada moderada
+                        cooldownTime: '10',
+                        description: '10 blocos de 1\' corrida forte : 2\' caminhada moderada'
+                    } as WorkoutModel;
+                }
+            }
+            // If outside this range, fallback to standard logic or return null
+            return null;
+        }
+
         return workouts.find(w => {
             if (!w.dayOfWeek) return false;
             const d = normalizeDay(String(w.dayOfWeek));
@@ -549,13 +663,53 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
         return history.some(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
     };
 
+    const getHistoryEntry = (day: number, workoutId: string) => {
+        const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
+        return history.find(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+    };
+
     const handleDayClick = (day: number, workout: WorkoutModel) => {
         setSelectedDay(day === selectedDay ? null : day);
     };
 
     const handleToggleComplete = (day: number, workout: WorkoutModel) => {
         const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
-        onCheckIn(dateStr, workout);
+        if (isCompleted(day, workout.id)) {
+            // If already completed, clicking again will undo it (no stats needed)
+            onCheckIn(dateStr, workout);
+        } else {
+            // Show modal to collect stats
+            setStatsForm({
+                distance: '',
+                duration: '',
+                avgPace: '',
+                avgHR: '',
+                calories: ''
+            });
+            setShowStatsModal(true);
+        }
+    };
+
+    const submitStats = () => {
+        if (!selectedDay || !selectedWorkout) return;
+        const dateStr = new Date(year, month, selectedDay).toLocaleDateString('pt-BR');
+        
+        const rawStats = {
+            distance: parseFloat(statsForm.distance) || undefined,
+            duration: statsForm.duration || undefined,
+            avgPace: statsForm.avgPace || undefined,
+            avgHR: parseInt(statsForm.avgHR) || undefined,
+            calories: parseInt(statsForm.calories) || undefined
+        };
+
+        // Clean undefined values for Firestore
+        const cleanStats = Object.fromEntries(Object.entries(rawStats).filter(([_, v]) => v !== undefined));
+        
+        // If object is empty, pass undefined so it doesn't store an empty object
+        const finalStats = Object.keys(cleanStats).length > 0 ? cleanStats : { empty: true };
+
+        onCheckIn(dateStr, selectedWorkout, finalStats);
+        setShowStatsModal(false);
     };
 
     const isToday = (day: number) => {
@@ -584,6 +738,9 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
                     {days.map(day => {
                         const workout = getWorkoutForDate(day);
                         const completed = workout ? isCompleted(day, workout.id) : false;
+                        const dateObj = new Date(year, month, day);
+                        const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        const isMissed = workout && !completed && isPast;
                         const todayHighlight = isToday(day) ? "bg-zinc-800" : "bg-transparent";
                         const isSelected = selectedDay === day;
                         
@@ -595,17 +752,19 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
                                         className={`w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all active:scale-95 relative overflow-hidden
                                             ${completed 
                                                 ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
-                                                : isSelected
-                                                    ? 'border-red-600 bg-red-600/10'
-                                                    : `border-zinc-800 hover:border-red-600/50 ${todayHighlight}`
+                                                : isMissed
+                                                    ? 'bg-red-950/30 border-red-900/50'
+                                                    : isSelected
+                                                        ? 'border-red-600 bg-red-600/10'
+                                                        : `border-zinc-800 hover:border-red-600/50 ${todayHighlight}`
                                             }
                                         `}
                                     >
-                                        <span className={`text-[10px] font-black z-10 ${completed ? 'text-emerald-500' : 'text-white'}`}>{day}</span>
+                                        <span className={`text-[10px] font-black z-10 ${completed ? 'text-emerald-500' : isMissed ? 'text-red-500' : 'text-white'}`}>{day}</span>
                                         <span className="text-[6px] font-black uppercase tracking-tighter opacity-40 absolute bottom-1">
                                             {workout.type.substring(0, 3)}
                                         </span>
-                                        <div className={`w-1 h-1 rounded-full absolute top-1 right-1 ${completed ? 'bg-emerald-500' : 'bg-red-600'}`}></div>
+                                        <div className={`w-1 h-1 rounded-full absolute top-1 right-1 ${completed ? 'bg-emerald-500' : isMissed ? 'bg-red-900' : 'bg-red-600'}`}></div>
                                     </button>
                                 ) : (
                                     <div className={`w-full h-full rounded-xl flex flex-col items-center justify-center border border-transparent text-zinc-700 ${todayHighlight}`}>
@@ -625,6 +784,10 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
                         <span className="text-[8px] font-bold text-zinc-500 uppercase">Concluído</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-900"></div>
+                        <span className="text-[8px] font-bold text-zinc-500 uppercase">Falta</span>
                     </div>
                 </div>
             </div>
@@ -649,7 +812,35 @@ const RunCalendar = ({ workouts, history, onCheckIn }: { workouts: WorkoutModel[
                             {isCompleted(selectedDay, selectedWorkout.id) ? 'Concluído' : 'Marcar Concluído'}
                         </button>
                     </div>
-                    <WorkoutCard workout={selectedWorkout} isCompleted={isCompleted(selectedDay, selectedWorkout.id)} />
+                    <WorkoutCard 
+                        workout={selectedWorkout} 
+                        isCompleted={isCompleted(selectedDay, selectedWorkout.id)} 
+                        stats={getHistoryEntry(selectedDay, selectedWorkout.id)?.runningStats}
+                    />
+                </div>
+            )}
+
+            {/* STATS MODAL */}
+            {showStatsModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 w-full max-w-md shadow-2xl relative">
+                        <button onClick={() => setShowStatsModal(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white"><X size={20}/></button>
+                        <h3 className="text-lg font-black italic uppercase text-white tracking-tighter mb-6">Dados do Treino</h3>
+                        <p className="text-xs text-zinc-400 mb-6">Insira os dados do seu Galaxy Watch 7 (opcional)</p>
+                        
+                        <div className="space-y-4 mb-8">
+                            <Input label="Distância (km)" type="number" value={statsForm.distance} onChange={(v: string) => setStatsForm({...statsForm, distance: v})} placeholder="Ex: 5.2" />
+                            <Input label="Duração Total" value={statsForm.duration} onChange={(v: string) => setStatsForm({...statsForm, duration: v})} placeholder="Ex: 45 min" />
+                            <Input label="Pace Médio" value={statsForm.avgPace} onChange={(v: string) => setStatsForm({...statsForm, avgPace: v})} placeholder="Ex: 6'30&quot;" />
+                            <Input label="BPM Médio" type="number" value={statsForm.avgHR} onChange={(v: string) => setStatsForm({...statsForm, avgHR: v})} placeholder="Ex: 145" />
+                            <Input label="Calorias" type="number" value={statsForm.calories} onChange={(v: string) => setStatsForm({...statsForm, calories: v})} placeholder="Ex: 450" />
+                        </div>
+                        
+                        <div className="flex gap-4">
+                            <Button variant="secondary" className="flex-1" onClick={() => setShowStatsModal(false)}>Cancelar</Button>
+                            <Button className="flex-1" onClick={submitStats}>Salvar</Button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
@@ -969,6 +1160,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     workouts={workouts} 
                     history={student.workoutHistory || []} 
                     onCheckIn={handleCheckIn} 
+                    studentId={student.id}
                 />
 
                 {/* HERO CARD (TODAY) */}
