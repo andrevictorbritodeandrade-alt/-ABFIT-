@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Student, WorkoutHistoryEntry } from '../types';
-import { HeaderTitle, Card, AppFooter } from './Layout';
+import { HeaderTitle, Card, AppFooter, BackgroundCarousel, RUNNING_IMAGES } from './Layout';
 
 // --- CONFIGURATION ---
 const RUN_COLLECTION = 'runtrack-elite-v4';
@@ -1118,7 +1118,8 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-black flex flex-col">
+        <div className="animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-transparent flex flex-col relative">
+            <BackgroundCarousel images={RUNNING_IMAGES} />
             {/* STICKY HEADER */}
             <header className="p-6 pb-4 border-b border-white/5 bg-black/80 backdrop-blur-md z-50">
                 <div className="flex items-center gap-4">

@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu, Layers } from 'lucide-react';
-import { Card, AppFooter, HeaderTitle } from './Layout';
+import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 import { Student } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, Cell } from 'recharts';
 import { EXERCISE_DATABASE } from '../constants/exercises';
@@ -126,8 +126,9 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
   );
 
   return (
-    <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-black">
-      <header className="flex items-center gap-4 mb-10">
+    <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-transparent relative">
+      <BackgroundCarousel images={FITNESS_IMAGES} />
+      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-3">
            {onToggleMenu && (
              <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">

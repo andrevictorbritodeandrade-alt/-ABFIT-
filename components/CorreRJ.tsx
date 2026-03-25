@@ -336,23 +336,7 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
       `}</style>
 
       {/* BACKGROUND CARROSSEL */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-black">
-        {BG_IMAGES.map((img, idx) => (
-          <div
-            key={idx}
-            className="absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
-            style={{ 
-              backgroundImage: `url(${img})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(10px) brightness(0.7)',
-              opacity: bgIndex === idx ? 0.4 : 0,
-              zIndex: bgIndex === idx ? 1 : 0
-            }}
-          />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black opacity-80 z-[2]"></div>
-      </div>
+      <BackgroundCarousel images={BG_IMAGES} />
 
       <div className="relative z-10 pb-20 h-screen overflow-y-auto custom-scrollbar">
         <header className="sticky top-0 z-50 glass-header border-b border-black/5 px-4 py-5 shadow-sm">

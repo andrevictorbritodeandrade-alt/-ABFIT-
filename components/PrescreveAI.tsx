@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Sparkles, BrainCircuit, ShieldAlert } from 'lucide-react';
+import { BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
 
@@ -240,7 +241,8 @@ REGRAS JSON:
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased p-4 sm:p-8 flex flex-col items-center overflow-y-auto">
+    <div className="min-h-screen bg-transparent text-slate-900 font-sans antialiased p-4 sm:p-8 flex flex-col items-center overflow-y-auto relative">
+      <BackgroundCarousel images={FITNESS_IMAGES} />
       
       {/* HEADER PREMIUM - LOGOTIPO ALINHADO CENTRALMENTE AO NOME */}
       <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-4 relative">

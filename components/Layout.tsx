@@ -8,6 +8,55 @@ import {
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
+export const RUNNING_IMAGES = [
+  'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1502224562085-639556652f33?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=2070&auto=format&fit=crop'
+];
+
+export const FITNESS_IMAGES = [
+  'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop'
+];
+
+export function BackgroundCarousel({ images }: { images: string[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [images]);
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <div className="fixed inset-0 z-[-1] overflow-hidden bg-black">
+      {images.map((img, idx) => (
+        <div
+          key={img}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            idx === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <img
+            src={img}
+            alt="Background"
+            className="w-full h-full object-cover opacity-40 blur-[6px] brightness-50"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 mix-blend-multiply" />
+    </div>
+  );
+}
+
 export function HeaderTitle({ text }: { text: string }) {
   if (!text) return null;
   const words = text.trim().split(/\s+/);
