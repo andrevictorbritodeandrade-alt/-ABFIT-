@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { db, appId } from '../services/firebase';
+import { BackgroundCarousel } from './Layout';
 
 // --- LINK ÚNICO DE INFORMAÇÕES ---
 const INFO_LINK = "https://www.olympics.com/pt/noticias/corrida-de-rua-rio-de-janeiro-2026-calendario-provas";

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Sparkles, BrainCircuit, ShieldAlert } from 'lucide-react';
+import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Sparkles, BrainCircuit, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
@@ -245,10 +245,14 @@ REGRAS JSON:
       <BackgroundCarousel images={FITNESS_IMAGES} />
       
       {/* HEADER PREMIUM - LOGOTIPO ALINHADO CENTRALMENTE AO NOME */}
-      <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-4 relative">
+      <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-12 relative">
         {onBack && (
-          <button onClick={onBack} className="absolute -top-4 left-0 p-2 text-slate-500 hover:text-slate-900 transition-colors">
-            &larr; Voltar
+          <button 
+            onClick={onBack} 
+            className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-slate-700 font-bold transition-all shadow-sm z-[60]"
+          >
+            <ArrowLeft size={20} />
+            <span>Voltar</span>
           </button>
         )}
         <div className="bg-gradient-to-tr from-blue-600 to-emerald-400 p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl shrink-0">
@@ -304,8 +308,14 @@ REGRAS JSON:
               onFocus={() => setShowDropdown(true)}
             />
             {selectedExercise && (
-              <button onClick={handleGenerate} disabled={isGenerating} className="hidden md:flex ml-2 mr-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-8 py-4 rounded-full font-bold hover:scale-[1.02] active:scale-95 transition-all items-center gap-2 disabled:opacity-50 shadow-lg">
-                {isGenerating ? <Loader2 className="animate-spin" size={20}/> : <Zap size={20}/>} Gerar Foto 8K
+              <button 
+                onClick={handleGenerate} 
+                disabled={isGenerating} 
+                className="flex ml-2 mr-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-bold hover:scale-[1.02] active:scale-95 transition-all items-center gap-2 disabled:opacity-50 shadow-lg shrink-0"
+              >
+                {isGenerating ? <Loader2 className="animate-spin" size={20}/> : <Zap size={20}/>} 
+                <span className="hidden sm:inline">Gerar Foto 8K</span>
+                <span className="sm:hidden text-xs">Gerar</span>
               </button>
             )}
           </div>

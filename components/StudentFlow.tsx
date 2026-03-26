@@ -300,20 +300,9 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
       }`}
     >
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="relative mb-6">
-          <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-border bg-background relative shadow-2xl cursor-pointer group" onClick={() => onShowDetail(ex)}>
-             <ExerciseImage 
-               ex={ex}
-               dbExercise={dbExercise}
-               className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-             />
-             <div className="absolute inset-0 bg-red-600/10 mix-blend-overlay"></div>
-             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                <Maximize2 size={24} className="text-white" />
-             </div>
-          </div>
+        <div className="relative mb-2">
           {allSetsCompleted && (
-             <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300 z-10 border-4 border-background">
+             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300 z-10 border-4 border-background mx-auto mb-2">
                <Check size={20} />
              </div>
           )}
@@ -535,6 +524,26 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     } else if (restCountdown === 0) {
       setIsResting(false);
       setRestCountdown(null);
+      
+      // SINAL SONORO ÚNICO
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.5);
+      } catch (e) {
+        console.error("Erro ao tocar sinal sonoro", e);
+      }
     }
     return () => { if (restTimerRef.current) clearInterval(restTimerRef.current); };
   }, [isResting, restCountdown]);

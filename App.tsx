@@ -1209,7 +1209,6 @@ export default function App() {
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
     { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
-    { id: 'PRESCREVE_AI', label: 'PrescreveAI', icon: Sparkles, color: 'cyan' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
 
