@@ -865,51 +865,63 @@ export default function App() {
                 } else if (rawData.periodization && defaultProfile.periodization) {
                     rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
                 }
-                // Forçar atualização de treinos e periodização se for o aluno Marcelly
-                if (rawData.id === 'fixed-marcelly' || (rawData.email && rawData.email.toLowerCase() === 'marcellybispo92@gmail.com')) {
-                    const hasOldWorkouts = rawData.workouts?.some(w => w.exercises.length !== 8);
-                    if (!rawData.workouts || rawData.workouts.length === 0 || hasOldWorkouts) {
-                        rawData.workouts = defaultProfile.workouts;
-                    }
-                    // Forçar atualização da periodização para a nova "Periodização Científica"
-                    if (!rawData.periodization || rawData.periodization.titulo !== 'Periodização Científica') {
-                        rawData.periodization = defaultProfile.periodization;
-                    }
-                    if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
-                        rawData.workoutHistory = defaultProfile.workoutHistory;
-                    }
-                    if (!rawData.analytics || rawData.analytics.sessionsCompleted === 0) {
-                        rawData.analytics = defaultProfile.analytics;
-                    }
+
+                // Se o aluno não tiver treinos, adiciona os padrões
+                if (!rawData.workouts || rawData.workouts.length === 0) {
+                    rawData.workouts = defaultProfile.workouts;
+                }
+                
+                // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
+                if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
+                    rawData.workoutHistory = defaultProfile.workoutHistory;
                 }
 
-                // Forçar atualização de treinos e periodização se for a aluna Liliane
-                if (rawData.id === 'fixed-liliane' || (rawData.email && rawData.email.toLowerCase() === 'lilicatorres@gmail.com')) {
-                    const hasOldWorkouts = rawData.workouts?.some(w => w.exercises.length !== 7);
-                    if (!rawData.workouts || rawData.workouts.length === 0 || hasOldWorkouts) {
-                        rawData.workouts = defaultProfile.workouts;
-                    }
-                    if (!rawData.periodization) {
-                        rawData.periodization = defaultProfile.periodization;
-                    }
+                // Se o aluno não tiver analytics, adiciona o padrão
+                if (!rawData.analytics) {
+                    rawData.analytics = defaultProfile.analytics;
                 }
-
-                // Forçar atualização de treinos e periodização se for o aluno André
-                if (rawData.id === 'fixed-andre' || (rawData.email && rawData.email.toLowerCase() === 'andrevictorbritodeandrade@gmail.com')) {
-                    const hasOldWorkouts = rawData.workouts?.some(w => w.exercises.length !== 9);
-                    const hasSissy = rawData.workouts?.some(w => w.exercises.some(ex => ex.name.toLowerCase().includes('sissy')));
-                    if (!rawData.workouts || rawData.workouts.length === 0 || hasOldWorkouts || hasSissy) {
-                        rawData.workouts = defaultProfile.workouts;
+            }
+            
+            // --- ONE-TIME FIX FOR ANDRE'S WORKOUT HISTORY ---
+            if (rawData.id === 'fixed-andre') {
+                const history = rawData.workoutHistory || [];
+                const treinoA = history.filter(h => h.name === 'TREINO A').length;
+                const treinoB = history.filter(h => h.name === 'TREINO B').length;
+                let updated = false;
+                if (treinoA < 4) {
+                    for (let i = treinoA; i < 4; i++) {
+                        history.push({
+                            id: `fixed-andre-a-${i}-${Date.now()}`,
+                            workoutId: 'treino-a-andre',
+                            name: 'TREINO A',
+                            athleteName: 'André Brito',
+                            duration: '60 min',
+                            date: `2${i}/03/2026`,
+                            timestamp: 1741536000000 + i * 86400000,
+                            type: 'STRENGTH'
+                        });
                     }
-                    if (!rawData.periodization) {
-                        rawData.periodization = defaultProfile.periodization;
+                    updated = true;
+                }
+                if (treinoB < 4) {
+                    for (let i = treinoB; i < 4; i++) {
+                        history.push({
+                            id: `fixed-andre-b-${i}-${Date.now()}`,
+                            workoutId: 'treino-b-andre',
+                            name: 'TREINO B',
+                            athleteName: 'André Brito',
+                            duration: '60 min',
+                            date: `2${i}/03/2026`,
+                            timestamp: 1741536000000 + i * 86400000,
+                            type: 'STRENGTH'
+                        });
                     }
-                    if (!rawData.workoutHistory || rawData.workoutHistory.length < 4) {
-                        rawData.workoutHistory = defaultProfile.workoutHistory;
-                    }
-                    if (!rawData.analytics || rawData.analytics.sessionsCompleted < 4) {
-                        rawData.analytics = defaultProfile.analytics;
-                    }
+                    updated = true;
+                }
+                if (updated) {
+                    rawData.workoutHistory = history;
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', rawData.id);
+                    setDoc(docRef, { workoutHistory: history }, { merge: true });
                 }
             }
             
@@ -973,50 +985,19 @@ export default function App() {
                 merged[existingIndex].periodization!.targetVolume = def.periodization.targetVolume;
             }
 
-            // Forçar atualização de treinos e periodização se for o aluno Marcelly
-            if (existing.id === 'fixed-marcelly' || (existing.email && existing.email.toLowerCase() === 'marcellybispo92@gmail.com')) {
-                const hasOldWorkouts = existing.workouts?.some(w => w.exercises.length !== 8);
-                if (!existing.workouts || existing.workouts.length === 0 || hasOldWorkouts) {
-                    merged[existingIndex].workouts = def.workouts;
-                }
-                if (!existing.periodization || existing.periodization.titulo !== 'Periodização Científica') {
-                    merged[existingIndex].periodization = def.periodization;
-                }
-                if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
-                    merged[existingIndex].workoutHistory = def.workoutHistory;
-                }
-                if (!existing.analytics || existing.analytics.sessionsCompleted === 0) {
-                    merged[existingIndex].analytics = def.analytics;
-                }
+            // Se o aluno não tiver treinos, adiciona os padrões
+            if (!existing.workouts || existing.workouts.length === 0) {
+                merged[existingIndex].workouts = def.workouts;
+            }
+            
+            // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
+            if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
+                merged[existingIndex].workoutHistory = def.workoutHistory;
             }
 
-            // Forçar atualização de treinos e periodização se for a aluna Liliane
-            if (existing.id === 'fixed-liliane' || (existing.email && existing.email.toLowerCase() === 'lilicatorres@gmail.com')) {
-                const hasOldWorkouts = existing.workouts?.some(w => w.exercises.length !== 7);
-                if (!existing.workouts || existing.workouts.length === 0 || hasOldWorkouts) {
-                    merged[existingIndex].workouts = def.workouts;
-                }
-                if (!existing.periodization) {
-                    merged[existingIndex].periodization = def.periodization;
-                }
-            }
-
-            // Forçar atualização de treinos e periodização se for o aluno André
-            if (existing.id === 'fixed-andre' || (existing.email && existing.email.toLowerCase() === 'andrevictorbritodeandrade@gmail.com')) {
-                const hasOldWorkouts = existing.workouts?.some(w => w.exercises.length !== 9);
-                const hasSissy = existing.workouts?.some(w => w.exercises.some(ex => ex.name.toLowerCase().includes('sissy')));
-                if (!existing.workouts || existing.workouts.length === 0 || hasOldWorkouts || hasSissy) {
-                    merged[existingIndex].workouts = def.workouts;
-                }
-                if (!existing.periodization) {
-                    merged[existingIndex].periodization = def.periodization;
-                }
-                if (!existing.workoutHistory || existing.workoutHistory.length < 4) {
-                    merged[existingIndex].workoutHistory = def.workoutHistory;
-                }
-                if (!existing.analytics || existing.analytics.sessionsCompleted < 4) {
-                    merged[existingIndex].analytics = def.analytics;
-                }
+            // Se o aluno não tiver analytics, adiciona o padrão
+            if (!existing.analytics) {
+                merged[existingIndex].analytics = def.analytics;
             }
         }
     });
@@ -1112,7 +1093,7 @@ export default function App() {
     const notifications: AppNotification[] = [];
     const history = selectedStudent.workoutHistory || [];
     selectedStudent.workouts?.forEach(w => {
-      const completed = history.filter(h => h.workoutId === w.id).length;
+      const completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
       const target = w.projectedSessions || 12;
       const remaining = target - completed;
       if (remaining <= 2 && remaining >= 0) {

@@ -114,7 +114,8 @@ export function PrescreveAI({ onBack, initialExerciseName }: { onBack?: () => vo
   };
 
   const handleGenerate = async () => {
-    if (!selectedExercise) return;
+    const exerciseName = selectedExercise ? selectedExercise.name : searchTerm.trim();
+    if (!exerciseName) return;
     setIsGenerating(true);
     setError(null);
     setGeneratedData(null);
@@ -166,7 +167,7 @@ REGRAS JSON:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `Modo: ${environment}. Exercício: ${selectedExercise.name}` }] }],
+          contents: [{ parts: [{ text: `Modo: ${environment}. Exercício: ${exerciseName}` }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
           generationConfig: { 
             responseMimeType: "application/json",
@@ -307,7 +308,7 @@ REGRAS JSON:
               onChange={(e) => { setSearchTerm(e.target.value); setShowDropdown(true); }}
               onFocus={() => setShowDropdown(true)}
             />
-            {selectedExercise && (
+            {searchTerm.trim().length > 0 && (
               <button 
                 onClick={handleGenerate} 
                 disabled={isGenerating} 

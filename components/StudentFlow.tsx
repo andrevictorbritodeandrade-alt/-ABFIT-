@@ -283,6 +283,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   key?: React.Key
 }) {
   const [localLoad, setLocalLoad] = useState(ex.load || '');
+  const previousLoad = useRef(ex.load || '--').current;
 
   useEffect(() => {
     setLocalLoad(ex.load || '');
@@ -348,22 +349,32 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
           <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner">
-          <div className="flex items-baseline gap-1">
-            <input 
-              type="number" 
-              value={localLoad}
-              placeholder="--"
-              onChange={(e) => {
-                setLocalLoad(e.target.value);
-                onUpdateLoad(ex.id!, e.target.value, true);
-              }}
-              onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
-              className="bg-transparent border-none p-0 text-3xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
-            />
-            <span className="text-xs font-black text-red-600 uppercase italic">KG</span>
+        <div className="flex flex-col gap-3">
+          <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase italic">KG</span>
+            </div>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Última Carga</p>
           </div>
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Carga Atual</p>
+
+          <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+            <div className="flex items-baseline gap-1">
+              <input 
+                type="number" 
+                value={localLoad}
+                placeholder="--"
+                onChange={(e) => {
+                  setLocalLoad(e.target.value);
+                  onUpdateLoad(ex.id!, e.target.value, true);
+                }}
+                onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
+                className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-muted-foreground"
+              />
+              <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
+            </div>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual</p>
+          </div>
         </div>
         
         {onShowPrescreveAI && (
@@ -455,7 +466,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   const workoutStats = useMemo(() => {
     if (!activeWorkout) return null;
     const history = user.workoutHistory || [];
-    const completed = history.filter(h => h.workoutId === activeWorkout.id).length;
+    const completed = history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length;
     const total = activeWorkout.projectedSessions || 20;
     const startDateDisplay = user.protocolStartDate ? new Date(user.protocolStartDate).toLocaleDateString('pt-BR') : 'Aguardando 1º Treino';
     return { completed, total, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
@@ -525,22 +536,36 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       setIsResting(false);
       setRestCountdown(null);
       
-      // SINAL SONORO ÚNICO
+      // SINAL SONORO ALTO E REPETIDO (ALERTA DE FIM DE DESCANSO)
       try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.5);
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+          const audioCtx = new AudioContext();
+          
+          const playBeep = (time: number) => {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'square'; // Square wave corta melhor a música
+            oscillator.frequency.setValueAtTime(1046.50, time); // C6
+            oscillator.frequency.setValueAtTime(1318.51, time + 0.15); // E6
+            
+            // Volume no máximo (1.0 vs 0.1 anterior)
+            gainNode.gain.setValueAtTime(1.0, time);
+            gainNode.gain.setTargetAtTime(0.0, time + 0.2, 0.05);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start(time);
+            oscillator.stop(time + 0.3);
+          };
+
+          const now = audioCtx.currentTime;
+          playBeep(now);
+          playBeep(now + 0.4);
+          playBeep(now + 0.8);
+        }
       } catch (e) {
         console.error("Erro ao tocar sinal sonoro", e);
       }
@@ -620,20 +645,25 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       });
 
       // Calculate streak
-      let newStreak = currentAnalytics.streakDays;
+      let newStreak = currentAnalytics.streakDays || 0;
       const lastDateStr = currentAnalytics.lastSessionDate;
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const todayStr = now.toLocaleDateString('pt-BR');
       
       if (lastDateStr) {
         const [lastDay, lastMonth, lastYear] = lastDateStr.split('/');
         const lastDate = new Date(parseInt(lastYear), parseInt(lastMonth) - 1, parseInt(lastDay));
-        const diffTime = Math.abs(now.getTime() - lastDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Diferença em dias considerando apenas as datas (meia-noite)
+        const diffTime = today.getTime() - lastDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         
         if (diffDays === 1) {
           newStreak += 1;
         } else if (diffDays > 1) {
           newStreak = 1;
+        } else if (diffDays === 0) {
+          // Já treinou hoje, mantém o streak atual
         }
       } else {
         newStreak = 1;
@@ -774,7 +804,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         <div className="space-y-4">
           {(user.workouts || []).length > 0 ? (
             user.workouts!.map(w => {
-              const completed = (user.workoutHistory || []).filter(h => h.workoutId === w.id).length;
+              const completed = (user.workoutHistory || []).filter(h => h.workoutId === w.id || h.name === w.title).length;
               const total = w.projectedSessions || 20;
               return (
                 <Card key={w.id} className="p-4 bg-card/50 border-border flex flex-row items-center gap-4 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-3xl transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
