@@ -1089,10 +1089,10 @@ export default function App() {
   }, [isCoach, students, studentForView]);
 
   const studentNotifications = useMemo(() => {
-    if (!selectedStudent) return [];
+    if (!studentForView) return [];
     const notifications: AppNotification[] = [];
-    const history = selectedStudent.workoutHistory || [];
-    selectedStudent.workouts?.forEach(w => {
+    const history = studentForView.workoutHistory || [];
+    studentForView.workouts?.forEach(w => {
       const completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
       const target = w.projectedSessions || 12;
       const remaining = target - completed;
@@ -1108,7 +1108,7 @@ export default function App() {
       }
     });
     return notifications;
-  }, [selectedStudent]);
+  }, [studentForView]);
 
   const handleLogin = (val: string) => {
     setLoginError('');
@@ -1220,6 +1220,13 @@ export default function App() {
           <div className="h-screen flex flex-col items-center justify-center text-muted-foreground">
             <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
             <p className="text-xs font-black uppercase tracking-widest">Carregando perfil...</p>
+          </div>
+        )}
+
+        {view !== 'LOGIN' && isCoach && !studentForView && view !== 'PROFESSOR_DASH' && view !== 'COACH_AI' && view !== 'SETTINGS' && (
+          <div className="h-screen flex flex-col items-center justify-center text-muted-foreground">
+            <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
+            <p className="text-xs font-black uppercase tracking-widest">Carregando dados...</p>
           </div>
         )}
 

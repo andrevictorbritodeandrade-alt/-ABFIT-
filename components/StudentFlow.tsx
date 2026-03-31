@@ -563,8 +563,6 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
           const now = audioCtx.currentTime;
           playBeep(now);
-          playBeep(now + 0.4);
-          playBeep(now + 0.8);
         }
       } catch (e) {
         console.error("Erro ao tocar sinal sonoro", e);

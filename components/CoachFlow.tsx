@@ -8,7 +8,7 @@ import {
   Users, Info, Sparkles, LayoutGrid, Calendar, Clock, Play, FileText, Folder,
   ChevronDown, Lightbulb, Bell, CalendarClock, Search, Check, Layers, Video, X, Eye, EyeOff,
   BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
-  CheckCircle2, MapPin, History
+  CheckCircle2, MapPin, History, Download
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Card, AppFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
@@ -84,6 +84,17 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
   onToggleMenu: () => void, 
   onNavigate: (view: string) => void
 }) {
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(students, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `abfit_export_${new Date().toISOString().split('T')[0]}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   return (
     <div className="p-6 text-foreground bg-background h-screen overflow-y-auto custom-scrollbar text-left flex flex-col items-center transition-colors">
       <header className="w-full flex justify-between items-center mb-6">
@@ -93,9 +104,14 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
           </button>
           <WeatherWidget />
         </div>
-        <button onClick={onLogout} className="p-3 bg-card rounded-full text-muted-foreground hover:text-red-600 transition-colors shadow-lg">
-          <LogOut size={20} />
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleExportData} className="p-3 bg-card rounded-full text-emerald-500 hover:text-emerald-400 transition-colors shadow-lg flex items-center gap-2" title="Exportar Todos os Dados">
+            <Download size={20} />
+          </button>
+          <button onClick={onLogout} className="p-3 bg-card rounded-full text-muted-foreground hover:text-red-600 transition-colors shadow-lg">
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
       
       <Logo size="text-5xl" subSize="text-[9px] sm:text-xs" />
