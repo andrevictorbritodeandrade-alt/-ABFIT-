@@ -856,7 +856,7 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
     
     useEffect(() => {
         if (!student.id) return;
-        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v6`);
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v7`);
         if (!hasSeeded) {
             const checkAndSeed = async () => {
                 try {
@@ -870,17 +870,15 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
                         .filter(w => w.studentId === student.id);
 
                     if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
-                        if (currentWorkouts.length < 5) {
-                            for (const w of currentWorkouts) {
-                                await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
-                            }
-                            await seedWorkouts(student.id);
+                        for (const w of currentWorkouts) {
+                            await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
                         }
+                        await seedWorkouts(student.id);
                     }
-                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 } catch (err) {
                     console.error("Seeding error:", err);
-                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 }
             };
             checkAndSeed();
@@ -989,7 +987,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
     useEffect(() => {
         if (!student.id) return;
-        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v6`);
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v7`);
         if (!hasSeeded) {
             const checkAndSeed = async () => {
                 try {
@@ -1002,17 +1000,15 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                         .filter(w => w.studentId === student.id);
 
                     if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
-                        if (currentWorkouts.length < 5) {
-                            for (const w of currentWorkouts) {
-                                await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
-                            }
-                            await seedWorkouts(student.id);
+                        for (const w of currentWorkouts) {
+                            await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
                         }
+                        await seedWorkouts(student.id);
                     }
-                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 } catch (err) {
                     console.error("Seeding error:", err);
-                    localStorage.setItem(`seeded_${student.id}_run_v6`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 }
             };
             checkAndSeed();
@@ -1382,11 +1378,11 @@ const seedWorkouts = async (studentId: string) => {
             { studentId: 'fixed-andre', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '8', reps: '1', stimulusTime: '2', speed: '8', recoveryTime: '1', cooldownTime: '10', description: '' }
         ],
         'fixed-liliane': [
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' },
-            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '20', speed: '6,0', recoveryTime: '0', cooldownTime: '10', description: 'O aquecimento e desaquecimento com velocidade baixa / Fazer caminhada contínua' },
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' },
-            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '20', speed: '6,0', recoveryTime: '0', cooldownTime: '10', description: 'O aquecimento e desaquecimento com velocidade baixa / Fazer caminhada contínua' },
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '7,5', recoveryTime: '2', cooldownTime: '10', description: 'Tentar correr / Se não conseguir, alternar caminhada forte por caminhada branda' }
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' },
+            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '5,5', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' },
+            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '5,5', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
+            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' }
         ],
         'fixed-marcelly': [
             { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' },
@@ -1408,5 +1404,5 @@ const seedWorkouts = async (studentId: string) => {
         })
     ));
     
-    localStorage.setItem(`seeded_${studentId}_run_v6`, 'true');
+    localStorage.setItem(`seeded_${studentId}_run_v7`, 'true');
 };

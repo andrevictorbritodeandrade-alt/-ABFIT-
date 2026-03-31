@@ -775,7 +775,7 @@ export default function App() {
               exercises: [
                 { id: 'ex-b1', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-b2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b3', name: 'Elevação de Quadril no solo com anilha', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
+                { id: 'ex-b3', name: 'Hack Squat (Máquina)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: 'Foco em quadríceps e glúteos com apoio total das costas, preservando a coluna.' },
                 { id: 'ex-b4', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-b5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
                 { id: 'ex-b6', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
