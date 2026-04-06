@@ -4,7 +4,7 @@ import {
   CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, 
   Mail, Phone, Loader2, MapPin, MessageCircle, Menu, X, 
   LayoutGrid, Bot, Settings2, User, Layout, Brain, Ruler, 
-  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets, AlertTriangle
+  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets, AlertTriangle, Share2
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
@@ -239,8 +239,30 @@ export function SideNav({
   );
 }
 
-export function Card({ children, className = "", onClick }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key }) {
-  return <div onClick={onClick} className={`bg-card border border-border rounded-3xl shadow-xl overflow-hidden transition-all ${className}`}>{children}</div>;
+export function Card({ children, className = "", onClick, title, text }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key, title?: string, text?: string }) {
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (navigator.share) {
+      navigator.share({
+        title: title || 'ABFIT Performance',
+        text: text || 'Confira os detalhes na ABFIT!',
+        url: window.location.href,
+      }).catch((err) => console.log('Error sharing:', err));
+    }
+  };
+
+  return (
+    <div onClick={onClick} className={`bg-card border border-border rounded-3xl shadow-xl overflow-hidden transition-all relative ${className}`}>
+      <button 
+        onClick={handleShare}
+        className="absolute top-4 right-4 z-10 p-2 bg-secondary/50 backdrop-blur-sm rounded-xl border border-border text-muted-foreground hover:text-red-600 transition-all"
+        aria-label="Compartilhar"
+      >
+        <Share2 size={16} />
+      </button>
+      {children}
+    </div>
+  );
 }
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
@@ -459,9 +481,9 @@ export function AppFooter() {
   return (
     <footer className="w-full py-12 mt-auto text-center border-t border-border">
       <div className="flex justify-center gap-6 mb-8">
-        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-red-600 transition-all border border-border">
+        <a href="mailto:andrevictorbritodeandrade@gmail.com" className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-red-600 transition-all border border-border">
           <Mail size={18} />
-        </button>
+        </a>
         <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-emerald-600 transition-all border border-border">
           <MessageCircle size={18} />
         </button>
@@ -469,8 +491,9 @@ export function AppFooter() {
           <Phone size={18} />
         </button>
       </div>
-      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">ABFIT Performance v2.0</p>
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">© 2025 Me. André Brito. All Rights Reserved.</p>
+      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">Desenvolvido por André Victor Brito de Andrade</p>
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Contato: andrevictorbritodeandrade@gmail.com</p>
+      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Versão 1.0.0 • © 2026</p>
     </footer>
   );
 }
