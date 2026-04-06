@@ -675,12 +675,24 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         exercises: newExercises
       };
 
-      // Salva o histórico e a data do protocolo
-      await onSave(user.id, { 
+      // Atualiza os contadores de progresso
+      const updates: Partial<Student> = {
         workoutHistory: updatedHistory, 
         protocolStartDate: updatedProtocolDate,
         analytics: updatedAnalytics
-      });
+      };
+
+      const title = activeWorkout.title.toLowerCase();
+      if (title.includes('treino a')) {
+        updates.faseAjusteA = (user.faseAjusteA || 0) + 1;
+        updates.totalGlobalA = (user.totalGlobalA || 0) + 1;
+      } else if (title.includes('treino b')) {
+        updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
+        updates.totalGlobalB = (user.totalGlobalB || 0) + 1;
+      }
+
+      // Salva o histórico e a data do protocolo
+      await onSave(user.id, updates);
 
       // Limpa o estado local
       localStorage.removeItem(`workout_start_${user.id}`);

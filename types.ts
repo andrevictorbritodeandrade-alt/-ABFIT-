@@ -167,4 +167,8 @@ export interface Student {
   goalTimeline?: string;
   weeklyFrequency?: string;
   plannedSessions?: string;
+  faseAjusteA?: number;
+  faseAjusteB?: number;
+  totalGlobalA?: number;
+  totalGlobalB?: number;
 }

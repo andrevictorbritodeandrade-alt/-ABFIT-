@@ -592,6 +592,10 @@ export default function App() {
               }
             ]
           },
+          faseAjusteA: 1,
+          faseAjusteB: 0,
+          totalGlobalA: 6,
+          totalGlobalB: 5,
           workouts: [
             {
               id: 'treino-a-andre',
@@ -600,15 +604,17 @@ export default function App() {
               defaultRest: '30s',
               status: 'published',
               exercises: [
-                { id: 'a1', name: 'Supino reto com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a2', name: 'Supino Reto com HBL', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a3', name: 'Remada alta em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a4', name: 'Tríceps francês simultâneo no cross polia baixa com barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a5', name: 'Tríceps no cross com barra reta', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a6', name: 'Agachamento em passada com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a7', name: 'Agachamento livre', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a8', name: 'Leg press horizontal', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'a9', name: 'Abdominal supra no solo', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'a1', name: 'Supino aberto com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'a2', name: 'Tríceps testa simultâneo com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'a3', name: 'Supino aberto com HBL', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'a4', name: 'Supino fechado com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'a5', name: 'Remada alta (Cross/Barra reta)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'a6', name: 'Abdução de ombros com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'a7', name: 'Agachamento em passada com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'a8', name: 'Agachamento livre com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'a9', name: 'Leg press horizontal (Simultâneo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'a10', name: 'Leg press horizontal (Unilateral)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'a11', name: 'Abdominal supra no solo (Progressivo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             },
             {
@@ -618,15 +624,17 @@ export default function App() {
               defaultRest: '30s',
               status: 'published',
               exercises: [
-                { id: 'b1', name: 'Remada aberta na máquina', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b2', name: 'Puxada aberta com barra romana pulley alto', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b3', name: 'Voador dorsal', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b4', name: 'Bíceps neutro com HBC banco 75 graus', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b5', name: 'Bíceps em pé com HBM pegada supinada', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b6', name: 'Agachamento sumô com HBC', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b7', name: 'Subida no step', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b8', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'b9', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '10-12', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'b1', name: 'Remada aberta na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'b2', name: 'Remada fechada na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'b3', name: 'Puxada aberta (Pulley/Romana)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'b4', name: 'Puxada fechada supinada (Pulley)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'b5', name: 'Bíceps em pé (HBM Supinado)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'b6', name: 'Bíceps alternado (HBC Neutro)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'b7', name: 'Agachamento sumô com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'b8', name: 'Stiff em pé com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'b9', name: 'Subida no step com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'b10', name: 'Extensão de quadril em pé (Caneleira)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'b11', name: 'Mata-borrão isométrico (Superman)', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             }
           ]
@@ -750,6 +758,10 @@ export default function App() {
               }
             ]
           },
+          faseAjusteA: 1,
+          faseAjusteB: 0,
+          totalGlobalA: 6,
+          totalGlobalB: 5,
           workouts: [
             {
               id: 'w-marcelly-01',
@@ -757,14 +769,18 @@ export default function App() {
               projectedSessions: 20,
               status: 'published',
               exercises: [
-                { id: 'ex-a1', name: 'Agachamento livre com HBC', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a2', name: 'Agachamento no sissy', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a3', name: 'Leg press horizontal', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a4', name: 'Abdominal diagonal no solo', sets: '3', reps: '20', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a5', name: 'Prancha lateral no solo em isometria', sets: '3', reps: '30s', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a6', name: 'Supino banco 45º aberto no crossover', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a7', name: 'Desenvolvimento banco 75º aberto com HBC', sets: '3', reps: '10', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-a8', name: 'Tríceps banco 75º francês com HBC simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-a1', name: 'Agachamento em passada com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'ex-a2', name: 'Agachamento livre com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'ex-a3', name: 'Leg press horizontal (Simultâneo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'ex-a4', name: 'Leg press horizontal (Unilateral)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'ex-a5', name: 'Cadeira extensora (Simultâneo + Isometria 10")', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'ex-a6', name: 'Cadeira extensora (Alternada E/D)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'ex-a7', name: 'Supino aberto com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'ex-a8', name: 'Supino fechado com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'ex-a9', name: 'Remada alta (Cross/Barra reta)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'ex-a10', name: 'Abdução de ombros com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'ex-a11', name: 'Abdominal supra (Solo progressivo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g6', description: '' },
+                { id: 'ex-a12', name: 'Ponte ventral isométrica', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g6', description: '' }
               ]
             },
             {
@@ -773,14 +789,17 @@ export default function App() {
               projectedSessions: 20,
               status: 'published',
               exercises: [
-                { id: 'ex-b1', name: 'Extensão de quadril e joelho em pé no cross', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b2', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b3', name: 'Hack Squat (Máquina)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: 'Foco em quadríceps e glúteos com apoio total das costas, preservando a coluna.' },
-                { id: 'ex-b4', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b5', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '45s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b6', name: 'Remada aberta na máquina', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b7', name: 'Puxada aberta com barra reta no cross polia alta', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' },
-                { id: 'ex-b8', name: 'Bíceps banco 75º com HBC pegada neutra simultâneo', sets: '3', reps: '12', rest: '60s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-b1', name: 'Agachamento sumô com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'ex-b2', name: 'Stiff em pé com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
+                { id: 'ex-b3', name: 'Subida no step com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'ex-b4', name: 'Extensão de quadril em pé (Caneleira)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
+                { id: 'ex-b5', name: 'Cadeira flexora (Isometria 10")', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'ex-b6', name: 'Cadeira extensora (Alternada E/D)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
+                { id: 'ex-b7', name: 'Remada aberta na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'ex-b8', name: 'Remada fechada na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
+                { id: 'ex-b9', name: 'Puxada aberta (Pulley/Romana)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'ex-b10', name: 'Puxada fechada supinada (Pulley)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
+                { id: 'ex-b11', name: 'Elevação de quadril no solo (Isometria 30")', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
               ]
             }
           ]

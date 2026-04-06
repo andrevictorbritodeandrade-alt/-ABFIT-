@@ -16,6 +16,7 @@ import { Student, Exercise, PhysicalAssessment, Workout, AppNotification, Period
 import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight } from '../services/gemini';
 import { RunTrackCoachView } from './RunTrack';
 import { EXERCISE_DATABASE, MUSCLE_GROUPS } from '../constants/exercises';
+import ProgressBarABFIT from './ProgressBarABFIT';
 
 export { RunTrackCoachView as RunTrackManager } from './RunTrack';
 
@@ -418,6 +419,33 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
 
       </div>
 
+      {/* Progresso: Ajuste de Treino */}
+      {(student.faseAjusteA !== undefined || student.faseAjusteB !== undefined) && (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] italic">📊 Progresso: Ajuste de Treino</h3>
+          </div>
+          <div className="space-y-3">
+            {student.faseAjusteA !== undefined && (
+              <ProgressBarABFIT 
+                label="Treino A" 
+                atual={student.faseAjusteA} 
+                totalFase={20} 
+                totalGlobal={student.totalGlobalA || 0} 
+              />
+            )}
+            {student.faseAjusteB !== undefined && (
+              <ProgressBarABFIT 
+                label="Treino B" 
+                atual={student.faseAjusteB} 
+                totalFase={20} 
+                totalGlobal={student.totalGlobalB || 0} 
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Planilhas Atuais - Lista Expansível / Atalho Rápido */}
       <div className="mt-8 space-y-4" ref={workoutsRef}>
          <div className="flex items-center justify-between px-2">
@@ -426,17 +454,35 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
          </div>
          <div className="space-y-3">
             {(student.workouts || []).map(w => (
-              <div key={w.id} className="p-6 rounded-[2rem] border border-border bg-card/50 flex justify-between items-center group transition-all shadow-lg hover:border-orange-600/30">
-                 <div className="flex items-center gap-4">
-                    <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
-                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase italic ${w.status === 'published' ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20' : 'bg-orange-600/10 text-orange-500 border border-orange-600/20'}`}>
-                      {w.status === 'published' ? 'Publicado' : 'Rascunho'}
-                    </span>
+              <div key={w.id} className="p-6 rounded-[2rem] border border-border bg-card/50 flex flex-col gap-4 group transition-all shadow-lg hover:border-orange-600/30">
+                 <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                       <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
+                       <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase italic ${w.status === 'published' ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20' : 'bg-orange-600/10 text-orange-500 border border-orange-600/20'}`}>
+                         {w.status === 'published' ? 'Publicado' : 'Rascunho'}
+                       </span>
+                    </div>
+                    <div className="flex gap-2">
+                       <button onClick={() => { /* TODO: Quick Edit */ }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-orange-600 transition-all">
+                           <Zap size={18}/>
+                       </button>
+                       <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600 transition-all">
+                           <Edit3 size={18}/>
+                       </button>
+                    </div>
                  </div>
-                 <button onClick={() => { onEditWorkout(w); onNavigate('WORKOUT_EDITOR'); }} className="p-3 rounded-xl bg-zinc-800 text-zinc-500 hover:text-white hover:bg-red-600 transition-all">
-                    <Edit3 size={18}/>
-                 </button>
-              </div>
+                 
+                 {/* Progress Display */}
+                 <div className="space-y-1">
+                   <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                     <span>Progresso</span>
+                     <span>{(student.workoutHistory || []).filter(h => h.workoutId === w.id).length} / {w.projectedSessions || 1} sessões</span>
+                   </div>
+                   <div className="w-full bg-background h-2 rounded-full overflow-hidden">
+                     <div className="bg-red-600 h-full transition-all duration-500" style={{ width: `${Math.min(100, Math.round(((student.workoutHistory || []).filter(h => h.workoutId === w.id).length / (w.projectedSessions || 1)) * 100))}%` }}></div>
+                   </div>
+                 </div>
+               </div>
             ))}
             {(!student.workouts || student.workouts.length === 0) && (
               <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] space-y-3">
