@@ -293,6 +293,19 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   const totalReps = formatReps(currentReps || ex.reps || '15');
   const allSetsCompleted = progress.completedSets.length >= totalSets;
 
+  const getGroupBorderColor = (groupId?: string) => {
+    if (!groupId) return 'border-orange-500';
+    switch (groupId.toLowerCase()) {
+      case 'g1': return 'border-emerald-500';
+      case 'g2': return 'border-red-600';
+      case 'g3': return 'border-blue-600';
+      case 'g4': return 'border-yellow-500';
+      case 'g5': return 'border-zinc-400';
+      case 'g6': return 'border-orange-500';
+      default: return 'border-orange-500';
+    }
+  };
+
   return (
     <div className={`relative bg-card/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
       ${allSetsCompleted 
@@ -300,7 +313,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
         : 'border-border hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
       }`}
     >
-      <div className="flex flex-col items-center text-center mb-8">
+      <div className={`flex flex-col items-center text-center mb-8 p-4 border-2 rounded-3xl bg-background/20 ${getGroupBorderColor(ex.groupId)}`}>
         <div className="relative mb-2">
           {allSetsCompleted && (
              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300 z-10 border-4 border-background mx-auto mb-2">
