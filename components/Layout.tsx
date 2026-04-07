@@ -84,17 +84,14 @@ export function HeaderTitle({ text }: { text: string }) {
 export function Logo({ size = "text-4xl", subSize = "text-xs", collapsed = false }: { size?: string, subSize?: string, collapsed?: boolean }) {
   if (collapsed) {
     return (
-      <div className="p-2 bg-card rounded-xl border border-border shadow-2xl">
-        <Dumbbell className="text-red-600 w-5 h-5" />
+      <div className="p-2 bg-card rounded-xl border border-border shadow-2xl flex items-center justify-center">
+        <span className="text-red-600 font-black italic text-xs transform -skew-x-12">AB</span>
       </div>
     );
   }
   return (
     <div className="text-center group select-none flex flex-col items-center justify-center">
-      <div className="p-2 bg-card rounded-[1.2rem] border border-border shadow-2xl group-hover:scale-110 transition-transform duration-500 mb-3">
-        <Dumbbell className="text-red-600 w-5 h-5 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
-      </div>
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9]`}>
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9]`} style={{ textShadow: '1px 1px 0px currentColor, -1px -1px 0px currentColor, 1px -1px 0px currentColor, -1px 1px 0px currentColor' }}>
         AB<span className="text-red-600">FIT</span>
       </h1>
       <p className={`${subSize} text-muted-foreground tracking-widest sm:tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80 whitespace-nowrap`}>Assessoria em Treinamentos Físicos</p>

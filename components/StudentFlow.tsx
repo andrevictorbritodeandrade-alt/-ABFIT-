@@ -549,7 +549,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
       setIsResting(false);
       setRestCountdown(null);
       
-      // SINAL SONORO ALTO E REPETIDO (ALERTA DE FIM DE DESCANSO)
+      // SINAL SONORO SUAVE (ALERTA DE FIM DE DESCANSO)
       try {
         const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioContext) {
@@ -559,19 +559,19 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
-            oscillator.type = 'square'; // Square wave corta melhor a música
-            oscillator.frequency.setValueAtTime(1046.50, time); // C6
-            oscillator.frequency.setValueAtTime(1318.51, time + 0.15); // E6
+            oscillator.type = 'sine'; // Sine wave é mais suave que square
+            oscillator.frequency.setValueAtTime(880.00, time); // A5
+            oscillator.frequency.exponentialRampToValueAtTime(440.00, time + 0.5); // Slide suave para A4
             
-            // Volume no máximo (1.0 vs 0.1 anterior)
-            gainNode.gain.setValueAtTime(1.0, time);
-            gainNode.gain.setTargetAtTime(0.0, time + 0.2, 0.05);
+            // Volume reduzido em 20% (de 1.0 para 0.8) para não atrapalhar a música
+            gainNode.gain.setValueAtTime(0.8, time);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
             
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             
             oscillator.start(time);
-            oscillator.stop(time + 0.3);
+            oscillator.stop(time + 0.6);
           };
 
           const now = audioCtx.currentTime;
