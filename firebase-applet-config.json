@@ -1,10 +1,10 @@
 {
   "projectId": "meus-apps---cerebro",
-  "appId": "1:980266889768:web:e15e1a6ac46df2faa53b1d",
+  "appId": "1:980266889768:web:123d0e4b8f42dc61a53b1d",
   "apiKey": "AIzaSyAxFmQtAjWqNoXpcGRnmAA_ouXsgw3RvT8",
   "authDomain": "meus-apps---cerebro.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
+  "firestoreDatabaseId": "ai-studio-97c40686-27a3-4087-87d1-71c9050a877e",
   "storageBucket": "meus-apps---cerebro.firebasestorage.app",
   "messagingSenderId": "980266889768",
-  "measurementId": "G-2C4DNZ5FM7"
+  "measurementId": ""
 }
