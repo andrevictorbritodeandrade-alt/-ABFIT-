@@ -307,13 +307,22 @@ export default function App() {
         console.log("Autenticação anônima concluída.");
       } catch (err: any) { 
         console.error("Erro na autenticação:", err);
-        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/admin-restricted-operation') {
-          console.warn("Auth restricted or not enabled. Using offline/default mode.");
+        
+        let errorMessage = "";
+        if (err.code === 'auth/admin-restricted-operation' || err.code === 'auth/operation-not-allowed') {
+          errorMessage = "O login anônimo está desativado no Console do Firebase. Por favor, ative-o em Authentication > Sign-in method > Anonymous.";
+          console.warn(errorMessage);
+          // We log it but don't set dbError to avoid blocking the whole app
+        } else if (err.code === 'auth/configuration-not-found') {
+          errorMessage = "Configuração do Firebase não encontrada ou incompleta.";
+          console.warn(errorMessage);
         } else {
           console.warn("Auth warning:", err.message);
         }
+        
+        // Even if auth fails, we try to proceed since some rules are 'if true'
         setAuthReady(true);
-        setLoading(false); 
+        // We don't set loading(false) here yet, let the timeout or onAuthStateChanged handle it
       } 
     };
     initAuth();
