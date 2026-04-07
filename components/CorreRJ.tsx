@@ -235,9 +235,8 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
       <Info size={10} />
       <p className="text-[8px] font-black uppercase italic truncate">"{race.info}"</p>
     </div>
-    </div>
-  );
-};
+  </div>
+);
 
 // --- APP PRINCIPAL ---
 export function CorreRJView({ onBack }: { onBack: () => void }) {

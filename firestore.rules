@@ -32,11 +32,9 @@ service cloud.firestore {
     // ===============================================================
 
     match /artifacts/{appId}/public/data/students/{studentId} {
-      allow read, write: if true;
-    }
-
-    match /exercise_database/{docId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidStudent(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /users/{userId} {
