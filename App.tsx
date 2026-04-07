@@ -196,7 +196,7 @@ import { PrescreveAI } from './components/PrescreveAI';
 
 export default function App() {
   const [view, setView] = useState('LOGIN');
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline'>('synced');
   const [dbError, setDbError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -205,10 +205,29 @@ export default function App() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+
+  const resetApp = () => {
+    localStorage.removeItem('elite_session_v2');
+    localStorage.removeItem('theme');
+    delete (window as any)._tempStudentId;
+    delete (window as any)._tempWorkoutId;
+    window.location.reload();
+  };
 
   useEffect(() => {
-    if (syncStatus === 'synced' || syncStatus === 'error') {
-      const timer = setTimeout(() => setSyncStatus('idle'), 3000);
+    console.log("App Initialization Debug:", {
+      appId,
+      dbInstance: db ? "Initialized" : "Missing",
+      view,
+      isCoach,
+      selectedStudentId: selectedStudent?.id
+    });
+  }, [view, isCoach, selectedStudent]);
+
+  useEffect(() => {
+    if (syncStatus === 'synced' || syncStatus === 'offline') {
+      const timer = setTimeout(() => setSyncStatus('synced'), 3000);
       return () => clearTimeout(timer);
     }
   }, [syncStatus]);
@@ -285,12 +304,15 @@ export default function App() {
       console.log("Iniciando autenticação anônima...");
       try { 
         await signInAnonymously(auth); 
+        console.log("Autenticação anônima concluída.");
       } catch (err: any) { 
+        console.error("Erro na autenticação:", err);
         if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/admin-restricted-operation') {
           console.warn("Auth restricted or not enabled. Using offline/default mode.");
         } else {
           console.warn("Auth warning:", err.message);
         }
+        setAuthReady(true);
         setLoading(false); 
       } 
     };
@@ -298,16 +320,21 @@ export default function App() {
     
     // Safety timeout to prevent stuck loading screen
     const timeout = setTimeout(() => {
+      console.warn("Auth timeout reached.");
+      setAuthReady(true);
       setLoading(false);
-    }, 5000);
+    }, 8000);
 
     const unsubAuth = onAuthStateChanged(auth, (u) => { 
+      console.log("Estado de autenticação alterado:", u ? "Usuário logado" : "Nenhum usuário");
       if (u) { 
         setUser(u); 
+        setAuthReady(true);
         setLoading(false); 
         clearTimeout(timeout);
       } else {
         setUser(null);
+        setAuthReady(true);
         setLoading(false);
         clearTimeout(timeout);
       }
@@ -1247,7 +1274,7 @@ export default function App() {
       await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
       // O syncStatus voltará a 'synced' automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
-      setSyncStatus('error');
+      setSyncStatus('offline');
       handleFirestoreError(e, OperationType.WRITE, path);
     }
   };
@@ -1284,7 +1311,18 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin text-red-600" /></div>;
+  if (loading) return (
+    <div className="h-screen bg-black flex flex-col items-center justify-center text-white p-6 text-center">
+      <Loader2 className="animate-spin text-red-600 mb-6" size={48} />
+      <p className="text-xs font-black uppercase tracking-[0.3em] mb-8">Iniciando ABFIT...</p>
+      <button 
+        onClick={resetApp}
+        className="px-6 py-2 border border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
+      >
+        Resetar Aplicativo
+      </button>
+    </div>
+  );
 
   const showSidebar = view !== 'LOGIN';
   
@@ -1334,19 +1372,33 @@ export default function App() {
                   <p className="text-xs font-bold uppercase tracking-widest mb-6 max-w-xs">
                     {dbError.includes('Database \'(default)\' not found') 
                       ? "O banco de dados Firestore não foi encontrado. Por favor, crie-o no Console do Firebase."
-                      : "Não foi possível carregar os dados do servidor."}
+                      : dbError}
                   </p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="px-8 py-3 bg-red-600 text-white rounded-2xl font-black uppercase italic tracking-tighter hover:bg-red-700 transition-all shadow-lg"
-                  >
-                    Tentar Novamente
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="px-8 py-3 bg-red-600 text-white rounded-2xl font-black uppercase italic tracking-tighter hover:bg-red-700 transition-all shadow-lg"
+                    >
+                      Tentar Novamente
+                    </button>
+                    <button 
+                      onClick={resetApp}
+                      className="px-8 py-3 border border-border rounded-2xl font-black uppercase italic tracking-tighter hover:bg-muted transition-all"
+                    >
+                      Voltar ao Login
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
                   <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
-                  <p className="text-xs font-black uppercase tracking-widest">Carregando perfil...</p>
+                  <p className="text-xs font-black uppercase tracking-widest mb-8">Carregando perfil...</p>
+                  <button 
+                    onClick={resetApp}
+                    className="px-6 py-2 border border-border rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-muted transition-all"
+                  >
+                    Resetar Aplicativo
+                  </button>
                 </>
               )}
             </div>
@@ -1373,7 +1425,13 @@ export default function App() {
               ) : (
                 <>
                   <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
-                  <p className="text-xs font-black uppercase tracking-widest">Carregando dados...</p>
+                  <p className="text-xs font-black uppercase tracking-widest mb-8">Carregando dados...</p>
+                  <button 
+                    onClick={resetApp}
+                    className="px-6 py-2 border border-border rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-muted transition-all"
+                  >
+                    Resetar Aplicativo
+                  </button>
                 </>
               )}
             </div>

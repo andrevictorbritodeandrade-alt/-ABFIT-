@@ -21,11 +21,14 @@ console.log("Firebase Config:", {
 const app = initializeApp(firebaseConfig);
 
 // Use the modern initializeFirestore API to enable persistence from the start
+const dbId = firebaseConfig.firestoreDatabaseId || '(default)';
+console.log(`Inicializando Firestore com Database ID: ${dbId}`);
+
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   })
-}, firebaseConfig.firestoreDatabaseId);
+}, dbId);
 
 export const auth = getAuth(app);
 export const appId = firebaseConfig.projectId;
