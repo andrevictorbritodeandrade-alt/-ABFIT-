@@ -12,6 +12,12 @@ import { getAuth } from "firebase/auth";
 // Import the Firebase configuration from the auto-generated file
 import firebaseConfig from '../firebase-applet-config.json';
 
+console.log("Firebase Config:", {
+  projectId: firebaseConfig.projectId,
+  firestoreDatabaseId: firebaseConfig.firestoreDatabaseId,
+  appId: firebaseConfig.appId
+});
+
 const app = initializeApp(firebaseConfig);
 
 // Use the modern initializeFirestore API to enable persistence from the start
