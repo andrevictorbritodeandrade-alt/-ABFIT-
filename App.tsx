@@ -282,11 +282,12 @@ export default function App() {
 
   useEffect(() => {
     const initAuth = async () => { 
+      console.log("Iniciando autenticação anônima...");
       try { 
         await signInAnonymously(auth); 
       } catch (err: any) { 
-        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
-          console.warn("Anonymous auth not enabled. Using offline/default mode.");
+        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/admin-restricted-operation') {
+          console.warn("Auth restricted or not enabled. Using offline/default mode.");
         } else {
           console.warn("Auth warning:", err.message);
         }
@@ -873,10 +874,22 @@ export default function App() {
     }, 8000);
 
     if (view !== 'LOGIN' && isCoach) {
+      console.log('Tentando buscar dados de alunos (Coach)...');
       const path = `artifacts/${appId}/public/data/students`;
       const q = collection(db, path);
+      
+      // Timeout para carregamento de dados
+      const dataTimeout = setTimeout(() => {
+        if (students.length === 0) {
+          console.warn("Timeout ao buscar dados de alunos (Coach).");
+          setDbError("Erro ao conectar ao banco. Verifique as Regras de Segurança.");
+          setLoading(false);
+        }
+      }, 5000);
+
       try {
         unsub = onSnapshot(q, (snapshot) => {
+          clearTimeout(dataTimeout);
           setDbError(null);
           if (snapshot.metadata.hasPendingWrites) {
             setSyncStatus('syncing');
@@ -919,10 +932,22 @@ export default function App() {
           return;
       }
 
+      console.log(`Tentando buscar dados do aluno ${targetId}...`);
       const path = `artifacts/${appId}/public/data/students/${targetId}`;
       const docRef = doc(db, path);
+
+      // Timeout para carregamento de dados do aluno
+      const dataTimeout = setTimeout(() => {
+        if (!studentForView) {
+          console.warn("Timeout ao buscar dados do aluno.");
+          setDbError("Erro ao conectar ao banco. Verifique as Regras de Segurança.");
+          setLoading(false);
+        }
+      }, 5000);
+
       try {
         unsub = onSnapshot(docRef, async (docSnap) => {
+          clearTimeout(dataTimeout);
           if (docSnap.metadata.hasPendingWrites) {
             setSyncStatus('syncing');
           } else {
