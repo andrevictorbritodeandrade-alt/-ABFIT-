@@ -3,10 +3,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { 
   Trophy, MapPin, Clock, ExternalLink, Bell, ArrowLeft, 
-  DollarSign, TrendingUp, Zap, X, Info, CheckCircle 
+  DollarSign, TrendingUp, Zap, X, Info, CheckCircle, Share2 
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { db, appId } from '../services/firebase';
+import { db, appId, handleFirestoreError, OperationType } from '../services/firebase';
 import { BackgroundCarousel } from './Layout';
 
 // --- LINK ÚNICO DE INFORMAÇÕES ---
@@ -177,9 +177,28 @@ const INITIAL_PREDICTIONS = [
 ];
 
 // --- CARD DE PROVA SLIM ---
-const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips }) => (
-  <div className="bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden">
-    <div className="flex justify-between items-center mb-3 text-slate-900">
+const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips }) => {
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (navigator.share) {
+      navigator.share({
+        title: `ABFIT - ${race.nome}`,
+        text: `Confira a prova ${race.nome} no calendário Corre RJ 2026 da ABFIT!`,
+        url: window.location.href,
+      }).catch((err) => console.log('Error sharing:', err));
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden">
+      <button 
+        onClick={handleShare}
+        className="absolute top-2 right-2 z-10 p-1.5 bg-white border-2 border-black rounded-lg text-slate-400 hover:text-red-600 transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+        aria-label="Compartilhar"
+      >
+        <Share2 size={12} />
+      </button>
+      <div className="flex justify-between items-center mb-3 text-slate-900">
       <div className="flex items-center gap-2 overflow-hidden">
         <div className="w-2 h-6 bg-orange-600 rounded-full shrink-0"></div>
         <h4 className="text-sm font-poppins font-black leading-none uppercase italic truncate group-hover:text-orange-600 transition-colors tracking-tight">
@@ -216,8 +235,9 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
       <Info size={10} />
       <p className="text-[8px] font-black uppercase italic truncate">"{race.info}"</p>
     </div>
-  </div>
-);
+    </div>
+  );
+};
 
 // --- APP PRINCIPAL ---
 export function CorreRJView({ onBack }: { onBack: () => void }) {
@@ -240,7 +260,8 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   }, []);
 
   useEffect(() => {
-    const racesRef = collection(db, 'artifacts', appId, 'public', 'data', 'races');
+    const path = `artifacts/${appId}/public/data/races`;
+    const racesRef = collection(db, path);
     const unsubscribe = onSnapshot(racesRef, (snapshot) => {
       const raceList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -257,7 +278,7 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
       setRaces(sorted);
       setLoading(false);
     }, (error) => {
-        console.error("Error fetching races:", error);
+        handleFirestoreError(error, OperationType.GET, path);
         setLoading(false);
     });
     return () => unsubscribe();
@@ -271,10 +292,11 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
     // Deleta as corridas que não estão mais na lista de predições
     for (const data of existingData) {
       if (!expectedIds.has(data.id)) {
+        const path = `artifacts/${appId}/public/data/races/${data.id}`;
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'races', data.id));
+          await deleteDoc(doc(db, path));
         } catch (e) {
-          console.error("Error deleting old data:", e);
+          handleFirestoreError(e, OperationType.DELETE, path);
         }
       }
     }
@@ -282,10 +304,11 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
     // Insere ou atualiza as corridas da lista
     for (const race of INITIAL_PREDICTIONS) {
       const raceId = `seed_${race.dataIso}_${race.nome.toLowerCase().replace(/\s/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`;
+      const path = `artifacts/${appId}/public/data/races/${raceId}`;
       try {
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'races', raceId), { ...race, lastScrape: new Date().toISOString() }, { merge: true });
+        await setDoc(doc(db, path), { ...race, lastScrape: new Date().toISOString() }, { merge: true });
       } catch (e) {
-        console.error("Error seeding data:", e);
+        handleFirestoreError(e, OperationType.WRITE, path);
       }
     }
   };

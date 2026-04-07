@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student profile with workouts, history, and assessments.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "sexo": { "type": "string", "enum": ["Masculino", "Feminino"] },
+        "workouts": { "type": "array" },
+        "workoutHistory": { "type": "array" },
+        "physicalAssessments": { "type": "array" },
+        "periodization": { "type": "object" },
+        "analytics": { "type": "object" },
+        "nutrition": { "type": "object" },
+        "notifications": { "type": "array" },
+        "disabledFeatures": { "type": "array" },
+        "age": { "type": "number" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "goal": { "type": "string" },
+        "anamneseComplete": { "type": "boolean" },
+        "protocolStartDate": { "type": "string" },
+        "neurodivergence": { "type": "string" },
+        "medicalHistory": { "type": "string" },
+        "bariatric": { "type": "boolean" },
+        "medications": { "type": "string" },
+        "exercisePreference": { "type": "string" },
+        "otherActivities": { "type": "string" },
+        "trainingSchedule": { "type": "string" },
+        "sessionDuration": { "type": "string" },
+        "goalTimeline": { "type": "string" },
+        "weeklyFrequency": { "type": "string" },
+        "plannedSessions": { "type": "string" },
+        "faseAjusteA": { "type": "number" },
+        "faseAjusteB": { "type": "number" },
+        "totalGlobalA": { "type": "number" },
+        "totalGlobalB": { "type": "number" }
+      },
+      "required": ["id", "nome", "email"]
+    }
+  },
+  "firestore": {
+    "/artifacts/{appId}/public/data/students": {
+      "schema": "Student",
+      "description": "Collection of student profiles."
+    }
+  }
+}

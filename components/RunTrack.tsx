@@ -9,7 +9,7 @@ import {
 import { 
   collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, getDocs 
 } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 import { Student, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle, Card, AppFooter, BackgroundCarousel, RUNNING_IMAGES } from './Layout';
 
@@ -450,9 +450,13 @@ function WorkoutBuilder({ studentId, onClose, initialData }: { studentId: string
             };
 
             // Wrap operation in a Promise.race to prevent infinite loading state in case of connection lag
+            const path = initialData && initialData.id 
+                ? `artifacts/${RUN_COLLECTION}/workouts/${initialData.id}`
+                : `artifacts/${RUN_COLLECTION}/workouts`;
+
             const saveOperation = initialData && initialData.id
-                ? updateDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', initialData.id), payload)
-                : addDoc(collection(db, 'artifacts', RUN_COLLECTION, 'workouts'), { ...payload, createdAt: new Date().toISOString() });
+                ? updateDoc(doc(db, path), payload)
+                : addDoc(collection(db, path), { ...payload, createdAt: new Date().toISOString() });
 
             const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -461,7 +465,10 @@ function WorkoutBuilder({ studentId, onClose, initialData }: { studentId: string
             // Forces modal close to allow new creation
             onClose();
         } catch (e) { 
-            console.error(e); 
+            const path = initialData && initialData.id 
+                ? `artifacts/${RUN_COLLECTION}/workouts/${initialData.id}`
+                : `artifacts/${RUN_COLLECTION}/workouts`;
+            handleFirestoreError(e, initialData && initialData.id ? OperationType.WRITE : OperationType.WRITE, path);
             // Even on error, we might want to close or at least stop loading
             setLoading(false);
         } finally { 
@@ -863,7 +870,8 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
                     await new Promise(r => setTimeout(r, 2000));
                     
                     // Query firestore directly to avoid closure stale state
-                    const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
+                    const q = collection(db, path);
                     const snap = await getDocs(q);
                     const currentWorkouts = snap.docs
                         .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
@@ -871,13 +879,15 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
 
                     if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
                         for (const w of currentWorkouts) {
-                            await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
+                            const docPath = `artifacts/${RUN_COLLECTION}/workouts/${w.id}`;
+                            await deleteDoc(doc(db, docPath));
                         }
                         await seedWorkouts(student.id);
                     }
                     localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 } catch (err) {
-                    console.error("Seeding error:", err);
+                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
+                    handleFirestoreError(err, OperationType.GET, path);
                     localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 }
             };
@@ -886,17 +896,23 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
     }, [student.id]);
 
     useEffect(() => {
-        const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+        const path = `artifacts/${RUN_COLLECTION}/workouts`;
+        const q = collection(db, path);
         const unsub = onSnapshot(q, (snap) => {
             const data = snap.docs.map(d => ({id: d.id, ...d.data()} as WorkoutModel));
             setWorkouts(data.filter(w => w.studentId === student.id));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.GET, path);
         });
         return () => unsub();
     }, [student.id]);
 
     const deleteWorkout = async (id: string) => {
-        if(confirm("Deletar este treino?")) {
-            await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', id));
+        const path = `artifacts/${RUN_COLLECTION}/workouts/${id}`;
+        try {
+            await deleteDoc(doc(db, path));
+        } catch (error) {
+            handleFirestoreError(error, OperationType.DELETE, path);
         }
     };
 
@@ -993,7 +1009,8 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                 try {
                     await new Promise(r => setTimeout(r, 2000));
                     
-                    const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
+                    const q = collection(db, path);
                     const snap = await getDocs(q);
                     const currentWorkouts = snap.docs
                         .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
@@ -1001,13 +1018,15 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
                     if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
                         for (const w of currentWorkouts) {
-                            await deleteDoc(doc(db, 'artifacts', RUN_COLLECTION, 'workouts', w.id));
+                            const docPath = `artifacts/${RUN_COLLECTION}/workouts/${w.id}`;
+                            await deleteDoc(doc(db, docPath));
                         }
                         await seedWorkouts(student.id);
                     }
                     localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 } catch (err) {
-                    console.error("Seeding error:", err);
+                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
+                    handleFirestoreError(err, OperationType.GET, path);
                     localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
                 }
             };
@@ -1017,10 +1036,13 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
     useEffect(() => {
         if (!student.id) return;
-        const q = collection(db, 'artifacts', RUN_COLLECTION, 'workouts');
+        const path = `artifacts/${RUN_COLLECTION}/workouts`;
+        const q = collection(db, path);
         const unsub = onSnapshot(q, (snap) => {
             const data = snap.docs.map(d => ({id: d.id, ...d.data()} as WorkoutModel));
             setWorkouts(data.filter(w => w.studentId === student.id));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.GET, path);
         });
         return () => unsub();
     }, [student.id]);
@@ -1396,13 +1418,18 @@ const seedWorkouts = async (studentId: string) => {
     const payload = payloadMap[studentId];
     if (!payload) return;
 
+    const path = `artifacts/${RUN_COLLECTION}/workouts`;
     // Use Promise.all to ensure all are added before finishing
-    await Promise.all(payload.map(w => 
-        addDoc(collection(db, 'artifacts', RUN_COLLECTION, 'workouts'), { 
-            ...w, 
-            createdAt: new Date().toISOString() 
-        })
-    ));
+    await Promise.all(payload.map(async (w) => {
+        try {
+            await addDoc(collection(db, path), { 
+                ...w, 
+                createdAt: new Date().toISOString() 
+            });
+        } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, path);
+        }
+    }));
     
     localStorage.setItem(`seeded_${studentId}_run_v7`, 'true');
 };

@@ -615,8 +615,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
 
           setExercises(prev => [...prev, ...enrichedExercises]);
         } catch (error) {
-          console.error(error);
-          alert("Erro ao analisar imagem. Tente novamente.");
+          console.error("Erro ao analisar imagem:", error);
         } finally {
           setIsAnalyzing(false);
         }

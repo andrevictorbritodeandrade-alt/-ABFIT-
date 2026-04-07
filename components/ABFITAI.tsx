@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Save, Video, X } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || ""; 
 
@@ -194,10 +194,10 @@ REGRAS JSON:
   const handleSaveToDatabase = async () => {
     if (!generatedData || !selectedExercise) return;
     setIsSaving(true);
+    const docId = selectedExercise.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+    const path = `exercise_database/${docId}`;
     try {
-      // Create a normalized ID based on the exercise name
-      const docId = selectedExercise.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
-      await setDoc(doc(db, 'exercise_database', docId), {
+      await setDoc(doc(db, path), {
         ...generatedData,
         videoUrl: videoUrl,
         originalName: selectedExercise.name,
@@ -205,10 +205,10 @@ REGRAS JSON:
         environment,
         updatedAt: new Date().toISOString()
       });
-      alert('Exercício salvo com sucesso na base de dados central!');
+      console.log('Exercício salvo com sucesso na base de dados central!');
     } catch (e) {
-      console.error(e);
-      alert('Erro ao salvar na base de dados.');
+      handleFirestoreError(e, OperationType.WRITE, path);
+      console.error('Erro ao salvar na base de dados.');
     } finally {
       setIsSaving(false);
     }
