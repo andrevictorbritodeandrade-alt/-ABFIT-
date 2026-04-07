@@ -282,11 +282,12 @@ export default function App() {
 
   useEffect(() => {
     const initAuth = async () => { 
+      console.log("Iniciando autenticação anônima...");
       try { 
         await signInAnonymously(auth); 
       } catch (err: any) { 
-        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
-          console.warn("Anonymous auth not enabled. Using offline/default mode.");
+        if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/admin-restricted-operation') {
+          console.warn("Auth restricted or not enabled. Using offline/default mode.");
         } else {
           console.warn("Auth warning:", err.message);
         }
@@ -857,6 +858,11 @@ export default function App() {
   useEffect(() => {
     let unsub: () => void;
     
+    // Se não houver usuário logado, não tentamos buscar dados do Firestore
+    if (!user && view !== 'LOGIN') {
+      return;
+    }
+
     // Safety timeout for student loading
     const studentLoadTimeout = setTimeout(() => {
       if (view !== 'LOGIN' && !isCoach && !selectedStudent) {
@@ -868,34 +874,55 @@ export default function App() {
     }, 8000);
 
     if (view !== 'LOGIN' && isCoach) {
+      console.log('Tentando buscar dados de alunos (Coach)...');
       const path = `artifacts/${appId}/public/data/students`;
       const q = collection(db, path);
-      unsub = onSnapshot(q, (snapshot) => {
-        setDbError(null);
-        if (snapshot.metadata.hasPendingWrites) {
-          setSyncStatus('syncing');
-        } else {
-          setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
+      
+      // Timeout para carregamento de dados
+      const dataTimeout = setTimeout(() => {
+        if (students.length === 0) {
+          console.warn("Timeout ao buscar dados de alunos (Coach).");
+          setDbError("Erro ao conectar ao banco. Verifique as Regras de Segurança.");
+          setLoading(false);
         }
-        const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
-        setStudents(updatedStudents);
-        // Atualiza o aluno selecionado em tempo real se ele estiver aberto
-        if (selectedStudent) {
-          const current = updatedStudents.find(s => s.id === selectedStudent.id);
-          if (current) setSelectedStudent(current);
-        }
-        // Restauração de aluno selecionado após refresh
-        if ((window as any)._tempStudentId && !selectedStudent) {
-            const saved = updatedStudents.find(s => s.id === (window as any)._tempStudentId);
-            if (saved) {
-                setSelectedStudent(saved);
-                // Limpa flag
-                delete (window as any)._tempStudentId;
-            }
-        }
-      }, (error) => {
-        handleFirestoreError(error, OperationType.GET, path);
-      });
+      }, 5000);
+
+      try {
+        unsub = onSnapshot(q, (snapshot) => {
+          clearTimeout(dataTimeout);
+          setDbError(null);
+          if (snapshot.metadata.hasPendingWrites) {
+            setSyncStatus('syncing');
+          } else {
+            setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
+          }
+          const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+          setStudents(updatedStudents);
+          // Atualiza o aluno selecionado em tempo real se ele estiver aberto
+          if (selectedStudent) {
+            const current = updatedStudents.find(s => s.id === selectedStudent.id);
+            if (current) setSelectedStudent(current);
+          }
+          // Restauração de aluno selecionado após refresh
+          if ((window as any)._tempStudentId && !selectedStudent) {
+              const saved = updatedStudents.find(s => s.id === (window as any)._tempStudentId);
+              if (saved) {
+                  setSelectedStudent(saved);
+                  // Limpa flag
+                  delete (window as any)._tempStudentId;
+              }
+          }
+        }, (error) => {
+          if (error.code === 'permission-denied') {
+            console.warn("Permissão negada ao buscar estudantes. Verifique se o usuário está logado e tem permissão.");
+            setDbError("Acesso restrito. Por favor, faça login novamente.");
+          } else {
+            handleFirestoreError(error, OperationType.GET, path);
+          }
+        });
+      } catch (e) {
+        console.error("Erro ao iniciar listener de estudantes:", e);
+      }
     } else if (view !== 'LOGIN' && !isCoach) {
       // Se tivermos um ID temporário restaurado ou um estudante já selecionado
       const targetId = selectedStudent?.id || (window as any)._tempStudentId;
@@ -905,110 +932,135 @@ export default function App() {
           return;
       }
 
+      console.log(`Tentando buscar dados do aluno ${targetId}...`);
       const path = `artifacts/${appId}/public/data/students/${targetId}`;
       const docRef = doc(db, path);
-      unsub = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.metadata.hasPendingWrites) {
-          setSyncStatus('syncing');
-        } else {
-          setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
-        }
-        if (docSnap.exists()) {
-            const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
-            
-            // --- MERGE COM DADOS PADRÃO (FIX PARA ALUNO) ---
-            const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
-            
-            if (defaultProfile) {
-                if (!rawData.nome) rawData.nome = defaultProfile.nome;
-                if (!rawData.email) rawData.email = defaultProfile.email;
-                if (!rawData.periodization && defaultProfile.periodization) {
-                    rawData.periodization = defaultProfile.periodization;
-                } else if (rawData.periodization && defaultProfile.periodization) {
-                    rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
-                }
 
-                // Se o aluno não tiver treinos, adiciona os padrões
-                if (!rawData.workouts || rawData.workouts.length === 0) {
-                    rawData.workouts = defaultProfile.workouts;
-                }
-                
-                // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
-                if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
-                    rawData.workoutHistory = defaultProfile.workoutHistory;
-                }
-
-                // Se o aluno não tiver analytics, adiciona o padrão
-                if (!rawData.analytics) {
-                    rawData.analytics = defaultProfile.analytics;
-                }
-            }
-            
-            // --- ONE-TIME FIX FOR ANDRE'S WORKOUT HISTORY ---
-            if (rawData.id === 'fixed-andre') {
-                const history = rawData.workoutHistory || [];
-                const treinoA = history.filter(h => h.name === 'TREINO A').length;
-                const treinoB = history.filter(h => h.name === 'TREINO B').length;
-                let updated = false;
-                if (treinoA < 4) {
-                    for (let i = treinoA; i < 4; i++) {
-                        history.push({
-                            id: `fixed-andre-a-${i}-${Date.now()}`,
-                            workoutId: 'treino-a-andre',
-                            name: 'TREINO A',
-                            athleteName: 'André Brito',
-                            duration: '60 min',
-                            date: `2${i}/03/2026`,
-                            timestamp: 1741536000000 + i * 86400000,
-                            type: 'STRENGTH'
-                        });
-                    }
-                    updated = true;
-                }
-                if (treinoB < 4) {
-                    for (let i = treinoB; i < 4; i++) {
-                        history.push({
-                            id: `fixed-andre-b-${i}-${Date.now()}`,
-                            workoutId: 'treino-b-andre',
-                            name: 'TREINO B',
-                            athleteName: 'André Brito',
-                            duration: '60 min',
-                            date: `2${i}/03/2026`,
-                            timestamp: 1741536000000 + i * 86400000,
-                            type: 'STRENGTH'
-                        });
-                    }
-                    updated = true;
-                }
-                if (updated) {
-                    rawData.workoutHistory = history;
-                    const docRef = doc(db, path);
-                    setDoc(docRef, { workoutHistory: history }, { merge: true });
-                }
-            }
-            
-            setSelectedStudent(rawData);
-            
-            // Restaurar Treino em Andamento se necessário
-            if ((window as any)._tempWorkoutId && rawData.workouts) {
-               const w = rawData.workouts.find(w => w.id === (window as any)._tempWorkoutId);
-               if (w) setSelectedWorkout(w); // Isso fará a UI renderizar o componente correto se a view for WORKOUTS
-               delete (window as any)._tempWorkoutId;
-            }
-        } else {
-            // Se não existe no banco, verifica se é um aluno padrão
-            const defaultProfile = defaultStudentsData.find(d => d.id === targetId);
-            if (defaultProfile) {
-                setSelectedStudent(defaultProfile);
-            } else {
-                // Se não for padrão e não estiver no banco, volta pro login
-                setView('LOGIN');
-                localStorage.removeItem('elite_session_v2');
-            }
+      // Timeout para carregamento de dados do aluno
+      const dataTimeout = setTimeout(() => {
+        if (!studentForView) {
+          console.warn("Timeout ao buscar dados do aluno.");
+          setDbError("Erro ao conectar ao banco. Verifique as Regras de Segurança.");
+          setLoading(false);
         }
-      }, (error) => {
-          handleFirestoreError(error, OperationType.GET, path);
-      });
+      }, 5000);
+
+      try {
+        unsub = onSnapshot(docRef, async (docSnap) => {
+          clearTimeout(dataTimeout);
+          if (docSnap.metadata.hasPendingWrites) {
+            setSyncStatus('syncing');
+          } else {
+            setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
+          }
+          if (docSnap.exists()) {
+              const rawData = { id: docSnap.id, ...docSnap.data() } as Student;
+              
+              // --- MERGE COM DADOS PADRÃO (FIX PARA ALUNO) ---
+              const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
+              
+              if (defaultProfile) {
+                  if (!rawData.nome) rawData.nome = defaultProfile.nome;
+                  if (!rawData.email) rawData.email = defaultProfile.email;
+                  if (!rawData.periodization && defaultProfile.periodization) {
+                      rawData.periodization = defaultProfile.periodization;
+                  } else if (rawData.periodization && defaultProfile.periodization) {
+                      rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
+                  }
+
+                  // Se o aluno não tiver treinos, adiciona os padrões
+                  if (!rawData.workouts || rawData.workouts.length === 0) {
+                      rawData.workouts = defaultProfile.workouts;
+                  }
+                  
+                  // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
+                  if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
+                      rawData.workoutHistory = defaultProfile.workoutHistory;
+                  }
+
+                  // Se o aluno não tiver analytics, adiciona o padrão
+                  if (!rawData.analytics) {
+                      rawData.analytics = defaultProfile.analytics;
+                  }
+              }
+              
+              // --- ONE-TIME FIX FOR ANDRE'S WORKOUT HISTORY ---
+              if (rawData.id === 'fixed-andre') {
+                  const history = rawData.workoutHistory || [];
+                  const treinoA = history.filter(h => h.name === 'TREINO A').length;
+                  const treinoB = history.filter(h => h.name === 'TREINO B').length;
+                  let updated = false;
+                  if (treinoA < 4) {
+                      for (let i = treinoA; i < 4; i++) {
+                          history.push({
+                              id: `fixed-andre-a-${i}-${Date.now()}`,
+                              workoutId: 'treino-a-andre',
+                              name: 'TREINO A',
+                              athleteName: 'André Brito',
+                              duration: '60 min',
+                              date: `2${i}/03/2026`,
+                              timestamp: 1741536000000 + i * 86400000,
+                              type: 'STRENGTH'
+                          });
+                      }
+                      updated = true;
+                  }
+                  if (treinoB < 4) {
+                      for (let i = treinoB; i < 4; i++) {
+                          history.push({
+                              id: `fixed-andre-b-${i}-${Date.now()}`,
+                              workoutId: 'treino-b-andre',
+                              name: 'TREINO B',
+                              athleteName: 'André Brito',
+                              duration: '60 min',
+                              date: `2${i}/03/2026`,
+                              timestamp: 1741536000000 + i * 86400000,
+                              type: 'STRENGTH'
+                          });
+                      }
+                      updated = true;
+                  }
+                  if (updated) {
+                      rawData.workoutHistory = history;
+                      const docRef = doc(db, path);
+                      try {
+                          await setDoc(docRef, { workoutHistory: history }, { merge: true });
+                      } catch (e) {
+                          handleFirestoreError(e, OperationType.WRITE, path);
+                      }
+                  }
+              }
+              
+              setSelectedStudent(rawData);
+              
+              // Restaurar Treino em Andamento se necessário
+              if ((window as any)._tempWorkoutId && rawData.workouts) {
+                 const w = rawData.workouts.find(w => w.id === (window as any)._tempWorkoutId);
+                 if (w) setSelectedWorkout(w); // Isso fará a UI renderizar o componente correto se a view for WORKOUTS
+                 delete (window as any)._tempWorkoutId;
+              }
+          } else {
+              // Se não existe no banco, verifica se é um aluno padrão
+              const defaultProfile = defaultStudentsData.find(d => d.id === targetId);
+              if (defaultProfile) {
+                  setSelectedStudent(defaultProfile);
+              } else {
+                  // Se não for padrão e não estiver no banco, volta pro login
+                  setView('LOGIN');
+                  localStorage.removeItem('elite_session_v2');
+              }
+          }
+        }, (error) => {
+          if (error.code === 'permission-denied') {
+            console.warn("Permissão negada ao buscar dados do aluno. Verifique se o usuário está logado.");
+            setDbError("Acesso restrito. Por favor, faça login novamente.");
+          } else {
+            handleFirestoreError(error, OperationType.GET, path);
+          }
+        });
+      } catch (e) {
+        console.error("Erro ao iniciar listener do aluno:", e);
+      }
     }
     return () => { 
       if (unsub) unsub(); 
@@ -1351,20 +1403,45 @@ export default function App() {
             <p className="text-xl font-black text-white italic uppercase tracking-[0.3em] mt-2">{studentForView.nome}</p>
             
             <div className="w-full mt-6 space-y-4 pb-20 flex flex-col max-w-xl mx-auto">
-              {visibleDashboardItems.map(item => (
-                <Card 
-                  key={item.id} 
-                  title={`ABFIT - ${item.label}`}
-                  text={`Acesse ${item.label} na ABFIT Performance!`}
-                  className={`p-4 bg-${item.color}-600/10 border-${item.color}-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl flex flex-row items-center gap-4 rounded-3xl`} 
-                  onClick={() => setView(item.id)}
-                >
-                   <div className={`w-12 h-12 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform shrink-0`}> 
+              {visibleDashboardItems.map(item => {
+                const isPeriodization = item.id === 'STUDENT_PERIODIZATION';
+                const isWorkouts = item.id === 'WORKOUTS';
+                
+                let progress = 0;
+                if (isPeriodization && studentForView?.periodization?.startDate) {
+                  progress = Math.min(100, Math.round(((Date.now() - new Date(studentForView.periodization.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100));
+                } else if (isWorkouts && studentForView?.workouts?.length) {
+                  const history = studentForView.workoutHistory || [];
+                  const totalProgress = studentForView.workouts.reduce((acc, w) => {
+                    const completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
+                    const total = w.projectedSessions || 20;
+                    return acc + (completed / total);
+                  }, 0);
+                  progress = Math.min(100, Math.round((totalProgress / studentForView.workouts.length) * 100));
+                }
+
+                return (
+                  <Card 
+                    key={item.id} 
+                    title={`ABFIT - ${item.label}`}
+                    text={`Acesse ${item.label} na ABFIT Performance!`}
+                    className={`p-4 bg-${item.color}-600/10 border-${item.color}-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl flex flex-row items-center gap-4 rounded-3xl`} 
+                    onClick={() => setView(item.id)}
+                  >
+                    <div className={`w-12 h-12 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform shrink-0`}> 
                       <item.icon className="text-white" size={24} /> 
-                   </div>
-                   <h3 className="text-sm font-black uppercase text-white italic tracking-[0.1em] text-left">{item.label}</h3>
-                </Card>
-              ))}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="text-sm font-black uppercase text-white italic tracking-[0.1em]">{item.label}</h3>
+                      {(isPeriodization || isWorkouts) && progress > 0 && (
+                        <div className="mt-2 w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className={`h-full bg-${item.color}-600`} style={{ width: `${progress}%` }} />
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
               <button onClick={() => { setUser(null); setView('LOGIN'); }} className="w-full mt-4 py-4 bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-row items-center justify-center gap-4 text-zinc-600 hover:text-red-600 transition-all active:scale-95 shadow-xl group">
                 <LogOut size={20} /> <span className="text-[11px] font-black uppercase tracking-[0.3em]">Finalizar Sessão</span>
               </button>

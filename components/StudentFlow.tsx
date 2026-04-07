@@ -11,7 +11,7 @@ import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from
 import { PrescreveAI } from './PrescreveAI';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db, handleFirestoreError, OperationType } from '../services/firebase';
 
 const formatReps = (reps: any): string | null => {
   if (!reps) return null;
@@ -454,7 +454,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               newDbExercises[ex.name] = docSnap.data();
             }
           } catch (e) {
-            console.error("Error fetching exercise from DB:", e);
+            handleFirestoreError(e, OperationType.GET, `exercise_database/${docId}`);
           }
         }
         setDbExercises(newDbExercises);
@@ -825,7 +825,13 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                       <h4 className="text-lg font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none mb-1">{w.title}</h4>
                       <span className="text-[10px] font-black italic text-red-600 uppercase tracking-widest">{completed}/{total}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{w.exercises.length} Exercícios Prescritos</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em] mb-2">{w.exercises.length} Exercícios Prescritos</p>
+                    <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-red-600 transition-all duration-1000" 
+                        style={{ width: `${Math.min(100, (completed / total) * 100)}%` }}
+                      />
+                    </div>
                   </div>
                 </Card>
               );
@@ -1074,6 +1080,30 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
           <HeaderTitle text="Periodização" />
         </h2>
       </header>
+
+      {/* Barra de Progresso do Macrociclo */}
+      <div className="mb-8 p-6 rounded-3xl bg-zinc-900/50 border border-white/5">
+        <div className="flex justify-between items-end mb-3">
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 italic">Progresso do Macrociclo</p>
+            <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">
+              Semana {Math.min(12, Math.max(1, Math.ceil((Date.now() - new Date(plan.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000))))} <span className="text-red-600">de 12</span>
+            </h3>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 italic">Conclusão</p>
+            <p className="text-sm font-black italic text-red-600">
+              {Math.min(100, Math.round(((Date.now() - new Date(plan.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100))}%
+            </p>
+          </div>
+        </div>
+        <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-1000" 
+            style={{ width: `${Math.min(100, ((Date.now() - new Date(plan.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100)}%` }}
+          />
+        </div>
+      </div>
 
       <div className="space-y-6">
         {plan.bioInsight && (

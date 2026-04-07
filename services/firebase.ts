@@ -1,14 +1,32 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence, doc, getDocFromServer } from "firebase/firestore";
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  doc, 
+  getDocFromServer 
+} from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
 // Import the Firebase configuration from the auto-generated file
 import firebaseConfig from '../firebase-applet-config.json';
 
+console.log("Firebase Config:", {
+  projectId: firebaseConfig.projectId,
+  firestoreDatabaseId: firebaseConfig.firestoreDatabaseId,
+  appId: firebaseConfig.appId
+});
+
 const app = initializeApp(firebaseConfig);
-// Use the specific database ID if provided in the config
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Use the modern initializeFirestore API to enable persistence from the start
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+}, firebaseConfig.firestoreDatabaseId);
+
 export const auth = getAuth(app);
 export const appId = firebaseConfig.projectId;
 
@@ -30,15 +48,6 @@ async function testConnection() {
 
 if (typeof window !== 'undefined') {
   testConnection();
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time.
-      console.warn('Firestore persistence failed: multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      // The current browser does not support all of the features required to enable persistence
-      console.warn('Firestore persistence is not supported by this browser');
-    }
-  });
 }
 
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
