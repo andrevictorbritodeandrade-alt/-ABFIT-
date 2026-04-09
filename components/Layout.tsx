@@ -262,10 +262,23 @@ export function Card({ children, className = "", onClick, title, text }: { child
   );
 }
 
+export const GLOBAL_BACKGROUND_IMAGES = [
+  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1558611848-73f7eb4001a1?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1526506114642-54cb358634a5?q=80&w=1920&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1920&auto=format&fit=crop"
+];
+
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
   return (
     <div className="relative min-h-screen bg-background overflow-hidden font-sans text-left transition-colors">
-      <div className="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-20 grayscale scale-110 blur-sm pointer-events-none dark:opacity-20 opacity-5"></div>
+      <BackgroundCarousel images={GLOBAL_BACKGROUND_IMAGES} />
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none"></div>
       <div className="relative z-10 h-full">{children}</div>
     </div>
