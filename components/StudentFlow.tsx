@@ -478,12 +478,28 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
 
   const workoutStats = useMemo(() => {
     if (!activeWorkout) return null;
+    const title = activeWorkout.title.toLowerCase();
     const history = user.workoutHistory || [];
-    const completed = history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length;
+    
+    let completed = history.filter(h => h.workoutId === activeWorkout.id).length;
+    let totalGlobal = 0;
+
+    if (title.includes('treino a')) {
+      const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
+      totalGlobal = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
+      completed = user.faseAjusteA !== undefined ? user.faseAjusteA : completed;
+    } else if (title.includes('treino b')) {
+      const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
+      totalGlobal = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
+      completed = user.faseAjusteB !== undefined ? user.faseAjusteB : completed;
+    } else {
+      completed = history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length;
+    }
+
     const total = activeWorkout.projectedSessions || 20;
     const startDateDisplay = user.protocolStartDate ? new Date(user.protocolStartDate).toLocaleDateString('pt-BR') : 'Aguardando 1º Treino';
-    return { completed, total, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
-  }, [activeWorkout, user.workoutHistory, user.protocolStartDate]);
+    return { completed, total, totalGlobal, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
+  }, [activeWorkout, user.workoutHistory, user.protocolStartDate, user.faseAjusteA, user.faseAjusteB, user.totalGlobalA, user.totalGlobalB]);
 
   const allExercisesCompleted = useMemo(() => {
     if (!activeWorkout) return false;
@@ -826,22 +842,49 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
         <div className="space-y-4">
           {(user.workouts || []).length > 0 ? (
             user.workouts!.map(w => {
-              const completed = (user.workoutHistory || []).filter(h => h.workoutId === w.id || h.name === w.title).length;
+              const title = w.title.toLowerCase();
+              const history = user.workoutHistory || [];
+              
+              // Parcial: treinos concluídos com este ID exato (se a série foi ajustada/recriada, zera)
+              let completed = history.filter(h => h.workoutId === w.id).length;
+              // Global: todos os treinos com o mesmo nome base
+              let totalGlobal: number | null = null;
+              
+              // Se for Treino A ou B, usamos a fase de ajuste específica ou calculamos do histórico
+              if (title.includes('treino a')) {
+                const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
+                totalGlobal = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
+                completed = user.faseAjusteA !== undefined ? user.faseAjusteA : completed;
+              } else if (title.includes('treino b')) {
+                const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
+                totalGlobal = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
+                completed = user.faseAjusteB !== undefined ? user.faseAjusteB : completed;
+              } else {
+                // Para outros treinos, mantém o comportamento padrão
+                completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
+              }
+
               const total = w.projectedSessions || 20;
+
               return (
-                <Card key={w.id} className="p-4 bg-card/50 border-border flex flex-row items-center gap-4 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-3xl transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
-                  <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all shadow-lg shrink-0">
-                    <Play size={20} fill="currentColor" />
+                <Card key={w.id} className="p-5 bg-card/50 border-border flex flex-row items-center gap-5 group cursor-pointer hover:border-red-600/20 shadow-xl rounded-[2rem] transition-all hover:scale-[1.02] active:scale-95" onClick={() => startSession(w)}>
+                  <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all shadow-lg shrink-0">
+                    <Play size={24} fill="currentColor" />
                   </div>
-                  <div className="text-left flex-1">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-lg font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none mb-1">{w.title}</h4>
-                      <span className="text-[10px] font-black italic text-red-600 uppercase tracking-widest">{completed}/{total}</span>
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-1 pr-10">
+                      <h4 className="text-xl font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none truncate pr-2">{w.title}</h4>
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="text-sm font-black italic text-red-600 uppercase tracking-tighter leading-none">{completed}<span className="text-[10px] text-muted-foreground mx-0.5">/</span>{total}</span>
+                        {totalGlobal !== null && (
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Total: {totalGlobal}</span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em] mb-2">{w.exercises.length} Exercícios Prescritos</p>
-                    <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em] mb-3">{w.exercises.length} Exercícios Prescritos</p>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden shadow-inner">
                       <div 
-                        className="h-full bg-red-600 transition-all duration-1000" 
+                        className="h-full bg-red-600 transition-all duration-1000 shadow-[0_0_10px_rgba(220,38,38,0.5)]" 
                         style={{ width: `${Math.min(100, (completed / total) * 100)}%` }}
                       />
                     </div>
@@ -913,6 +956,9 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
                        <span className="text-lg font-black text-foreground italic tracking-tighter leading-none">{workoutStats.completed}</span>
                        <span className="text-[11px] font-black text-muted-foreground italic">/{workoutStats.total}</span>
                     </div>
+                    {workoutStats.totalGlobal > 0 && (
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1 block">Total: {workoutStats.totalGlobal}</span>
+                    )}
                  </div>
                  <div className="text-right hidden xs:block">
                     <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Renovação</span>

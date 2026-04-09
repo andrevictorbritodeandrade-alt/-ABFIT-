@@ -322,7 +322,7 @@ export default function App() {
         
         // Even if auth fails, we try to proceed since some rules are 'if true'
         setAuthReady(true);
-        // We don't set loading(false) here yet, let the timeout or onAuthStateChanged handle it
+        setLoading(false);
       } 
     };
     initAuth();
@@ -894,18 +894,24 @@ export default function App() {
   useEffect(() => {
     let unsub: () => void;
     
-    // Se não houver usuário logado, não tentamos buscar dados do Firestore
-    if (!user && view !== 'LOGIN') {
+    // Se a autenticação ainda não estiver pronta, esperamos.
+    // Mas se estiver pronta, prosseguimos mesmo sem usuário (user === null)
+    // pois as regras do Firestore para 'students' são públicas (allow read, write: if true)
+    if (!authReady && view !== 'LOGIN') {
       return;
     }
 
     // Safety timeout for student loading
     const studentLoadTimeout = setTimeout(() => {
-      if (view !== 'LOGIN' && !isCoach && !selectedStudent) {
-          console.warn("Student loading timed out, redirecting to login");
-          setView('LOGIN');
-          localStorage.removeItem('elite_session_v2');
-          delete (window as any)._tempStudentId;
+      if (view !== 'LOGIN' && !selectedStudent && view !== 'PROFESSOR_DASH' && view !== 'COACH_AI' && view !== 'SETTINGS' && view !== 'FEED' && view !== 'CORRE_RJ') {
+          console.warn("Student loading timed out, redirecting...");
+          if (isCoach) {
+              setView('PROFESSOR_DASH');
+          } else {
+              setView('LOGIN');
+              localStorage.removeItem('elite_session_v2');
+              delete (window as any)._tempStudentId;
+          }
       }
     }, 8000);
 
@@ -1102,7 +1108,7 @@ export default function App() {
       if (unsub) unsub(); 
       clearTimeout(studentLoadTimeout);
     };
-  }, [user, view, selectedStudent?.id, isCoach, defaultStudentsData]);
+  }, [authReady, view, selectedStudent?.id, isCoach, defaultStudentsData]);
 
   const allStudentsForCoach = useMemo(() => {
     // 1. Começamos com os alunos vindos do Firestore (students)

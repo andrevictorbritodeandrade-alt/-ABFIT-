@@ -101,7 +101,7 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
     try {
       // Create a new GoogleGenAI instance right before making an API call
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
       const response = await ai.models.generateContent({
         model: MODEL_TEXT,
         contents: userMsg,

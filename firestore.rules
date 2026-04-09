@@ -31,7 +31,7 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
-    match /artifacts/{appId}/public/data/students/{studentId} {
+    match /artifacts/{document=**} {
       allow read, write: if true;
     }
 
