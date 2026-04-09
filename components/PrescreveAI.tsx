@@ -243,7 +243,6 @@ REGRAS JSON:
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 font-sans antialiased p-4 sm:p-8 flex flex-col items-center overflow-y-auto relative">
-      <BackgroundCarousel images={FITNESS_IMAGES} />
       
       {/* HEADER PREMIUM - LOGOTIPO ALINHADO CENTRALMENTE AO NOME */}
       <header className="max-w-6xl w-full flex items-center gap-1.5 sm:gap-2.5 mb-12 pt-12 relative">

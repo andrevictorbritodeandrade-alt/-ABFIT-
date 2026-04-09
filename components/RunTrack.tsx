@@ -1137,7 +1137,6 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
     return (
         <div className="animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-transparent flex flex-col relative">
-            <BackgroundCarousel images={RUNNING_IMAGES} />
             {/* STICKY HEADER */}
             <header className="p-6 pb-4 border-b border-white/5 bg-black/80 backdrop-blur-md z-50">
                 <div className="flex items-center gap-4">

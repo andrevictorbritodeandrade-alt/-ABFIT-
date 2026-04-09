@@ -47,7 +47,6 @@ export function WorkoutFeed({ history, onBack, onToggleMenu, isProfessor = false
 
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-transparent relative animate-in fade-in">
-      <BackgroundCarousel images={FITNESS_IMAGES} />
       <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-3">
           {onToggleMenu && (

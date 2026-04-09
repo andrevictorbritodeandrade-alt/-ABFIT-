@@ -360,7 +360,6 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
       `}</style>
 
       {/* BACKGROUND CARROSSEL */}
-      <BackgroundCarousel images={BG_IMAGES} />
 
       <div className="relative z-10 pb-20 h-screen overflow-y-auto custom-scrollbar">
         <header className="sticky top-0 z-50 glass-header border-b border-black/5 px-4 py-5 shadow-sm">
