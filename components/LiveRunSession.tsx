@@ -16,7 +16,6 @@ interface LiveRunSessionProps {
     onFinish: (totalTime: number) => void;
 }
 
-type Accent = 'salvador' | 'rio';
 type Gender = 'male' | 'female';
 
 export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: LiveRunSessionProps) {
@@ -25,7 +24,6 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
     const [segmentTimeLeft, setSegmentTimeLeft] = useState(segments[0]?.duration || 0);
     const [totalTimeElapsed, setTotalTimeElapsed] = useState(0);
     const [soundEnabled, setSoundEnabled] = useState(true);
-    const [accent, setAccent] = useState<Accent>('rio');
     const [gender, setGender] = useState<Gender>('female');
     const [countdownValue, setCountdownValue] = useState<number | string | null>(null);
     const [showSettings, setShowSettings] = useState(true);
@@ -83,15 +81,10 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
 
         if (preferredVoice) utterance.voice = preferredVoice;
 
-        // Adjust parameters for "natural" feel based on accent
+        // Adjust parameters for "natural" feel
         // User requested 1.25x speed
         utterance.rate = 1.25;
-
-        if (accent === 'salvador') {
-            utterance.pitch = gender === 'female' ? 1.2 : 0.9;
-        } else {
-            utterance.pitch = gender === 'female' ? 1.0 : 1.1;
-        }
+        utterance.pitch = gender === 'female' ? 1.1 : 1.0;
 
         utterance.onend = () => {
             isSpeakingRef.current = false;
@@ -226,35 +219,18 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <button 
-                                onClick={() => setAccent('salvador')}
-                                className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${accent === 'salvador' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
-                            >
-                                <span className="text-2xl">🌴</span>
-                                <span className="font-black uppercase tracking-widest text-xs text-white">Salvador</span>
-                            </button>
-                            <button 
-                                onClick={() => setAccent('rio')}
-                                className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${accent === 'rio' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
-                            >
-                                <span className="text-2xl">⛰️</span>
-                                <span className="font-black uppercase tracking-widest text-xs text-white">Rio de Janeiro</span>
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <button 
                                 onClick={() => setGender('female')}
-                                className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${gender === 'female' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
+                                className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${gender === 'female' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
                             >
-                                <User size={24} className={gender === 'female' ? 'text-red-600' : 'text-zinc-500'} />
-                                <span className="font-black uppercase tracking-widest text-xs text-white">Mulher</span>
+                                <User size={32} className={gender === 'female' ? 'text-red-600' : 'text-zinc-500'} />
+                                <span className="font-black uppercase tracking-widest text-sm text-white">Voz Feminina</span>
                             </button>
                             <button 
                                 onClick={() => setGender('male')}
-                                className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${gender === 'male' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
+                                className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${gender === 'male' ? 'border-red-600 bg-red-600/10' : 'border-zinc-800 bg-zinc-900'}`}
                             >
-                                <Users size={24} className={gender === 'male' ? 'text-red-600' : 'text-zinc-500'} />
-                                <span className="font-black uppercase tracking-widest text-xs text-white">Homem</span>
+                                <Users size={32} className={gender === 'male' ? 'text-red-600' : 'text-zinc-500'} />
+                                <span className="font-black uppercase tracking-widest text-sm text-white">Voz Masculina</span>
                             </button>
                         </div>
                     </div>
@@ -321,30 +297,16 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
             </header>
 
             <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-                {/* Circular Progress */}
-                <div className="relative w-[28rem] h-[28rem] flex items-center justify-center mb-12">
-                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                        <circle cx="224" cy="224" r="210" className="stroke-zinc-900" strokeWidth="16" fill="none" />
-                        <circle 
-                            cx="224" cy="224" r="210" 
-                            className={`${getSegmentStroke(currentSegment.type)} transition-all duration-1000 ease-linear`} 
-                            strokeWidth="16" fill="none" 
-                            strokeDasharray={2 * Math.PI * 210}
-                            strokeDashoffset={2 * Math.PI * 210 * (1 - progress / 100)}
-                            strokeLinecap="round"
-                        />
-                    </svg>
-                    <div className="text-center z-10 flex flex-col items-center justify-center">
-                        <p className={`text-[10rem] font-black tracking-tighter tabular-nums leading-none ${getSegmentColor(currentSegment.type)}`}>
-                            {formatTime(segmentTimeLeft)}
-                        </p>
-                        <p className="text-3xl font-black uppercase tracking-widest text-white mt-4 italic">{currentSegment.title}</p>
-                        {currentSegment.speed && (
-                            <div className="mt-4 px-6 py-2 bg-white/10 rounded-full border border-white/10">
-                                <p className="text-2xl font-black uppercase text-red-500 tracking-tighter">{currentSegment.speed} km/h</p>
-                            </div>
-                        )}
-                    </div>
+                <div className="text-center z-10 flex flex-col items-center justify-center">
+                    <p className={`text-[12rem] font-black tracking-tighter tabular-nums leading-none ${getSegmentColor(currentSegment.type)}`}>
+                        {formatTime(segmentTimeLeft)}
+                    </p>
+                    <p className="text-4xl font-black uppercase tracking-widest text-white mt-8 italic">{currentSegment.title}</p>
+                    {currentSegment.speed && (
+                        <div className="mt-6 px-8 py-3 bg-white/10 rounded-full border border-white/10">
+                            <p className="text-3xl font-black uppercase text-red-500 tracking-tighter">{currentSegment.speed} km/h</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Next Segment Preview */}
