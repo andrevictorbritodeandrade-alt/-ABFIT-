@@ -47,12 +47,18 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
         return 'stroke-emerald-500';
     };
 
-    const speak = (text: string) => {
+    const speak = (text: string, interrupt = false) => {
         if (!soundEnabled) return;
         if (!('speechSynthesis' in window)) return;
 
+        if (interrupt) {
+            window.speechSynthesis.cancel();
+            speechQueueRef.current = [];
+            isSpeakingRef.current = false;
+        }
+
         // Avoid repeating the same phrase if it's already in queue or being spoken
-        if (speechQueueRef.current.includes(text)) return;
+        if (!interrupt && speechQueueRef.current.includes(text)) return;
         
         speechQueueRef.current.push(text);
         processSpeechQueue();
@@ -78,13 +84,13 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
         if (preferredVoice) utterance.voice = preferredVoice;
 
         // Adjust parameters for "natural" feel based on accent
-        // Note: Real regional accents require specialized TTS, but we can tweak pitch/rate
+        // User requested 1.25x speed
+        utterance.rate = 1.25;
+
         if (accent === 'salvador') {
             utterance.pitch = gender === 'female' ? 1.2 : 0.9;
-            utterance.rate = 0.95; // Slower, more rhythmic
         } else {
             utterance.pitch = gender === 'female' ? 1.0 : 1.1;
-            utterance.rate = 1.05; // Faster, carioca style
         }
 
         utterance.onend = () => {
@@ -157,11 +163,11 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
 
     const announceSegment = (segment: WorkoutSegment) => {
         if (segment.type === 'stimulus' || segment.type === 'continuous') {
-            speak("Vamos correr!");
+            speak("Vamos correr!", true);
         } else if (segment.type === 'recovery') {
-            speak("Recuperação");
+            speak("Recuperação", true);
         } else if (segment.type === 'cooldown') {
-            speak("Desaquecimento");
+            speak("Desaquecimento", true);
         }
     };
 
@@ -169,14 +175,19 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish }: Li
         setIsRunning(false);
         let count = 3;
         setCountdownValue(count);
-        speak("Três. Dois. Um. Iniciar!");
+        speak("Três", true);
 
         const interval = setInterval(() => {
             count--;
-            if (count > 0) {
+            if (count === 2) {
                 setCountdownValue(count);
+                speak("Dois");
+            } else if (count === 1) {
+                setCountdownValue(count);
+                speak("Um");
             } else if (count === 0) {
                 setCountdownValue("VAI!");
+                speak("Iniciar!");
             } else {
                 clearInterval(interval);
                 setCountdownValue(null);
