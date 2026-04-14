@@ -1,10 +1,17 @@
 import { initializeApp } from "firebase/app";
 import { 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager, 
+  getFirestore, 
   doc, 
-  getDocFromServer 
+  getDocFromServer,
+  collection,
+  query,
+  onSnapshot,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  getDocs
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
@@ -20,15 +27,24 @@ console.log("Firebase Config:", {
 
 const app = initializeApp(firebaseConfig);
 
-// Use the modern initializeFirestore API to enable persistence from the start
 const dbId = firebaseConfig.firestoreDatabaseId || '(default)';
 console.log(`Inicializando Firestore com Database ID: ${dbId}`);
 
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-}, dbId);
+export const db = getFirestore(app, dbId);
+
+// Export firestore functions to ensure they are from the same module instance
+export {
+  doc,
+  collection,
+  query,
+  onSnapshot,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  getDocs
+};
 
 export const auth = getAuth(app);
 export const appId = firebaseConfig.projectId;

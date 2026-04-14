@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { 
   Trophy, MapPin, Clock, ExternalLink, Bell, ArrowLeft, 
   DollarSign, TrendingUp, Zap, X, Info, CheckCircle, Share2 
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { db, appId, handleFirestoreError, OperationType } from '../services/firebase';
+import { db, appId, handleFirestoreError, OperationType, collection, doc, setDoc, onSnapshot, deleteDoc } from '../services/firebase';
 import { BackgroundCarousel } from './Layout';
 
 // --- LINK ÚNICO DE INFORMAÇÕES ---

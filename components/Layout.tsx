@@ -29,7 +29,7 @@ export function BackgroundCarousel({ images }: { images: string[] }) {
     if (!images || images.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [images]);
 
@@ -47,7 +47,7 @@ export function BackgroundCarousel({ images }: { images: string[] }) {
           <img
             src={img}
             alt="Background"
-            className="w-full h-full object-cover opacity-40 blur-[6px] brightness-50"
+            className="w-full h-full object-cover opacity-40 blur-[6px] brightness-50 grayscale contrast-125"
             referrerPolicy="no-referrer"
           />
         </div>

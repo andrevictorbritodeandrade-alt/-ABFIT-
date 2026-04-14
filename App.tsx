@@ -15,9 +15,8 @@ import { WorkoutFeed } from './components/WorkoutFeed';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
 import { CorreRJView } from './components/CorreRJ';
-import { collection, query, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { auth, db, appId, handleFirestoreError, OperationType } from './services/firebase';
+import { auth, db, appId, handleFirestoreError, OperationType, collection, query, onSnapshot, doc, setDoc } from './services/firebase';
 import { Student, Workout, AppNotification, WorkoutHistoryEntry } from './types';
 import { useTheme } from './components/ThemeContext';
 

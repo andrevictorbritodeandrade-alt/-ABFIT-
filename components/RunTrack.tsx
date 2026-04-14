@@ -4,12 +4,15 @@ import {
   Activity, CalendarDays, Flame, Info, Plus, 
   Trash2, X, Brain, ChevronDown, Play, Zap, BarChart3,
   ArrowLeft, Menu, Gauge, TrendingUp, CheckCircle2, ChevronRight, ChevronLeft,
-  Timer, Calculator, Edit3, Circle
+  Timer, Calculator, Edit3, Circle, Camera, Upload, Loader2, Sparkles
 } from 'lucide-react';
 import { 
+  db, handleFirestoreError, OperationType,
   collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, getDocs 
-} from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../services/firebase';
+} from '../services/firebase';
+import { GoogleGenAI } from "@google/genai";
+
+const genAI = new GoogleGenAI(import.meta.env.VITE_GEMINI_API_KEY || "");
 import { Student, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle, Card, AppFooter, BackgroundCarousel, RUNNING_IMAGES } from './Layout';
 
@@ -276,53 +279,53 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
     }
 
     return (
-        <div className={`bg-zinc-900 border p-6 rounded-3xl relative group transition-all ${isToday ? 'border-red-600 ring-2 ring-red-600/20' : badge ? 'border-red-600/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]' : 'border-zinc-800 hover:border-red-600/30'} ${isCompleted ? 'opacity-60' : ''}`}>
+        <div className={`bg-zinc-900 border p-8 rounded-[3rem] relative group transition-all ${isToday ? 'border-red-600 ring-4 ring-red-600/20' : badge ? 'border-red-600/40 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-zinc-800 hover:border-red-600/30'} ${isCompleted ? 'opacity-60' : ''}`}>
             {isToday && (
-                <div className="absolute -top-3 left-6 bg-red-600 text-white text-[8px] font-black px-3 py-1 rounded-full shadow-lg z-10 animate-bounce">
+                <div className="absolute -top-4 left-8 bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-xl z-10 animate-bounce">
                     TREINO DE HOJE
                 </div>
             )}
-            <div className="absolute top-6 right-6 flex items-center gap-2">
+            <div className="absolute top-8 right-8 flex items-center gap-3">
                 {onEdit && (
-                    <button onClick={onEdit} className="text-zinc-500 hover:text-white p-2 rounded-xl transition-all bg-zinc-800 hover:bg-zinc-700">
-                        <Edit3 size={16} />
+                    <button onClick={onEdit} className="text-zinc-500 hover:text-white p-3 rounded-2xl transition-all bg-zinc-800 hover:bg-zinc-700">
+                        <Edit3 size={20} />
                     </button>
                 )}
                 {onDelete && (
-                    <button onClick={onDelete} className="text-zinc-500 hover:text-red-500 p-2 rounded-xl transition-all hover:bg-zinc-800">
-                        <Trash2 size={16} />
+                    <button onClick={onDelete} className="text-zinc-500 hover:text-red-500 p-3 rounded-2xl transition-all hover:bg-zinc-800">
+                        <Trash2 size={20} />
                     </button>
                 )}
             </div>
             
-            <div className="flex flex-col mb-6">
+            <div className="flex flex-col mb-8">
                 <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 flex items-center gap-2">
-                        <CalendarDays size={10} /> {adjusted.dayOfWeek}
+                    <span className="text-xs font-black uppercase tracking-widest text-red-600 mb-2 flex items-center gap-2">
+                        <CalendarDays size={14} /> {adjusted.dayOfWeek}
                     </span>
                     {badge ? (
-                        <span className="bg-red-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded-md flex items-center gap-1 animate-pulse">
-                            <TrendingUp size={10} /> {badge}
+                        <span className="bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-lg flex items-center gap-2 animate-pulse">
+                            <TrendingUp size={12} /> {badge}
                         </span>
                     ) : (
-                        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-1 bg-black/40 px-2 py-1 rounded mr-16">
-                            <Timer size={10} /> {formatDuration(totalDuration)}
+                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-lg mr-20">
+                            <Timer size={12} /> {formatDuration(totalDuration)}
                         </span>
                     )}
                 </div>
-                <h4 className="text-2xl font-black italic uppercase text-white leading-none tracking-tighter">
+                <h4 className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter">
                     {adjusted.type}
                 </h4>
             </div>
 
             {/* SINGLE BLOCK LAYOUT - UNIFIED TEXT */}
-            <div className="bg-black/40 p-6 rounded-2xl border border-white/5 mb-6 flex items-center justify-center text-center">
-                <p className="text-lg md:text-xl font-black italic uppercase text-white leading-relaxed tracking-wide">
+            <div className="bg-black/40 p-8 rounded-3xl border border-white/5 mb-8 flex items-center justify-center text-center">
+                <p className="text-2xl md:text-3xl font-black italic uppercase text-white leading-relaxed tracking-wide">
                     {/* AQUECIMENTO */}
                     {warmPart && (
                         <>
-                            <span>{warmPart}</span>
-                            <span className="text-red-600 mx-2">+</span>
+                            <span className="text-emerald-500">{warmPart}</span>
+                            <span className="text-red-600 mx-3">+</span>
                         </>
                     )}
                     
@@ -331,22 +334,22 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                         <span>{totalBlocks} BLOCOS DE </span>
                     )}
                     
-                    <span>{stimPart}</span>
-                    {speedPart && <span className="text-zinc-400 ml-2 text-[0.9em]">{speedPart}</span>}
+                    <span className="text-red-600">{stimPart}</span>
+                    {speedPart && <span className="text-zinc-400 ml-3 text-[0.9em]">{speedPart}</span>}
                     
                     {/* RECUPERAÇÃO ENTRE TIROS */}
                     {recPart && (
                         <>
-                            <span className="text-red-600 mx-2">:</span>
-                            <span className="text-zinc-300">{recPart}</span>
+                            <span className="text-red-600 mx-3">:</span>
+                            <span className="text-emerald-500">{recPart}</span>
                         </>
                     )}
                     
                     {/* DESAQUECIMENTO */}
                     {coolPart && (
                         <>
-                            <span className="text-red-600 mx-2">+</span>
-                            <span>{coolPart}</span>
+                            <span className="text-red-600 mx-3">+</span>
+                            <span className="text-emerald-500">{coolPart}</span>
                         </>
                     )}
                 </p>
@@ -589,79 +592,14 @@ const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: Wo
 
     const getWorkoutForDate = (day: number) => {
         const date = new Date(year, month, day);
-        const dayOfWeek = date.getDay();
+        const dayOfWeekIndex = date.getDay(); // 0 is Sunday
+        const daysMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const dayName = daysMap[dayOfWeekIndex];
         
-        if (studentId === 'fixed-andre') {
-            const march22 = new Date(2026, 2, 22); // Month is 0-indexed, 2 = March
-            const march25 = new Date(2026, 2, 25);
-            
-            // Normalize dates to midnight for accurate day difference calculation
-            const dNorm = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-            const m22Norm = new Date(march22.getFullYear(), march22.getMonth(), march22.getDate()).getTime();
-            const m25Norm = new Date(march25.getFullYear(), march25.getMonth(), march25.getDate()).getTime();
-
-            if (dNorm === m22Norm) {
-                return {
-                    id: 'andre-workout-0',
-                    studentId: 'fixed-andre',
-                    type: 'Intervalado',
-                    dayOfWeek: 'Domingo',
-                    warmupTime: '10',
-                    sets: '6',
-                    reps: '1',
-                    stimulusTime: '2',
-                    speed: '8',
-                    recoveryTime: '1',
-                    cooldownTime: '10',
-                    description: '6 blocos de 2\' de corrida : 1\' caminhada de recuperação'
-                } as WorkoutModel;
-            }
-            
-            const diffTime = dNorm - m25Norm;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays >= 0 && diffDays < 28) { // 4 weeks
-                if (diffDays % 2 === 0) {
-                    return {
-                        id: 'andre-workout-a',
-                        studentId: 'fixed-andre',
-                        type: 'Intervalado',
-                        dayOfWeek: '',
-                        warmupTime: '10',
-                        sets: '10',
-                        reps: '1',
-                        stimulusTime: '1',
-                        speed: '8', // moderada
-                        recoveryTime: '1', // caminhada forte
-                        cooldownTime: '10',
-                        description: '10 blocos de 1\' corrida moderada : 1\' caminhada forte'
-                    } as WorkoutModel;
-                } else {
-                    return {
-                        id: 'andre-workout-b',
-                        studentId: 'fixed-andre',
-                        type: 'Intervalado',
-                        dayOfWeek: '',
-                        warmupTime: '10',
-                        sets: '10', // Assuming 10 blocks based on standard pattern
-                        reps: '1',
-                        stimulusTime: '1',
-                        speed: '10', // forte
-                        recoveryTime: '2', // caminhada moderada
-                        cooldownTime: '10',
-                        description: '10 blocos de 1\' corrida forte : 2\' caminhada moderada'
-                    } as WorkoutModel;
-                }
-            }
-            // If outside this range, fallback to standard logic or return null
-            return null;
-        }
-
         return workouts.find(w => {
             if (!w.dayOfWeek) return false;
             const d = normalizeDay(String(w.dayOfWeek));
-            const wDayIndex = dayNameMap[d];
-            return wDayIndex === dayOfWeek;
+            return d === normalizeDay(dayName);
         });
     };
 
@@ -997,9 +935,87 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
 
 // --- STUDENT VIEW ---
 
+import { LiveRunSession, WorkoutSegment } from './LiveRunSession';
+
+function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
+    const segments: WorkoutSegment[] = [];
+    
+    // Warmup
+    const warmupMins = parseToMinutes(workout.warmupTime, workout.speed);
+    if (warmupMins > 0) {
+        segments.push({
+            type: 'warmup',
+            duration: Math.round(warmupMins * 60),
+            title: 'Aquecimento'
+        });
+    }
+
+    // Main Block
+    const sets = parseInt(workout.sets || '1') || 1;
+    const reps = parseInt(workout.reps || '1') || 1;
+    const totalIntervals = sets * reps;
+
+    if (totalIntervals > 1 && workout.stimulusTime) {
+        // Interval training
+        const stimulusMins = parseToMinutes(workout.stimulusTime, workout.speed);
+        const recoveryMins = parseToMinutes(workout.recoveryTime, workout.speed);
+        
+        for (let i = 0; i < totalIntervals; i++) {
+            if (stimulusMins > 0) {
+                segments.push({
+                    type: 'stimulus',
+                    duration: Math.round(stimulusMins * 60),
+                    title: `Tiro ${i + 1}/${totalIntervals}`,
+                    speed: workout.speed
+                });
+            }
+            if (recoveryMins > 0 && i < totalIntervals - 1) { 
+                segments.push({
+                    type: 'recovery',
+                    duration: Math.round(recoveryMins * 60),
+                    title: `Recuperação ${i + 1}/${totalIntervals}`
+                });
+            }
+        }
+    } else {
+        // Continuous
+        const mainMins = parseToMinutes(workout.totalTime, workout.speed) || parseToMinutes(workout.distance, workout.speed);
+        if (mainMins > 0) {
+            segments.push({
+                type: 'continuous',
+                duration: Math.round(mainMins * 60),
+                title: 'Corrida Principal',
+                speed: workout.speed
+            });
+        }
+    }
+
+    // Cooldown
+    const cooldownMins = parseToMinutes(workout.cooldownTime, workout.speed);
+    if (cooldownMins > 0) {
+        segments.push({
+            type: 'cooldown',
+            duration: Math.round(cooldownMins * 60),
+            title: 'Desaquecimento'
+        });
+    }
+
+    // Fallback if no segments could be parsed (e.g. just distance without pace)
+    if (segments.length === 0) {
+        segments.push({
+            type: 'continuous',
+            duration: 0, // 0 means indefinite
+            title: 'Corrida Livre'
+        });
+    }
+
+    return segments;
+}
+
 export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void, onToggleMenu?: () => void }) {
     const [workouts, setWorkouts] = useState<WorkoutModel[]>([]);
     const [loggingWorkout, setLoggingWorkout] = useState<WorkoutModel | null>(null);
+    const [liveWorkout, setLiveWorkout] = useState<WorkoutModel | null>(null);
 
     useEffect(() => {
         if (!student.id) return;
@@ -1047,9 +1063,35 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
         return () => unsub();
     }, [student.id]);
 
-    const sortedWorkouts = [...workouts].sort((a,b) => getDayIndex(a.dayOfWeek) - getDayIndex(b.dayOfWeek));
-    const daysMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const todayName = daysMap[new Date().getDay()];
+    const daysMap = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const todayName = daysMap[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+
+    const uniqueWorkoutsByDay = useMemo(() => {
+        const map = new Map<string, WorkoutModel>();
+        workouts.forEach(w => {
+            const day = normalizeDay(w.dayOfWeek);
+            if (!map.has(day)) {
+                map.set(day, w);
+            }
+        });
+
+        return daysMap.map(dayName => {
+            const normalized = normalizeDay(dayName);
+            const workout = map.get(normalized);
+            if (workout) return workout;
+            
+            // Return a "Day Off" placeholder
+            return {
+                id: `day-off-${normalized}`,
+                studentId: student.id,
+                type: 'DAY OFF',
+                dayOfWeek: dayName,
+                description: 'Recuperação total. Hidrate-se e descanse.',
+                isDayOff: true
+            } as any;
+        });
+    }, [workouts, student.id]);
+
     const todayWorkout = workouts.find(w => {
         if (!w.dayOfWeek) return false;
         const d = normalizeDay(String(w.dayOfWeek));
@@ -1183,45 +1225,52 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
                 {/* HERO CARD (TODAY) */}
                 {todayWorkout ? (
-                    <div 
-                        onClick={() => setLoggingWorkout(todayWorkout)}
-                        className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl cursor-pointer active:scale-[0.98] transition-all"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative z-10 p-8">
-                            <div className="flex justify-between items-start mb-12">
-                                <span className="bg-red-600 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest">Treino de Hoje</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Clique para registrar</span>
-                                    <Play className="text-white fill-white" size={24} />
+                        <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl transition-all">
+                            <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10 p-8">
+                                <div className="flex justify-between items-start mb-12">
+                                    <span className="bg-red-600 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest">Treino de Hoje</span>
+                                    <div 
+                                        className="flex items-center gap-2 cursor-pointer hover:text-red-400 transition-colors"
+                                        onClick={() => setLoggingWorkout(todayWorkout)}
+                                    >
+                                        <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Registro Manual</span>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <h3 className="text-3xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
-                            <p className="text-zinc-400 font-medium text-sm line-clamp-2 mb-8">{todayWorkout.description || 'Foco na técnica.'}</p>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                                    <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Volume</span>
-                                    <span className="text-2xl font-black tracking-tight text-white">
-                                        {todayWorkout.distance 
-                                            ? `${todayWorkout.distance}km` 
-                                            : (todayWorkout.totalTime 
-                                                ? `${todayWorkout.totalTime}'` 
-                                                : formatDuration(estimateWorkoutDuration(calculateAdjustedWorkout(todayWorkout).adjusted))
-                                              )
-                                        }
-                                    </span>
+                                
+                                <h3 className="text-3xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
+                                <p className="text-zinc-400 font-medium text-sm line-clamp-2 mb-8">{todayWorkout.description || 'Foco na técnica.'}</p>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
+                                        <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Volume</span>
+                                        <span className="text-2xl font-black tracking-tight text-white">
+                                            {todayWorkout.distance 
+                                                ? `${todayWorkout.distance}km` 
+                                                : (todayWorkout.totalTime 
+                                                    ? `${todayWorkout.totalTime}'` 
+                                                    : formatDuration(estimateWorkoutDuration(calculateAdjustedWorkout(todayWorkout).adjusted))
+                                                  )
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
+                                        <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Intensidade</span>
+                                        <span className="text-2xl font-black tracking-tight text-red-500">
+                                            {todayWorkout.speed ? `${todayWorkout.speed} km/h` : 'Livre'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                                    <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Intensidade</span>
-                                    <span className="text-2xl font-black tracking-tight text-red-500">
-                                        {todayWorkout.speed ? `${todayWorkout.speed} km/h` : 'Livre'}
-                                    </span>
-                                </div>
+
+                                <button 
+                                    onClick={() => setLiveWorkout(todayWorkout)}
+                                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black italic uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-lg shadow-red-600/20"
+                                >
+                                    <Play size={20} className="fill-white" />
+                                    Iniciar Treino
+                                </button>
                             </div>
                         </div>
-                    </div>
                 ) : (
                      <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-center border border-zinc-800 flex flex-col items-center justify-center h-80 relative overflow-hidden shadow-inner">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent" />
@@ -1235,15 +1284,15 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <div className="flex items-center gap-3 mb-4 pl-2">
-                        <BarChart3 size={20} className="text-red-600"/>
-                        <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">Semana</h3>
+                        <BarChart3 size={24} className="text-red-600"/>
+                        <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Sua Planilha</h3>
                     </div>
-                    {sortedWorkouts.map(w => {
+                    {uniqueWorkoutsByDay.map(w => {
                         const isTodayWorkout = normalizeDay(w.dayOfWeek).includes(normalizeDay(todayName));
                         return (
-                            <div key={w.id} onClick={() => setLoggingWorkout(w)} className="cursor-pointer">
+                            <div key={w.id} onClick={() => !w.isDayOff && setLoggingWorkout(w)} className={w.isDayOff ? 'opacity-50 grayscale' : 'cursor-pointer'}>
                                 <WorkoutCard 
                                     workout={w} 
                                     isToday={isTodayWorkout}
@@ -1265,6 +1314,19 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     onSave={(stats) => handleCheckIn(new Date().toLocaleDateString('pt-BR'), loggingWorkout, stats)}
                 />
             )}
+
+            {liveWorkout && (
+                <LiveRunSession
+                    segments={parseWorkoutSegments(liveWorkout)}
+                    workoutTitle={`${liveWorkout.type} - ${liveWorkout.dayOfWeek}`}
+                    onClose={() => setLiveWorkout(null)}
+                    onFinish={(totalTime) => {
+                        setLiveWorkout(null);
+                        // Pre-fill log modal with total time
+                        setLoggingWorkout(liveWorkout);
+                    }}
+                />
+            )}
         </div>
     </div>
     )
@@ -1278,89 +1340,166 @@ const LogWorkoutModal = ({ workout, onClose, onSave }: { workout: WorkoutModel, 
         calories: '',
         duration: ''
     });
+    const [isExtracting, setIsExtracting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsExtracting(true);
+        try {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = (reader.result as string).split(',')[1];
+                
+                const prompt = "Analise esta foto de uma esteira ou print de app de corrida e extraia os seguintes dados em formato JSON: distance (km), duration (minutos), avgPace (ritmo médio), avgHR (batimentos cardíacos), calories (kcal). Se não encontrar algum dado, deixe em branco. Retorne APENAS o JSON.";
+                
+                const response = await genAI.models.generateContent({
+                    model: "gemini-3-flash-preview",
+                    contents: {
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { data: base64, mimeType: file.type } }
+                        ]
+                    }
+                });
+                
+                const text = response.text || "";
+                const jsonMatch = text.match(/\{.*\}/s);
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    setStats({
+                        distance: data.distance || '',
+                        duration: data.duration || '',
+                        avgPace: data.avgPace || '',
+                        avgHR: data.avgHR || '',
+                        calories: data.calories || ''
+                    });
+                }
+                setIsExtracting(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Erro ao extrair dados:", error);
+            setIsExtracting(false);
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                <header className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
+                <header className="p-8 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
                     <div>
-                        <h3 className="text-xl font-black italic uppercase text-white tracking-tighter">Registrar Treino</h3>
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{workout.type} - {workout.dayOfWeek}</p>
+                        <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Registrar Treino</h3>
+                        <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">{workout.type} - {workout.dayOfWeek}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
-                        <X size={20} />
+                    <button onClick={onClose} className="p-3 bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
+                        <X size={24} />
                     </button>
                 </header>
 
-                <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Distância (km)</label>
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                    {/* PHOTO UPLOAD SECTION */}
+                    <div className="space-y-4">
+                        <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Extrair dados da foto</label>
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            ref={fileInputRef} 
+                            onChange={handleImageUpload}
+                        />
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isExtracting}
+                            className="w-full py-8 border-2 border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center gap-3 hover:border-red-600/50 hover:bg-red-600/5 transition-all group"
+                        >
+                            {isExtracting ? (
+                                <>
+                                    <Loader2 size={32} className="text-red-600 animate-spin" />
+                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Analisando Imagem...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-all">
+                                        <Camera size={24} />
+                                    </div>
+                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Tire uma foto ou envie um print</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Distância (km)</label>
                             <input 
                                 type="text" 
                                 placeholder="Ex: 5.2"
                                 value={stats.distance}
                                 onChange={e => setStats({...stats, distance: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Duração (min)</label>
+                        <div className="space-y-3">
+                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Duração (min)</label>
                             <input 
                                 type="text" 
                                 placeholder="Ex: 30"
                                 value={stats.duration}
                                 onChange={e => setStats({...stats, duration: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Ritmo Médio (Pace)</label>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Ritmo Médio (Pace)</label>
                             <input 
                                 type="text" 
                                 placeholder="Ex: 5:45"
                                 value={stats.avgPace}
                                 onChange={e => setStats({...stats, avgPace: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">FC Média (bpm)</label>
+                        <div className="space-y-3">
+                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">FC Média (bpm)</label>
                             <input 
                                 type="text" 
                                 placeholder="Ex: 145"
                                 value={stats.avgHR}
                                 onChange={e => setStats({...stats, avgHR: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2">Calorias (kcal)</label>
+                    <div className="space-y-3">
+                        <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Calorias (kcal)</label>
                         <input 
                             type="text" 
                             placeholder="Ex: 450"
                             value={stats.calories}
                             onChange={e => setStats({...stats, calories: e.target.value})}
-                            className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white font-bold focus:border-red-600 transition-colors outline-none"
+                            className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
                         />
                     </div>
 
-                    <div className="p-4 bg-red-600/5 border border-red-600/20 rounded-2xl">
-                        <p className="text-[10px] text-zinc-400 font-medium leading-relaxed italic">
-                            "Insira os dados da esteira ou do seu smartwatch (Galaxy Watch, Apple Watch, Garmin) para acompanhar sua evolução."
+                    <div className="p-6 bg-red-600/5 border border-red-600/20 rounded-3xl flex items-start gap-4">
+                        <Sparkles size={20} className="text-red-600 shrink-0 mt-1" />
+                        <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">
+                            "Dica: Bater uma foto do painel da esteira preenche os dados automaticamente para você."
                         </p>
                     </div>
                 </div>
 
-                <footer className="p-6 border-t border-white/5 bg-zinc-900/50">
+                <footer className="p-8 border-t border-white/5 bg-zinc-900/50">
                     <button 
                         onClick={() => onSave(stats)}
-                        className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+                        className="w-full py-6 bg-red-600 text-white rounded-3xl font-black uppercase tracking-widest text-lg shadow-xl shadow-red-600/20 active:scale-95 transition-all"
                     >
                         Salvar Treino
                     </button>

@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Save, Video, X } from 'lucide-react';
-import { doc, setDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../services/firebase';
+import { db, handleFirestoreError, OperationType, doc, setDoc } from '../services/firebase';
 
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || ""; 
 
