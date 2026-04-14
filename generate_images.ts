@@ -2,8 +2,6 @@ import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
-
 const exercises = [
   "SUPINO AB. BC. RETO HBC",
   "REMADA ALTA CROSS",
@@ -18,6 +16,13 @@ const exercises = [
 ];
 
 async function run() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY is not set.");
+    return;
+  }
+  const ai = new GoogleGenAI({ apiKey });
+  
   const dir = path.join(process.cwd(), "public", "images", "andre");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 

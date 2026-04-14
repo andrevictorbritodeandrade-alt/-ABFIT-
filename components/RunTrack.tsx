@@ -12,7 +12,19 @@ import {
 } from '../services/firebase';
 import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenAI(import.meta.env.VITE_GEMINI_API_KEY || "");
+let genAIInstance: GoogleGenAI | null = null;
+
+function getGenAI() {
+    if (!genAIInstance) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY is not set. Please configure it in the settings.");
+        }
+        genAIInstance = new GoogleGenAI({ apiKey });
+    }
+    return genAIInstance;
+}
+
 import { Student, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle, Card, AppFooter, BackgroundCarousel, RUNNING_IMAGES } from './Layout';
 
@@ -1355,7 +1367,8 @@ const LogWorkoutModal = ({ workout, onClose, onSave }: { workout: WorkoutModel, 
                 
                 const prompt = "Analise esta foto de uma esteira ou print de app de corrida e extraia os seguintes dados em formato JSON: distance (km), duration (minutos), avgPace (ritmo médio), avgHR (batimentos cardíacos), calories (kcal). Se não encontrar algum dado, deixe em branco. Retorne APENAS o JSON.";
                 
-                const response = await genAI.models.generateContent({
+                const ai = getGenAI();
+                const response = await ai.models.generateContent({
                     model: "gemini-3-flash-preview",
                     contents: {
                         parts: [

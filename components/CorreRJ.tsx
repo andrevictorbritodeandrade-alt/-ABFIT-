@@ -315,7 +315,14 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   const callGemini = async (prompt: string, systemInstruction: string, race: any) => {
     setIaLoading(true); setIaContent(null); setActiveRace(race); setShowIaModal(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        setIaContent("A chave da IA (GEMINI_API_KEY) não está configurada.");
+        setIaLoading(false);
+        return;
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,

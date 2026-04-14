@@ -100,8 +100,14 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(true);
 
     try {
-      // Create a new GoogleGenAI instance right before making an API call
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        setMessages(prev => [...prev, { role: 'model', text: "A chave da IA (GEMINI_API_KEY) não está configurada. Por favor, configure-a nas configurações do app." }]);
+        setLoading(false);
+        return;
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: MODEL_TEXT,
         contents: userMsg,

@@ -4,8 +4,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 
+let genAIInstance: GoogleGenAI | null = null;
+
+function getGenAI() {
+  if (!genAIInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      // Return null or throw a more descriptive error that can be caught
+      return null;
+    }
+    genAIInstance = new GoogleGenAI({ apiKey });
+  }
+  return genAIInstance;
+}
+
 export async function analyzeExerciseAndGenerateImage(exerciseName: string, studentProfile?: any): Promise<any> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return null;
   try {
     const brainPrompt = `Analise o exercício "${exerciseName}". 
     Instruções biomecânicas de Mestre:
@@ -52,7 +67,8 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
 }
 
 export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return [];
   
   const systemInstruction = `
     Você é o ABFIT AI, um treinador Mestre. 
@@ -81,7 +97,8 @@ export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
 }
 
 export async function generateRunningPlan(anamneseData: any): Promise<any> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return null;
   const prompt = `Gere planilha de corrida para: ${JSON.stringify(anamneseData)}. Responda JSON: {"workouts": [{"dayOfWeek": "Segunda", "type": "Tiro", "warmupTime": 10, "sets": 1, "reps": 8, "stimulusTime": "400m", "recoveryTime": 60, "cooldownTime": 5, "totalTime": 45, "pace": "4:30"}]}`;
   try {
     const res = await ai.models.generateContent({
@@ -94,7 +111,8 @@ export async function generateRunningPlan(anamneseData: any): Promise<any> {
 }
 
 export async function generateTechnicalCue(exerciseName: string) {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return "Mantenha a estabilidade do core.";
   try {
     const res = await ai.models.generateContent({
       model: MODEL_TEXT,
@@ -105,7 +123,8 @@ export async function generateTechnicalCue(exerciseName: string) {
 }
 
 export async function generateBioInsight(profile: any) {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return "";
   try {
     const res = await ai.models.generateContent({
       model: MODEL_TEXT,
@@ -116,7 +135,8 @@ export async function generateBioInsight(profile: any) {
 }
 
 export async function generateAIMealPlan(profile: any): Promise<any> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return null;
   const prompt = `Gere um plano alimentar diário para: ${JSON.stringify(profile)}. Responda JSON: {"id": "1", "date": "2024-01-01", "breakfast": "...", "lunch": "...", "dinner": "...", "snacks": "..."}`;
   try {
     const res = await ai.models.generateContent({
@@ -129,7 +149,8 @@ export async function generateAIMealPlan(profile: any): Promise<any> {
 }
 
 export async function estimateFoodMacros(foodInput: string): Promise<any> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return null;
   const prompt = `Estime macros para: "${foodInput}". Responda JSON: {"calories": 0, "protein": 0, "carbs": 0, "fat": 0}`;
   try {
     const res = await ai.models.generateContent({
@@ -142,7 +163,8 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
 }
 
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const ai = getGenAI();
+  if (!ai) return [];
   
   // Limpeza de header base64 caso exista
   const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
