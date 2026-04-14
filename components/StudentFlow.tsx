@@ -267,7 +267,7 @@ export function ABFITDetailModal({ ex, dbExercise, onClose }: { ex: Exercise, db
   );
 }
 
-function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, onShowPrescreveAI, currentReps }: { 
+function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, onShowPrescreveAI, currentReps, onSkip }: { 
   ex: Exercise, 
   dbExercise?: any,
   idx: number, 
@@ -279,6 +279,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   onShowDetail: (ex: Exercise) => void,
   onShowPrescreveAI?: () => void,
   currentReps?: string | null,
+  onSkip?: (id: string) => void,
   key?: React.Key
 }) {
   const [localLoad, setLocalLoad] = useState(ex.load || '');
@@ -322,9 +323,20 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
         </div>
         
         <div className="space-y-3">
-          <span className={`text-xs font-black italic uppercase tracking-[0.3em] leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>
-            {idx + 1}º Exercício
-          </span>
+          <div className="flex items-center justify-center gap-2">
+            <span className={`text-xs font-black italic uppercase tracking-[0.3em] leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>
+              {idx + 1}º Exercício
+            </span>
+            {!allSetsCompleted && onSkip && (
+              <button 
+                onClick={() => onSkip(ex.id!)}
+                className="p-1 text-muted-foreground hover:text-red-600 transition-colors"
+                title="Pular Exercício"
+              >
+                <FastForward size={14} />
+              </button>
+            )}
+          </div>
           <h4 className={`text-3xl font-black italic uppercase tracking-tighter leading-tight transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground'}`}>
             {ex.name}
           </h4>
@@ -905,29 +917,34 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
   return (
     <div className="p-6 pb-48 text-foreground overflow-y-auto h-screen text-left custom-scrollbar bg-background animate-in fade-in duration-500">
       <header className="flex items-center justify-between mb-8 sticky top-0 bg-background/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-border">
-        <div className="flex items-center gap-3">
+        <div className="flex-1 flex items-center gap-3">
            <button onClick={onBack} className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
               <LayoutGrid size={20}/>
            </button>
            <button onClick={cancelSession} className="p-3 bg-muted rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
               <ArrowLeft size={20}/>
            </button>
-           <div className="flex flex-col">
+           <div className="flex flex-col hidden xs:flex">
               <span className="text-[11px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
               <h2 className="text-lg font-black italic uppercase tracking-tighter text-foreground leading-none">{activeWorkout.title}</h2>
            </div>
         </div>
-        <div className="flex flex-col items-end">
-           <div className="flex items-center gap-2 mb-2">
-             <Clock size={20} className="text-red-600 animate-pulse" />
-             <span className="text-xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
+
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+           <div className="flex items-center gap-2">
+             <Clock size={24} className="text-red-600 animate-pulse" />
+             <span className="text-3xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
            </div>
+           <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Tempo Total</span>
+        </div>
+
+        <div className="flex-1 flex flex-col items-end">
            {allExercisesCompleted ? (
              <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[12px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
-                SALVAR TREINO
+                SALVAR
              </button>
            ) : (
-             <span className="text-[11px] font-black uppercase text-muted-foreground tracking-widest">EM ANDAMENTO</span>
+             <span className="text-[11px] font-black uppercase text-muted-foreground tracking-widest hidden xs:block">EM ANDAMENTO</span>
            )}
         </div>
       </header>
@@ -1019,6 +1036,13 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               }}
               onShowDetail={setExerciseDetail}
               onShowPrescreveAI={() => setPrescreveAIExercise(ex.name)}
+              onSkip={(id) => {
+                setExerciseProgress(p => {
+                  const totalSets = parseInt(ex.sets || '3') || 3;
+                  const allSets = Array.from({ length: totalSets }).map((_, i) => i);
+                  return { ...p, [id]: { completedSets: allSets, isFinished: true } };
+                });
+              }}
             />
           );
         })}

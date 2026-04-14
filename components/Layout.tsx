@@ -484,21 +484,21 @@ export function WeatherWidget() {
 
 export function AppFooter() {
   return (
-    <footer className="w-full py-12 mt-auto text-center border-t border-border">
-      <div className="flex justify-center gap-6 mb-8">
-        <a href="mailto:andrevictorbritodeandrade@gmail.com" className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-red-600 transition-all border border-border">
-          <Mail size={18} />
+    <footer className="w-full py-8 mt-auto text-center border-t border-border opacity-60">
+      <div className="flex justify-center gap-4 mb-6">
+        <a href="mailto:andrevictorbritodeandrade@gmail.com" className="p-2 bg-card rounded-xl text-muted-foreground hover:text-red-600 transition-all border border-border">
+          <Mail size={14} />
         </a>
-        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-emerald-600 transition-all border border-border">
-          <MessageCircle size={18} />
+        <button className="p-2 bg-card rounded-xl text-muted-foreground hover:text-emerald-600 transition-all border border-border">
+          <MessageCircle size={14} />
         </button>
-        <button className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-blue-600 transition-all border border-border">
-          <Phone size={18} />
+        <button className="p-2 bg-card rounded-xl text-muted-foreground hover:text-blue-600 transition-all border border-border">
+          <Phone size={14} />
         </button>
       </div>
-      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em] mb-2">Desenvolvido por André Victor Brito de Andrade</p>
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Contato: andrevictorbritodeandrade@gmail.com</p>
-      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Versão 1.0.0 • © 2026</p>
+      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-1">Desenvolvido por André Victor Brito de Andrade</p>
+      <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Contato: andrevictorbritodeandrade@gmail.com</p>
+      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Versão 1.0.0 • © 2026</p>
     </footer>
   );
 }
