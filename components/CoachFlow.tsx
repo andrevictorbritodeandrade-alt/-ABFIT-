@@ -75,7 +75,27 @@ const GIF_DATABASE: Record<string, string> = {
   "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
   "super-man": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
   "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino inclinado": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino declinado": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "rosca martelo": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "tríceps corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "tríceps testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "panturrilha em pé": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "panturrilha sentado": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
   "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
+};
+
+const getExerciseGif = (name: string) => {
+  const nameLower = name.toLowerCase();
+  const matchKey = Object.keys(GIF_DATABASE).find(key => nameLower.includes(key));
+  return matchKey ? GIF_DATABASE[matchKey] : null;
 };
 
 export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
@@ -260,7 +280,7 @@ export function StudentWorkoutHistoryView({ student, onBack }: { student: Studen
   );
 }
 
-export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, onSave }: { student: Student, onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout | null) => void, onSave: (sid: string, data: any) => void }) {
+export function StudentManagement({ student, runningWorkouts, onBack, onNavigate, onEditWorkout, onSave }: { student: Student, runningWorkouts: any[], onBack: () => void, onNavigate: (v: string) => void, onEditWorkout: (w: Workout | null) => void, onSave: (sid: string, data: any) => void }) {
   const [publishing, setPublishing] = useState(false);
   const [abrirPrescritor, setAbrirPrescritor] = useState(false);
   const workoutsRef = useRef<HTMLDivElement>(null);
@@ -339,6 +359,14 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
            </div>
            <ChevronRight className="text-rose-600 group-hover:translate-x-1 transition-transform" />
         </button>
+        <div className="space-y-2 mt-2 px-2">
+            {runningWorkouts.slice(0, 5).map(w => (
+                <div key={w.id} className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex justify-between items-center">
+                    <span className="text-xs font-bold text-white">{w.type} - {w.dayOfWeek}</span>
+                    <span className="text-[10px] text-zinc-500">{w.totalTime}</span>
+                </div>
+            ))}
+        </div>
 
         {/* Periodização Mestre */}
         <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-3.5 rounded-3xl bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
@@ -453,7 +481,7 @@ export function StudentManagement({ student, onBack, onNavigate, onEditWorkout, 
             <span className="text-[8px] font-black uppercase text-muted-foreground bg-card px-2 py-1 rounded-md">{student.workouts?.length || 0} Ativas</span>
          </div>
          <div className="space-y-3">
-            {(student.workouts || []).map(w => (
+            {(student.workouts || []).filter(w => !w.title.toUpperCase().includes('RUN')).map(w => (
               <div key={w.id} className="p-6 rounded-[2rem] border border-border bg-card/50 flex flex-col gap-4 group transition-all shadow-lg hover:border-orange-600/30">
                  <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
@@ -768,8 +796,8 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
              <div key={i} className="flex flex-col gap-2 bg-card p-4 rounded-2xl border border-border animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-background rounded-xl overflow-hidden shrink-0 border border-border">
-                     {ex.thumb ? (
-                       <img src={ex.thumb} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                     {ex.thumb || getExerciseGif(ex.name) ? (
+                       <img src={ex.thumb || getExerciseGif(ex.name)!} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                      ) : (
                        <div className="w-full h-full flex items-center justify-center bg-secondary">
                          <Dumbbell size={16} className="text-muted-foreground"/>

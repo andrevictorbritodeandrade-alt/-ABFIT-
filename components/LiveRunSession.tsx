@@ -594,10 +594,10 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 {/* Stats View */}
                 <div className={`flex-1 flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-300 ${viewMode === 'map' ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'} overflow-y-auto custom-scrollbar`}>
                     <div className="text-center flex flex-col items-center justify-center mb-8 md:mb-16">
-                        <p className="text-[8rem] md:text-[14rem] lg:text-[18rem] font-black tracking-tighter tabular-nums leading-none text-[#e2ff00] drop-shadow-[10px_10px_0px_rgba(255,255,255,1)]">
+                        <p className="text-[8rem] md:text-[14rem] lg:text-[18rem] font-black tracking-tighter tabular-nums leading-none text-[#e2ff00] drop-shadow-[4px_4px_0px_rgba(255,255,255,1)]">
                             {mode === 'outdoor' ? distance.toFixed(2) : formatTime(segmentTimeLeft)}
                         </p>
-                        <p className="text-xl md:text-3xl font-black uppercase tracking-widest text-white mt-2 italic drop-shadow-[2px_2px_0px_rgba(255,255,255,1)]">
+                        <p className="text-xl md:text-3xl font-black uppercase tracking-widest text-white mt-2 italic drop-shadow-[1px_1px_0px_rgba(255,255,255,1)]">
                             {mode === 'outdoor' ? 'Quilômetros' : currentSegment.title}
                         </p>
                     </div>

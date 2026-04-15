@@ -68,7 +68,21 @@ const GIF_DATABASE: Record<string, string> = {
   "mata-borrão": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
   "super-man": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
   "superman": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
-  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif"
+  "lombar": "https://i.pinimg.com/originals/81/20/83/81208392a5499292376991f24d7790b9.gif",
+  "supino reto": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino inclinado": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "supino declinado": "https://i.pinimg.com/originals/52/63/a2/5263a236402377a00f40d64996924263.gif",
+  "rosca direta": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "rosca martelo": "https://i.pinimg.com/originals/24/f8/4a/24f84a86162391694f5be74005b61e21.gif",
+  "tríceps corda": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "tríceps testa": "https://i.pinimg.com/originals/8c/54/10/8c54101476c243c9417855b5b91b5c46.gif",
+  "agachamento livre": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "agachamento smith": "https://i.pinimg.com/originals/3f/78/3f/3f783f237373024766023277732623a6.gif",
+  "leg press 45": "https://i.pinimg.com/originals/9e/1f/2a/9e1f2a36b0432924467c6999205307b2.gif",
+  "extensora": "https://i.pinimg.com/originals/94/a5/d8/94a5d85203387c97561337dce95e4e20.gif",
+  "flexora": "https://i.pinimg.com/originals/34/00/28/340028e35900508e063806f97653241e.gif",
+  "panturrilha em pé": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif",
+  "panturrilha sentado": "https://i.pinimg.com/originals/b5/02/b7/b502b70f05562d98064402636a04e57e.gif"
 };
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop";
@@ -851,8 +865,8 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
           </h2>
         </header>
         <div className="space-y-4">
-          {(user.workouts || []).length > 0 ? (
-            user.workouts!.map(w => {
+          {(user.workouts || []).filter(w => !['treino-intervalado-confortavel', 'treino-intervalado-desconfortavel', 'treino-rodagem'].includes(w.id)).length > 0 ? (
+            (user.workouts || []).filter(w => !['treino-intervalado-confortavel', 'treino-intervalado-desconfortavel', 'treino-rodagem'].includes(w.id)).map(w => {
               const title = w.title.toLowerCase();
               const history = user.workoutHistory || [];
               

@@ -186,10 +186,21 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isCoach, setIsCoach] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
+  const [runningWorkouts, setRunningWorkouts] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
+
+  // Fetch running workouts
+  useEffect(() => {
+    const q = query(collection(db, `artifacts/runtrack-elite-v4/workouts`));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const workouts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setRunningWorkouts(workouts);
+    });
+    return () => unsub();
+  }, []);
 
   const resetApp = () => {
     localStorage.removeItem('elite_session_v2');
@@ -935,6 +946,7 @@ export default function App() {
             setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
           }
           const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+          console.log("Updated Students:", updatedStudents);
           setStudents(updatedStudents);
           // Atualiza o aluno selecionado em tempo real se ele estiver aberto
           if (selectedStudent) {
@@ -1529,7 +1541,7 @@ export default function App() {
         {view === 'ABOUT_ABFIT' && <AboutView onBack={handleBackNavigation} />}
         
         {view === 'PROFESSOR_DASH' && <ProfessorDashboard students={allStudentsForCoach} onLogout={() => setView('LOGIN')} onSelect={(s) => { setSelectedStudent(s); setView('STUDENT_MGMT'); }} onToggleMenu={toggleSidebar} onNavigate={setView} />}
-        {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} onSave={handleSaveData} />}
+        {view === 'STUDENT_MGMT' && selectedStudent && <StudentManagement student={selectedStudent} runningWorkouts={runningWorkouts.filter(w => w.studentId === selectedStudent.id)} onBack={() => setView('PROFESSOR_DASH')} onNavigate={setView} onEditWorkout={setSelectedWorkout} onSave={handleSaveData} />}
         {view === 'WORKOUT_EDITOR' && selectedStudent && <WorkoutEditorView student={selectedStudent} workoutToEdit={selectedWorkout} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}
         {view === 'COACH_ASSESSMENT' && selectedStudent && <CoachAssessmentView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onSave={handleSaveData} />}
         {view === 'PERIODIZATION' && selectedStudent && <PeriodizationView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onProceedToWorkout={() => setView('WORKOUT_EDITOR')} onSave={handleSaveData} />}
