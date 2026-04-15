@@ -11,6 +11,18 @@ import {
   collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, getDocs 
 } from '../services/firebase';
 import { GoogleGenAI } from "@google/genai";
+import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix Leaflet marker icon issue
+if (typeof window !== 'undefined') {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+}
 
 let genAIInstance: GoogleGenAI | null = null;
 
@@ -374,42 +386,74 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
             )}
 
             {stats && !stats.empty && (
-                <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
-                    <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3 flex items-center gap-2">
-                        <Activity size={12} /> Dados do Galaxy Watch
-                    </h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {stats.distance && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Distância</div>
-                                <div className="text-sm font-black text-white">{stats.distance} km</div>
-                            </div>
-                        )}
-                        {stats.duration && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Duração</div>
-                                <div className="text-sm font-black text-white">{stats.duration}</div>
-                            </div>
-                        )}
-                        {stats.avgPace && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Pace Médio</div>
-                                <div className="text-sm font-black text-white">{stats.avgPace}</div>
-                            </div>
-                        )}
+                <div className="bg-white p-6 rounded-3xl border border-zinc-200 space-y-6 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+                    <div className="flex items-center justify-between">
+                        <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                            <Activity size={12} className="text-red-600" /> Resumo da Corrida
+                        </h5>
+                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-full">
+                            {stats.duration}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8">
+                        <div>
+                            <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Distância</div>
+                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">{stats.distance} <span className="text-sm">km</span></div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Pace Médio</div>
+                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">{stats.avgPace}</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 border-t border-zinc-100 pt-6">
                         {stats.avgHR && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-bold">BPM Médio</div>
-                                <div className="text-sm font-black text-white">{stats.avgHR} bpm</div>
+                                <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">BPM Médio</div>
+                                <div className="text-2xl font-black text-black italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[10px]">bpm</span></div>
                             </div>
                         )}
                         {stats.calories && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-bold">Calorias</div>
-                                <div className="text-sm font-black text-white">{stats.calories} kcal</div>
+                                <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Calorias</div>
+                                <div className="text-2xl font-black text-black italic tracking-tighter leading-none">{stats.calories} <span className="text-[10px]">kcal</span></div>
                             </div>
                         )}
                     </div>
+
+                    {stats.path && stats.path.length > 0 && (
+                        <div className="h-64 w-full rounded-2xl overflow-hidden border border-white/10 relative mt-4">
+                            <MapContainer 
+                                center={stats.path[0]} 
+                                zoom={15} 
+                                style={{ height: '100%', width: '100%' }}
+                                zoomControl={false}
+                                dragging={false}
+                                touchZoom={false}
+                                scrollWheelZoom={false}
+                                doubleClickZoom={false}
+                            >
+                                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                                <Polyline positions={stats.path} color="#dc2626" weight={4} opacity={0.8} />
+                                <Marker position={stats.path[0]} icon={L.divIcon({
+                                    className: 'custom-div-icon',
+                                    html: `<div style="background-color: #10b981; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(16,185,129,0.5);"></div>`,
+                                    iconSize: [12, 12],
+                                    iconAnchor: [6, 6]
+                                })} />
+                                <Marker position={stats.path[stats.path.length - 1]} icon={L.divIcon({
+                                    className: 'custom-div-icon',
+                                    html: `<div style="background-color: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(220,38,38,0.5);"></div>`,
+                                    iconSize: [12, 12],
+                                    iconAnchor: [6, 6]
+                                })} />
+                            </MapContainer>
+                            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 z-[1000]">
+                                <span className="text-[8px] font-black text-white uppercase tracking-widest">Mapa do Percurso</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -808,6 +852,7 @@ const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: Wo
 
 export function RunTrackCoachView({ student, onBack }: { student: Student, onBack: () => void }) {
     const [workouts, setWorkouts] = useState<WorkoutModel[]>([]);
+    const [runnerCount, setRunnerCount] = useState(1);
     const [isCreating, setIsCreating] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<WorkoutModel | null>(null);
     
@@ -851,6 +896,10 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
         const unsub = onSnapshot(q, (snap) => {
             const data = snap.docs.map(d => ({id: d.id, ...d.data()} as WorkoutModel));
             setWorkouts(data.filter(w => w.studentId === student.id));
+            
+            // Count unique students with prescribed workouts
+            const studentIds = new Set(data.map(d => d.studentId));
+            setRunnerCount(studentIds.size);
         }, (error) => {
             handleFirestoreError(error, OperationType.GET, path);
         });
@@ -1026,6 +1075,7 @@ function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
 
 export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void, onToggleMenu?: () => void }) {
     const [workouts, setWorkouts] = useState<WorkoutModel[]>([]);
+    const [runnerCount, setRunnerCount] = useState(1);
     const [loggingWorkout, setLoggingWorkout] = useState<WorkoutModel | null>(null);
     const [liveWorkout, setLiveWorkout] = useState<WorkoutModel | null>(null);
 
@@ -1069,6 +1119,10 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
         const unsub = onSnapshot(q, (snap) => {
             const data = snap.docs.map(d => ({id: d.id, ...d.data()} as WorkoutModel));
             setWorkouts(data.filter(w => w.studentId === student.id));
+            
+            // Count unique students with prescribed workouts
+            const studentIds = new Set(data.map(d => d.studentId));
+            setRunnerCount(studentIds.size);
         }, (error) => {
             handleFirestoreError(error, OperationType.GET, path);
         });
@@ -1109,6 +1163,15 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
         const d = normalizeDay(String(w.dayOfWeek));
         return d.includes(normalizeDay(todayName));
     });
+
+    const isWatch = React.useMemo(() => {
+        if (typeof window === 'undefined') return false;
+        const ua = navigator.userAgent.toLowerCase();
+        const isWearOS = ua.includes('wear os') || ua.includes('wearos');
+        const isWatchUA = ua.includes('watch') || ua.includes('samsung');
+        const isSmallScreen = window.innerWidth < 500 && window.innerHeight < 500;
+        return (isWearOS || isWatchUA) && isSmallScreen;
+    }, []);
 
     const weeklyVolume = useMemo(() => {
         return workouts.reduce((acc, w) => acc + estimateWorkoutDuration(calculateAdjustedWorkout(w).adjusted), 0);
@@ -1190,133 +1253,172 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-transparent flex flex-col relative">
+        <div className={`animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-transparent flex flex-col relative ${isWatch ? 'rounded-full border-2 border-red-600 p-2' : ''}`}>
             {/* STICKY HEADER */}
-            <header className="p-6 pb-4 border-b border-white/5 bg-black/80 backdrop-blur-md z-50">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                       {onToggleMenu && (
-                         <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
-                           <Menu size={20}/>
-                         </button>
-                       )}
-                       <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
-                         <ArrowLeft size={20}/>
-                       </button>
+            {!isWatch && (
+                <header className="p-6 pb-4 border-b border-white/5 bg-black/80 backdrop-blur-md z-50">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                           {onToggleMenu && (
+                             <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+                               <Menu size={20}/>
+                             </button>
+                           )}
+                           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg">
+                             <ArrowLeft size={20}/>
+                           </button>
+                        </div>
+                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
+                          <HeaderTitle text="ABFIT RUN" />
+                        </h2>
                     </div>
-                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">
-                      <HeaderTitle text="ABFIT RUN" />
-                    </h2>
-                </div>
-            </header>
+                </header>
+            )}
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                {/* WEEKLY VOLUME SUMMARY */}
-            <div className="bg-gradient-to-r from-zinc-900 to-black border border-white/5 rounded-3xl p-6 flex items-center justify-between shadow-xl mb-4">
-                <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                        <Calculator size={12} className="text-red-600" /> Volume Semanal
-                    </span>
-                    <span className="text-3xl font-black italic text-white tracking-tighter leading-none">
-                        {formatDuration(weeklyVolume)}
-                    </span>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-red-600/10 border border-red-600/30 flex items-center justify-center">
-                    <TrendingUp size={24} className="text-red-600" />
-                </div>
-            </div>
-
-            <div className="max-w-md mx-auto space-y-10 pb-24">
-                {/* CALENDAR */}
-                <RunCalendar 
-                    workouts={workouts} 
-                    history={student.workoutHistory || []} 
-                    onCheckIn={handleCheckIn} 
-                    studentId={student.id}
-                />
-
-                {/* HERO CARD (TODAY) */}
-                {todayWorkout ? (
-                        <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-zinc-800 group shadow-2xl transition-all">
-                            <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
-                            <div className="relative z-10 p-8">
-                                <div className="flex justify-between items-start mb-12">
-                                    <span className="bg-red-600 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest">Treino de Hoje</span>
-                                    <div 
-                                        className="flex items-center gap-2 cursor-pointer hover:text-red-400 transition-colors"
-                                        onClick={() => setLoggingWorkout(todayWorkout)}
-                                    >
-                                        <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Registro Manual</span>
+            <div className={`flex-1 overflow-y-auto custom-scrollbar p-6 ${isWatch ? 'space-y-6' : 'space-y-12'}`}>
+                {/* WEEKLY VOLUME SUMMARY - NRC STYLE */}
+                <div className={`${isWatch ? 'p-4 rounded-3xl' : 'p-8 rounded-[2.5rem]'} bg-zinc-900 border border-white/5 shadow-2xl relative overflow-hidden group`}>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/10 blur-3xl -mr-16 -mt-16 group-hover:bg-red-600/20 transition-all" />
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                            <span className={`${isWatch ? 'text-[8px]' : 'text-[10px]'} font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2`}>
+                                <Activity size={isWatch ? 10 : 14} className="text-red-600" /> Volume
+                            </span>
+                            
+                            {!isWatch && runnerCount > 1 && (
+                                <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/5 backdrop-blur-md">
+                                    <div className="flex -space-x-1.5">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className="w-5 h-5 rounded-full border border-zinc-900 bg-zinc-800 flex items-center justify-center overflow-hidden">
+                                                <img src={`https://picsum.photos/seed/athlete${i}/32/32`} alt="athlete" referrerPolicy="no-referrer" />
+                                            </div>
+                                        ))}
                                     </div>
+                                    <span className="text-[7px] font-black text-zinc-400 uppercase tracking-[0.15em] leading-none">
+                                        Você e +{runnerCount - 1} <span className="text-zinc-600">Atletas</span>
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-baseline gap-2">
+                            <span className={`${isWatch ? 'text-4xl' : 'text-7xl'} font-black italic text-white tracking-tighter leading-none`}>
+                                {formatDuration(weeklyVolume).split(' ')[0]}
+                            </span>
+                            <span className={`${isWatch ? 'text-xs' : 'text-2xl'} font-black italic text-zinc-500 uppercase tracking-tight`}>
+                                {formatDuration(weeklyVolume).split(' ')[1] || 'min'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={`max-w-md mx-auto ${isWatch ? 'space-y-6' : 'space-y-12'} pb-24`}>
+                    {/* CALENDAR */}
+                    {!isWatch && (
+                        <RunCalendar 
+                            workouts={workouts} 
+                            history={student.workoutHistory || []} 
+                            onCheckIn={handleCheckIn} 
+                            studentId={student.id}
+                        />
+                    )}
+
+                    {/* HERO CARD (TODAY) */}
+                    {todayWorkout ? (
+                        <div className={`relative overflow-hidden ${isWatch ? 'rounded-3xl p-6' : 'rounded-[3rem] p-10'} bg-zinc-900 border border-zinc-800 group shadow-2xl transition-all`}>
+                            <div className="absolute inset-0 bg-gradient-to-br from-red-600/30 to-transparent opacity-40 group-hover:opacity-60 transition-opacity" />
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-6">
+                                    <span className="bg-red-600 text-white px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Hoje</span>
+                                    {isWatch && (
+                                        <button onClick={onBack} className="p-1 bg-black/40 rounded-full text-white"><ArrowLeft size={12}/></button>
+                                    )}
                                 </div>
                                 
-                                <h3 className="text-3xl font-black italic uppercase mb-2 leading-[0.85] tracking-tighter text-white">{todayWorkout.type}</h3>
-                                <p className="text-zinc-400 font-medium text-sm line-clamp-2 mb-8">{todayWorkout.description || 'Foco na técnica.'}</p>
+                                <h3 className={`${isWatch ? 'text-xl' : 'text-5xl'} font-black italic uppercase mb-2 leading-none tracking-tighter text-white`}>{todayWorkout.type}</h3>
                                 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                                        <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Volume</span>
-                                        <span className="text-2xl font-black tracking-tight text-white">
-                                            {todayWorkout.distance 
-                                                ? `${todayWorkout.distance}km` 
-                                                : (todayWorkout.totalTime 
-                                                    ? `${todayWorkout.totalTime}'` 
-                                                    : formatDuration(estimateWorkoutDuration(calculateAdjustedWorkout(todayWorkout).adjusted))
-                                                  )
-                                            }
-                                        </span>
-                                    </div>
-                                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                                        <span className="text-[9px] uppercase text-zinc-400 font-black tracking-wider block mb-1">Intensidade</span>
-                                        <span className="text-2xl font-black tracking-tight text-red-500">
-                                            {todayWorkout.speed ? `${todayWorkout.speed} km/h` : 'Livre'}
-                                        </span>
-                                    </div>
-                                </div>
-
                                 <button 
                                     onClick={() => setLiveWorkout(todayWorkout)}
-                                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black italic uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-lg shadow-red-600/20"
+                                    className={`w-full ${isWatch ? 'py-3 mt-4' : 'py-6 mt-8'} bg-red-600 hover:bg-red-500 text-white rounded-2xl font-black italic uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-2xl shadow-red-600/40`}
                                 >
-                                    <Play size={20} className="fill-white" />
-                                    Iniciar Treino
+                                    <Play size={isWatch ? 16 : 24} className="fill-white" />
+                                    {isWatch ? 'Iniciar' : 'Iniciar Corrida'}
                                 </button>
                             </div>
                         </div>
-                ) : (
-                     <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-center border border-zinc-800 flex flex-col items-center justify-center h-80 relative overflow-hidden shadow-inner">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent" />
-                        <div className="relative z-10">
-                            <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-6 text-zinc-500 border border-white/5">
-                                <Zap size={24} />
+                    ) : (
+                        <div className={`bg-zinc-900 ${isWatch ? 'rounded-3xl p-6 h-40' : 'rounded-[3rem] p-12 h-96'} text-center border border-zinc-800 flex flex-col items-center justify-center relative overflow-hidden shadow-inner`}>
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/5 to-transparent" />
+                            <div className="relative z-10">
+                                <p className="text-white font-black text-xl italic uppercase tracking-tighter">Descanso</p>
                             </div>
-                            <p className="text-white font-black text-2xl italic uppercase tracking-tighter">Descanso</p>
-                            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-2">Recuperar & Hidratar</p>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-4 pl-2">
-                        <BarChart3 size={24} className="text-red-600"/>
-                        <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Sua Planilha</h3>
-                    </div>
-                    {uniqueWorkoutsByDay.map(w => {
-                        const isTodayWorkout = normalizeDay(w.dayOfWeek).includes(normalizeDay(todayName));
-                        return (
-                            <div key={w.id} onClick={() => !w.isDayOff && setLoggingWorkout(w)} className={w.isDayOff ? 'opacity-50 grayscale' : 'cursor-pointer'}>
-                                <WorkoutCard 
-                                    workout={w} 
-                                    isToday={isTodayWorkout}
-                                    isCompleted={student.workoutHistory?.some(h => h.workoutId === w.id && h.date === new Date().toLocaleDateString('pt-BR'))}
-                                />
+                    {/* RECENT RUNS HISTORY - NRC STYLE */}
+                    {!isWatch && (
+                        <div className="space-y-8">
+                            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                    <BarChart3 size={24} className="text-red-600"/>
+                                    <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Atividades Recentes</h3>
+                                </div>
+                                <button className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Ver Tudo</button>
                             </div>
-                        );
-                    })}
-                </div>
+                            
+                            <div className="space-y-6">
+                                {(student.workoutHistory || [])
+                                    .filter(h => h.type === 'RUNNING')
+                                    .slice(0, 5)
+                                    .map(h => {
+                                        const workout = workouts.find(w => w.id === h.workoutId);
+                                        return (
+                                            <div key={h.id} className="animate-in slide-in-from-bottom-4 duration-500">
+                                                <div className="flex items-center gap-3 mb-3 pl-2">
+                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{h.date}</span>
+                                                    <div className="h-px flex-1 bg-white/5" />
+                                                </div>
+                                                <WorkoutCard 
+                                                    workout={workout || { type: h.name, dayOfWeek: '' } as any} 
+                                                    stats={h.runningStats}
+                                                    isCompleted={true}
+                                                />
+                                            </div>
+                                        );
+                                    })
+                                }
+                                {!(student.workoutHistory || []).some(h => h.type === 'RUNNING') && (
+                                    <div className="p-12 text-center bg-zinc-900/50 rounded-[2rem] border border-dashed border-zinc-800">
+                                        <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">Nenhuma corrida registrada ainda</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                <WorkoutLegend />
-            </div>
+                    {!isWatch && (
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3 mb-4 pl-2">
+                                <Calculator size={24} className="text-red-600"/>
+                                <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Sua Planilha</h3>
+                            </div>
+                            {uniqueWorkoutsByDay.map(w => {
+                                const isTodayWorkout = normalizeDay(w.dayOfWeek).includes(normalizeDay(todayName));
+                                return (
+                                    <div key={w.id} onClick={() => !w.isDayOff && setLoggingWorkout(w)} className={w.isDayOff ? 'opacity-50 grayscale' : 'cursor-pointer'}>
+                                        <WorkoutCard 
+                                            workout={w} 
+                                            isToday={isTodayWorkout}
+                                            isCompleted={student.workoutHistory?.some(h => h.workoutId === w.id && h.date === new Date().toLocaleDateString('pt-BR'))}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {!isWatch && <WorkoutLegend />}
+                </div>
             <AppFooter />
 
             {loggingWorkout && (
@@ -1324,6 +1426,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     workout={loggingWorkout} 
                     onClose={() => setLoggingWorkout(null)} 
                     onSave={(stats) => handleCheckIn(new Date().toLocaleDateString('pt-BR'), loggingWorkout, stats)}
+                    initialStats={(loggingWorkout as any).initialStats}
                 />
             )}
 
@@ -1332,10 +1435,17 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     segments={parseWorkoutSegments(liveWorkout)}
                     workoutTitle={`${liveWorkout.type} - ${liveWorkout.dayOfWeek}`}
                     onClose={() => setLiveWorkout(null)}
-                    onFinish={(totalTime) => {
+                    studentWeight={typeof student.weight === 'string' ? parseFloat(student.weight) : student.weight}
+                    studentHeight={typeof student.height === 'string' ? parseFloat(student.height) : student.height}
+                    onFinish={(totalTime, stats) => {
                         setLiveWorkout(null);
-                        // Pre-fill log modal with total time
-                        setLoggingWorkout(liveWorkout);
+                        // Pre-fill log modal with total time and stats
+                        const workoutWithStats = {
+                            ...liveWorkout,
+                            totalTime: formatDuration(Math.ceil(totalTime / 60)),
+                        } as any;
+                        workoutWithStats.initialStats = stats;
+                        setLoggingWorkout(workoutWithStats);
                     }}
                 />
             )}
@@ -1344,13 +1454,14 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     )
 }
 
-const LogWorkoutModal = ({ workout, onClose, onSave }: { workout: WorkoutModel, onClose: () => void, onSave: (stats: any) => void }) => {
+const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: WorkoutModel, onClose: () => void, onSave: (stats: any) => void, initialStats?: any }) => {
     const [stats, setStats] = useState({
-        distance: '',
-        avgPace: '',
-        avgHR: '',
-        calories: '',
-        duration: ''
+        distance: initialStats?.distance || '',
+        avgPace: initialStats?.avgPace || '',
+        avgHR: initialStats?.avgHR || '',
+        calories: initialStats?.calories || '',
+        duration: initialStats?.duration || '',
+        path: initialStats?.path || []
     });
     const [isExtracting, setIsExtracting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1380,16 +1491,17 @@ const LogWorkoutModal = ({ workout, onClose, onSave }: { workout: WorkoutModel, 
                 
                 const text = response.text || "";
                 const jsonMatch = text.match(/\{.*\}/s);
-                if (jsonMatch) {
-                    const data = JSON.parse(jsonMatch[0]);
-                    setStats({
-                        distance: data.distance || '',
-                        duration: data.duration || '',
-                        avgPace: data.avgPace || '',
-                        avgHR: data.avgHR || '',
-                        calories: data.calories || ''
-                    });
-                }
+                    if (jsonMatch) {
+                        const data = JSON.parse(jsonMatch[0]);
+                        setStats({
+                            distance: data.distance || '',
+                            duration: data.duration || '',
+                            avgPace: data.avgPace || '',
+                            avgHR: data.avgHR || '',
+                            calories: data.calories || '',
+                            path: stats.path // Keep existing path if any
+                        });
+                    }
                 setIsExtracting(false);
             };
             reader.readAsDataURL(file);

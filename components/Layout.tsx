@@ -277,9 +277,16 @@ export const GLOBAL_BACKGROUND_IMAGES = [
 
 export function BackgroundWrapper({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden font-sans text-left transition-colors">
-      <BackgroundCarousel images={GLOBAL_BACKGROUND_IMAGES} />
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none"></div>
+    <div className="relative min-h-screen bg-black overflow-hidden font-sans text-left transition-colors">
+      <div className="fixed inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" 
+          alt="Gym Background" 
+          className="w-full h-full object-cover opacity-40 grayscale blur-[4px] brightness-[0.4] scale-105"
+          referrerPolicy="no-referrer"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/20 to-black/90" />
+      </div>
       <div className="relative z-10 h-full">{children}</div>
     </div>
   );
@@ -298,31 +305,18 @@ export function GlobalSyncIndicator({ status }: { status: 'synced' | 'syncing' |
     };
   }, []);
 
-  const getStatusColor = () => {
-    if (!online || status === 'offline') return 'bg-red-950/90 border-red-500/50';
-    switch (status) {
-      case 'syncing': return 'bg-orange-950/90 border-orange-500/50 scale-105 shadow-[0_0_20px_rgba(234,88,12,0.4)]';
-      case 'synced': return 'bg-emerald-950/90 border-emerald-500/50 scale-100 shadow-[0_0_20px_rgba(16,185,129,0.4)]';
-      default: return 'bg-card/90 border-border/30';
-    }
-  };
-
   return (
-    <div className="fixed bottom-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-1000 pointer-events-none select-none">
-      <div className={`p-3 rounded-full border shadow-[0_0_30px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 ${getStatusColor()}`}>
-        <div className="relative flex items-center justify-center w-5 h-5">
-           {!online || status === 'offline' ? (
-             <WifiOff size={18} className="text-red-500" />
-           ) : status === 'syncing' ? (
-             <RefreshCw size={18} className="text-orange-500 animate-spin" />
-           ) : (
-             <div className="flex items-center justify-center">
-                <Wifi size={18} className="text-emerald-500 relative z-10" />
-                <div className="absolute inset-0 bg-emerald-500/30 rounded-full animate-ping opacity-75"></div>
-             </div>
-           )}
-        </div>
-      </div>
+    <div className="fixed top-4 right-4 z-[100] animate-in fade-in slide-in-from-top-4 duration-1000 pointer-events-none select-none flex items-center justify-center">
+       {!online || status === 'offline' ? (
+         <WifiOff size={24} className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
+       ) : status === 'syncing' ? (
+         <RefreshCw size={24} className="text-orange-500 animate-spin drop-shadow-[0_0_10px_rgba(249,115,22,0.6)]" />
+       ) : (
+         <div className="relative flex items-center justify-center">
+            <Wifi size={24} className="text-emerald-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
+            <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping opacity-50"></div>
+         </div>
+       )}
     </div>
   );
 }
@@ -483,22 +477,39 @@ export function WeatherWidget() {
 }
 
 export function AppFooter() {
+  const coachEmail = "andrevictorbritodeandrade@gmail.com";
+  const coachPhone = "5521994527694";
+
   return (
-    <footer className="w-full py-8 mt-auto text-center border-t border-border opacity-60">
-      <div className="flex justify-center gap-4 mb-6">
-        <a href="mailto:andrevictorbritodeandrade@gmail.com" className="p-2 bg-card rounded-xl text-muted-foreground hover:text-red-600 transition-all border border-border">
-          <Mail size={14} />
+    <footer className="w-full py-6 mt-auto text-center border-t border-border opacity-60">
+      <div className="flex justify-center gap-4 mb-4">
+        <a 
+          href={`mailto:${coachEmail}`} 
+          className="p-1.5 bg-card rounded-lg text-muted-foreground hover:text-red-600 transition-all border border-border"
+          title="Enviar E-mail"
+        >
+          <Mail size={12} />
         </a>
-        <button className="p-2 bg-card rounded-xl text-muted-foreground hover:text-emerald-600 transition-all border border-border">
-          <MessageCircle size={14} />
-        </button>
-        <button className="p-2 bg-card rounded-xl text-muted-foreground hover:text-blue-600 transition-all border border-border">
-          <Phone size={14} />
-        </button>
+        <a 
+          href={`https://wa.me/${coachPhone}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-1.5 bg-card rounded-lg text-muted-foreground hover:text-emerald-600 transition-all border border-border"
+          title="WhatsApp"
+        >
+          <MessageCircle size={12} />
+        </a>
+        <a 
+          href={`tel:+${coachPhone}`} 
+          className="p-1.5 bg-card rounded-lg text-muted-foreground hover:text-blue-600 transition-all border border-border"
+          title="Ligar"
+        >
+          <Phone size={12} />
+        </a>
       </div>
-      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-1">Desenvolvido por André Victor Brito de Andrade</p>
-      <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Contato: andrevictorbritodeandrade@gmail.com</p>
-      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Versão 1.0.0 • © 2026</p>
+      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest">
+        Desenvolvido por André Victor Brito de Andrade • Contato: {coachEmail} • Versão 1.0.0 © 2026
+      </p>
     </footer>
   );
 }

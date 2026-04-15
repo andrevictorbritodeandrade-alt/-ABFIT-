@@ -177,6 +177,8 @@ const INITIAL_PREDICTIONS = [
 
 // --- CARD DE PROVA SLIM ---
 const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips }) => {
+  const isCompleted = new Date(race.dataIso).getTime() < Date.now();
+
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (navigator.share) {
@@ -189,7 +191,12 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
   };
 
   return (
-    <div className="bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden">
+    <div className={`bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden ${isCompleted ? 'opacity-70 grayscale-[0.5]' : ''}`}>
+      {isCompleted && (
+        <div className="absolute top-0 left-0 bg-green-500 text-white px-3 py-1 rounded-br-xl border-b-2 border-r-2 border-black text-[9px] font-black uppercase tracking-widest flex items-center gap-1 z-20 shadow-sm">
+          <CheckCircle size={10} /> Check In
+        </div>
+      )}
       <button 
         onClick={handleShare}
         className="absolute top-2 right-2 z-10 p-1.5 bg-white border-2 border-black rounded-lg text-slate-400 hover:text-red-600 transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
@@ -197,10 +204,10 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
       >
         <Share2 size={12} />
       </button>
-      <div className="flex justify-between items-center mb-3 text-slate-900">
+      <div className="flex justify-between items-center mb-3 text-slate-900 mt-4">
       <div className="flex items-center gap-2 overflow-hidden">
-        <div className="w-2 h-6 bg-orange-600 rounded-full shrink-0"></div>
-        <h4 className="text-sm font-poppins font-black leading-none uppercase italic truncate group-hover:text-orange-600 transition-colors tracking-tight">
+        <div className={`w-2 h-6 ${isCompleted ? 'bg-green-500' : 'bg-orange-600'} rounded-full shrink-0`}></div>
+        <h4 className={`text-sm font-poppins font-black leading-none uppercase italic truncate ${isCompleted ? 'text-green-700' : 'group-hover:text-orange-600'} transition-colors tracking-tight`}>
           {race.nome}
         </h4>
       </div>

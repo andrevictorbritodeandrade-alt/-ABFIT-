@@ -42,6 +42,7 @@ export interface RunningStats {
   verticalOscillation?: number;
   groundContactTime?: number;
   asymmetry?: string;
+  path?: [number, number][];
 }
 
 export interface WorkoutHistoryEntry {

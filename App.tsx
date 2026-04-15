@@ -5,7 +5,7 @@ import {
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
   BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin,
-  Sun, Moon, AlertTriangle, Sparkles
+  AlertTriangle, Sparkles
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, AppFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager, StudentWorkoutHistoryView } from './components/CoachFlow';
@@ -68,8 +68,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 function SettingsView({ onBack }: { onBack: () => void }) {
-  const { theme, toggleTheme } = useTheme();
-  
   return (
     <div className="p-6 pb-48 animate-in fade-in duration-500 text-foreground overflow-y-auto h-screen custom-scrollbar text-left bg-background transition-colors">
       <header className="flex items-center gap-4 mb-10">
@@ -92,21 +90,6 @@ function SettingsView({ onBack }: { onBack: () => void }) {
                </div>
             </div>
             <ChevronRight className="text-muted-foreground" size={18} />
-         </Card>
-         
-         <Card className="p-5 bg-card border-border flex items-center justify-between cursor-pointer" onClick={toggleTheme}>
-            <div className="flex items-center gap-4">
-               <div className="p-2.5 bg-zinc-800 dark:bg-zinc-700 rounded-xl shadow-lg transition-colors">
-                  {theme === 'dark' ? <Moon className="text-white" size={20} /> : <Sun className="text-white" size={20} />}
-               </div>
-               <div>
-                  <h4 className="text-[13px] font-black uppercase italic text-foreground">Aparência</h4>
-                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Alternar para tema {theme === 'dark' ? 'claro' : 'escuro'}</p>
-               </div>
-            </div>
-            <div className={`w-10 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-zinc-700' : 'bg-emerald-500'}`}>
-               <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-0.5' : 'right-0.5'}`} />
-            </div>
          </Card>
 
          <Card className="p-5 bg-card border-border flex items-center justify-between">
@@ -133,7 +116,6 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
   const [input, setInput] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { theme, toggleTheme } = useTheme();
   
   const registeredOptions = useMemo(() => {
     const coachOption = { name: "PROFESSOR", value: "PROFESSOR", type: "COACH" };
@@ -159,34 +141,37 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center font-sans bg-background text-foreground transition-colors">
-      <div className="absolute top-6 right-6">
-        <button onClick={toggleTheme} className="p-3 bg-secondary rounded-full shadow-lg text-foreground hover:bg-red-600 hover:text-white transition-colors">
-          {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
-        </button>
-      </div>
-      <div className="animate-in fade-in zoom-in duration-700 text-center"><Logo size="text-5xl" /></div>
-      <div className="w-full max-sm mt-8 space-y-4 animate-in slide-in-from-bottom-10 duration-1000 relative">
-        <div className="text-left">
-          <div className="relative" ref={dropdownRef}>
-            <input type="text" name="login-email-no-autofill" id="login-email-no-autofill" placeholder="E-MAIL OU 'PROFESSOR'" className="w-full bg-input border border-border p-5 rounded-[2.5rem] text-foreground outline-none focus:border-red-600 transition-all text-center font-black tracking-tight uppercase placeholder:text-muted-foreground" value={input} autoComplete="new-password" onChange={e => setInput(e.target.value)} onClick={() => setShowDropdown(true)} onFocus={() => setShowDropdown(true)} />
-            {showDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 max-h-80 overflow-y-auto custom-scrollbar">
-                <div className="p-3 border-b border-border bg-secondary/40 text-center sticky top-0 z-10"><p className="text-[11px] font-black text-muted-foreground uppercase text-center tracking-[0.2em]">Selecione um perfil</p></div>
-                {registeredOptions.map((opt, idx) => (
-                  <button key={`opt-${idx}`} onClick={() => { setInput(opt.value); setShowDropdown(false); }} className="w-full p-4 hover:bg-red-600/10 text-left flex items-center justify-between border-b border-border transition-colors group">
-                    <div className="text-left"><p className="text-foreground text-base font-black uppercase tracking-tight text-left">{opt.name}</p><p className="text-[12px] text-muted-foreground lowercase text-left">{opt.value}</p></div>
-                    <span className={`text-[11px] font-black px-2 py-1 rounded-full ${opt.type === 'COACH' ? 'bg-red-600 text-white' : 'bg-secondary text-muted-foreground'}`}>{opt.type}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="relative flex flex-col items-center justify-center min-h-screen p-6 text-center font-sans text-foreground transition-colors overflow-hidden">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center justify-center">
+        <div className="animate-in fade-in zoom-in duration-700 text-center mb-12">
+          <Logo size="text-[8rem] sm:text-[10rem]" subSize="text-[10px] sm:text-xs" />
         </div>
-        {error && <p className="text-red-500 text-[13px] font-black uppercase py-2 tracking-widest text-center">{error}</p>}
-        <button onClick={() => onLogin(input)} className="w-full bg-red-600 py-5 rounded-[2.5rem] font-black uppercase tracking-widest text-white active:scale-95 transition-all shadow-xl shadow-red-900/20 hover:bg-red-700">ENTRAR NO ECOSSISTEMA</button>
+        
+        <div className="w-full space-y-4 animate-in slide-in-from-bottom-10 duration-1000 relative">
+          <div className="text-left">
+            <div className="relative" ref={dropdownRef}>
+              <input type="text" name="login-email-no-autofill" id="login-email-no-autofill" placeholder="E-MAIL OU 'PROFESSOR'" className="w-full bg-zinc-900/80 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] text-white outline-none focus:border-red-600 transition-all text-center font-black tracking-tight uppercase placeholder:text-zinc-500 shadow-2xl" value={input} autoComplete="new-password" onChange={e => setInput(e.target.value)} onClick={() => setShowDropdown(true)} onFocus={() => setShowDropdown(true)} />
+              {showDropdown && (
+                <div className="absolute bottom-full left-0 right-0 mb-4 bg-zinc-900 border border-white/10 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-2 max-h-80 overflow-y-auto custom-scrollbar">
+                  <div className="p-3 border-b border-white/5 bg-zinc-800/50 text-center sticky top-0 z-10"><p className="text-[11px] font-black text-zinc-500 uppercase text-center tracking-[0.2em]">Selecione um perfil</p></div>
+                  {registeredOptions.map((opt, idx) => (
+                    <button key={`opt-${idx}`} onClick={() => { setInput(opt.value); setShowDropdown(false); }} className="w-full p-4 hover:bg-red-600/10 text-left flex items-center justify-between border-b border-white/5 transition-colors group">
+                      <div className="text-left"><p className="text-white text-base font-black uppercase tracking-tight text-left">{opt.name}</p><p className="text-[12px] text-zinc-500 lowercase text-left">{opt.value}</p></div>
+                      <span className={`text-[11px] font-black px-2 py-1 rounded-full ${opt.type === 'COACH' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}>{opt.type}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {error && <p className="text-red-500 text-[13px] font-black uppercase py-2 tracking-widest text-center">{error}</p>}
+          <button onClick={() => onLogin(input)} className="w-full bg-red-600 py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-white active:scale-95 transition-all shadow-2xl shadow-red-900/40 hover:bg-red-700 text-lg">ENTRAR NO ECOSSISTEMA</button>
+        </div>
       </div>
-      <AppFooter />
+      
+      <div className="absolute bottom-6 left-0 right-0 z-10">
+        <AppFooter />
+      </div>
     </div>
   );
 }
@@ -368,7 +353,10 @@ export default function App() {
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
           email: 'lilicatorres@gmail.com', 
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20mixed%20race%20woman%2C%20shoulder%20length%20straight%20hair%2C%20slightly%20chubby%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey?width=400&height=400&nologo=true',
           age: 35,
+          weight: 81,
+          height: 165,
           goal: 'health',
           medicalHistory: '⚠️ Dores no joelho',
           medications: 'Nenhuma',
@@ -492,35 +480,41 @@ export default function App() {
           },
           workouts: [
             {
-              id: 'treino-a-liliane',
-              title: 'TREINO A',
+              id: 'treino-intervalado-confortavel',
+              title: 'INTERVALADO (Confortável) - Seg/Sex',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'ex1-liliane', name: 'Leg press horizontal', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex2-liliane', name: 'Levantar e sentar no banco reto', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex3-liliane', name: 'Agachamento livre', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex4-liliane', name: 'Abdominal supra no solo', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex5-liliane', name: 'Prancha ventral no solo em isometria', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex6-liliane', name: 'Crucifixo aberto com HBC no banco reto', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex7-liliane', name: 'Crucifixo aberto com HBC no banco inclinado', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' }
+                { id: 'ex-aq-1', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-1', name: 'Bloco 1: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-tr-1', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-1', name: 'Bloco 2: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-dq-1', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
               ]
             },
             {
-              id: 'treino-b-liliane',
-              title: 'TREINO B',
+              id: 'treino-intervalado-desconfortavel',
+              title: 'INTERVALADO (Desconfortável) - Qua',
+              projectedSessions: 10,
+              frequencyWeekly: 1,
+              status: 'published',
+              exercises: [
+                { id: 'ex-aq-2', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-2', name: 'Bloco 1: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-tr-2', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-2', name: 'Bloco 2: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-dq-2', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-rodagem',
+              title: 'RODAGEM - Ter/Qui',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'ex8-liliane', name: 'Extensão de quadril em pé caneleira', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex9-liliane', name: 'Flexão de joelho em pé com caneleira', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex10-liliane', name: 'Abdução de quadril em pé com caneleira', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex11-liliane', name: 'Subida no step', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex12-liliane', name: 'Mata-borrão isométrico no solo (super-man)', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex13-liliane', name: 'Prancha lateral no solo em isometria', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' },
-                { id: 'ex14-liliane', name: 'Crucifixo inverso na máquina', sets: '3', reps: '15', rest: '30s', executionType: 'Simples' }
+                { id: 'ex-rod-1', name: 'Caminhada Contínua a 5,5 km/h', sets: '1', reps: '50 min', rest: '0s', executionType: 'Simples' }
               ]
             }
           ]
@@ -529,7 +523,10 @@ export default function App() {
           id: 'fixed-andre', 
           nome: 'André Brito', 
           email: 'andrevictorbritodeandrade@gmail.com', 
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20black%20man%2C%20dark%20skin%2C%20athletic%20body%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey%2C%20round%20glasses%2C%20full%20beard%2C%20smiling?width=400&height=400&nologo=true',
           age: 36,
+          weight: 103,
+          height: 180,
           goal: 'health',
           medicalHistory: '⚠️ Patela esquerda já saiu do lugar 4 vezes em um intervalo de 14 meses.',
           medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
@@ -682,43 +679,41 @@ export default function App() {
           totalGlobalB: 5,
           workouts: [
             {
-              id: 'treino-a-andre',
-              title: 'TREINO A',
+              id: 'treino-intervalado-confortavel',
+              title: 'INTERVALADO (Confortável) - Seg/Sex',
               projectedSessions: 20,
-              defaultRest: '30s',
+              frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a1', name: 'Supino aberto com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'a2', name: 'Tríceps testa simultâneo com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'a3', name: 'Supino aberto com HBL', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'a4', name: 'Supino fechado com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'a5', name: 'Remada alta (Cross/Barra reta)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'a6', name: 'Abdução de ombros com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'a7', name: 'Agachamento em passada com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'a8', name: 'Agachamento livre com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'a9', name: 'Leg press horizontal (Simultâneo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'a10', name: 'Leg press horizontal (Unilateral)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'a11', name: 'Abdominal supra no solo (Progressivo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-aq-1', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-1', name: 'Bloco 1: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-tr-1', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-1', name: 'Bloco 2: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-dq-1', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
               ]
             },
             {
-              id: 'treino-b-andre',
-              title: 'TREINO B',
-              projectedSessions: 20,
-              defaultRest: '30s',
+              id: 'treino-intervalado-desconfortavel',
+              title: 'INTERVALADO (Desconfortável) - Qua',
+              projectedSessions: 10,
+              frequencyWeekly: 1,
               status: 'published',
               exercises: [
-                { id: 'b1', name: 'Remada aberta na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'b2', name: 'Remada fechada na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'b3', name: 'Puxada aberta (Pulley/Romana)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'b4', name: 'Puxada fechada supinada (Pulley)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'b5', name: 'Bíceps em pé (HBM Supinado)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'b6', name: 'Bíceps alternado (HBC Neutro)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'b7', name: 'Agachamento sumô com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'b8', name: 'Stiff em pé com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'b9', name: 'Subida no step com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'b10', name: 'Extensão de quadril em pé (Caneleira)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'b11', name: 'Mata-borrão isométrico (Superman)', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-aq-2', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-2', name: 'Bloco 1: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-tr-2', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-2', name: 'Bloco 2: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-dq-2', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-rodagem',
+              title: 'RODAGEM - Ter/Qui',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'ex-rod-1', name: 'Caminhada Contínua a 5,5 km/h', sets: '1', reps: '50 min', rest: '0s', executionType: 'Simples' }
               ]
             }
           ]
@@ -727,7 +722,10 @@ export default function App() {
           id: 'fixed-marcelly', 
           nome: 'Marcelly Bispo', 
           email: 'marcellybispo92@gmail.com', 
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20black%20woman%2C%20dark%20skin%2C%20thin%20but%20with%20voluminous%20hips%20and%20breasts%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey%2C%20big%20mouth%2C%204c%20curly%20afro%20hair?width=400&height=400&nologo=true',
           age: 34,
+          weight: 60,
+          height: 167,
           goal: 'health',
           medicalHistory: '⚠️ Nada',
           medications: 'Nada',
@@ -848,42 +846,41 @@ export default function App() {
           totalGlobalB: 5,
           workouts: [
             {
-              id: 'w-marcelly-01',
-              title: 'Treino A',
+              id: 'treino-intervalado-confortavel',
+              title: 'INTERVALADO (Confortável) - Seg/Sex',
               projectedSessions: 20,
+              frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'ex-a1', name: 'Agachamento em passada com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'ex-a2', name: 'Agachamento livre com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'ex-a3', name: 'Leg press horizontal (Simultâneo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'ex-a4', name: 'Leg press horizontal (Unilateral)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'ex-a5', name: 'Cadeira extensora (Simultâneo + Isometria 10")', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'ex-a6', name: 'Cadeira extensora (Alternada E/D)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'ex-a7', name: 'Supino aberto com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'ex-a8', name: 'Supino fechado com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'ex-a9', name: 'Remada alta (Cross/Barra reta)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'ex-a10', name: 'Abdução de ombros com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'ex-a11', name: 'Abdominal supra (Solo progressivo)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g6', description: '' },
-                { id: 'ex-a12', name: 'Ponte ventral isométrica', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g6', description: '' }
+                { id: 'ex-aq-1', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-1', name: 'Bloco 1: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-tr-1', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-1', name: 'Bloco 2: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
+                { id: 'ex-dq-1', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
               ]
             },
             {
-              id: 'w-marcelly-02',
-              title: 'Treino B',
-              projectedSessions: 20,
+              id: 'treino-intervalado-desconfortavel',
+              title: 'INTERVALADO (Desconfortável) - Qua',
+              projectedSessions: 10,
+              frequencyWeekly: 1,
               status: 'published',
               exercises: [
-                { id: 'ex-b1', name: 'Agachamento sumô com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'ex-b2', name: 'Stiff em pé com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g1', description: '' },
-                { id: 'ex-b3', name: 'Subida no step com HBC', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'ex-b4', name: 'Extensão de quadril em pé (Caneleira)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g2', description: '' },
-                { id: 'ex-b5', name: 'Cadeira flexora (Isometria 10")', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'ex-b6', name: 'Cadeira extensora (Alternada E/D)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g3', description: '' },
-                { id: 'ex-b7', name: 'Remada aberta na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'ex-b8', name: 'Remada fechada na máquina', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g4', description: '' },
-                { id: 'ex-b9', name: 'Puxada aberta (Pulley/Romana)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'ex-b10', name: 'Puxada fechada supinada (Pulley)', sets: '3', reps: '10', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Conjugado', groupId: 'g5', description: '' },
-                { id: 'ex-b11', name: 'Elevação de quadril no solo (Isometria 30")', sets: '3', reps: 'Isometria', rest: '30s', load: '', loadUnit: 'Kg', method: '', executionType: 'Simples', description: '' }
+                { id: 'ex-aq-2', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b1-2', name: 'Bloco 1: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-tr-2', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
+                { id: 'ex-b2-2', name: 'Bloco 2: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
+                { id: 'ex-dq-2', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-rodagem',
+              title: 'RODAGEM - Ter/Qui',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'ex-rod-1', name: 'Caminhada Contínua a 5,5 km/h', sets: '1', reps: '50 min', rest: '0s', executionType: 'Simples' }
               ]
             }
           ]
@@ -1126,6 +1123,7 @@ export default function App() {
             
             if (!existing.nome) merged[existingIndex].nome = def.nome;
             if (!existing.email) merged[existingIndex].email = def.email;
+            if (!existing.photoUrl && def.photoUrl) merged[existingIndex].photoUrl = def.photoUrl;
             
             if (!existing.periodization && def.periodization) {
                 merged[existingIndex].periodization = def.periodization;
@@ -1493,15 +1491,13 @@ export default function App() {
                 }
 
                 return (
-                  <Card 
+                  <div 
                     key={item.id} 
-                    title={`ABFIT - ${item.label}`}
-                    text={`Acesse ${item.label} na ABFIT Performance!`}
-                    className={`p-4 bg-${item.color}-600/10 border-${item.color}-600/20 group cursor-pointer active:scale-95 transition-all shadow-xl flex flex-row items-center gap-4 rounded-3xl`} 
+                    className={`p-4 bg-zinc-950/80 border border-${item.color}-600/30 group cursor-pointer active:scale-95 transition-all shadow-lg shadow-${item.color}-600/10 flex flex-row items-center gap-4 rounded-[2rem] backdrop-blur-sm`} 
                     onClick={() => setView(item.id)}
                   >
-                    <div className={`w-12 h-12 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform shrink-0`}> 
-                      <item.icon className="text-white" size={24} /> 
+                    <div className={`w-14 h-14 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-lg shadow-${item.color}-600/40 shrink-0`}> 
+                      <item.icon className="text-white" size={28} /> 
                     </div>
                     <div className="flex-1 text-left">
                       <h3 className="text-sm font-black uppercase text-white italic tracking-[0.1em]">{item.label}</h3>
@@ -1511,7 +1507,7 @@ export default function App() {
                         </div>
                       )}
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
               <button onClick={() => { setUser(null); setView('LOGIN'); }} className="w-full mt-4 py-4 bg-zinc-900 border border-zinc-800 rounded-3xl flex flex-row items-center justify-center gap-4 text-zinc-600 hover:text-red-600 transition-all active:scale-95 shadow-xl group">
