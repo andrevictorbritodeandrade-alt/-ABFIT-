@@ -66,12 +66,34 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const [path, setPath] = useState<[number, number][]>([]);
     
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastTickRef = useRef<number>(0);
     const speechQueueRef = useRef<string[]>([]);
     const isSpeakingRef = useRef(false);
     const watchIdRef = useRef<number | null>(null);
+    const wakeLockRef = useRef<any>(null);
 
     const currentSegment = segments[currentSegmentIndex];
     const isFinished = currentSegmentIndex >= segments.length;
+
+    // Wake Lock to prevent screen from sleeping
+    useEffect(() => {
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+                } catch (err: any) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            }
+        };
+        if (isRunning) requestWakeLock();
+        return () => {
+            if (wakeLockRef.current) {
+                wakeLockRef.current.release();
+                wakeLockRef.current = null;
+            }
+        };
+    }, [isRunning]);
 
     const isWatch = React.useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -249,28 +271,37 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
 
     useEffect(() => {
         if (isRunning && !isFinished && !countdownValue && !isAutoPaused) {
+            lastTickRef.current = Date.now();
             timerRef.current = setInterval(() => {
-                setTotalTimeElapsed(prev => {
-                    const next = prev + 1;
-                    // Update Avg Speed
-                    if (next > 0 && distance > 0) {
-                        setAvgSpeed((distance / (next / 3600)));
-                    }
-                    return next;
-                });
-                setSegmentTimeLeft(prev => {
-                    const newTime = prev - 1;
+                const now = Date.now();
+                const delta = Math.floor((now - lastTickRef.current) / 1000);
+                
+                if (delta >= 1) {
+                    lastTickRef.current = now;
                     
-                    if (newTime === 5) {
-                        speak("Cinco. Quatro. Três. Dois. Um.");
-                    }
-                    
-                    if (newTime <= 0) {
-                        handleNextSegment();
-                        return 0;
-                    }
-                    return newTime;
-                });
+                    setTotalTimeElapsed(prev => {
+                        const next = prev + delta;
+                        if (next > 0 && distance > 0) {
+                            setAvgSpeed((distance / (next / 3600)));
+                        }
+                        return next;
+                    });
+
+                    setSegmentTimeLeft(prev => {
+                        const newTime = prev - delta;
+                        
+                        // Voice feedback for countdown
+                        if (newTime <= 5 && newTime > 0 && prev > 5) {
+                            speak("Cinco. Quatro. Três. Dois. Um.");
+                        }
+                        
+                        if (newTime <= 0) {
+                            handleNextSegment();
+                            return 0;
+                        }
+                        return newTime;
+                    });
+                }
             }, 1000);
         } else if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -278,11 +309,24 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isRunning, currentSegmentIndex, isFinished, soundEnabled, countdownValue, isAutoPaused]);
+    }, [isRunning, currentSegmentIndex, isFinished, soundEnabled, countdownValue, isAutoPaused, distance]);
 
     const handleNextSegment = (forceFinish = false) => {
+        if (forceFinish) {
+            speak("Treino encerrado.");
+            setIsRunning(false);
+            onFinish(totalTimeElapsed, {
+                distance: distance.toFixed(2),
+                calories: calories,
+                avgPace: pace,
+                duration: formatTime(totalTimeElapsed),
+                path: path
+            });
+            return;
+        }
+
         const nextIndex = currentSegmentIndex + 1;
-        if (nextIndex < segments.length && !forceFinish) {
+        if (nextIndex < segments.length) {
             const nextSegment = segments[nextIndex];
             
             // Show countdown for transitions to stimulus or from warmup
@@ -593,13 +637,18 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
 
                 {/* Stats View */}
                 <div className={`flex-1 flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-300 ${viewMode === 'map' ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'} overflow-y-auto custom-scrollbar`}>
-                    <div className="text-center flex flex-col items-center justify-center mb-8 md:mb-16">
-                        <p className="text-[8rem] md:text-[14rem] lg:text-[18rem] font-black tracking-tighter tabular-nums leading-none text-[#e2ff00] drop-shadow-[4px_4px_0px_rgba(255,255,255,1)]">
-                            {mode === 'outdoor' ? distance.toFixed(2) : formatTime(segmentTimeLeft)}
+                    <div className="text-center flex flex-col items-center justify-center mb-4 md:mb-16">
+                        <p className="text-[6rem] sm:text-[8rem] md:text-[14rem] lg:text-[18rem] font-black tracking-tighter tabular-nums leading-none text-[#e2ff00] drop-shadow-[4px_4px_0px_rgba(255,255,255,1)]">
+                            {formatTime(segmentTimeLeft)}
                         </p>
                         <p className="text-xl md:text-3xl font-black uppercase tracking-widest text-white mt-2 italic drop-shadow-[1px_1px_0px_rgba(255,255,255,1)]">
-                            {mode === 'outdoor' ? 'Quilômetros' : currentSegment.title}
+                            {currentSegment.title}
                         </p>
+                        {mode === 'outdoor' && (
+                            <p className="text-2xl font-black text-zinc-400 mt-4 italic">
+                                {distance.toFixed(2)} <span className="text-sm">KM</span>
+                            </p>
+                        )}
                     </div>
 
                     {/* Stats Grid - Expanded for new metrics */}
@@ -648,7 +697,15 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             </div>
 
             {/* Bottom Controls */}
-            <div className="p-8 md:p-12 pb-16 md:pb-20 flex justify-center items-center gap-8 md:gap-12 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent z-50">
+            <div className="p-8 md:p-12 pb-16 md:pb-20 flex justify-center items-center gap-6 md:gap-12 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent z-50">
+                <button 
+                    onClick={() => handleNextSegment(true)}
+                    className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center border border-white/10 hover:bg-red-900/20 transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    title="Encerrar Treino"
+                >
+                    <Square size={24} className="text-red-600 fill-red-600" />
+                </button>
+
                 <div className="relative">
                     {isAutoPaused && (
                         <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-600 rounded-full flex items-center gap-2 animate-bounce shadow-lg shadow-red-600/40">
@@ -658,18 +715,18 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     )}
                     <button 
                         onClick={togglePlayPause}
-                        className="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 z-10 relative"
+                        className="w-28 h-28 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 z-10 relative"
                     >
-                        {isRunning ? <Pause size={56} className="fill-black" /> : <Play size={56} className="fill-black ml-2" />}
+                        {isRunning ? <Pause size={48} className="fill-black" /> : <Play size={48} className="fill-black ml-2" />}
                     </button>
                 </div>
                 
                 <button 
                     onClick={() => handleNextSegment()}
-                    className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center border border-white/10 hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center border border-white/10 hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-lg"
                     title="Pular Etapa"
                 >
-                    <ChevronRight size={48} className="text-white" />
+                    <ChevronRight size={32} className="text-white" />
                 </button>
             </div>
         </div>

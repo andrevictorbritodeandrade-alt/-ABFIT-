@@ -60,7 +60,9 @@ interface WorkoutModel {
   recoveryTime?: string;
   speed?: string; 
   description?: string;
+  customDisplay?: string;
   createdAt?: string;
+  segments?: WorkoutSegment[];
 }
 
 // --- HELPER FUNCTIONS FOR TIME CALCULATION ---
@@ -293,7 +295,11 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                     {isCompleted && <CheckCircle2 size={12} className="text-emerald-500" />}
                 </div>
                 <p className="text-xs font-black italic uppercase text-white leading-tight">
-                    {showBlocks && `${totalBlocks}x `}{stimPart} {speedPart && `@ ${speedPart}`}
+                    {adjusted.customDisplay ? (
+                        <span dangerouslySetInnerHTML={{ __html: adjusted.customDisplay }} className="[&>span]:mx-0 [&>span]:text-[10px]" />
+                    ) : (
+                        <>{showBlocks && `${totalBlocks}x `}{stimPart} {speedPart && `@ ${speedPart}`}</>
+                    )}
                 </p>
                 <div className="mt-2 flex items-center gap-1 text-[8px] text-zinc-500 font-bold uppercase">
                     <Timer size={8} /> Est. {formatDuration(totalDuration)}
@@ -345,35 +351,41 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
             {/* SINGLE BLOCK LAYOUT - UNIFIED TEXT */}
             <div className="bg-black/40 p-8 rounded-3xl border border-white/5 mb-8 flex items-center justify-center text-center">
                 <p className="text-2xl md:text-3xl font-black italic uppercase text-white leading-relaxed tracking-wide">
-                    {/* AQUECIMENTO */}
-                    {warmPart && (
+                    {adjusted.customDisplay ? (
+                        <span dangerouslySetInnerHTML={{ __html: adjusted.customDisplay }} />
+                    ) : (
                         <>
-                            <span className="text-emerald-500">{warmPart}</span>
-                            <span className="text-red-600 mx-3">+</span>
-                        </>
-                    )}
-                    
-                    {/* BLOCOS E ESTIMULO */}
-                    {showBlocks && (
-                        <span>{totalBlocks} BLOCOS DE </span>
-                    )}
-                    
-                    <span className="text-red-600">{stimPart}</span>
-                    {speedPart && <span className="text-zinc-400 ml-3 text-[0.9em]">{speedPart}</span>}
-                    
-                    {/* RECUPERAÇÃO ENTRE TIROS */}
-                    {recPart && (
-                        <>
-                            <span className="text-red-600 mx-3">:</span>
-                            <span className="text-emerald-500">{recPart}</span>
-                        </>
-                    )}
-                    
-                    {/* DESAQUECIMENTO */}
-                    {coolPart && (
-                        <>
-                            <span className="text-red-600 mx-3">+</span>
-                            <span className="text-emerald-500">{coolPart}</span>
+                            {/* AQUECIMENTO */}
+                            {warmPart && (
+                                <>
+                                    <span className="text-emerald-500">{warmPart}</span>
+                                    <span className="text-red-600 mx-3">+</span>
+                                </>
+                            )}
+                            
+                            {/* BLOCOS E ESTIMULO */}
+                            {showBlocks && (
+                                <span>{totalBlocks} BLOCOS DE </span>
+                            )}
+                            
+                            <span className="text-red-600">{stimPart}</span>
+                            {speedPart && <span className="text-zinc-400 ml-3 text-[0.9em]">{speedPart}</span>}
+                            
+                            {/* RECUPERAÇÃO ENTRE TIROS */}
+                            {recPart && (
+                                <>
+                                    <span className="text-red-600 mx-3">:</span>
+                                    <span className="text-emerald-500">{recPart}</span>
+                                </>
+                            )}
+                            
+                            {/* DESAQUECIMENTO */}
+                            {coolPart && (
+                                <>
+                                    <span className="text-red-600 mx-3">+</span>
+                                    <span className="text-emerald-500">{coolPart}</span>
+                                </>
+                            )}
                         </>
                     )}
                 </p>
@@ -858,7 +870,7 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
     
     useEffect(() => {
         if (!student.id) return;
-        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v7`);
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v9`);
         if (!hasSeeded) {
             const checkAndSeed = async () => {
                 try {
@@ -879,11 +891,11 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
                         }
                         await seedWorkouts(student.id);
                     }
-                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 } catch (err) {
                     const path = `artifacts/${RUN_COLLECTION}/workouts`;
                     handleFirestoreError(err, OperationType.GET, path);
-                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 }
             };
             checkAndSeed();
@@ -999,6 +1011,9 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
 import { LiveRunSession, WorkoutSegment } from './LiveRunSession';
 
 function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
+    if (workout.segments && workout.segments.length > 0) {
+        return workout.segments;
+    }
     const segments: WorkoutSegment[] = [];
     
     // Warmup
@@ -1081,7 +1096,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
     useEffect(() => {
         if (!student.id) return;
-        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v7`);
+        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v9`);
         if (!hasSeeded) {
             const checkAndSeed = async () => {
                 try {
@@ -1101,11 +1116,11 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                         }
                         await seedWorkouts(student.id);
                     }
-                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 } catch (err) {
                     const path = `artifacts/${RUN_COLLECTION}/workouts`;
                     handleFirestoreError(err, OperationType.GET, path);
-                    localStorage.setItem(`seeded_${student.id}_run_v7`, 'true');
+                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 }
             };
             checkAndSeed();
@@ -1654,27 +1669,72 @@ const getDayIndex = (day: string): number => {
 };
 
 const seedWorkouts = async (studentId: string) => {
+    const complexSegments: WorkoutSegment[] = [
+        { type: 'warmup', duration: 10 * 60, title: 'Aquecimento' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 1/8' },
+        { type: 'recovery', duration: 90, title: 'Recuperação 1/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 2/8' },
+        { type: 'recovery', duration: 90, title: 'Recuperação 2/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 3/8' },
+        { type: 'recovery', duration: 90, title: 'Recuperação 3/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 4/8' },
+        { type: 'recovery', duration: 90, title: 'Recuperação 4/8' },
+        { type: 'recovery', duration: 510, title: 'Transição' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 5/8' },
+        { type: 'recovery', duration: 120, title: 'Recuperação 5/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 6/8' },
+        { type: 'recovery', duration: 120, title: 'Recuperação 6/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 7/8' },
+        { type: 'recovery', duration: 120, title: 'Recuperação 7/8' },
+        { type: 'stimulus', duration: 90, title: 'Tiro 8/8' },
+        { type: 'recovery', duration: 120, title: 'Recuperação 8/8' },
+        { type: 'cooldown', duration: 510, title: 'Desaquecimento' }
+    ];
+
+    const intervaladoConfortavel = {
+        type: 'Intervalado',
+        warmupTime: '10', sets: '1', reps: '1', stimulusTime: '26', recoveryTime: '8.5', cooldownTime: '8.5',
+        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">1\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">2\' CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 REC</span>',
+        description: 'Ritmo deve permitir conversa fácil.',
+        segments: complexSegments
+    };
+
+    const intervaladoDesconfortavel = {
+        type: 'Intervalado',
+        warmupTime: '10', sets: '1', reps: '1', stimulusTime: '26', recoveryTime: '8.5', cooldownTime: '8.5',
+        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">1\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">2\' CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 REC</span>',
+        description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.',
+        segments: complexSegments
+    };
+
+    const rodagem = {
+        type: 'Rodagem',
+        warmupTime: '50', sets: '1', reps: '1', stimulusTime: '0', recoveryTime: '0', cooldownTime: '0',
+        customDisplay: '<span class="text-emerald-500">50\' CA</span> <span class="text-zinc-400 ml-3 text-[0.9em]">5.5km/h</span>',
+        description: 'Caminhada Contínua a 5,5 km/h'
+    };
+
     const payloadMap: Record<string, any[]> = {
         'fixed-andre': [
-            { studentId: 'fixed-andre', type: 'Regenerativo', dayOfWeek: 'Segunda', warmupTime: '10', sets: '10', reps: '1', stimulusTime: '1', speed: '9', recoveryTime: '2', cooldownTime: '10', description: '' },
-            { studentId: 'fixed-andre', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '30', speed: '6', recoveryTime: '0', cooldownTime: '10', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-andre', type: 'Ritmo / Tempo', dayOfWeek: 'Quarta', warmupTime: '10', sets: '6', reps: '1', stimulusTime: '3', speed: '8', recoveryTime: '3', cooldownTime: '10', description: '' },
-            { studentId: 'fixed-andre', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '10', sets: '1', reps: '1', stimulusTime: '30', speed: '6', recoveryTime: '0', cooldownTime: '10', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-andre', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '8', reps: '1', stimulusTime: '2', speed: '8', recoveryTime: '1', cooldownTime: '10', description: '' }
+            { studentId: 'fixed-andre', dayOfWeek: 'Segunda', ...intervaladoConfortavel },
+            { studentId: 'fixed-andre', dayOfWeek: 'Terça', ...rodagem },
+            { studentId: 'fixed-andre', dayOfWeek: 'Quarta', ...intervaladoDesconfortavel },
+            { studentId: 'fixed-andre', dayOfWeek: 'Quinta', ...rodagem },
+            { studentId: 'fixed-andre', dayOfWeek: 'Sexta', ...intervaladoConfortavel }
         ],
         'fixed-liliane': [
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' },
-            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '5,5', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' },
-            { studentId: 'fixed-liliane', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '5,5', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-liliane', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '7', recoveryTime: '2', cooldownTime: '5', description: '' }
+            { studentId: 'fixed-liliane', dayOfWeek: 'Segunda', ...intervaladoConfortavel },
+            { studentId: 'fixed-liliane', dayOfWeek: 'Terça', ...rodagem },
+            { studentId: 'fixed-liliane', dayOfWeek: 'Quarta', ...intervaladoDesconfortavel },
+            { studentId: 'fixed-liliane', dayOfWeek: 'Quinta', ...rodagem },
+            { studentId: 'fixed-liliane', dayOfWeek: 'Sexta', ...intervaladoConfortavel }
         ],
         'fixed-marcelly': [
-            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Segunda', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' },
-            { studentId: 'fixed-marcelly', type: 'Longão', dayOfWeek: 'Terça', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '6', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Quarta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' },
-            { studentId: 'fixed-marcelly', type: 'Longão', dayOfWeek: 'Quinta', warmupTime: '5', sets: '1', reps: '1', stimulusTime: '20', speed: '6', recoveryTime: '0', cooldownTime: '5', description: 'Caminhada contínua forte' },
-            { studentId: 'fixed-marcelly', type: 'Intervalado', dayOfWeek: 'Sexta', warmupTime: '10', sets: '5', reps: '1', stimulusTime: '1', speed: '8', recoveryTime: '2', cooldownTime: '5', description: '' }
+            { studentId: 'fixed-marcelly', dayOfWeek: 'Segunda', ...intervaladoConfortavel },
+            { studentId: 'fixed-marcelly', dayOfWeek: 'Terça', ...rodagem },
+            { studentId: 'fixed-marcelly', dayOfWeek: 'Quarta', ...intervaladoDesconfortavel },
+            { studentId: 'fixed-marcelly', dayOfWeek: 'Quinta', ...rodagem },
+            { studentId: 'fixed-marcelly', dayOfWeek: 'Sexta', ...intervaladoConfortavel }
         ]
     };
 
@@ -1694,5 +1754,5 @@ const seedWorkouts = async (studentId: string) => {
         }
     }));
     
-    localStorage.setItem(`seeded_${studentId}_run_v7`, 'true');
+    localStorage.setItem(`seeded_${studentId}_run_v9`, 'true');
 };

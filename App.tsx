@@ -491,6 +491,36 @@ export default function App() {
           },
           workouts: [
             {
+              id: 'treino-a-liliane',
+              title: 'TREINO A - Musculação',
+              status: 'published',
+              exercises: [
+                { id: 'l-a-1', name: 'LEG PRESS horizontal', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-2', name: 'LEG PRESS horizontal unilateral', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-3', name: 'sentar e levantar do banco reto com HBC', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-4', name: 'cadeira extensora', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-5', name: 'crucifixo aberto com HBC no banco reto', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-6', name: 'abdução de ombros em pé com HBC', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-7', name: 'triceps em pé no CROSS com barra reta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-8', name: 'abdominal supra no solo', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-b-liliane',
+              title: 'TREINO B - Musculação',
+              status: 'published',
+              exercises: [
+                { id: 'l-b-1', name: 'elevação do quadril no solo com sobrecarga', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-2', name: 'extensão de quadril em pé com caneleira', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-3', name: 'abdução de quadril em pé com caneleira', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-4', name: 'cadeira FLEXORA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-5', name: 'remada fechada SUPINADA com barra reta em pé no CROSS na polia média', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-6', name: 'extensão de ombros em pé no CROSS barra reta polia alta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-7', name: 'bíceps em pé no CROSS com barra reta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-8', name: 'flexão plantar em pé no solo livre', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
+              ]
+            },
+            {
               id: 'treino-intervalado-confortavel',
               title: 'INTERVALADO (Confortável) - Seg/Sex',
               projectedSessions: 20,
