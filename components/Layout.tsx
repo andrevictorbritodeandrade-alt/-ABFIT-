@@ -4,7 +4,7 @@ import {
   CloudRain, Sun, RefreshCw, Bell, Dumbbell, Wifi, WifiOff, 
   Mail, Phone, Loader2, MapPin, MessageCircle, Menu, X, 
   LayoutGrid, Bot, Settings2, User, Layout, Brain, Ruler, 
-  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets, AlertTriangle, Share2
+  Footprints, BarChart3, Info, Cloud, Thermometer, Droplets, AlertTriangle
 } from 'lucide-react';
 import { AppNotification } from '../types';
 
@@ -90,8 +90,8 @@ export function Logo({ size = "text-4xl", subSize = "text-xs", collapsed = false
     );
   }
   return (
-    <div className="text-center group select-none flex flex-col items-center justify-center">
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9]`} style={{ textShadow: '1px 1px 0px currentColor, -1px -1px 0px currentColor, 1px -1px 0px currentColor, -1px 1px 0px currentColor' }}>
+    <div className="text-center group select-none flex flex-col items-center justify-center w-full overflow-hidden px-4">
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] transition-all text-foreground uppercase leading-[0.9] px-2`} style={{ textShadow: '1px 1px 0px currentColor, -1px -1px 0px currentColor, 1px -1px 0px currentColor, -1px 1px 0px currentColor' }}>
         AB<span className="text-red-600">FIT</span>
       </h1>
       <p className={`${subSize} text-muted-foreground tracking-widest sm:tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80 whitespace-nowrap`}>Assessoria em Treinamentos Físicos</p>
@@ -111,13 +111,15 @@ export function SideNav({
   onClose, 
   activeView, 
   onNavigate,
-  isProfessor = false
+  isProfessor = false,
+  userPhoto = null
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
   activeView: string, 
   onNavigate: (view: string) => void,
-  isProfessor?: boolean
+  isProfessor?: boolean,
+  userPhoto?: string | null
 }) {
   // Mapeamento de cores idêntico ao Dashboard em App.tsx
   const studentItems: NavItem[] = [
@@ -209,11 +211,11 @@ export function SideNav({
                 <button
                   key={item.id}
                   onClick={() => { onNavigate(item.id); onClose(); }}
-                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all group relative overflow-hidden ${getColorClasses(item.color, isActive)}`}
+                  className={`w-full flex items-center justify-start gap-4 px-5 py-4 rounded-2xl transition-all group relative overflow-hidden text-left ${getColorClasses(item.color, isActive)}`}
                 >
                   {isActive && <div className={`absolute left-0 top-0 bottom-0 w-1 ${getIndicatorColor(item.color)}`} />}
-                  <item.icon size={18} className={getIconColor(item.color, isActive)} />
-                  <span className="text-[13px] font-black uppercase italic tracking-widest">{item.label}</span>
+                  <item.icon size={18} className={`shrink-0 ${getIconColor(item.color, isActive)}`} />
+                  <span className="text-[13px] font-black uppercase italic tracking-widest leading-tight text-left block">{item.label}</span>
                 </button>
               );
             })}
@@ -222,7 +224,11 @@ export function SideNav({
           <div className="mt-auto pt-6 border-t border-border">
              <div className="flex items-center gap-4 px-2">
                 <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center overflow-hidden shadow-inner">
-                   <User className="text-muted-foreground" size={18} />
+                   {userPhoto ? (
+                     <img src={userPhoto} className="w-full h-full object-cover" alt="Profile" />
+                   ) : (
+                     <User className="text-muted-foreground" size={18} />
+                   )}
                 </div>
                 <div className="flex flex-col">
                    <span className="text-[9px] font-black uppercase text-foreground italic leading-none mb-1">ABFIT Member</span>
@@ -237,26 +243,8 @@ export function SideNav({
 }
 
 export function Card({ children, className = "", onClick, title, text }: { children?: React.ReactNode, className?: string, onClick?: any, key?: React.Key, title?: string, text?: string }) {
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: title || 'ABFIT Performance',
-        text: text || 'Confira os detalhes na ABFIT!',
-        url: window.location.href,
-      }).catch((err) => console.log('Error sharing:', err));
-    }
-  };
-
   return (
     <div onClick={onClick} className={`bg-card border border-border rounded-3xl shadow-xl overflow-hidden transition-all relative ${className}`}>
-      <button 
-        onClick={handleShare}
-        className="absolute top-4 right-4 z-10 p-2 bg-secondary/50 backdrop-blur-sm rounded-xl border border-border text-muted-foreground hover:text-red-600 transition-all"
-        aria-label="Compartilhar"
-      >
-        <Share2 size={16} />
-      </button>
       {children}
     </div>
   );

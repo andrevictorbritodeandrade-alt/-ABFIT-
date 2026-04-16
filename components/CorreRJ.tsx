@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Trophy, MapPin, Clock, ExternalLink, Bell, ArrowLeft, 
-  DollarSign, TrendingUp, Zap, X, Info, CheckCircle, Share2 
+  DollarSign, TrendingUp, Zap, X, Info, CheckCircle 
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { db, appId, handleFirestoreError, OperationType, collection, doc, setDoc, onSnapshot, deleteDoc } from '../services/firebase';
@@ -179,17 +179,6 @@ const INITIAL_PREDICTIONS = [
 const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips }) => {
   const isCompleted = new Date(race.dataIso).getTime() < Date.now();
 
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: `ABFIT - ${race.nome}`,
-        text: `Confira a prova ${race.nome} no calendário Corre RJ 2026 da ABFIT!`,
-        url: window.location.href,
-      }).catch((err) => console.log('Error sharing:', err));
-    }
-  };
-
   return (
     <div className={`bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden ${isCompleted ? 'opacity-70 grayscale-[0.5]' : ''}`}>
       {isCompleted && (
@@ -197,13 +186,6 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
           <CheckCircle size={10} /> Check In
         </div>
       )}
-      <button 
-        onClick={handleShare}
-        className="absolute top-2 right-2 z-10 p-1.5 bg-white border-2 border-black rounded-lg text-slate-400 hover:text-red-600 transition-all shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-        aria-label="Compartilhar"
-      >
-        <Share2 size={12} />
-      </button>
       <div className="flex justify-between items-center mb-3 text-slate-900 mt-4">
       <div className="flex items-center gap-2 overflow-hidden">
         <div className={`w-2 h-6 ${isCompleted ? 'bg-green-500' : 'bg-orange-600'} rounded-full shrink-0`}></div>

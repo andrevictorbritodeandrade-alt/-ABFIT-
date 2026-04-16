@@ -382,37 +382,35 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
           </p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center justify-center shadow-inner">
+        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
           <span className="text-3xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
-              <span className="text-[10px] font-black text-muted-foreground uppercase italic">KG</span>
-            </div>
-            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Última Carga</p>
+        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase italic">KG</span>
           </div>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Última Carga</p>
+        </div>
 
-          <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
-            <div className="flex items-baseline gap-1">
-              <input 
-                type="number" 
-                value={localLoad}
-                placeholder="--"
-                onChange={(e) => {
-                  setLocalLoad(e.target.value);
-                  onUpdateLoad(ex.id!, e.target.value, true);
-                }}
-                onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
-                className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-16 italic tracking-tighter placeholder:text-muted-foreground"
-              />
-              <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
-            </div>
-            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual</p>
+        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
+          <div className="flex items-baseline gap-1">
+            <input 
+              type="number" 
+              value={localLoad}
+              placeholder="--"
+              onChange={(e) => {
+                setLocalLoad(e.target.value);
+                onUpdateLoad(ex.id!, e.target.value, true);
+              }}
+              onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
+              className="bg-transparent border-none p-0 text-3xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
+            />
+            <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
           </div>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual</p>
         </div>
         
         {onShowPrescreveAI && (

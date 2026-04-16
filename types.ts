@@ -172,4 +172,5 @@ export interface Student {
   faseAjusteB?: number;
   totalGlobalA?: number;
   totalGlobalB?: number;
+  runAlertsEnabled?: boolean;
 }

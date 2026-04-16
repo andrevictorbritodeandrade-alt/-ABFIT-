@@ -4,7 +4,7 @@ import {
   Activity, CalendarDays, Flame, Info, Plus, 
   Trash2, X, Brain, ChevronDown, Play, Zap, BarChart3,
   ArrowLeft, Menu, Gauge, TrendingUp, CheckCircle2, ChevronRight, ChevronLeft,
-  Timer, Calculator, Edit3, Circle, Camera, Upload, Loader2, Sparkles
+  Timer, Calculator, Edit3, Circle, Camera, Upload, Loader2, Sparkles, Heart
 } from 'lucide-react';
 import { 
   db, handleFirestoreError, OperationType,
@@ -54,6 +54,8 @@ interface WorkoutModel {
   distance?: string; 
   totalTime?: string;
   pace?: string;
+  status?: 'draft' | 'published';
+  projectedSessions?: number;
   sets?: string;
   reps?: string;
   stimulusTime?: string;
@@ -398,46 +400,61 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
             )}
 
             {stats && !stats.empty && (
-                <div className="bg-white p-6 rounded-3xl border border-zinc-200 space-y-6 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+                <div className="bg-[#1a1a1a] p-8 rounded-[3rem] border border-white/5 space-y-8 overflow-hidden shadow-2xl">
                     <div className="flex items-center justify-between">
-                        <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                            <Activity size={12} className="text-red-600" /> Resumo da Corrida
+                        <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2 italic">
+                            <Activity size={12} className="text-red-600 animate-pulse" /> Resumo da Corrida
                         </h5>
-                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-full">
+                        <div className="bg-zinc-800 px-3 py-1 rounded-full text-[10px] font-black text-zinc-400 uppercase tracking-widest border border-white/5">
                             {stats.duration}
-                        </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-8">
-                        <div>
-                            <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Distância</div>
-                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">{stats.distance} <span className="text-sm">km</span></div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Pace Médio</div>
-                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">{stats.avgPace}</div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-8 border-t border-zinc-100 pt-6">
-                        {stats.avgHR && (
+                    <div className="grid grid-cols-2 gap-10">
+                        <div>
+                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Distância</div>
+                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.distance} <span className="text-sm">km</span></div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Pace Médio</div>
+                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgPace} <span className="text-sm">/km</span></div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-10 pt-6 border-t border-white/5">
+                        {stats.duration && (
                             <div>
-                                <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">BPM Médio</div>
-                                <div className="text-2xl font-black text-black italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[10px]">bpm</span></div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Tempo</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.duration} <span className="text-[10px]">min</span></div>
                             </div>
                         )}
                         {stats.calories && (
                             <div>
-                                <div className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Calorias</div>
-                                <div className="text-2xl font-black text-black italic tracking-tighter leading-none">{stats.calories} <span className="text-[10px]">kcal</span></div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Calorias</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.calories} <span className="text-[10px]">kcal</span></div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-10">
+                        {stats.elevation && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Elevação</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.elevation} <span className="text-[10px]">m</span></div>
+                            </div>
+                        )}
+                        {stats.avgHR && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Batimento Médio</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[10px]">bpm</span></div>
                             </div>
                         )}
                     </div>
 
                     {stats.path && stats.path.length > 0 && (
-                        <div className="h-64 w-full rounded-2xl overflow-hidden border border-white/10 relative mt-4">
+                        <div className="h-64 w-full rounded-[2rem] overflow-hidden border border-white/5 relative mt-4 shadow-inner">
                             <MapContainer 
-                                center={stats.path[0]} 
+                                center={stats.path[0].lat !== undefined ? [stats.path[0].lat, stats.path[0].lng] : stats.path[0]} 
                                 zoom={15} 
                                 style={{ height: '100%', width: '100%' }}
                                 zoomControl={false}
@@ -447,25 +464,33 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                                 doubleClickZoom={false}
                             >
                                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-                                <Polyline positions={stats.path} color="#dc2626" weight={4} opacity={0.8} />
-                                <Marker position={stats.path[0]} icon={L.divIcon({
-                                    className: 'custom-div-icon',
-                                    html: `<div style="background-color: #10b981; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(16,185,129,0.5);"></div>`,
-                                    iconSize: [12, 12],
-                                    iconAnchor: [6, 6]
-                                })} />
-                                <Marker position={stats.path[stats.path.length - 1]} icon={L.divIcon({
-                                    className: 'custom-div-icon',
-                                    html: `<div style="background-color: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(220,38,38,0.5);"></div>`,
-                                    iconSize: [12, 12],
-                                    iconAnchor: [6, 6]
-                                })} />
+                                <Polyline positions={stats.path.map((p: any) => [p.lat !== undefined ? p.lat : p[0], p.lng !== undefined ? p.lng : p[1]])} color="#e2ff00" weight={4} />
                             </MapContainer>
-                            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 z-[1000]">
-                                <span className="text-[8px] font-black text-white uppercase tracking-widest">Mapa do Percurso</span>
-                            </div>
                         </div>
                     )}
+                    
+                    {/* RESUMO DIÁRIO (IF DATA EXISTS) */}
+                    <div className="pt-8 mt-4 border-t border-white/5">
+                         <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <Activity size={10} className="text-white" />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">RESUMO DIÁRIO (HEALTH)</span>
+                            </div>
+                            <Heart size={14} className="text-blue-600 fill-blue-600" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">PASSOS</p>
+                                <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">10,500 <span className="text-[10px] uppercase">steps</span></p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">SONO</p>
+                                <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">7h 15m</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
@@ -1376,7 +1401,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                             <div className="flex items-center justify-between px-2">
                                 <div className="flex items-center gap-3">
                                     <BarChart3 size={24} className="text-red-600"/>
-                                    <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Atividades Recentes</h3>
+                                    <h3 className="text-2xl font-black italic uppercase text-zinc-400 tracking-tighter">Atividades Recentes</h3>
                                 </div>
                                 <button className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Ver Tudo</button>
                             </div>
@@ -1452,6 +1477,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     onClose={() => setLiveWorkout(null)}
                     studentWeight={typeof student.weight === 'string' ? parseFloat(student.weight) : student.weight}
                     studentHeight={typeof student.height === 'string' ? parseFloat(student.height) : student.height}
+                    studentPhoto={student.photoUrl}
                     onFinish={(totalTime, stats) => {
                         setLiveWorkout(null);
                         // Pre-fill log modal with total time and stats
@@ -1476,6 +1502,7 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
         avgHR: initialStats?.avgHR || '',
         calories: initialStats?.calories || '',
         duration: initialStats?.duration || '',
+        elevation: initialStats?.elevation || '',
         path: initialStats?.path || []
     });
     const [isExtracting, setIsExtracting] = useState(false);
@@ -1514,6 +1541,7 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
                             avgPace: data.avgPace || '',
                             avgHR: data.avgHR || '',
                             calories: data.calories || '',
+                            elevation: data.elevation || '',
                             path: stats.path // Keep existing path if any
                         });
                     }
@@ -1542,7 +1570,7 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
                 <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
                     {/* PHOTO UPLOAD SECTION */}
                     <div className="space-y-4">
-                        <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Extrair dados da foto</label>
+                        <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">EXTRAIR DADOS (SAMSUNG HEALTH / NRC)</label>
                         <input 
                             type="file" 
                             accept="image/*" 
@@ -1553,19 +1581,22 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
                         <button 
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isExtracting}
-                            className="w-full py-8 border-2 border-dashed border-zinc-800 rounded-3xl flex flex-col items-center justify-center gap-3 hover:border-red-600/50 hover:bg-red-600/5 transition-all group"
+                            className="w-full py-10 border-2 border-dashed border-zinc-800 rounded-[2rem] flex flex-col items-center justify-center gap-4 hover:border-[#e2ff00]/50 hover:bg-[#e2ff00]/5 transition-all group relative overflow-hidden bg-black/20"
                         >
                             {isExtracting ? (
                                 <>
-                                    <Loader2 size={32} className="text-red-600 animate-spin" />
-                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Analisando Imagem...</span>
+                                    <Loader2 size={32} className="text-[#e2ff00] animate-spin" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Processando Imagem com IA...</span>
                                 </>
                             ) : (
                                 <>
-                                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-all">
-                                        <Camera size={24} />
+                                    <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:bg-[#e2ff00] group-hover:text-black transition-all shadow-xl">
+                                        <Camera size={28} />
                                     </div>
-                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300">Tire uma foto ou envie um print</span>
+                                    <div className="text-center">
+                                        <span className="block text-xs font-black uppercase tracking-widest text-[#e2ff00]">Sincronizar Samsung Health</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Tire uma foto ou envie um print</span>
+                                    </div>
                                 </>
                             )}
                         </button>
@@ -1573,75 +1604,87 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
 
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-3">
-                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Distância (km)</label>
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">DISTÂNCIA (KM)</label>
                             <input 
                                 type="text" 
-                                placeholder="Ex: 5.2"
+                                placeholder="0.00"
                                 value={stats.distance}
                                 onChange={e => setStats({...stats, distance: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-[#e2ff00] font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
                             />
                         </div>
                         <div className="space-y-3">
-                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Duração (min)</label>
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">DURAÇÃO (MIN)</label>
                             <input 
                                 type="text" 
-                                placeholder="Ex: 30"
+                                placeholder="00"
                                 value={stats.duration}
                                 onChange={e => setStats({...stats, duration: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-[#e2ff00] font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-3">
-                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Ritmo Médio (Pace)</label>
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">RITMO MÉDIO (PACE)</label>
                             <input 
                                 type="text" 
-                                placeholder="Ex: 5:45"
+                                placeholder="0:00"
                                 value={stats.avgPace}
                                 onChange={e => setStats({...stats, avgPace: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-white font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
                             />
                         </div>
                         <div className="space-y-3">
-                            <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">FC Média (bpm)</label>
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">FC MÉDIA (BPM)</label>
                             <input 
                                 type="text" 
-                                placeholder="Ex: 145"
+                                placeholder="--"
                                 value={stats.avgHR}
                                 onChange={e => setStats({...stats, avgHR: e.target.value})}
-                                className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-white font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="text-xs font-black uppercase text-zinc-500 tracking-widest ml-2">Calorias (kcal)</label>
-                        <input 
-                            type="text" 
-                            placeholder="Ex: 450"
-                            value={stats.calories}
-                            onChange={e => setStats({...stats, calories: e.target.value})}
-                            className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-xl text-white font-black focus:border-red-600 transition-colors outline-none"
-                        />
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">CALORIAS (KCAL)</label>
+                            <input 
+                                type="text" 
+                                placeholder="0"
+                                value={stats.calories}
+                                onChange={e => setStats({...stats, calories: e.target.value})}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-white font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-2 italic">ELEVAÇÃO (M)</label>
+                            <input 
+                                type="text" 
+                                placeholder="0"
+                                value={stats.elevation || ''}
+                                onChange={e => setStats({...stats, elevation: e.target.value})}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-5 text-2xl text-white font-black italic focus:border-[#e2ff00] transition-colors outline-none tracking-tighter"
+                            />
+                        </div>
                     </div>
 
-                    <div className="p-6 bg-red-600/5 border border-red-600/20 rounded-3xl flex items-start gap-4">
-                        <Sparkles size={20} className="text-red-600 shrink-0 mt-1" />
-                        <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">
-                            "Dica: Bater uma foto do painel da esteira preenche os dados automaticamente para você."
+                    <div className="p-6 bg-[#e2ff00]/5 border border-[#e2ff00]/10 rounded-3xl flex items-start gap-4">
+                        <Sparkles size={20} className="text-[#e2ff00] shrink-0 mt-1" />
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest leading-relaxed italic">
+                            A inteligência artificial do ABFIT analisa seu print do Samsung Health ou NRC e preenche tudo instantaneamente.
                         </p>
                     </div>
                 </div>
 
-                <footer className="p-8 border-t border-white/5 bg-zinc-900/50">
+                <footer className="p-8 border-t border-white/5 bg-zinc-950">
                     <button 
                         onClick={() => onSave(stats)}
-                        className="w-full py-6 bg-red-600 text-white rounded-3xl font-black uppercase tracking-widest text-lg shadow-xl shadow-red-600/20 active:scale-95 transition-all"
+                        className="w-full py-6 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest text-lg shadow-2xl shadow-red-900/40 active:scale-95 transition-all hover:bg-red-500"
                     >
-                        Salvar Treino
+                        Confirmar Registro
                     </button>
                 </footer>
             </div>
@@ -1694,7 +1737,7 @@ const seedWorkouts = async (studentId: string) => {
     const intervaladoConfortavel = {
         type: 'Intervalado',
         warmupTime: '10', sets: '1', reps: '1', stimulusTime: '26', recoveryTime: '8.5', cooldownTime: '8.5',
-        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">1\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">2\' CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 REC</span>',
+        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-zinc-400 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-zinc-400 mx-1">:</span><span class="text-white">1\'30 CA</span> <span class="text-zinc-400 mx-2">+</span> <span class="text-white">8\'30 CA</span> <span class="text-zinc-400 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-zinc-400 mx-1">:</span><span class="text-white">2\' CA</span> <span class="text-zinc-400 mx-2">+</span> <span class="text-white">8\'30 REC</span>',
         description: 'Ritmo deve permitir conversa fácil.',
         segments: complexSegments
     };
@@ -1702,7 +1745,7 @@ const seedWorkouts = async (studentId: string) => {
     const intervaladoDesconfortavel = {
         type: 'Intervalado',
         warmupTime: '10', sets: '1', reps: '1', stimulusTime: '26', recoveryTime: '8.5', cooldownTime: '8.5',
-        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">1\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 CA</span> <span class="text-red-600 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-red-600 mx-1">:</span><span class="text-emerald-500">2\' CA</span> <span class="text-red-600 mx-2">+</span> <span class="text-emerald-500">8\'30 REC</span>',
+        customDisplay: '<span class="text-emerald-500">10\' AQ</span> <span class="text-zinc-400 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-zinc-400 mx-1">:</span><span class="text-white">1\'30 CA</span> <span class="text-zinc-400 mx-2">+</span> <span class="text-white">8\'30 CA</span> <span class="text-zinc-400 mx-2">+</span> <span>4x</span> <span class="text-red-600">1\'30 CO</span><span class="text-zinc-400 mx-1">:</span><span class="text-white">2\' CA</span> <span class="text-zinc-400 mx-2">+</span> <span class="text-white">8\'30 REC</span>',
         description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.',
         segments: complexSegments
     };

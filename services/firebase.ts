@@ -11,7 +11,8 @@ import {
   updateDoc,
   deleteDoc,
   addDoc,
-  getDocs
+  getDocs,
+  enableIndexedDbPersistence
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
@@ -31,6 +32,19 @@ const dbId = firebaseConfig.firestoreDatabaseId || '(default)';
 console.log(`Inicializando Firestore com Database ID: ${dbId}`);
 
 export const db = getFirestore(app, dbId);
+
+// Habilitar persistência offline
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+          // Multiple tabs open, persistence can only be enabled in one tab at a time.
+          console.warn('Firestore persistence failed-precondition: Multiple tabs open');
+      } else if (err.code === 'unimplemented') {
+          // The current browser does not support all of the features required to enable persistence
+          console.warn('Firestore persistence unimplemented: Browser not supported');
+      }
+  });
+}
 
 // Export firestore functions to ensure they are from the same module instance
 export {

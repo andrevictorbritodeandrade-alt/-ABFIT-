@@ -144,7 +144,7 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
     <div className="relative flex flex-col items-center justify-center min-h-screen p-6 text-center font-sans text-foreground transition-colors overflow-hidden">
       <div className="relative z-10 w-full max-w-md flex flex-col items-center justify-center">
         <div className="animate-in fade-in zoom-in duration-700 text-center mb-12">
-          <Logo size="text-[8rem] sm:text-[10rem]" subSize="text-[10px] sm:text-xs" />
+          <Logo size="text-[5.5rem] xs:text-[7rem] sm:text-[9rem]" subSize="text-[9px] sm:text-xs" />
         </div>
         
         <div className="w-full space-y-4 animate-in slide-in-from-bottom-10 duration-1000 relative">
@@ -364,7 +364,7 @@ export default function App() {
           id: 'fixed-liliane', 
           nome: 'Liliane Torres', 
           email: 'lilicatorres@gmail.com', 
-          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20mixed%20race%20woman%2C%20shoulder%20length%20straight%20hair%2C%20slightly%20chubby%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey?width=400&height=400&nologo=true',
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20illustration%20of%20a%20smiling%20Brazilian%20woman%20named%20Liliane%20Torres%2C%20long%20brown%20hair%2C%20wearing%20a%20yellow%20Flamengo%20soccer%20jersey%2C%20standing%20in%20a%20packed%20stadium?width=400&height=400&nologo=true',
           age: 35,
           weight: 81,
           height: 165,
@@ -564,7 +564,7 @@ export default function App() {
           id: 'fixed-andre', 
           nome: 'André Brito', 
           email: 'andrevictorbritodeandrade@gmail.com', 
-          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20black%20man%2C%20dark%20skin%2C%20athletic%20body%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey%2C%20round%20glasses%2C%20full%20beard%2C%20smiling?width=400&height=400&nologo=true',
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20of%20a%20black%20man%20named%20André%20Brito%2C%20full%20beard%2C%20round%20glasses%2C%20wearing%20a%20safari%20hat%20and%20leopard%20print%20shirt%2C%20standing%20in%20a%20colorful%20colonial%20street?width=400&height=400&nologo=true',
           age: 36,
           weight: 103,
           height: 180,
@@ -763,7 +763,7 @@ export default function App() {
           id: 'fixed-marcelly', 
           nome: 'Marcelly Bispo', 
           email: 'marcellybispo92@gmail.com', 
-          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20avatar%20of%20a%20black%20woman%2C%20dark%20skin%2C%20thin%20but%20with%20voluminous%20hips%20and%20breasts%2C%20wearing%20a%20red%20and%20black%20striped%20soccer%20jersey%2C%20big%20mouth%2C%204c%20curly%20afro%20hair?width=400&height=400&nologo=true',
+          photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20of%20a%20black%20woman%20named%20Marcelly%20Bispo%2C%20voluminous%20curly%20afro%20hair%2C%20wearing%20a%20yellow%20leopard%20print%20one-shoulder%20top%20and%20skirt%2C%20standing%20in%20a%20colorful%20Brazilian%20colonial%20street?width=400&height=400&nologo=true',
           age: 34,
           weight: 60,
           height: 167,
@@ -1411,6 +1411,7 @@ export default function App() {
             activeView={view} 
             onNavigate={setView}
             isProfessor={isCoach}
+            userPhoto={studentForView?.photoUrl}
           />
         )}
 

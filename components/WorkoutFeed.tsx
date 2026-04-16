@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Camera, Heart, Zap, MapPin, Share2, Activity, Clock, Menu, Send, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Camera, Heart, Zap, MapPin, Activity, Clock, Menu, Send, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Card, HeaderTitle, AppFooter, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 import { WorkoutHistoryEntry } from '../types';
 
@@ -185,9 +185,6 @@ export function WorkoutFeed({ history, onBack, onToggleMenu, isProfessor = false
                     <button className="flex items-center gap-2 group">
                       <Heart size={18} className="text-zinc-500 group-hover:text-red-600 transition-colors" />
                       <span className="text-[9px] font-black text-zinc-500">RESPEITO</span>
-                    </button>
-                    <button className="flex items-center gap-2 group">
-                      <Share2 size={18} className="text-zinc-500 group-hover:text-white transition-colors" />
                     </button>
                   </div>
                   {post.runningStats?.avgHR && (

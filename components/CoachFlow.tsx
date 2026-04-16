@@ -98,13 +98,37 @@ const getExerciseGif = (name: string) => {
   return matchKey ? GIF_DATABASE[matchKey] : null;
 };
 
-export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate }: { 
+export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu, onNavigate, notifications = [] }: { 
   students: Student[], 
   onLogout: () => void, 
   onSelect: (s: Student) => void, 
   onToggleMenu: () => void, 
-  onNavigate: (view: string) => void
+  onNavigate: (view: string) => void,
+  notifications?: AppNotification[]
 }) {
+  const alerts = useMemo(() => {
+    const list: { studentId: string; studentName: string; type: 'STRENGTH' | 'RUNNING'; current: number; total: number; workoutTitle: string }[] = [];
+    
+    students.forEach(s => {
+      // Strength Workouts
+      const strengthWorkouts = (s.workouts || []).filter(w => w.status === 'published');
+      strengthWorkouts.forEach(w => {
+        const completed = (s.workoutHistory || []).filter(h => h.workoutId === w.id).length;
+        const total = w.projectedSessions || 20;
+        if (completed >= total - 2) {
+          list.push({ studentId: s.id, studentName: s.nome, type: 'STRENGTH', current: completed, total, workoutTitle: w.title });
+        }
+      });
+
+      // Running Workouts (ABFIT RUN)
+      // Note: We'll assume running workouts also have projectedSessions or we use a global default for now
+      // Since Running workouts might be in a separate collection, we rely on what's in the student object if synced
+      // and checking if student has runAlertsEnabled
+    });
+
+    return list;
+  }, [students]);
+
   const handleExportData = () => {
     const dataStr = JSON.stringify(students, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -136,6 +160,36 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
       </header>
       
       <Logo size="text-5xl" subSize="text-[9px] sm:text-xs" />
+
+      {alerts.length > 0 && (
+        <div className="w-full max-w-xl mt-6 px-2">
+          <div className="flex items-center gap-3 mb-3">
+             <Bell className="text-red-500 animate-bounce" size={16} />
+             <h3 className="text-[12px] font-black uppercase text-foreground tracking-widest italic">Alertas de Troca de Treino</h3>
+          </div>
+          <div className="space-y-2">
+            {alerts.map((alert, idx) => (
+              <Card key={`${alert.studentId}-${idx}`} className="p-4 bg-red-600/10 border-red-600/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl bg-background ${alert.type === 'STRENGTH' ? 'text-orange-500' : 'text-rose-500'}`}>
+                    {alert.type === 'STRENGTH' ? <Dumbbell size={16} /> : <Footprints size={16} />}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase text-foreground italic">{alert.studentName}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase">{alert.workoutTitle} • {alert.current}/{alert.total}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => onSelect(students.find(s => s.id === alert.studentId)!)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase italic shadow-lg active:scale-95 transition-all"
+                >
+                  Ajustar
+                </button>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="w-full max-w-xl mt-8 space-y-4 pb-20">
         <div className="grid grid-cols-2 gap-2 mb-2">
