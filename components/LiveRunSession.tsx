@@ -44,7 +44,17 @@ function MapUpdater({ center }: { center: [number, number] }) {
     return null;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+let genAIInstance: GoogleGenAI | null = null;
+function getGenAI() {
+    if (!genAIInstance) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY is not set. Please configure it in the settings.");
+        }
+        genAIInstance = new GoogleGenAI({ apiKey });
+    }
+    return genAIInstance;
+}
 
 export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto }: LiveRunSessionProps) {
     const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
@@ -338,7 +348,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             const modelName = "gemini-3-flash-preview";
             const prompt = "Analise este print do Samsung Health. Extraia exatamente estes 3 valores numerais: 'Passos Totais do dia', 'Tempo total de sono (formato Xh Ym)' e 'Minutos Ativos'. Retorne APENAS um JSON: { \"steps\": number, \"sleep\": string, \"activeMin\": number }. Se não encontrar, use valores padrão realistas próximos a 8000 passos, 7h de sono e 60min ativos.";
             
-            const response = await ai.models.generateContent({
+            const response = await getGenAI().models.generateContent({
                 model: modelName,
                 contents: [
                     {
