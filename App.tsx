@@ -997,7 +997,11 @@ export default function App() {
             console.warn("Permissão negada ao buscar estudantes. Verifique se o usuário está logado e tem permissão.");
             setDbError("Acesso restrito. Por favor, faça login novamente.");
           } else {
-            handleFirestoreError(error, OperationType.GET, path);
+            try {
+              handleFirestoreError(error, OperationType.GET, path);
+            } catch (err) {
+              console.error("Firestore error via onSnapshot:", err);
+            }
           }
         });
       } catch (e) {
@@ -1106,7 +1110,11 @@ export default function App() {
                       try {
                           await setDoc(docRef, { workoutHistory: history }, { merge: true });
                       } catch (e) {
-                          handleFirestoreError(e, OperationType.WRITE, path);
+                          try {
+                              handleFirestoreError(e, OperationType.WRITE, path);
+                          } catch (err) {
+                              console.error("Firestore write error during auto-fix:", err);
+                          }
                       }
                   }
               }
@@ -1135,7 +1143,11 @@ export default function App() {
             console.warn("Permissão negada ao buscar dados do aluno. Verifique se o usuário está logado.");
             setDbError("Acesso restrito. Por favor, faça login novamente.");
           } else {
-            handleFirestoreError(error, OperationType.GET, path);
+            try {
+              handleFirestoreError(error, OperationType.GET, path);
+            } catch (err) {
+              console.error("Firestore error via onSnapshot:", err);
+            }
           }
         });
       } catch (e) {
@@ -1329,7 +1341,11 @@ export default function App() {
       // O syncStatus voltará a 'synced' automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       setSyncStatus('offline');
-      handleFirestoreError(e, OperationType.WRITE, path);
+      try {
+        handleFirestoreError(e, OperationType.WRITE, path);
+      } catch (err) {
+        console.error("Failed to sync save data:", err);
+      }
     }
   };
 

@@ -564,7 +564,11 @@ function WorkoutBuilder({ studentId, onClose, initialData }: { studentId: string
             const path = initialData && initialData.id 
                 ? `artifacts/${RUN_COLLECTION}/workouts/${initialData.id}`
                 : `artifacts/${RUN_COLLECTION}/workouts`;
-            handleFirestoreError(e, initialData && initialData.id ? OperationType.WRITE : OperationType.WRITE, path);
+            try {
+                handleFirestoreError(e, initialData && initialData.id ? OperationType.WRITE : OperationType.WRITE, path);
+            } catch (err) {
+                console.error(err);
+            }
             // Even on error, we might want to close or at least stop loading
             setLoading(false);
         } finally { 
@@ -919,7 +923,11 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
                     localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 } catch (err) {
                     const path = `artifacts/${RUN_COLLECTION}/workouts`;
-                    handleFirestoreError(err, OperationType.GET, path);
+                    try {
+                        handleFirestoreError(err, OperationType.GET, path);
+                    } catch (e) {
+                        console.error(e);
+                    }
                     localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 }
             };
@@ -938,7 +946,11 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
             const studentIds = new Set(data.map(d => d.studentId));
             setRunnerCount(studentIds.size);
         }, (error) => {
-            handleFirestoreError(error, OperationType.GET, path);
+            try {
+                handleFirestoreError(error, OperationType.GET, path);
+            } catch (e) {
+                console.error(e);
+            }
         });
         return () => unsub();
     }, [student.id]);
@@ -948,7 +960,11 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
         try {
             await deleteDoc(doc(db, path));
         } catch (error) {
-            handleFirestoreError(error, OperationType.DELETE, path);
+            try {
+                handleFirestoreError(error, OperationType.DELETE, path);
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 
@@ -1036,6 +1052,9 @@ export function RunTrackCoachView({ student, onBack }: { student: Student, onBac
 import { LiveRunSession, WorkoutSegment } from './LiveRunSession';
 
 function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
+    if (workout.type === 'TREINO LIVRE') {
+        return [{ type: 'continuous', duration: 24 * 60 * 60, title: 'Treino Livre' }];
+    }
     if (workout.segments && workout.segments.length > 0) {
         return workout.segments;
     }
@@ -1144,7 +1163,11 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 } catch (err) {
                     const path = `artifacts/${RUN_COLLECTION}/workouts`;
-                    handleFirestoreError(err, OperationType.GET, path);
+                    try {
+                        handleFirestoreError(err, OperationType.GET, path);
+                    } catch (e) {
+                        console.error(e);
+                    }
                     localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
                 }
             };
@@ -1164,7 +1187,11 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
             const studentIds = new Set(data.map(d => d.studentId));
             setRunnerCount(studentIds.size);
         }, (error) => {
-            handleFirestoreError(error, OperationType.GET, path);
+            try {
+                handleFirestoreError(error, OperationType.GET, path);
+            } catch (e) {
+                console.error(e);
+            }
         });
         return () => unsub();
     }, [student.id]);
@@ -1389,8 +1416,21 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     ) : (
                         <div className={`bg-zinc-900 ${isWatch ? 'rounded-3xl p-6 h-40' : 'rounded-[3rem] p-12 h-96'} text-center border border-zinc-800 flex flex-col items-center justify-center relative overflow-hidden shadow-inner`}>
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/5 to-transparent" />
-                            <div className="relative z-10">
+                            <div className="relative z-10 flex flex-col items-center gap-6">
                                 <p className="text-white font-black text-xl italic uppercase tracking-tighter">Descanso</p>
+                                <button 
+                                    onClick={() => setLiveWorkout({
+                                        id: `free-run-${Date.now()}`,
+                                        studentId: student.id,
+                                        type: 'TREINO LIVRE',
+                                        dayOfWeek: todayName,
+                                        description: 'Treino Livre',
+                                    } as any)}
+                                    className="py-4 px-8 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl font-black italic uppercase tracking-widest flex items-center gap-2 transition-all"
+                                >
+                                    <Play size={18} />
+                                    Treinar Livre
+                                </button>
                             </div>
                         </div>
                     )}
@@ -1474,6 +1514,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                 <LiveRunSession
                     segments={parseWorkoutSegments(liveWorkout)}
                     workoutTitle={`${liveWorkout.type} - ${liveWorkout.dayOfWeek}`}
+                    isFreeMode={liveWorkout.type === 'TREINO LIVRE'}
                     onClose={() => setLiveWorkout(null)}
                     studentWeight={typeof student.weight === 'string' ? parseFloat(student.weight) : student.weight}
                     studentHeight={typeof student.height === 'string' ? parseFloat(student.height) : student.height}
@@ -1793,7 +1834,11 @@ const seedWorkouts = async (studentId: string) => {
                 createdAt: new Date().toISOString() 
             });
         } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, path);
+            try {
+                handleFirestoreError(error, OperationType.WRITE, path);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }));
     

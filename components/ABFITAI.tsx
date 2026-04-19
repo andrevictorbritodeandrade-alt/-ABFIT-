@@ -206,7 +206,11 @@ REGRAS JSON:
       });
       console.log('Exercício salvo com sucesso na base de dados central!');
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, path);
+      try {
+        handleFirestoreError(e, OperationType.WRITE, path);
+      } catch (err) {
+        console.error('Firestore write error in ABFITAI:', err);
+      }
       console.error('Erro ao salvar na base de dados.');
     } finally {
       setIsSaving(false);

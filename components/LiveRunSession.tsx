@@ -31,6 +31,7 @@ interface LiveRunSessionProps {
     studentWeight?: number;
     studentHeight?: number;
     studentPhoto?: string;
+    isFreeMode?: boolean;
 }
 
 type Gender = 'male' | 'female';
@@ -56,7 +57,7 @@ function getGenAI() {
     return genAIInstance;
 }
 
-export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto }: LiveRunSessionProps) {
+export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto, isFreeMode }: LiveRunSessionProps) {
     const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [segmentTimeLeft, setSegmentTimeLeft] = useState(segments[0]?.duration || 0);
@@ -556,68 +557,69 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 <div className="w-[56px]" /> {/* Spacer to balance the header since wifi icon is removed */}
             </header>
 
-            <div className="flex-1 flex flex-col items-center justify-start pt-10 px-8 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-zinc-900/20 to-black">
-                <p className="text-3xl font-black uppercase tracking-[0.2em] text-white text-center italic mb-6 border-b-4 border-red-600 pb-2">{currentSegment.title}</p>
-                <div className="mb-14">
-                    <div className="px-12 py-5 rounded-[2rem] border-2 border-red-600 bg-red-600/5 flex items-center justify-center gap-4 shadow-2xl shadow-red-900/20">
-                        <span className="text-xs font-black uppercase text-red-600 tracking-[0.2em] italic">RESTANTE:</span>
-                        <span className="text-5xl font-black italic text-red-600 tabular-nums leading-none tracking-tighter">{formatTime(segmentTimeLeft)}</span>
-                    </div>
-                </div>
-                
-                <div className="text-center mb-16 relative">
-                    <div className="absolute inset-0 bg-[#e2ff00]/5 blur-[80px] rounded-full scale-150 opacity-30"></div>
-                    <p className="text-[clamp(6rem,20vw,9.5rem)] font-black text-[#e2ff00] leading-none tracking-tighter flex items-baseline justify-center drop-shadow-[0_10px_80px_rgba(226,255,0,0.25)] italic">
-                        {distance.toFixed(2)} 
-                        <span className="text-4xl text-zinc-600 ml-4 uppercase font-black tracking-tighter not-italic">KM</span>
-                    </p>
-                </div>
-
-                <div className="w-full max-w-3xl border-y border-white/5 bg-zinc-950/20 rounded-[3rem] p-4">
-                    <div className="grid grid-cols-2">
-                        <div className="p-8 text-center border-r border-b border-white/5"><p className="text-5xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{pace}</p><p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-3 italic">RITMO /KM</p></div>
-                        <div className="p-8 text-center border-b border-white/5"><p className="text-5xl font-black text-white tabular-nums italic tracking-tighter">{formatTime(totalTimeElapsed)}</p><p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-3 italic">TEMPO CORRIDO</p></div>
-                        <div className="p-8 text-center border-r border-white/5"><p className="text-5xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{avgSpeed.toFixed(1)}</p><p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-3 italic">KM/H MÉDIO</p></div>
-                        <div className="p-8 text-center"><p className="text-5xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{calories}</p><p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-3 italic">CALORIAS KCAL</p></div>
-                    </div>
-                </div>
-
+            <div className="fixed inset-0 z-[1000] bg-black text-white font-sans overflow-hidden">
+                {/* Map Background */}
                 {mode === 'outdoor' && lastPosition && (
-                    <button onClick={() => setViewMode(viewMode === 'stats' ? 'map' : 'stats')} className="mt-12 mb-8 px-10 py-5 bg-[#1a1a1a] rounded-[2rem] text-zinc-400 border border-white/5 flex items-center gap-4 uppercase font-black text-xs tracking-widest shadow-xl hover:text-[#e2ff00] transition-colors">{viewMode === 'stats' ? <><MapIcon size={20} /> VER MAPA EM TEMPO REAL</> : <><BarChart2 size={20} /> VOLTAR PARA MÉTRICAS</>}</button>
-                )}
-
-                {mode === 'outdoor' && viewMode === 'map' && lastPosition && (
-                    <div className="fixed inset-0 z-[1060] bg-black animate-in zoom-in-95 duration-500">
-                         <MapContainer center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} zoom={17} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={true} scrollWheelZoom={false}>
+                    <div className="absolute inset-0 z-[1]">
+                        <MapContainer center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} zoom={17} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={true} scrollWheelZoom={false}>
                             <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
                             <Polyline positions={path.map(p => [p.lat, p.lng] as [number, number])} color="#e2ff00" weight={6} />
                             <Circle center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} radius={12} pathOptions={{ fillColor: '#e2ff00', fillOpacity: 0.8, color: 'white', weight: 4 }} />
                             <MapUpdater center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} />
-                         </MapContainer>
-                        <div className="absolute top-40 left-1/2 -translate-x-1/2 z-[1070] flex flex-col items-center gap-4 w-full px-6">
-                            <div className="px-6 py-3 bg-black/80 backdrop-blur-md rounded-full border border-[#e2ff00]/30 flex items-center gap-3 shadow-xl">
-                                <MapIcon size={16} className="text-[#e2ff00]" />
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest italic">{distance.toFixed(2)} KM PERCORRIDOS</span>
-                            </div>
-                            <button onClick={() => setViewMode('stats')} className="px-10 py-5 bg-[#e2ff00] text-black rounded-full shadow-[0_0_30px_rgba(226,255,0,0.4)] hover:scale-105 active:scale-95 transition-all font-black uppercase text-sm tracking-[0.2em] italic">SAIR DO MAPA</button>
-                        </div>
+                        </MapContainer>
                     </div>
                 )}
-            </div>
 
-            <div className="p-12 pb-20 flex justify-center items-center gap-14 bg-gradient-to-t from-black via-black to-transparent z-[1080]">
-                <button onClick={() => handleNextSegment(true)} className="w-14 h-32 bg-[#1a1a1a] rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-red-600 transition-colors">
-                    <div className="w-5 h-5 bg-red-600 rounded-[4px]" />
-                </button>
-                <div className="relative group">
-                    {isAutoPaused && <div className="absolute -top-16 left-1/2 -translate-x-1/2 px-6 py-3 bg-red-600 rounded-full flex items-center gap-2 animate-bounce shadow-2xl"><Pause size={16} className="text-white" /><span className="text-[10px] font-black uppercase text-white whitespace-nowrap italic tracking-widest">MOVIMENTO PARADO</span></div>}
-                    <button onClick={togglePlayPause} className="w-36 h-36 bg-[#e2ff00] rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(226,255,0,0.3)] hover:scale-105 active:scale-95 transition-all outline outline-8 outline-[#e2ff00]/10">
-                        {isRunning ? <Pause size={56} className="text-black" /> : <Play size={56} className="text-black ml-4" />}
-                    </button>
+                {/* Overlays */}
+                <div className="absolute inset-0 z-[2] p-6 flex flex-col items-center justify-between bg-black/60 backdrop-blur-[2px]">
+                    {/* Header/Title Zone */}
+                    <div className="text-center w-full">
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-1">DURAÇÃO TOTAL</p>
+                        <p className="text-4xl font-black tabular-nums tracking-tighter text-[#e2ff00] italic leading-none">{formatTime(totalTimeElapsed)}</p>
+                        <p className="text-xl font-black uppercase tracking-[0.2em] text-white text-center italic mt-2 pb-1 inline-block">{isFreeMode ? 'TREINO LIVRE' : currentSegment.title}</p>
+                    </div>
+                    
+                    {/* Distance and Current Speed Zone */}
+                    <div className="flex w-full justify-between items-center px-4">
+                        <div className="text-left">
+                            <p className="text-[clamp(3rem,8vw,5rem)] font-black text-[#e2ff00] leading-none tracking-tighter italic drop-shadow-md">
+                                {distance.toFixed(2)}
+                            </p>
+                            <p className="text-sm uppercase font-black tracking-[0.2em] text-zinc-400">KM</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[clamp(3rem,8vw,5rem)] font-black text-white leading-none tracking-tighter italic drop-shadow-md">
+                                {currentSpeed.toFixed(1)}
+                            </p>
+                            <p className="text-sm uppercase font-black tracking-[0.2em] text-zinc-400">KM/H</p>
+                        </div>
+                    </div>
+
+                    {/* Metrics Grid */}
+                    <div className="w-full grid grid-cols-2 gap-px bg-zinc-800 border border-zinc-800 rounded-3xl overflow-hidden shadow-xl">
+                        <div className="bg-black p-4 text-center">
+                            <p className="text-3xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{avgSpeed.toFixed(1)}</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-1 italic">V. MÉDIA</p>
+                        </div>
+                        <div className="bg-black p-4 text-center">
+                            <p className="text-3xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{calories}</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-1 italic">CALORIAS</p>
+                        </div>
+                    </div>
+
+                    {/* Footer Controls */}
+                    <div className="w-full flex justify-between items-center px-2">
+                        <button onClick={() => handleNextSegment(true)} className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-red-600 transition-colors">
+                            <X size={24} className="text-zinc-500" />
+                        </button>
+                        <button onClick={togglePlayPause} className="w-24 h-24 bg-[#e2ff00] rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(226,255,0,0.3)] hover:scale-105 active:scale-95 transition-all outline outline-8 outline-[#e2ff00]/10">
+                            {isRunning ? <Pause size={40} className="text-black" /> : <Play size={40} className="text-black ml-2" />}
+                        </button>
+                        <button onClick={() => handleNextSegment()} className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-[#e2ff00] transition-colors">
+                            <ChevronRight size={24} className="text-white" />
+                        </button>
+                    </div>
                 </div>
-                <button onClick={() => handleNextSegment()} className="w-14 h-32 bg-[#1a1a1a] rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-[#e2ff00] transition-colors">
-                    <ChevronRight size={32} className="text-white" />
-                </button>
             </div>
         </div>
     );

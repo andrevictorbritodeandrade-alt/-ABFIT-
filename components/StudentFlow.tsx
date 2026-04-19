@@ -490,7 +490,11 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
               newDbExercises[ex.name] = docSnap.data();
             }
           } catch (e) {
-            handleFirestoreError(e, OperationType.GET, `exercise_database/${docId}`);
+            try {
+              handleFirestoreError(e, OperationType.GET, `exercise_database/${docId}`);
+            } catch (innerError) {
+              console.warn("Could not fetch exercise details from database. Using limited details.");
+            }
           }
         }
         setDbExercises(newDbExercises);

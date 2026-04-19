@@ -266,8 +266,12 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
       setRaces(sorted);
       setLoading(false);
     }, (error) => {
+      try {
         handleFirestoreError(error, OperationType.GET, path);
-        setLoading(false);
+      } catch (err) {
+        console.error("Firestore get error:", err);
+      }
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -284,7 +288,11 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
         try {
           await deleteDoc(doc(db, path));
         } catch (e) {
-          handleFirestoreError(e, OperationType.DELETE, path);
+          try {
+            handleFirestoreError(e, OperationType.DELETE, path);
+          } catch (err) {
+            console.error("Firestore delete error:", err);
+          }
         }
       }
     }
@@ -296,7 +304,11 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
       try {
         await setDoc(doc(db, path), { ...race, lastScrape: new Date().toISOString() }, { merge: true });
       } catch (e) {
-        handleFirestoreError(e, OperationType.WRITE, path);
+        try {
+          handleFirestoreError(e, OperationType.WRITE, path);
+        } catch (err) {
+          console.error("Firestore write error:", err);
+        }
       }
     }
   };
