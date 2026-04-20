@@ -372,7 +372,68 @@ export default function App() {
           medicalHistory: '⚠️ Dores no joelho',
           medications: 'Nenhuma',
           physicalAssessments: [], 
-          workoutHistory: [], 
+          workoutHistory: [
+            {
+              id: 'hist-1',
+              name: 'Treino Livre',
+              duration: '48:54',
+              date: '19/04/2026',
+              timestamp: new Date('2026-04-19T12:10:00').getTime(),
+              type: 'RUNNING',
+              runningStats: {
+                distance: 3.74,
+                avgHR: 105,
+                calories: 223,
+                elevation: 32,
+                cadence: 101
+              }
+            },
+            {
+              id: 'hist-2',
+              name: 'Treino Livre',
+              duration: '33:15',
+              date: '16/04/2026',
+              timestamp: new Date('2026-04-16T22:22:00').getTime(),
+              type: 'RUNNING',
+              runningStats: {
+                distance: 3.52,
+                avgHR: 115,
+                calories: 195,
+                elevation: 2,
+                cadence: 118
+              }
+            },
+            {
+              id: 'hist-3',
+              name: 'Treino Livre',
+              duration: '38:18',
+              date: '15/04/2026',
+              timestamp: new Date('2026-04-15T21:06:00').getTime(),
+              type: 'RUNNING',
+              runningStats: {
+                distance: 3.12,
+                avgHR: 110,
+                calories: 174,
+                elevation: 4,
+                cadence: 104
+              }
+            },
+            {
+              id: 'hist-4',
+              name: 'Treino Livre',
+              duration: '29:31',
+              date: '09/04/2026',
+              timestamp: new Date('2026-04-09T16:03:00').getTime(),
+              type: 'RUNNING',
+              runningStats: {
+                distance: 2.48,
+                avgHR: 119,
+                calories: 152,
+                elevation: 41,
+                cadence: 103
+              }
+            }
+          ], 
           analytics: {
             sessionsCompleted: 0,
             streakDays: 0,

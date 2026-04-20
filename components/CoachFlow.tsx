@@ -309,6 +309,35 @@ export function StudentWorkoutHistoryView({ student, onBack }: { student: Studen
                 </span>
               </div>
 
+              {entry.type === 'RUNNING' && entry.runningStats && (
+                <div className="mt-4 grid grid-cols-3 gap-3 bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                  <div className="text-center">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Distância</p>
+                    <p className="text-sm font-black italic text-[#e2ff00] leading-none">{entry.runningStats.distance}<span className="text-[8px] ml-0.5">km</span></p>
+                  </div>
+                  <div className="text-center border-x border-white/5">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Ritmo Médio</p>
+                    <p className="text-sm font-black italic text-white leading-none">{entry.runningStats.avgPace || '--'}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Calorias</p>
+                    <p className="text-sm font-black italic text-white leading-none">{entry.runningStats.calories}<span className="text-[8px] ml-0.5">kcal</span></p>
+                  </div>
+                  <div className="text-center pt-2 border-t border-white/5">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Batimento</p>
+                    <p className="text-sm font-black italic text-red-500 leading-none">{entry.runningStats.avgHR || '--'}<span className="text-[8px] ml-0.5">bpm</span></p>
+                  </div>
+                  <div className="text-center pt-2 border-t border-white/5 border-x border-white/5">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Elevação</p>
+                    <p className="text-sm font-black italic text-white leading-none">{entry.runningStats.elevation || 0}<span className="text-[8px] ml-0.5">m</span></p>
+                  </div>
+                  <div className="text-center pt-2 border-t border-white/5">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 mb-1">Cadência</p>
+                    <p className="text-sm font-black italic text-white leading-none">{entry.runningStats.cadence || '--'}<span className="text-[8px] ml-0.5">ppm</span></p>
+                  </div>
+                </div>
+              )}
+
               {entry.text && (
                 <div className="mt-4 p-4 bg-secondary/50 rounded-2xl border border-border">
                   <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, ChevronRight, Volume2, VolumeX, X, User, Users, Map as MapIcon, BarChart2, Check, Timer, Wifi, LayoutGrid, Camera, Loader2, Heart, Activity } from 'lucide-react';
+import { Play, Pause, Square, ChevronRight, Volume2, VolumeX, X, User, Users, Map as MapIcon, BarChart2, Check, Timer, Wifi, LayoutGrid, Camera, Loader2, Heart, Activity, Menu, ArrowLeft, Zap, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Polyline, useMap, Marker, Circle } from 'react-leaflet';
 import L from 'leaflet';
@@ -31,6 +31,7 @@ interface LiveRunSessionProps {
     studentWeight?: number;
     studentHeight?: number;
     studentPhoto?: string;
+    athleteName?: string;
     isFreeMode?: boolean;
 }
 
@@ -57,7 +58,7 @@ function getGenAI() {
     return genAIInstance;
 }
 
-export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto, isFreeMode }: LiveRunSessionProps) {
+export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto, athleteName, isFreeMode }: LiveRunSessionProps) {
     const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [segmentTimeLeft, setSegmentTimeLeft] = useState(segments[0]?.duration || 0);
@@ -67,46 +68,190 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const [mode, setMode] = useState<Mode>('indoor');
     const [weight, setWeight] = useState(studentWeight || 70);
     const [height, setHeight] = useState(studentHeight || 170);
-    const [countdownValue, setCountdownValue] = useState<number | string | null>(null);
-    const [showSettings, setShowSettings] = useState(true);
     const [viewMode, setViewMode] = useState<'stats' | 'map'>('stats');
     
-    // GPS & Stats State
+    // Profiles for the "Athlete" selection step
+    const PROFILES: Record<string, { id: string, name: string }> = {
+        marcelly: { id: 'marcelly', name: 'Marcelly Bispo' },
+        andre: { id: 'andre', name: 'André Brito' },
+        liliane: { id: 'liliane', name: 'Líliane Torres' }
+    };
+    
+    const initialMatch = athleteName 
+        ? Object.entries(PROFILES).find(([_, p]) => p.name.toLowerCase().includes(athleteName.toLowerCase()))
+        : null;
+
+    const [selectedProfile, setSelectedProfile] = useState<string>(initialMatch ? initialMatch[0] : 'marcelly');
+    const [setupStep, setSetupStep] = useState(initialMatch ? 2 : 1);
+
     const [distance, setDistance] = useState(0); // in km
     const [calories, setCalories] = useState(0);
     const [pace, setPace] = useState('0:00');
     const [currentSpeed, setCurrentSpeed] = useState(0); // km/h
     const [avgSpeed, setAvgSpeed] = useState(0); // km/h
     const [elevationGain, setElevationGain] = useState(0); // meters
-    const [steps, setSteps] = useState(0);
-    const [avgHeartRate, setAvgHeartRate] = useState<number | null>(null);
+    // Heart Rate Monitoring (Camera)
+    const [isCameraActive, setIsCameraActive] = useState(false);
+    const [heartRate, setHeartRate] = useState(0);
+    const [isCountingDown, setIsCountingDown] = useState(false);
+    const [countdownNum, setCountdownNum] = useState<number | string>(3);
+    const [lastPosition, setLastPosition] = useState<GeolocationPosition | null>(null);
     
+    // Performance Sensors
+    const [steps, setSteps] = useState(0);
+    const [cadence, setCadence] = useState(0);
+    const [avgHeartRate, setAvgHeartRate] = useState<number | null>(null);
+
+    // Saving & Status
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [isFinished, setIsFinished] = useState(false);
+    const [workoutDate, setWorkoutDate] = useState<string>(new Date().toLocaleDateString('pt-BR'));
+    const [isAutoPaused, setIsAutoPaused] = useState(false);
+    const [hasMovedOnce, setHasMovedOnce] = useState(false);
+
     // Daily Health Stats
     const [dailySteps, setDailySteps] = useState(10500);
     const [dailySleep, setDailySleep] = useState("7h 15m");
     const [dailyActiveMin, setDailyActiveMin] = useState(75);
     const [isProcessingHealth, setIsProcessingHealth] = useState(false);
 
-    const [isAutoPaused, setIsAutoPaused] = useState(false);
-    const [lastPosition, setLastPosition] = useState<GeolocationPosition | null>(null);
-    const [path, setPath] = useState<{lat: number, lng: number}[]>([]);
-    const [isFinished, setIsFinished] = useState(false);
-    const togglePlayPause = () => {
-        if (!isRunning) lastMovementTimeRef.current = Date.now();
-        if (isAutoPaused) setIsAutoPaused(false);
-        setIsRunning(!isRunning);
-    };
-    
+    // Refs
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTickRef = useRef<number>(0);
+    const watchIdRef = useRef<number | null>(null);
+    const lastPosRef = useRef<{lat: number, lng: number} | null>(null);
+    const lastPositionRef = useRef<GeolocationPosition | null>(null);
+    const selectedVoiceObj = useRef<SpeechSynthesisVoice | null>(null);
+    const lastAltRef = useRef<number | null>(null);
+    const lastStepTimeRef = useRef(0);
+    const lastMovementTimeRef = useRef<number>(0);
     const speechQueueRef = useRef<string[]>([]);
     const isSpeakingRef = useRef(false);
-    const watchIdRef = useRef<number | null>(null);
+    const activeUtterancesRef = useRef<SpeechSynthesisUtterance[]>([]);
     const wakeLockRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const lastMovementTimeRef = useRef<number>(0);
+
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const hrLoopRef = useRef<NodeJS.Timeout | null>(null);
+    const hrHistoryRef = useRef<number[]>([]);
+    const lastBeatTimeRef = useRef(0);
+    const [path, setPath] = useState<{lat: number, lng: number}[]>([]);
 
     const currentSegment = segments[currentSegmentIndex];
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const getSpeechDuration = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        if (m > 0 && s > 0) return `${m} minutos e ${s} segundos`;
+        if (m > 0) return `${m} minutos`;
+        return `${s} segundos`;
+    };
+
+    const initSpeechMode = (g: Gender) => {
+        setGender(g);
+        speak(g === 'female' ? "Modo feminino ativado." : "Modo masculino ativado.", true);
+    };
+
+    const toggleCameraHRM = async () => {
+        if (isCameraActive) {
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+            if (hrLoopRef.current) clearInterval(hrLoopRef.current);
+            setIsCameraActive(false);
+            setHeartRate(0);
+        } else {
+            try {
+                // Alternado para 'environment' (câmera traseira) que é onde fica o flash e o dedo normalmente
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment', width: { ideal: 10 }, height: { ideal: 10 } }, 
+                    audio: false 
+                });
+                streamRef.current = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play();
+                }
+                setIsCameraActive(true);
+                startHRLoop();
+            } catch (err) {
+                console.error("Camera Error:", err);
+                alert("Erro ao acessar a câmera traseira. Tente autorizar e usar a câmera onde você coloca o dedo.");
+            }
+        }
+    };
+
+    const startHRLoop = () => {
+        if (!canvasRef.current || !videoRef.current) return;
+        const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return;
+
+        let frameCount = 0;
+        let localMin = 255;
+        let localMax = 0;
+        let lastCrossingTime = 0;
+
+        hrLoopRef.current = setInterval(() => {
+            if (!videoRef.current || !ctx) return;
+            
+            // Desenhar um pequeno trecho para processar
+            ctx.drawImage(videoRef.current, 0, 0, 10, 10);
+            const frame = ctx.getImageData(0, 0, 10, 10).data;
+            
+            let rSum = 0;
+            for (let i = 0; i < frame.length; i += 4) {
+                rSum += frame[i]; // Pegamos apenas o canal vermelho
+            }
+            const rAvg = rSum / (frame.length / 4);
+            
+            hrHistoryRef.current.push(rAvg);
+            if (hrHistoryRef.current.length > 60) hrHistoryRef.current.shift(); // ~3 segundos em 20fps
+            
+            // Algoritmo de cruzamento de média móvel para detecção de pulso
+            if (hrHistoryRef.current.length > 20) {
+                // Calcular min/max recente para normalização
+                localMin = Math.min(...hrHistoryRef.current);
+                localMax = Math.max(...hrHistoryRef.current);
+                const range = localMax - localMin;
+                
+                // Se a variação for muito baixa, provavelmente não há dedo ou pulso detectável
+                if (range > 5) { 
+                    const threshold = localMin + (range * 0.7); // 70% do range (pico)
+                    const lastValue = hrHistoryRef.current[hrHistoryRef.current.length - 1];
+                    const prevValue = hrHistoryRef.current[hrHistoryRef.current.length - 2];
+                    
+                    // Detecção de subida cruzando o limiar
+                    if (prevValue <= threshold && lastValue > threshold) {
+                        const now = Date.now();
+                        const diff = now - lastCrossingTime;
+                        
+                        // Limitado a batimentos humanos normais (40 a 200 bpm)
+                        if (diff > 300 && diff < 1500) {
+                            const bpm = Math.round(60000 / diff);
+                            setHeartRate(bpm);
+                            setAvgHeartRate(curr => curr === null ? bpm : Math.round((curr * 0.8) + (bpm * 0.2)));
+                        }
+                        lastCrossingTime = now;
+                    }
+                } else {
+                    // Se não houver variação, zera a leitura atual (mas mantém a média se desejar)
+                    setHeartRate(0);
+                }
+            }
+            
+            frameCount++;
+        }, 50);
+    };
 
     // Wake Lock to prevent screen from sleeping
     useEffect(() => {
@@ -155,52 +300,71 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     };
 
     useEffect(() => {
-        if (mode === 'outdoor' && isRunning && !isFinished) {
+        if (mode === 'outdoor' && !isFinished) {
             if ('geolocation' in navigator) {
+                if (watchIdRef.current !== null) {
+                    navigator.geolocation.clearWatch(watchIdRef.current);
+                }
+
                 watchIdRef.current = window.navigator.geolocation.watchPosition(
                     (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const { latitude, longitude, accuracy } = position.coords;
                         
-                        if (lastPosition) {
+                        // Ignore coordinates with poor accuracy (> 45m)
+                        if (accuracy > 45) return;
+
+                        const lastPos = lastPositionRef.current;
+                        
+                        // Se já temos a última posição e o cronômetro está rodando
+                        if (lastPos && lastPos.coords.latitude !== 0) {
                             const d = calculateDistance(
-                                lastPosition.coords.latitude,
-                                lastPosition.coords.longitude,
+                                lastPos.coords.latitude,
+                                lastPos.coords.longitude,
                                 latitude,
                                 longitude
                             );
                             
-                            if (d > 0.002) {
+                            // Acumular distância apenas se o treino estiver rolando
+                            if (isRunning && d > 0.0015 && d < 0.1) {
                                 lastMovementTimeRef.current = Date.now();
-                                if (isAutoPaused) setIsAutoPaused(false);
+                                if (isAutoPaused) {
+                                    setIsAutoPaused(false);
+                                    speak("Treino retomado.", true);
+                                }
                                 setDistance(prev => {
-                                    const newDist = prev + d;
-                                    updateCalories(newDist);
+                                    const next = prev + d;
+                                    updateCalories(next);
                                     const strideLength = (height / 100) * 0.414;
-                                    setSteps(Math.round((newDist * 1000) / strideLength));
-                                    return newDist;
+                                    setSteps(Math.round((next * 1000) / strideLength));
+                                    return next;
                                 });
                                 setPath(prev => [...prev, { lat: latitude, lng: longitude }]);
-                            }
-                            
-                            if (position.coords.altitude !== null && lastPosition.coords.altitude !== null) {
-                                const diff = position.coords.altitude - lastPosition.coords.altitude;
-                                if (diff > 0.5) setElevationGain(prev => prev + diff);
+                                
+                                if (position.coords.altitude !== null && lastPos.coords.altitude !== null) {
+                                    const diff = position.coords.altitude - lastPos.coords.altitude;
+                                    if (diff > 0.5) setElevationGain(prev => prev + diff);
+                                }
+                            } else if (!isRunning) {
+                                // Se não estiver rodando, apenas marca a posição no mapa sem contar distância
+                                setPath([{ lat: latitude, lng: longitude }]);
                             }
                         } else {
                             lastMovementTimeRef.current = Date.now();
                             if (isAutoPaused) setIsAutoPaused(false);
                             setPath([{ lat: latitude, lng: longitude }]);
                         }
+                        
+                        lastPositionRef.current = position;
                         setLastPosition(position);
                         
-                        if (position.coords.speed !== null && position.coords.speed > 0.5) {
+                        if (isRunning && position.coords.speed !== null && position.coords.speed > 0.15) {
                             const speedKmh = position.coords.speed * 3.6;
                             setCurrentSpeed(speedKmh);
                             const paceMinKm = 60 / speedKmh;
                             const mins = Math.floor(paceMinKm);
                             const secs = Math.round((paceMinKm - mins) * 60);
                             setPace(`${mins}:${secs.toString().padStart(2, '0')}`);
-                        } else {
+                        } else if (!isRunning) {
                             setCurrentSpeed(0);
                         }
                     },
@@ -208,11 +372,23 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             }
-        } else if (watchIdRef.current !== null) {
-            navigator.geolocation.clearWatch(watchIdRef.current);
-            watchIdRef.current = null;
         }
-    }, [mode, isRunning, isFinished, lastPosition]);
+        
+        return () => {
+            if (watchIdRef.current !== null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+                watchIdRef.current = null;
+            }
+        };
+    }, [mode, isRunning, isFinished, weight, height]);
+
+    useEffect(() => {
+        if (segments[0]?.title === 'Photo Sync') {
+            setIsFinished(true);
+            setSetupStep(4);
+            speak("Abra a foto do seu Samsung Health para sincronizar os dados.");
+        }
+    }, [segments]);
 
     const speak = (text: string, interrupt = false) => {
         if (!soundEnabled || !('speechSynthesis' in window)) return;
@@ -230,58 +406,230 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         if (isSpeakingRef.current || speechQueueRef.current.length === 0) return;
         const text = speechQueueRef.current.shift()!;
         isSpeakingRef.current = true;
+        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'pt-BR';
-        utterance.rate = 1.25;
-        utterance.onend = () => { isSpeakingRef.current = false; processSpeechQueue(); };
-        utterance.onerror = () => { isSpeakingRef.current = false; processSpeechQueue(); };
+        utterance.rate = 1.1; // Slightly slower to prevent engine errors
+        utterance.volume = 1;
+        utterance.pitch = 1;
+
+        // Try to explicitly get a pt-BR voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoices = voices.filter(v => v.lang.includes('pt-BR') || v.lang.includes('pt_BR'));
+        if (ptVoices.length > 0) {
+            utterance.voice = ptVoices[0];
+        }
+        
+        // Prevent Garbage Collection of Utterance in Android/Safari
+        activeUtterancesRef.current.push(utterance);
+        
+        let hasEnded = false;
+        let timeoutId: any;
+        
+        const finishSpeaking = () => {
+            if (hasEnded) return;
+            hasEnded = true;
+            clearTimeout(timeoutId);
+            
+            // Cleanup from active references to allow GC after completion
+            activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
+            
+            isSpeakingRef.current = false;
+            
+            // Added small delay before next speech to prevent TTS engine overlap panic
+            setTimeout(() => {
+                processSpeechQueue();
+            }, 100);
+        };
+
+        utterance.onend = finishSpeaking;
+        utterance.onerror = finishSpeaking;
+        
+        // Wake up audio engine for some mobile browsers
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
+        
         window.speechSynthesis.speak(utterance);
+
+        // Fallback for Android Chrome bug where onend never fires
+        // Give normal talking speed + 2 seconds breathing room
+        timeoutId = setTimeout(finishSpeaking, Math.max(3000, text.length * 150));
     };
 
     useEffect(() => {
-        if (isRunning && !isFinished && !countdownValue && !isAutoPaused) {
+        // Pre-load voices on component mount
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.cancel(); // Clear any hanging utterances from previous sessions
+        }
+    }, []);
+
+    // Timer Logic - Refactored to avoid distance dependency re-renders
+    useEffect(() => {
+        if (isRunning && !isFinished && typeof countdownNum === 'number' && !isAutoPaused) {
             lastTickRef.current = Date.now();
             if (lastMovementTimeRef.current === 0) lastMovementTimeRef.current = Date.now();
+            
             timerRef.current = setInterval(() => {
                 const now = Date.now();
                 
-                if (mode === 'outdoor' && !isAutoPaused) {
-                    if (now - lastMovementTimeRef.current > 3000) {
+                // Auto-pause detection (5 sec threshold) - Only if has moved once
+                if (mode === 'outdoor' && !isAutoPaused && hasMovedOnce) {
+                    if (now - lastMovementTimeRef.current > 7000) { 
                         setIsAutoPaused(true);
-                        speak("Treino pausado. Sem movimento detectado.");
-                        return; // Auto-pause stops the clock completely
+                        speak("Treino pausado automaticamente. Volte a se movimentar para retomar.", true);
                     }
                 }
 
                 const delta = Math.floor((now - lastTickRef.current) / 1000);
                 if (delta >= 1) {
                     lastTickRef.current = now;
-                    setTotalTimeElapsed(prev => {
-                        const next = prev + delta;
-                        if (next > 0 && distance > 0) setAvgSpeed((distance / (next / 3600)));
-                        return next;
-                    });
-                    setSegmentTimeLeft(prev => {
-                        const newTime = prev - delta;
-                        if (newTime <= 5 && newTime > 0 && prev > 5) speak("Cinco. Quatro. Três. Dois. Um.");
-                        if (newTime <= 0) { handleNextSegment(); return 0; }
-                        return newTime;
-                    });
+                    setTotalTimeElapsed(prev => prev + delta);
+                    
+                    if (!isFreeMode) {
+                        setSegmentTimeLeft(prev => {
+                            const newTime = prev - delta;
+                            if (newTime <= 5 && newTime > 0 && prev > 5) speak("Cinco. Quatro. Três. Dois. Um.");
+                            if (newTime <= 0) { handleNextSegment(); return 0; }
+                            return newTime;
+                        });
+                    }
                 }
             }, 1000);
-        } else if (timerRef.current) clearInterval(timerRef.current);
+        } else if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [isRunning, currentSegmentIndex, isFinished, soundEnabled, countdownValue, isAutoPaused, distance]);
+    }, [isRunning, isFinished, countdownNum, isAutoPaused, isFreeMode]);
+
+    // Secondary effect to update average speed periodically without restarting timer
+    useEffect(() => {
+        if (totalTimeElapsed > 0 && distance > 0) {
+            setAvgSpeed(distance / (totalTimeElapsed / 3600));
+        }
+    }, [totalTimeElapsed, distance]);
+
+    // Wake Lock to prevent screen sleep
+    useEffect(() => {
+        let wakeLock: any = null;
+        const requestWakeLock = async () => {
+            try {
+                if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+                    wakeLock = await (navigator as any).wakeLock.request('screen');
+                }
+            } catch (err: any) {
+                // Silently drop permission errors in iframe preview to keep console clean
+                if (err.name !== 'NotAllowedError') {
+                    console.error("Wake Lock Error:", err);
+                }
+            }
+        };
+
+        if (isRunning) requestWakeLock();
+        return () => { if (wakeLock) { try { wakeLock.release(); } catch(e) {} } };
+    }, [isRunning]);
+
+    const handleHealthImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsProcessingHealth(true);
+        try {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = (reader.result as string).split(',')[1];
+                
+                const prompt = `Analise esta foto do Samsung Health ou app de corrida e extraia os dados em JSON. 
+                Campos obrigatórios: distance (km), duration (minutos), calories (kcal), avgHR (bpm), steps (número), elevation (metros), date (string no formato dd/mm/aaaa). 
+                Seja preciso. Retorne APENAS o JSON no formato: 
+                {"distance": float, "duration": int, "calories": int, "avgHR": int, "steps": int, "elevation": int, "date": "dd/mm/aaaa"}`;
+                
+                const ai = getGenAI();
+                const response = await ai.models.generateContent({
+                    model: "gemini-3-flash-preview",
+                    contents: {
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { data: base64, mimeType: file.type } }
+                        ]
+                    }
+                });
+                
+                const text = response.text || "";
+                const jsonMatch = text.match(/\{.*\}/s);
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    
+                    if (data.distance) setDistance(parseFloat(data.distance));
+                    if (data.duration) setTotalTimeElapsed(parseInt(data.duration) * 60);
+                    if (data.calories) setCalories(parseInt(data.calories));
+                    if (data.avgHR) setAvgHeartRate(parseInt(data.avgHR));
+                    if (data.steps) setSteps(parseInt(data.steps));
+                    if (data.elevation) setElevationGain(parseInt(data.elevation));
+                    if (data.date) setWorkoutDate(data.date);
+                    
+                    speak("Dados sincronizados com sucesso!");
+                }
+                setIsProcessingHealth(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Health sync error:", error);
+            setIsProcessingHealth(false);
+            speak("Erro ao extrair dados da imagem.");
+        }
+    };
+
+    const saveWorkout = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        setSaveStatus('idle');
+
+        try {
+            const entryId = `run-${Date.now()}`;
+            const historyEntry = {
+                id: entryId,
+                workoutId: isFreeMode ? 'free' : 'planned',
+                name: workoutTitle,
+                duration: formatTime(totalTimeElapsed),
+                date: workoutDate,
+                timestamp: Date.now(),
+                type: 'RUNNING',
+                runningStats: {
+                    distance: Number(distance.toFixed(2)),
+                    avgSpeed: Number(avgSpeed.toFixed(1)),
+                    calories: calories,
+                    avgHR: avgHeartRate || 0,
+                    elevation: Number(elevationGain.toFixed(0)),
+                    steps: steps,
+                    path: path.map(p => [p.lat, p.lng])
+                }
+            };
+
+            onFinish(totalTimeElapsed, historyEntry);
+            setSaveStatus('success');
+            setTimeout(() => onClose(), 2000);
+        } catch (err) {
+            console.error("Error saving workout:", err);
+            setSaveStatus('error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handleNextSegment = (forceFinish = false) => {
         if (forceFinish || currentSegmentIndex + 1 >= segments.length) {
-            speak(forceFinish ? "Treino encerrado." : "Treino concluído! Parabéns!");
+            speak(forceFinish ? "Treino encerrado." : "Treino concluído! Parabéns!", true);
             setIsRunning(false);
             setIsFinished(true);
         } else {
             const nextIndex = currentSegmentIndex + 1;
             const nextSegment = segments[nextIndex];
-            if (nextSegment.type === 'stimulus' || currentSegment.type === 'warmup') {
+            
+            speak("Bloco concluído.", true);
+
+            if (nextSegment.type === 'stimulus' || nextSegment.type === 'continuous' || currentSegment.type === 'warmup') {
                 startCountdown(() => {
                     setCurrentSegmentIndex(nextIndex);
                     setSegmentTimeLeft(nextSegment.duration);
@@ -296,154 +644,200 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     };
 
     const announceSegment = (segment: WorkoutSegment) => {
-        if (segment.type === 'stimulus' || segment.type === 'continuous') speak("Vamos correr!", true);
-        else if (segment.type === 'recovery') speak("Recuperação", true);
-        else if (segment.type === 'cooldown') speak("Desaquecimento", true);
+        speak(`Iniciando ${segment.title}. Tempo: ${getSpeechDuration(segment.duration)}.`, false);
     };
 
     const startCountdown = (callback: () => void) => {
         setIsRunning(false);
+        setIsCountingDown(true);
         let count = 3;
-        setCountdownValue(count);
-        speak("Três", true);
+        setCountdownNum(count);
+        speak("Atenção, preparando...", true);
+        speak("Três", false);
         const interval = setInterval(() => {
             count--;
             if (count > 0) {
-                setCountdownValue(count);
-                speak(count === 2 ? "Dois" : "Um");
+                setCountdownNum(count);
+                speak(count === 2 ? "Dois" : "Um", false);
             } else if (count === 0) {
-                setCountdownValue("VAI!");
-                speak("Iniciar!");
+                setCountdownNum("JÁ!");
+                speak("Já!", false);
             } else {
                 clearInterval(interval);
-                setCountdownValue(null);
+                setIsCountingDown(false);
+                setCountdownNum(3); // Reset
                 setIsRunning(true);
                 callback();
             }
         }, 1000);
     };
 
+    const startRunCountdown = () => {
+        setIsCountingDown(true);
+        setCountdownNum(3);
+        speak("Atenção, preparando para iniciar.", true);
+        speak("Três", false);
+        
+        let count = 3;
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                setCountdownNum(count);
+                speak(count === 2 ? "Dois" : "Um", false);
+            } else if (count === 0) {
+                 setCountdownNum("JÁ!");
+                 speak("Já!", false);
+            } else {
+                clearInterval(interval);
+                setIsCountingDown(false);
+                setCountdownNum(3); // Reset to number to un-pause the timer hook
+                setIsRunning(true);
+                announceSegment(segments[0]);
+            }
+        }, 1000);
+    };
+
     const startWorkout = () => {
-        setShowSettings(false);
-        startCountdown(() => announceSegment(segments[0]));
+        setSegmentTimeLeft(segments[0]?.duration || 0);
+        setSetupStep(4);
+        speak(`Painel aberto. O seu primeiro bloco será ${segments[0]?.title}, com duração de ${getSpeechDuration(segments[0]?.duration)}. Pressione Play para começar.`, true);
     };
 
-    const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
-    const handleHealthImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsProcessingHealth(true);
-        try {
-            const base64 = await new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                reader.readAsDataURL(file);
-            });
-
-            const modelName = "gemini-3-flash-preview";
-            const prompt = "Analise este print do Samsung Health. Extraia exatamente estes 3 valores numerais: 'Passos Totais do dia', 'Tempo total de sono (formato Xh Ym)' e 'Minutos Ativos'. Retorne APENAS um JSON: { \"steps\": number, \"sleep\": string, \"activeMin\": number }. Se não encontrar, use valores padrão realistas próximos a 8000 passos, 7h de sono e 60min ativos.";
-            
-            const response = await getGenAI().models.generateContent({
-                model: modelName,
-                contents: [
-                    {
-                        text: prompt
-                    },
-                    {
-                        inlineData: {
-                            data: base64,
-                            mimeType: file.type
-                        }
-                    }
-                ]
-            });
-            const text = (response.text || "").replace(/```json|```/g, "").trim();
-            const data = JSON.parse(text);
-            
-            if (data.steps) setDailySteps(data.steps);
-            if (data.sleep) setDailySleep(data.sleep);
-            if (data.activeMin) setDailyActiveMin(data.activeMin);
-            
-        } catch (err) {
-            console.error("Health Sync Error:", err);
-        } finally {
-            setIsProcessingHealth(false);
-        }
-    };
-
-    if (showSettings) {
+    if (setupStep === 1) {
         return (
-            <div className="fixed inset-0 z-[1100] bg-black p-8 overflow-y-auto custom-scrollbar flex flex-col items-center">
-                <div className="w-full max-w-2xl space-y-10 py-10">
-                    <div className="flex justify-between items-center mb-6">
-                        <Logo size="text-4xl" subSize="text-[8px]" />
-                        <button onClick={onClose} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-500 hover:text-white transition-all"><X size={24} /></button>
-                    </div>
-
-                    <div className="bg-[#1a1a1a] p-8 rounded-[3rem] border border-white/5 shadow-2xl space-y-4 font-sans">
-                        <div className="flex items-center gap-3 text-red-600 mb-2">
-                            <Activity size={24} className="animate-pulse" />
-                            <h2 className="text-2xl font-black italic uppercase tracking-tighter">PREPARAR TREINO</h2>
-                        </div>
-                        <p className="text-xl font-black italic text-white uppercase tracking-tighter leading-none border-l-4 border-red-600 pl-4 py-1">{workoutTitle}</p>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mt-4">{segments.length} Segmentos • Estimativa {Math.ceil(segments.reduce((acc, s) => acc + s.duration, 0) / 60)} min</p>
-                    </div>
-
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 italic">Voz do Audio-Feedback</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => setGender('female')} className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${gender === 'female' ? 'border-[#e2ff00] bg-[#e2ff00]/10' : 'border-zinc-800 bg-[#1a1a1a]'}`}><User size={24} className={gender === 'female' ? 'text-[#e2ff00]' : 'text-zinc-500'} /><span className="font-black uppercase tracking-widest text-[10px] text-white italic">Feminina</span></button>
-                                <button onClick={() => setGender('male')} className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${gender === 'male' ? 'border-[#e2ff00] bg-[#e2ff00]/10' : 'border-zinc-800 bg-[#1a1a1a]'}`}><Users size={24} className={gender === 'male' ? 'text-[#e2ff00]' : 'text-zinc-500'} /><span className="font-black uppercase tracking-widest text-[10px] text-white italic">Masculina</span></button>
+            <div className="fixed inset-0 z-[1100] bg-black text-white p-6 font-sans flex flex-col justify-center max-w-md mx-auto">
+                <div className="text-center mb-10">
+                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-[#e2ff00]">Atleta</h2>
+                    <p className="text-zinc-500 text-sm mt-2 font-bold uppercase tracking-widest">Quem vai treinar?</p>
+                </div>
+                <div className="space-y-4">
+                    {Object.values(PROFILES).map(profile => (
+                        <button 
+                            key={profile.id}
+                            onClick={() => setSelectedProfile(profile.id)}
+                            className={`w-full flex items-center justify-between p-6 rounded-3xl border-2 transition-all ${
+                                selectedProfile === profile.id ? 'bg-[#e2ff00] text-black border-[#e2ff00]' : 'bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800'
+                            }`}
+                        >
+                            <div className="flex items-center gap-4">
+                                <Users size={24} />
+                                <span className="text-xl font-black italic uppercase">{profile.name}</span>
                             </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 italic">Ambiente de Operação</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => setMode('indoor')} className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${mode === 'indoor' ? 'border-[#e2ff00] bg-[#e2ff00]/10' : 'border-zinc-800 bg-[#1a1a1a]'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${mode === 'indoor' ? 'bg-[#e2ff00] text-black' : 'bg-zinc-800 text-zinc-500'}`}><Timer size={16} /></div>
-                                    <span className="font-black uppercase tracking-widest text-[10px] text-white italic">Esteira (Indoor)</span>
-                                </button>
-                                <button onClick={() => setMode('outdoor')} className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${mode === 'outdoor' ? 'border-[#e2ff00] bg-[#e2ff00]/10' : 'border-zinc-800 bg-[#1a1a1a]'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${mode === 'outdoor' ? 'bg-[#e2ff00] text-black' : 'bg-zinc-800 text-zinc-500'}`}><MapIcon size={16} /></div>
-                                    <span className="font-black uppercase tracking-widest text-[10px] text-white italic">Rua (GPS Ativo)</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onClick={startWorkout} className="w-full py-8 bg-red-600 text-white rounded-[2rem] font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-red-900/40 active:scale-95 transition-all mt-10">INICIAR SESSÃO</button>
+                            {selectedProfile === profile.id && <ChevronRight size={24} />}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex gap-4 mt-12">
+                    <button onClick={onClose} className="py-5 px-6 bg-zinc-900 text-zinc-500 font-black uppercase text-xs tracking-widest rounded-2xl">Fechar</button>
+                    <button 
+                        onClick={() => setSetupStep(2)}
+                        className="flex-1 py-5 bg-white text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl active:scale-95 transition-all"
+                    >
+                        Próximo
+                    </button>
                 </div>
             </div>
         );
     }
 
-    if (isWatch) {
+    if (setupStep === 2) {
         return (
-            <div className="fixed inset-0 z-[200] bg-black text-white flex flex-col items-center justify-center p-2 rounded-full border-2 border-red-600 overflow-hidden">
-                {isFinished ? (
-                    <div className="text-center"><h2 className="text-lg font-black italic text-emerald-500 uppercase">Fim!</h2><p className="text-xs font-bold">{distance.toFixed(2)} km</p><button onClick={onClose} className="mt-2 px-4 py-1 bg-red-600 rounded-full text-[10px] font-black uppercase">OK</button></div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-full relative">
-                        <div className="text-center mb-1">
-                            <p className="text-[10px] font-black text-zinc-500 uppercase">{currentSegment.title}</p>
-                            <p className="text-4xl font-black italic text-[#e2ff00] drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">{mode === 'outdoor' ? distance.toFixed(2) : formatTime(segmentTimeLeft)}</p>
-                            <p className="text-[8px] font-bold text-zinc-400 uppercase">{mode === 'outdoor' ? 'KM' : 'Tempo'}</p>
+            <div className="fixed inset-0 z-[1100] bg-black text-white p-6 font-sans flex flex-col justify-center max-w-md mx-auto">
+                <div className="text-center mb-10">
+                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-[#e2ff00]">Ambiente</h2>
+                    <p className="text-zinc-500 text-sm mt-2 font-bold uppercase tracking-widest">Local do Treino</p>
+                </div>
+                <div className="space-y-4">
+                    <button 
+                        onClick={() => setMode('indoor')}
+                        className={`w-full flex items-center justify-between p-8 rounded-3xl border-2 transition-all ${
+                            mode === 'indoor' ? 'bg-blue-500 border-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]' : 'bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800'
+                        }`}
+                    >
+                        <div className="text-left">
+                            <span className="block text-2xl font-black italic uppercase">Indoor</span>
+                            <span className="text-xs font-bold uppercase tracking-widest opacity-80">Esteira / Ginásio</span>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setIsRunning(!isRunning)} className="p-2 bg-red-600 rounded-full">{isRunning ? <Pause size={14} fill="white"/> : <Play size={14} fill="white"/>}</button>
-                            <button onClick={() => handleNextSegment()} className="p-2 bg-zinc-900 rounded-full border border-white/10"><ChevronRight size={14}/></button>
-                            <button onClick={() => handleNextSegment(true)} className="p-2 bg-emerald-600 rounded-full border border-white/10"><Check size={14}/></button>
+                        <Activity size={32} />
+                    </button>
+                    <button 
+                        onClick={() => {
+                            setMode('outdoor');
+                            if ('geolocation' in navigator) {
+                                navigator.geolocation.getCurrentPosition(() => {}, () => {
+                                    alert("Para marcar o percurso corretamente, autorize o acesso à localização e permita que o navegador use o GPS em segundo plano (Não fechar a aba).");
+                                });
+                            }
+                        }}
+                        className={`w-full flex items-center justify-between p-8 rounded-3xl border-2 transition-all ${
+                            mode === 'outdoor' ? 'bg-[#e2ff00] border-[#e2ff00] text-black shadow-[0_0_20px_rgba(226,255,0,0.5)]' : 'bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800'
+                        }`}
+                    >
+                        <div className="text-left">
+                            <span className="block text-2xl font-black italic uppercase">Outdoor</span>
+                            <span className="text-xs font-bold uppercase tracking-widest opacity-80">Rua / GPS Real</span>
                         </div>
-                    </div>
-                )}
+                        <MapIcon size={32} />
+                    </button>
+                    {mode === 'outdoor' && (
+                        <div className="p-4 bg-red-600/10 border border-red-600/30 rounded-2xl animate-in slide-in-from-top-4">
+                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest leading-relaxed">
+                                <Zap size={10} className="inline mr-1" /> ATENÇÃO: Mantenha a tela ligada e o GPS ativo para não travar o tempo.
+                            </p>
+                        </div>
+                    )}
+                </div>
+                
+                <div className="flex gap-4 mt-12">
+                     <button onClick={() => setSetupStep(1)} className="py-5 px-6 bg-zinc-900 text-zinc-500 font-black uppercase text-xs tracking-widest rounded-2xl">Voltar</button>
+                     <button 
+                        onClick={() => setSetupStep(3)}
+                        className="flex-1 py-5 bg-white text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl active:scale-95 transition-all"
+                    >
+                        Próximo
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (setupStep === 3) {
+        return (
+            <div className="fixed inset-0 z-[1100] bg-black text-white p-6 font-sans flex flex-col justify-center max-w-md mx-auto">
+                <div className="text-center mb-10">
+                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-[#e2ff00]">Treinador</h2>
+                    <p className="text-zinc-500 text-sm mt-2 font-bold uppercase tracking-widest">Feedback Vocal (1.2x)</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <button 
+                        onClick={() => initSpeechMode('female')}
+                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${
+                            gender === 'female' ? 'bg-pink-500 border-pink-500 text-white shadow-[0_0_20px_rgba(236,72,153,0.4)]' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+                        }`}
+                    >
+                        <User size={36} />
+                        <span className="font-black uppercase tracking-widest text-xs">Feminina</span>
+                    </button>
+                    <button 
+                        onClick={() => initSpeechMode('male')}
+                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${
+                            gender === 'male' ? 'bg-blue-500 border-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+                        }`}
+                    >
+                        <Users size={36} />
+                        <span className="font-black uppercase tracking-widest text-xs">Masculina</span>
+                    </button>
+                </div>
+
+                <div className="flex gap-4 mt-12">
+                     <button onClick={() => setSetupStep(2)} className="py-5 px-6 bg-zinc-900 text-zinc-500 font-black uppercase text-xs tracking-widest rounded-2xl">Voltar</button>
+                     <button 
+                        onClick={startWorkout}
+                        className="flex-1 py-6 bg-[#e2ff00] text-black font-black uppercase text-sm tracking-[0.2em] rounded-3xl active:scale-95 transition-all w-full animate-in fade-in"
+                    >
+                        Abrir Painel de Treino
+                    </button>
+                </div>
             </div>
         );
     }
@@ -466,11 +860,11 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
 
                     <div className="grid grid-cols-2 gap-y-12 gap-x-6">
                         <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">DISTÂNCIA</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{distance.toFixed(2)} <span className="text-sm font-black uppercase italic text-zinc-400">km</span></p></div>
-                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">PACE MÉDIO</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{pace} <span className="text-sm font-black uppercase italic text-zinc-400">/km</span></p></div>
-                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">TEMPO FINAL</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{Math.floor(totalTimeElapsed / 60)}:{(totalTimeElapsed % 60).toString().padStart(2, '0')} <span className="text-sm font-black uppercase italic text-zinc-400">min</span></p></div>
+                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">VELOCIDADE MÉDIA</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{avgSpeed.toFixed(1)} <span className="text-sm font-black uppercase italic text-zinc-400">km/h</span></p></div>
+                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">TEMPO FINAL</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{formatTime(totalTimeElapsed)} <span className="text-sm font-black uppercase italic text-zinc-400">min</span></p></div>
                         <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">ELEVAÇÃO GANHA</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{elevationGain.toFixed(0)} <span className="text-sm font-black uppercase italic text-zinc-400">m</span></p></div>
                         <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">CALORIAS</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{calories} <span className="text-sm font-black uppercase italic text-zinc-400">kcal</span></p></div>
-                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">BATIMENTO MÉDIO</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{avgHeartRate || '--'} <span className="text-sm font-black uppercase italic text-zinc-400">bpm</span></p></div>
+                        <div><p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 italic">PASSOS</p><p className="text-5xl font-black italic text-[#e2ff00] tracking-tighter leading-none">{steps} <span className="text-sm font-black uppercase italic text-zinc-400">steps</span></p></div>
                     </div>
                 </div>
 
@@ -488,7 +882,41 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     )}
                 </div>
 
-                <div className="bg-[#1a1a1a] rounded-[3rem] p-10 mb-12 shadow-2xl relative border border-white/5">
+                {saveStatus === 'success' ? (
+                    <div className="bg-emerald-600/20 border border-emerald-500/30 p-8 rounded-[2.5rem] text-center mb-8 animate-in zoom-in duration-300">
+                        <Check size={48} className="text-emerald-500 mx-auto mb-4" />
+                        <p className="text-xl font-black italic uppercase text-white">Treino Salvo com Sucesso!</p>
+                        <p className="text-xs font-bold text-emerald-500/70 uppercase tracking-widest mt-2 font-sans">Sincronizado com seu histórico</p>
+                    </div>
+                ) : saveStatus === 'error' ? (
+                    <div className="bg-red-600/20 border border-red-500/30 p-8 rounded-[2.5rem] text-center mb-8 animate-in shake duration-500">
+                        <X size={48} className="text-red-500 mx-auto mb-4" />
+                        <p className="text-xl font-black italic uppercase text-white">Erro ao Salvar</p>
+                        <button onClick={saveWorkout} className="mt-4 px-6 py-2 bg-red-600 rounded-full text-xs font-black uppercase">Tentar Novamente</button>
+                    </div>
+                ) : (
+                    <button 
+                        onClick={saveWorkout}
+                        disabled={isSaving}
+                        className="w-full py-8 bg-[#e2ff00] text-black rounded-[2.5rem] font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-[#e2ff00]/20 active:scale-95 transition-all mb-8 flex items-center justify-center gap-4"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 size={32} className="animate-spin" />
+                                SALVANDO...
+                            </>
+                        ) : (
+                            <>
+                                <Check size={32} />
+                                SALVAR TREINO
+                            </>
+                        )}
+                    </button>
+                )}
+
+                <button onClick={onClose} className="w-full py-6 bg-zinc-900 text-zinc-500 rounded-[2rem] font-black italic uppercase tracking-widest text-sm hover:text-white transition-all">DESCARTAR TREINO</button>
+
+                <div className="bg-[#1a1a1a] rounded-[3rem] p-10 mt-12 mb-8 shadow-2xl relative border border-white/5">
                     <div className="flex justify-between items-center mb-10">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40"><Activity size={16} className="text-white" /></div>
@@ -507,119 +935,266 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleHealthImageUpload} className="hidden" accept="image/*" />
                 </div>
-
-                <div className="flex flex-col gap-6">
-                    <button 
-                        onClick={() => { onFinish(totalTimeElapsed, { distance, calories, avgPace: pace, duration: totalTimeElapsed, path }); onClose(); }} 
-                        className="w-full py-8 bg-[#e2ff00] text-black rounded-full font-black italic uppercase tracking-[0.2em] text-2xl shadow-3xl shadow-[#e2ff00]/20 active:scale-95 transition-all outline outline-8 outline-[#e2ff00]/5"
-                    >
-                        CONCLUIR TREINO
-                    </button>
-                    <p className="text-center text-[8px] font-black text-zinc-700 uppercase tracking-widest italic">ABFIT PERFORMANCE SYSTEM • DADOS CRIPTOGRAFADOS</p>
-                </div>
+                
+                <p className="text-center text-[8px] font-black text-zinc-700 uppercase tracking-widest italic mt-4">ABFIT PERFORMANCE SYSTEM • DADOS CRIPTOGRAFADOS</p>
             </div>
         );
     }
-     return (
-        <div className="fixed inset-0 z-[1000] bg-black text-white flex flex-col animate-in slide-in-from-bottom-full duration-700 overflow-hidden font-sans">
+
+    return (
+        <div className="fixed inset-0 z-[1000] bg-black text-white flex flex-col animate-in slide-in-from-bottom-full duration-700 overflow-hidden font-sans max-w-md mx-auto">
+            {/* Hidden Video for Camera HRM */}
+            <video ref={videoRef} playsInline style={{ display: 'none' }}></video>
+            <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+
             <AnimatePresence>
-                {countdownValue && (
+                {isCountingDown && (
                     <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.5 }} className="fixed inset-0 z-[1100] bg-black/95 flex flex-col items-center justify-center pointer-events-none">
+                         <div className="text-[#e2ff00] text-sm font-black uppercase tracking-[0.5em] mb-8 text-center px-4">
+                            Prepara: <br/>{segments[isRunning ? currentSegmentIndex + 1 : 0]?.title.toUpperCase() || 'VAMOS!'}
+                        </div>
                         <motion.span 
                             initial={{ y: 50 }} animate={{ y: 0 }}
-                            className={`font-black italic text-red-600 tracking-tighter drop-shadow-[0_10px_60px_rgba(220,38,38,0.6)] leading-none ${countdownValue === 'VAI!' ? 'text-[clamp(10rem,30vw,20rem)]' : 'text-[clamp(15rem,40vw,30rem)]'}`}
+                            className="font-black italic text-[#e2ff00] tracking-tighter drop-shadow-[0_10px_60px_rgba(226,255,0,0.6)] leading-none text-[clamp(15rem,40vw,30rem)]"
                         >
-                            {countdownValue}
+                            {countdownNum}
                         </motion.span>
-                        {countdownValue === 'VAI!' && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white text-xl font-black uppercase tracking-[0.5em] italic mt-4">ABFIT RUN</motion.p>}
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <header className="px-8 py-8 flex justify-between items-center z-[1050] bg-black/80 backdrop-blur-md border-b border-white/5">
-                <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="p-4 bg-zinc-900 rounded-3xl text-red-600 hover:text-white transition-all shadow-xl border border-red-600/20 group">
-                        <X size={24} className="group-hover:rotate-90 transition-transform" />
-                    </button>
-                    {studentPhoto && (
-                        <div className="w-14 h-14 rounded-2xl border-2 border-red-600 overflow-hidden shadow-lg shadow-red-900/20 bg-zinc-900">
-                            <img src={studentPhoto} className="w-full h-full object-cover" alt="User" />
+            {/* AUTO-PAUSE OVERLAY */}
+            <AnimatePresence>
+                {isAutoPaused && isRunning && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center"
+                    >
+                        <div className="bg-zinc-900 border-4 border-[#e2ff00] p-10 rounded-[3rem] shadow-[0_0_50px_rgba(226,255,0,0.3)] animate-pulse">
+                            <Pause size={64} className="text-[#e2ff00] mx-auto mb-6" fill="#e2ff00" />
+                            <h2 className="text-4xl font-black italic uppercase text-white tracking-widest mb-2">AUTO-PAUSE</h2>
+                            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Retome o movimento para continuar</p>
                         </div>
-                    )}
+                        <button 
+                            onClick={() => {
+                                setIsAutoPaused(false);
+                                speak("Treino retomado.", true);
+                                lastMovementTimeRef.current = Date.now();
+                            }}
+                            className="mt-8 px-10 py-5 bg-[#e2ff00] text-black font-black uppercase text-sm tracking-widest rounded-2xl active:scale-95 transition-all"
+                        >
+                            Retomar Manualmente
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* HEADER */}
+            <header className="px-6 py-6 flex justify-between items-center z-[1050] bg-black">
+                <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${isRunning && mode === 'outdoor' ? 'bg-[#e2ff00]' : 'bg-zinc-500'}`} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-400">
+                        {mode === 'outdoor' ? 'GPS' : 'Indoor'}
+                    </span>
                 </div>
-                <div className="flex flex-col items-center flex-1">
-                    <div className="flex items-center gap-3">
-                        <Timer size={22} className="text-red-600 animate-pulse" />
-                        <span className="text-5xl font-black tabular-nums tracking-tighter text-[#e2ff00] italic leading-none">{formatTime(totalTimeElapsed)}</span>
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mt-2">DURAÇÃO TOTAL</p>
+                {mode === 'outdoor' && (
+                    <button 
+                        onClick={() => setViewMode(prev => prev === 'stats' ? 'map' : 'stats')}
+                        className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-400 hover:text-white transition-all flex items-center gap-2"
+                    >
+                        {viewMode === 'stats' ? <><MapIcon size={12}/> Ver Mapa</> : <><Activity size={12}/> Ver Dados</>}
+                    </button>
+                )}
+                <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] border border-zinc-800 px-3 py-1 rounded-lg">
+                    Atleta: <span className="text-white">{(PROFILES as any)[selectedProfile]?.name.split(' ')[0]}</span>
                 </div>
-                <div className="w-[56px]" /> {/* Spacer to balance the header since wifi icon is removed */}
             </header>
 
-            <div className="fixed inset-0 z-[1000] bg-black text-white font-sans overflow-hidden">
-                {/* Map Background */}
-                {mode === 'outdoor' && lastPosition && (
-                    <div className="absolute inset-0 z-[1]">
-                        <MapContainer center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} zoom={17} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={true} scrollWheelZoom={false}>
+            {viewMode === 'map' && mode === 'outdoor' ? (
+                <div className="flex-1 relative mx-6 mb-28 rounded-3xl overflow-hidden border-2 border-zinc-800">
+                    {lastPosition ? (
+                        <MapContainer center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} zoom={17} style={{ height: '100%', width: '100%' }}>
                             <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-                            <Polyline positions={path.map(p => [p.lat, p.lng] as [number, number])} color="#e2ff00" weight={6} />
-                            <Circle center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} radius={12} pathOptions={{ fillColor: '#e2ff00', fillOpacity: 0.8, color: 'white', weight: 4 }} />
+                            <Polyline positions={path.map(p => [p.lat, p.lng] as [number, number])} color="#e2ff00" weight={5} />
+                            <Marker position={[lastPosition.coords.latitude, lastPosition.coords.longitude]} />
+                            <MapUpdater center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} />
+                        </MapContainer>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900/50">
+                            <Loader2 size={32} className="animate-spin text-[#e2ff00] mb-4" />
+                            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Buscando Sinal de GPS...</p>
+                        </div>
+                    )}
+                    
+                    {/* Floating Info on Map */}
+                    <div className="absolute top-4 left-4 right-4 z-[400] grid grid-cols-2 gap-2">
+                        <div className="bg-black/80 backdrop-blur p-3 rounded-2xl border border-white/10">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Distância</p>
+                            <p className="text-xl font-black text-white">{distance.toFixed(2)}km</p>
+                        </div>
+                        <div className="bg-black/80 backdrop-blur p-3 rounded-2xl border border-white/10">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Ritmo Atual</p>
+                            <p className="text-xl font-black text-white">{currentSpeed > 1 ? pace : "0'00"}</p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* GRID SUPERIOR DE DADOS */}
+            <div className="px-6 grid grid-cols-4 gap-2 mb-4">
+                <button 
+                    onClick={toggleCameraHRM}
+                    className={`p-3 rounded-[20px] border flex flex-col items-center justify-center text-center transition-all relative overflow-hidden ${isCameraActive ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-zinc-900/40 border-zinc-800'}`}
+                >
+                    {isCameraActive && (
+                        <div className="absolute inset-0 opacity-10 pointer-events-none">
+                            <div className="w-full h-full bg-red-600 animate-pulse" />
+                        </div>
+                    )}
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1 z-10">{isCameraActive ? 'Captação' : 'Batimento'}</span>
+                    <p className="text-lg font-black text-red-500 z-10">
+                        {heartRate > 0 ? (
+                            <motion.span 
+                                key={heartRate}
+                                initial={{ scale: 1.2, opacity: 0.5 }} 
+                                animate={{ scale: 1, opacity: 1 }}
+                            >
+                                {heartRate}
+                            </motion.span>
+                        ) : (isCameraActive ? '--' : '--')}
+                        <span className="text-[8px] ml-0.5 text-zinc-500">bpm</span>
+                    </p>
+                    {isCameraActive && (
+                         <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    )}
+                </button>
+                <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Cadência</span>
+                    <p className="text-lg font-black text-green-400">{cadence > 0 ? cadence : '--'}<span className="text-[8px] ml-0.5 text-zinc-500">ppm</span></p>
+                </div>
+                <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Passos</span>
+                    <p className="text-lg font-black text-blue-400">{steps}</p>
+                </div>
+                <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Elevação</span>
+                    <p className="text-lg font-black text-emerald-400">{elevationGain.toFixed(0)}<span className="text-[8px] ml-0.5 text-zinc-500">m</span></p>
+                </div>
+            </div>
+
+            <div className="px-6 grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-zinc-900/40 p-5 rounded-3xl border border-zinc-800 flex flex-col items-center">
+                    <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                        <MapPin size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Distância</span>
+                    </div>
+                    <p className="text-3xl font-black tracking-tighter">{distance.toFixed(2)}<span className="text-xs ml-1 text-zinc-500 italic">KM</span></p>
+                </div>
+
+                <div className="bg-zinc-900/40 p-5 rounded-3xl border border-zinc-800 flex flex-col items-center">
+                    <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                        <Timer size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Ritmo</span>
+                    </div>
+                    <p className="text-3xl font-black tracking-tighter">
+                        {currentSpeed > 1 ? pace : "0'00"}
+                        <span className="text-xs ml-1 text-zinc-500 italic">/KM</span>
+                    </p>
+                </div>
+            </div>
+
+            {/* PAINEL CENTRAL REGRESSIVO */}
+            <div className="mx-6 flex-1 flex flex-col items-center justify-center bg-zinc-900/30 rounded-[45px] border border-zinc-800/50 shadow-2xl p-8 mb-4 relative overflow-hidden">
+                <div 
+                    className="absolute bottom-0 left-0 h-1.5 bg-[#e2ff00] transition-all duration-1000 shadow-[0_0_15px_rgba(226,255,0,0.5)]"
+                    style={{ width: `${(isFreeMode ? 100 : (segmentTimeLeft / (currentSegment?.duration || 1)) * 100)}%` }}
+                />
+                <div className="text-center w-full z-10 px-2">
+                    <p className="text-lg md:text-xl font-black uppercase italic tracking-tighter mb-2 text-[#e2ff00] w-full truncate">
+                        {isFreeMode ? 'TREINO LIVRE' : currentSegment?.title}
+                    </p>
+                    <h2 className="text-[90px] leading-none font-black tabular-nums tracking-tighter" style={{textShadow: "0 0 20px rgba(226, 255, 0, 0.2)"}}>
+                        {isFreeMode ? formatTime(totalTimeElapsed) : formatTime(segmentTimeLeft)}
+                    </h2>
+                    <p className="text-zinc-500 font-bold uppercase text-[10px] mt-4 tracking-[0.4em]">
+                        {isFreeMode ? 'EM EXECUÇÃO' : `Etapa ${currentSegmentIndex + 1} de ${segments.length}`}
+                    </p>
+                </div>
+                
+                {/* Background Map Overlay if Outdoor */}
+                {mode === 'outdoor' && lastPosition && viewMode === 'stats' && (
+                    <div className="absolute inset-0 z-[0] opacity-20 pointer-events-none">
+                        <MapContainer center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} zoom={18} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={false} scrollWheelZoom={false}>
+                            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                            <Polyline positions={path.map(p => [p.lat, p.lng] as [number, number])} color="#e2ff00" weight={4} />
+                            <Circle center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} radius={5} pathOptions={{ color: '#e2ff00' }} />
                             <MapUpdater center={[lastPosition.coords.latitude, lastPosition.coords.longitude]} />
                         </MapContainer>
                     </div>
                 )}
+            </div>
 
-                {/* Overlays */}
-                <div className="absolute inset-0 z-[2] p-6 flex flex-col items-center justify-between bg-black/60 backdrop-blur-[2px]">
-                    {/* Header/Title Zone */}
-                    <div className="text-center w-full">
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-1">DURAÇÃO TOTAL</p>
-                        <p className="text-4xl font-black tabular-nums tracking-tighter text-[#e2ff00] italic leading-none">{formatTime(totalTimeElapsed)}</p>
-                        <p className="text-xl font-black uppercase tracking-[0.2em] text-white text-center italic mt-2 pb-1 inline-block">{isFreeMode ? 'TREINO LIVRE' : currentSegment.title}</p>
+            {/* CONTROLES DE AÇÃO - Trocando o footer de posição quando estiver no painel stats */}
+            {viewMode === 'stats' && (
+                <div className="px-6 grid grid-cols-2 gap-4 mb-28">
+                    <div className="text-center bg-zinc-900/20 p-4 rounded-3xl">
+                        <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-[0.3em] mb-1">Tempo Total</p>
+                        <h1 className="text-2xl font-black tabular-nums tracking-tighter italic">
+                            {formatTime(totalTimeElapsed)}
+                        </h1>
                     </div>
-                    
-                    {/* Distance and Current Speed Zone */}
-                    <div className="flex w-full justify-between items-center px-4">
-                        <div className="text-left">
-                            <p className="text-[clamp(3rem,8vw,5rem)] font-black text-[#e2ff00] leading-none tracking-tighter italic drop-shadow-md">
-                                {distance.toFixed(2)}
-                            </p>
-                            <p className="text-sm uppercase font-black tracking-[0.2em] text-zinc-400">KM</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[clamp(3rem,8vw,5rem)] font-black text-white leading-none tracking-tighter italic drop-shadow-md">
-                                {currentSpeed.toFixed(1)}
-                            </p>
-                            <p className="text-sm uppercase font-black tracking-[0.2em] text-zinc-400">KM/H</p>
-                        </div>
-                    </div>
-
-                    {/* Metrics Grid */}
-                    <div className="w-full grid grid-cols-2 gap-px bg-zinc-800 border border-zinc-800 rounded-3xl overflow-hidden shadow-xl">
-                        <div className="bg-black p-4 text-center">
-                            <p className="text-3xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{avgSpeed.toFixed(1)}</p>
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-1 italic">V. MÉDIA</p>
-                        </div>
-                        <div className="bg-black p-4 text-center">
-                            <p className="text-3xl font-black text-[#e2ff00] tabular-nums italic tracking-tighter">{calories}</p>
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-1 italic">CALORIAS</p>
-                        </div>
-                    </div>
-
-                    {/* Footer Controls */}
-                    <div className="w-full flex justify-between items-center px-2">
-                        <button onClick={() => handleNextSegment(true)} className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-red-600 transition-colors">
-                            <X size={24} className="text-zinc-500" />
-                        </button>
-                        <button onClick={togglePlayPause} className="w-24 h-24 bg-[#e2ff00] rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(226,255,0,0.3)] hover:scale-105 active:scale-95 transition-all outline outline-8 outline-[#e2ff00]/10">
-                            {isRunning ? <Pause size={40} className="text-black" /> : <Play size={40} className="text-black ml-2" />}
-                        </button>
-                        <button onClick={() => handleNextSegment()} className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center border border-white/5 shadow-2xl hover:border-[#e2ff00] transition-colors">
-                            <ChevronRight size={24} className="text-white" />
-                        </button>
+                    <div className="text-center bg-zinc-900/20 p-4 rounded-3xl">
+                        <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-[0.3em] mb-1">Calorias</p>
+                        <h1 className="text-2xl font-black tabular-nums tracking-tighter italic text-orange-500">
+                            {Math.round(calories)} <span className="text-xs text-zinc-600">KCAL</span>
+                        </h1>
                     </div>
                 </div>
+            )}
+                </>
+            )}
+
+            {/* CONTROLES DE AÇÃO / BOTOES */}
+            <div className="fixed bottom-8 left-0 right-0 px-10 flex justify-center items-center gap-8 z-[1050]">
+                {!isRunning ? (
+                    <button 
+                        onClick={() => {
+                            if (isFinished) return;
+                            if (totalTimeElapsed === 0) startRunCountdown();
+                            else {
+                                speak("Treino retomado.", true);
+                                setIsRunning(true);
+                            }
+                        }}
+                        className="w-24 h-24 bg-[#e2ff00] rounded-full flex items-center justify-center text-black shadow-[0_0_40px_rgba(226,255,0,0.3)] active:scale-90 transition-all border-[6px] border-black"
+                    >
+                        <Play size={40} fill="black" />
+                    </button>
+                ) : (
+                    <>
+                        <button 
+                            onClick={() => {
+                                speak("Treino pausado.", true);
+                                setIsRunning(false);
+                            }}
+                            className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center border-2 border-zinc-700 active:scale-95 transition-all"
+                        >
+                            <Pause size={28} fill="white" />
+                        </button>
+                        <button 
+                            onClick={() => {
+                                if(confirm("Deseja finalizar o treino agora?")) {
+                                    handleNextSegment(true);
+                                }
+                            }}
+                            className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center active:scale-95 transition-all border-2 border-red-500/50 shadow-lg"
+                        >
+                            <Square size={24} fill="white" />
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

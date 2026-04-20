@@ -3,6 +3,7 @@
   "description": "An AI-powered exercise prescription and biomechanics analysis application for fitness professionals.",
   "requestFramePermissions": [
     "geolocation",
-    "camera"
+    "camera",
+    "screen-wake-lock"
   ]
 }

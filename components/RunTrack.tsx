@@ -1378,6 +1378,28 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                         </div>
                     </div>
                 </div>
+                
+                {/* QUICK LOG SECTION */}
+                {!isWatch && (
+                    <div className="bg-zinc-900 border border-white/5 rounded-[2rem] p-6 shadow-xl">
+                         <div className="flex items-center gap-3 mb-4">
+                            <Zap size={18} className="text-[#e2ff00]" />
+                            <h3 className="text-sm font-black italic uppercase text-white tracking-widest leading-none">Registro Rápido</h3>
+                        </div>
+                        <button 
+                            onClick={() => setLiveWorkout({ 
+                                id: `photo-sync-${Date.now()}`, 
+                                type: 'TREINO LIVRE', 
+                                dayOfWeek: todayName,
+                                segments: [{ type: 'continuous', duration: 0, title: 'Photo Sync' }] 
+                            } as any)}
+                            className="w-full py-5 border-2 border-dashed border-zinc-800 rounded-2xl flex items-center justify-center gap-3 text-zinc-500 hover:text-[#e2ff00] hover:border-[#e2ff00]/50 transition-all group"
+                        >
+                            <Camera size={20} className="group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-widest italic">Sincronizar Samsung Health (IA)</span>
+                        </button>
+                    </div>
+                )}
 
                 <div className={`max-w-md mx-auto ${isWatch ? 'space-y-6' : 'space-y-12'} pb-24`}>
                     {/* CALENDAR */}
@@ -1519,15 +1541,14 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     studentWeight={typeof student.weight === 'string' ? parseFloat(student.weight) : student.weight}
                     studentHeight={typeof student.height === 'string' ? parseFloat(student.height) : student.height}
                     studentPhoto={student.photoUrl}
+                    athleteName={student.nome}
                     onFinish={(totalTime, stats) => {
                         setLiveWorkout(null);
-                        // Pre-fill log modal with total time and stats
-                        const workoutWithStats = {
-                            ...liveWorkout,
-                            totalTime: formatDuration(Math.ceil(totalTime / 60)),
-                        } as any;
-                        workoutWithStats.initialStats = stats;
-                        setLoggingWorkout(workoutWithStats);
+                        // Save immediately to history
+                        const dateStr = new Date().toLocaleDateString('pt-BR');
+                        // stats might be a whole history entry or just stats object depending on implementation
+                        const runningStats = stats?.runningStats || stats;
+                        handleCheckIn(dateStr, liveWorkout, runningStats);
                     }}
                 />
             )}
