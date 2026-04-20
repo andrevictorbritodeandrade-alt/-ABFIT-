@@ -253,26 +253,6 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         }, 50);
     };
 
-    // Wake Lock to prevent screen from sleeping
-    useEffect(() => {
-        const requestWakeLock = async () => {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-                } catch (err: any) {
-                    console.error(`${err.name}, ${err.message}`);
-                }
-            }
-        };
-        if (isRunning) requestWakeLock();
-        return () => {
-            if (wakeLockRef.current) {
-                wakeLockRef.current.release();
-                wakeLockRef.current = null;
-            }
-        };
-    }, [isRunning]);
-
     const isWatch = React.useMemo(() => {
         if (typeof window === 'undefined') return false;
         const ua = navigator.userAgent.toLowerCase();
