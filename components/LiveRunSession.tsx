@@ -169,6 +169,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const activeUtterancesRef = useRef<SpeechSynthesisUtterance[]>([]);
     const wakeLockRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const lastAnnouncedKmRef = useRef<number>(0);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -650,6 +651,31 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             setAvgSpeed(distance / (totalTimeElapsed / 3600));
         }
     }, [totalTimeElapsed, distance]);
+
+    // Feedback audio por KM
+    useEffect(() => {
+        if (!isRunning || isAutoPaused || distance === 0) return;
+        
+        const currentKm = Math.floor(distance);
+        if (currentKm > lastAnnouncedKmRef.current) {
+            lastAnnouncedKmRef.current = currentKm;
+            
+            // Format time and pace for spoken words
+            const paceParts = pace.split(':');
+            const paceMin = parseInt(paceParts[0] || '0', 10);
+            const paceSec = parseInt(paceParts[1] || '0', 10);
+            let spokenPace = '';
+            if (paceMin > 0) spokenPace += `${paceMin} minuto${paceMin > 1 ? 's' : ''}`;
+            if (paceSec > 0) {
+                if (spokenPace.length > 0) spokenPace += ' e ';
+                spokenPace += `${paceSec} segundo${paceSec > 1 ? 's' : ''}`;
+            }
+
+            const formattedTime = Math.floor(totalTimeElapsed / 60);
+
+            speak(`Você completou ${currentKm} quilômetro${currentKm > 1 ? 's' : ''}. Tempo total: ${formattedTime} minuto${formattedTime !== 1 ? 's' : ''}. Pace médio atual de: ${spokenPace || pace} por quilômetro. Continue assim!`);
+        }
+    }, [distance, isRunning, isAutoPaused, pace, totalTimeElapsed]);
 
     // Wake Lock to prevent screen sleep
     useEffect(() => {
