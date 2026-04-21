@@ -255,7 +255,7 @@ const calculateAdjustedWorkout = (workout: WorkoutModel) => {
     return { adjusted, badge };
 };
 
-const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean, isToday?: boolean, stats?: any }> = ({ workout, onDelete, onEdit, isCompleted, compact, isToday, stats }) => {
+const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEdit?: () => void, isCompleted?: boolean, compact?: boolean, isToday?: boolean, stats?: any, hideActions?: boolean }> = ({ workout, onDelete, onEdit, isCompleted, compact, isToday, stats, hideActions }) => {
     const { adjusted, badge } = useMemo(() => calculateAdjustedWorkout(workout), [workout]);
     const totalDuration = useMemo(() => estimateWorkoutDuration(adjusted), [adjusted]);
 
@@ -458,10 +458,25 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                                 <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.elevation} <span className="text-[10px]">m</span></div>
                             </div>
                         )}
+                        {stats.cadence && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Cadência</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.cadence} <span className="text-[10px]">spm</span></div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-10 pt-4">
                         {stats.avgHR && (
                             <div>
                                 <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Batimento Médio</div>
                                 <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[10px]">bpm</span></div>
+                            </div>
+                        )}
+                        {stats.maxHR && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Batimento Máx</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxHR} <span className="text-[10px]">bpm</span></div>
                             </div>
                         )}
                     </div>
@@ -470,6 +485,43 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                         <div className="pt-6 border-t border-white/5">
                             <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Melhor Pace</div>
                             <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxPace} <span className="text-[10px]">/km</span></div>
+                        </div>
+                    )}
+
+                    {stats.hrZones && (
+                        <div className="pt-6 border-t border-white/5 space-y-3">
+                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-3 italic">Zonas de Frequência Cardíaca</div>
+                            
+                            {stats.hrZones.max && (
+                                <div className="flex justify-between items-center bg-red-950/20 px-3 py-2 rounded-xl">
+                                    <span className="text-xs font-black text-red-500 uppercase">Z5 - Máximo</span>
+                                    <span className="text-sm font-black text-white">{stats.hrZones.max}</span>
+                                </div>
+                            )}
+                            {stats.hrZones.anaerobic && (
+                                <div className="flex justify-between items-center bg-orange-950/20 px-3 py-2 rounded-xl">
+                                    <span className="text-xs font-black text-orange-500 uppercase">Z4 - Anaeróbico</span>
+                                    <span className="text-sm font-black text-white">{stats.hrZones.anaerobic}</span>
+                                </div>
+                            )}
+                            {stats.hrZones.aerobic && (
+                                <div className="flex justify-between items-center bg-emerald-950/20 px-3 py-2 rounded-xl">
+                                    <span className="text-xs font-black text-emerald-500 uppercase">Z3 - Aeróbico</span>
+                                    <span className="text-sm font-black text-white">{stats.hrZones.aerobic}</span>
+                                </div>
+                            )}
+                            {stats.hrZones.weightControl && (
+                                <div className="flex justify-between items-center bg-blue-950/20 px-3 py-2 rounded-xl">
+                                    <span className="text-xs font-black text-blue-500 uppercase">Z2 - Controle de Peso</span>
+                                    <span className="text-sm font-black text-white">{stats.hrZones.weightControl}</span>
+                                </div>
+                            )}
+                            {stats.hrZones.lowIntensity && (
+                                <div className="flex justify-between items-center bg-zinc-800/50 px-3 py-2 rounded-xl">
+                                    <span className="text-xs font-black text-zinc-400 uppercase">Z1 - Baixa Intensidade</span>
+                                    <span className="text-sm font-black text-white">{stats.hrZones.lowIntensity}</span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -728,14 +780,20 @@ const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: Wo
         });
     };
 
-    const isCompleted = (day: number, workoutId: string) => {
+    const isCompleted = (day: number, workoutId?: string) => {
         const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
-        return history.some(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+        if (workoutId) {
+            return history.some(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+        }
+        return history.some(h => h.date === dateStr && h.type === 'RUNNING');
     };
 
-    const getHistoryEntry = (day: number, workoutId: string) => {
+    const getHistoryEntry = (day: number, workoutId?: string) => {
         const dateStr = new Date(year, month, day).toLocaleDateString('pt-BR');
-        return history.find(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+        if (workoutId) {
+            return history.find(h => h.date === dateStr && h.workoutId === workoutId && h.type === 'RUNNING');
+        }
+        return history.find(h => h.date === dateStr && h.type === 'RUNNING');
     };
 
     const handleDayClick = (day: number, workout: WorkoutModel) => {
@@ -807,18 +865,19 @@ const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: Wo
                     {blanks.map(b => <div key={`blank-${b}`} className="aspect-square"></div>)}
                     {days.map(day => {
                         const workout = getWorkoutForDate(day);
-                        const completed = workout ? isCompleted(day, workout.id) : false;
+                        const completed = isCompleted(day);
                         const dateObj = new Date(year, month, day);
                         const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
                         const isMissed = workout && !completed && isPast;
+                        const hasUnplannedWorkout = !workout && completed;
                         const todayHighlight = isToday(day) ? "bg-zinc-800" : "bg-transparent";
                         const isSelected = selectedDay === day;
                         
                         return (
                             <div key={day} className="aspect-square relative">
-                                {workout ? (
+                                {(workout || hasUnplannedWorkout) ? (
                                     <button 
-                                        onClick={() => handleDayClick(day, workout)}
+                                        onClick={() => handleDayClick(day, workout || { id: 'unplanned', type: 'TREINO LIVRE', dayOfWeek: '' } as any)}
                                         className={`w-full h-full rounded-xl flex flex-col items-center justify-center border-2 transition-all active:scale-95 relative overflow-hidden
                                             ${completed 
                                                 ? 'bg-emerald-950/30 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
@@ -832,7 +891,7 @@ const RunCalendar = ({ workouts, history, onCheckIn, studentId }: { workouts: Wo
                                     >
                                         <span className={`text-[10px] font-black z-10 ${completed ? 'text-emerald-500' : isMissed ? 'text-red-500' : 'text-white'}`}>{day}</span>
                                         <span className="text-[6px] font-black uppercase tracking-tighter opacity-40 absolute bottom-1">
-                                            {workout.type.substring(0, 3)}
+                                            {workout ? workout.type.substring(0, 3) : 'LIV'}
                                         </span>
                                         <div className={`w-1 h-1 rounded-full absolute top-1 right-1 ${completed ? 'bg-emerald-500' : isMissed ? 'bg-red-900' : 'bg-red-600'}`}></div>
                                     </button>
@@ -1165,6 +1224,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
     const [runnerCount, setRunnerCount] = useState(1);
     const [loggingWorkout, setLoggingWorkout] = useState<WorkoutModel | null>(null);
     const [liveWorkout, setLiveWorkout] = useState<WorkoutModel | null>(null);
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY'>('OVERVIEW');
 
     useEffect(() => {
         if (!student.id) return;
@@ -1358,7 +1418,28 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                 </header>
             )}
 
+            {!isWatch && (
+                <div className="bg-black/80 backdrop-blur-md px-6 flex gap-6 z-40 relative">
+                    <button 
+                        onClick={() => setActiveTab('OVERVIEW')} 
+                        className={`py-4 uppercase text-xs font-black tracking-widest relative ${activeTab === 'OVERVIEW' ? 'text-red-600' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        Visão Geral
+                        {activeTab === 'OVERVIEW' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />}
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('HISTORY')} 
+                        className={`py-4 uppercase text-xs font-black tracking-widest relative ${activeTab === 'HISTORY' ? 'text-red-600' : 'text-zinc-500 hover:text-white'}`}
+                    >
+                        Histórico
+                        {activeTab === 'HISTORY' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />}
+                    </button>
+                </div>
+            )}
+
             <div className={`flex-1 overflow-y-auto custom-scrollbar p-6 ${isWatch ? 'space-y-6' : 'space-y-12'}`}>
+                {activeTab === 'OVERVIEW' ? (
+                <>
                 {/* WEEKLY VOLUME SUMMARY - NRC STYLE */}
                 <div className={`${isWatch ? 'p-4 rounded-3xl' : 'p-8 rounded-[2.5rem]'} bg-zinc-900 border border-white/5 shadow-2xl relative overflow-hidden group`}>
                     <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/10 blur-3xl -mr-16 -mt-16 group-hover:bg-red-600/20 transition-all" />
@@ -1485,7 +1566,8 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                             </div>
                             
                             <div className="space-y-6">
-                                {(student.workoutHistory || [])
+                                {[...(student.workoutHistory || [])]
+                                    .sort((a, b) => b.timestamp - a.timestamp)
                                     .filter(h => h.type === 'RUNNING')
                                     .slice(0, 5)
                                     .map(h => {
@@ -1537,7 +1619,46 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
                     {!isWatch && <WorkoutLegend />}
                 </div>
-            <AppFooter />
+                </>
+                ) : (
+                    // HISTORY TAB CONTENT
+                    <div className="max-w-md mx-auto space-y-6 pb-24">
+                        <div className="flex items-center gap-3 mb-8 px-2 mt-4">
+                            <Activity size={24} className="text-red-600"/>
+                            <h3 className="text-2xl font-black italic uppercase text-white tracking-tighter">Histórico Completo</h3>
+                        </div>
+                        <div className="space-y-6">
+                            {[...(student.workoutHistory || [])]
+                                .sort((a, b) => b.timestamp - a.timestamp)
+                                .filter(h => h.type === 'RUNNING')
+                                .map((h, index) => {
+                                    const workout = workouts.find(w => w.id === h.workoutId) || { id: 'unplanned', type: h.name || 'TREINO LIVRE', dayOfWeek: '', customDisplay: h.name || 'TREINO LIVRE' } as any;
+                                    return (
+                                        <div key={h.id || index} className="animate-in slide-in-from-bottom-4 duration-500">
+                                            <div className="flex items-center gap-3 mb-3 pl-2">
+                                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{h.date}</span>
+                                                <div className="h-px flex-1 bg-white/5" />
+                                            </div>
+                                            <WorkoutCard 
+                                                workout={workout} 
+                                                stats={h.runningStats}
+                                                isCompleted={true}
+                                                hideActions={true}
+                                            />
+                                        </div>
+                                    );
+                                })
+                            }
+                            {!(student.workoutHistory || []).some(h => h.type === 'RUNNING') && (
+                                <div className="p-12 text-center bg-zinc-900/50 rounded-[2rem] border border-dashed border-zinc-800">
+                                    <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">Nenhuma corrida registrada ainda</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+                <AppFooter />
+            </div>
 
             {loggingWorkout && (
                 <LogWorkoutModal 
@@ -1569,7 +1690,6 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                 />
             )}
         </div>
-    </div>
     )
 }
 

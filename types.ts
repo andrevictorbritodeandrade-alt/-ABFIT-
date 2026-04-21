@@ -46,6 +46,13 @@ export interface RunningStats {
   verticalOscillation?: number;
   groundContactTime?: number;
   asymmetry?: string;
+  hrZones?: {
+    max?: string;
+    anaerobic?: string;
+    aerobic?: string;
+    weightControl?: string;
+    lowIntensity?: string;
+  };
   path?: [number, number][];
 }
 

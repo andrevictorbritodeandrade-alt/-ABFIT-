@@ -635,6 +635,72 @@ export default function App() {
           physicalAssessments: [], 
           workoutHistory: [
             {
+              id: "hist-andre-run-20260420",
+              workoutId: "unplanned",
+              name: "TREINO LIVRE",
+              athleteName: "André Brito",
+              duration: "40:00",
+              date: "20/04/2026",
+              timestamp: 1745107200000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 5.5,
+                avgPace: "7'15\"",
+                avgHR: 145,
+                calories: 450
+              }
+            },
+            {
+              id: "hist-andre-run-20260419",
+              workoutId: "unplanned",
+              name: "TREINO LIVRE",
+              athleteName: "André Brito",
+              duration: "30:00",
+              date: "19/04/2026",
+              timestamp: 1745020800000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 4.8,
+                avgPace: "6'15\"",
+                avgHR: 135,
+                calories: 320
+              }
+            },
+            {
+              id: "hist-andre-run-20260416",
+              workoutId: "treino-rodagem", // Thursday (Rodagem)
+              name: "RODAGEM - Ter/Qui",
+              athleteName: "André Brito",
+              duration: "52:00",
+              date: "16/04/2026",
+              timestamp: 1744761600000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 6.0,
+                avgPace: "8'40\"",
+                avgHR: 110,
+                calories: 380,
+                elevation: 10
+              }
+            },
+            {
+              id: "hist-andre-run-20260415",
+              workoutId: "treino-intervalado-desconfortavel", // Wednesday (Intervalado Desconfortável)
+              name: "INTERVALADO (Desconfortável) - Qua",
+              athleteName: "André Brito",
+              duration: "45:00",
+              date: "15/04/2026",
+              timestamp: 1744675200000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 6.5,
+                avgPace: "6'55\"",
+                avgHR: 152,
+                calories: 512,
+                elevation: 15
+              }
+            },
+            {
               id: "hist-andre-20250113",
               workoutId: "andre-workout-0",
               name: "Treino de Corrida",
