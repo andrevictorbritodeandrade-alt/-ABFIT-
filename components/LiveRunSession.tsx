@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Play, Pause, Square, ChevronRight, Volume2, VolumeX, X, User, Users, Map as MapIcon, BarChart2, Check, Timer, Wifi, LayoutGrid, Camera, Loader2, Heart, Activity, Menu, ArrowLeft, Zap, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Polyline, useMap, Marker, Circle } from 'react-leaflet';
@@ -62,6 +62,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [segmentTimeLeft, setSegmentTimeLeft] = useState(segments[0]?.duration || 0);
+    const segmentTimeLeftRef = useRef(segments[0]?.duration || 0);
     const [totalTimeElapsed, setTotalTimeElapsed] = useState(0);
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [gender, setGender] = useState<Gender>('female');
@@ -83,6 +84,38 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
 
     const [selectedProfile, setSelectedProfile] = useState<string>(initialMatch ? initialMatch[0] : 'marcelly');
     const [setupStep, setSetupStep] = useState(initialMatch ? 2 : 1);
+    const [resumeDialog, setResumeDialog] = useState<{show: boolean, state: any}>({show: false, state: null});
+
+    // Offline State Recovery
+    useEffect(() => {
+        const savedState = localStorage.getItem('abfit_run_active_session');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                const age = Date.now() - state.timestamp;
+                if (age < 3600000) { // If less than 1 hour old
+                    setResumeDialog({show: true, state});
+                }
+            } catch (e) {}
+        }
+    }, []);
+
+    const handleResume = () => {
+        if (!resumeDialog.state) return;
+        const s = resumeDialog.state;
+        setTotalTimeElapsed(s.totalTimeElapsed);
+        accumulatedTimeRef.current = s.totalTimeElapsed;
+        setDistance(s.distance);
+        stepsRef.current = s.steps || 0;
+        setSteps(s.steps || 0);
+        setPath(s.path || []);
+        setCurrentSegmentIndex(s.currentSegmentIndex || 0);
+        setSegmentTimeLeft(s.segmentTimeLeft || 0);
+        segmentTimeLeftRef.current = s.segmentTimeLeft || 0;
+        setSetupStep(4);
+        setIsRunning(true);
+        setResumeDialog({show: false, state: null});
+    };
 
     const [distance, setDistance] = useState(0); // in km
     const [calories, setCalories] = useState(0);
@@ -109,6 +142,11 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const [workoutDate, setWorkoutDate] = useState<string>(new Date().toLocaleDateString('pt-BR'));
     const [isAutoPaused, setIsAutoPaused] = useState(false);
     const [hasMovedOnce, setHasMovedOnce] = useState(false);
+    const sessionStartRef = useRef<number | null>(null);
+    const accumulatedTimeRef = useRef<number>(0);
+    const stepsRef = useRef<number>(0);
+    const lastStepMagnitudeRef = useRef<number>(0);
+    const isOfflineMode = useRef(false);
 
     // Daily Health Stats
     const [dailySteps, setDailySteps] = useState(10500);
@@ -139,6 +177,72 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     const hrHistoryRef = useRef<number[]>([]);
     const lastBeatTimeRef = useRef(0);
     const [path, setPath] = useState<{lat: number, lng: number}[]>([]);
+    const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+    const [showStopConfirm, setShowStopConfirm] = useState(false);
+
+    // Effect for accurate step counting via motion sensor
+    useEffect(() => {
+        const handleMotion = (event: DeviceMotionEvent) => {
+            if (!isRunning || isAutoPaused) return;
+            
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+            
+            const magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
+            const delta = magnitude - lastStepMagnitudeRef.current;
+            lastStepMagnitudeRef.current = magnitude;
+            
+            // Peak detection logic
+            if (delta > 2.5 && magnitude > 12) {
+                const now = Date.now();
+                if (now - lastStepTimeRef.current > 250) { // Max 4 steps per second
+                    stepsRef.current += 1;
+                    setSteps(stepsRef.current);
+                    lastStepTimeRef.current = now;
+                    
+                    // Update cadence
+                    setCadence(Math.round(60000 / (now - lastStepTimeRef.current)));
+                }
+            }
+        };
+
+        if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+            window.addEventListener('devicemotion', handleMotion);
+        }
+        return () => window.removeEventListener('devicemotion', handleMotion);
+    }, [isRunning, isAutoPaused]);
+
+    // Offline State Recovery
+    useEffect(() => {
+        const savedState = localStorage.getItem('abfit_run_active_session');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                // If it's a very fresh session (less than 1 hour old), we could offer to restore
+                // But for now, let's just log it.
+                console.log("Found previous session state", state);
+            } catch (e) {}
+        }
+    }, []);
+
+    const saveSessionState = useCallback(() => {
+        if (!isRunning) return;
+        const state = {
+            totalTimeElapsed,
+            distance,
+            steps: stepsRef.current,
+            path,
+            segments,
+            currentSegmentIndex,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('abfit_run_active_session', JSON.stringify(state));
+    }, [totalTimeElapsed, distance, path, segments, currentSegmentIndex, isRunning]);
+
+    useEffect(() => {
+        const interval = setInterval(saveSessionState, 5000);
+        return () => clearInterval(interval);
+    }, [saveSessionState]);
 
     const currentSegment = segments[currentSegmentIndex];
 
@@ -294,10 +398,11 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                         if (accuracy > 45) return;
 
                         const lastPos = lastPositionRef.current;
+                        let d = 0;
                         
                         // Se já temos a última posição e o cronômetro está rodando
                         if (lastPos && lastPos.coords.latitude !== 0) {
-                            const d = calculateDistance(
+                            d = calculateDistance(
                                 lastPos.coords.latitude,
                                 lastPos.coords.longitude,
                                 latitude,
@@ -314,8 +419,6 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                                 setDistance(prev => {
                                     const next = prev + d;
                                     updateCalories(next);
-                                    const strideLength = (height / 100) * 0.414;
-                                    setSteps(Math.round((next * 1000) / strideLength));
                                     return next;
                                 });
                                 setPath(prev => [...prev, { lat: latitude, lng: longitude }]);
@@ -337,14 +440,28 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                         lastPositionRef.current = position;
                         setLastPosition(position);
                         
-                        if (isRunning && position.coords.speed !== null && position.coords.speed > 0.15) {
-                            const speedKmh = position.coords.speed * 3.6;
-                            setCurrentSpeed(speedKmh);
-                            const paceMinKm = 60 / speedKmh;
-                            const mins = Math.floor(paceMinKm);
-                            const secs = Math.round((paceMinKm - mins) * 60);
-                            setPace(`${mins}:${secs.toString().padStart(2, '0')}`);
-                        } else if (!isRunning) {
+                        if (isRunning) {
+                            let speedKmh = 0;
+                            if (position.coords.speed !== null && position.coords.speed > 0.15) {
+                                speedKmh = position.coords.speed * 3.6;
+                            } else if (lastPos) {
+                                // Fallback speed calc from distance/time
+                                const timeDeltaS = (position.timestamp - lastPos.timestamp) / 1000;
+                                if (timeDeltaS > 0.5) {
+                                    speedKmh = (d * 3600) / timeDeltaS;
+                                }
+                            }
+
+                            if (speedKmh > 0.5) {
+                                setCurrentSpeed(speedKmh);
+                                const paceMinKm = 60 / speedKmh;
+                                const mins = Math.floor(paceMinKm);
+                                const secs = Math.round((paceMinKm - mins) * 60);
+                                setPace(`${mins}:${secs.toString().padStart(2, '0')}`);
+                            } else {
+                                setCurrentSpeed(0);
+                            }
+                        } else {
                             setCurrentSpeed(0);
                         }
                     },
@@ -370,6 +487,8 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         }
     }, [segments]);
 
+    const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
     const speak = (text: string, interrupt = false) => {
         if (!soundEnabled || !('speechSynthesis' in window)) return;
         if (interrupt) {
@@ -379,7 +498,13 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         }
         if (!interrupt && speechQueueRef.current.includes(text)) return;
         speechQueueRef.current.push(text);
-        processSpeechQueue();
+        
+        // Fast path for interrupt
+        if (interrupt) {
+            processSpeechQueue();
+        } else {
+            processSpeechQueue();
+        }
     };
 
     const processSpeechQueue = () => {
@@ -389,18 +514,24 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'pt-BR';
-        utterance.rate = 1.1; // Slightly slower to prevent engine errors
+        utterance.rate = text.length < 10 ? 1.3 : 1.1; // Fast-talk for countdowns
         utterance.volume = 1;
         utterance.pitch = 1;
 
-        // Try to explicitly get a pt-BR voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const ptVoices = voices.filter(v => v.lang.includes('pt-BR') || v.lang.includes('pt_BR'));
-        if (ptVoices.length > 0) {
-            utterance.voice = ptVoices[0];
+        if (!voiceRef.current) {
+            const voices = window.speechSynthesis.getVoices();
+            const ptVoices = voices.filter(v => v.lang.includes('pt-BR') || v.lang.includes('pt_BR'));
+            if (ptVoices.length > 0) {
+                // Prefer Google voices if on Android as they are usually faster
+                const googleVoice = ptVoices.find(v => v.name.toLowerCase().includes('google'));
+                voiceRef.current = googleVoice || ptVoices[0];
+            }
         }
         
-        // Prevent Garbage Collection of Utterance in Android/Safari
+        if (voiceRef.current) {
+            utterance.voice = voiceRef.current;
+        }
+        
         activeUtterancesRef.current.push(utterance);
         
         let hasEnded = false;
@@ -411,77 +542,107 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             hasEnded = true;
             clearTimeout(timeoutId);
             
-            // Cleanup from active references to allow GC after completion
             activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
-            
             isSpeakingRef.current = false;
             
-            // Added small delay before next speech to prevent TTS engine overlap panic
+            // Reduced delay for faster transitions between queued messages
             setTimeout(() => {
                 processSpeechQueue();
-            }, 100);
+            }, 50);
         };
 
         utterance.onend = finishSpeaking;
         utterance.onerror = finishSpeaking;
         
-        // Wake up audio engine for some mobile browsers
         if (window.speechSynthesis.paused) {
             window.speechSynthesis.resume();
         }
         
         window.speechSynthesis.speak(utterance);
-
-        // Fallback for Android Chrome bug where onend never fires
-        // Give normal talking speed + 2 seconds breathing room
-        timeoutId = setTimeout(finishSpeaking, Math.max(3000, text.length * 150));
+        timeoutId = setTimeout(finishSpeaking, Math.max(2000, text.length * 150));
     };
 
     useEffect(() => {
-        // Pre-load voices on component mount
+        const loadVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            const ptVoices = voices.filter(v => v.lang.includes('pt-BR') || v.lang.includes('pt_BR'));
+            if (ptVoices.length > 0) {
+                const googleVoice = ptVoices.find(v => v.name.toLowerCase().includes('google'));
+                voiceRef.current = googleVoice || ptVoices[0];
+            }
+        };
+
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.getVoices();
-            window.speechSynthesis.cancel(); // Clear any hanging utterances from previous sessions
+            window.speechSynthesis.cancel();
+            loadVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
         }
     }, []);
 
-    // Timer Logic - Refactored to avoid distance dependency re-renders
+    // Timer Logic - Absolute Timestamp Based (Precise in background)
     useEffect(() => {
         if (isRunning && !isFinished && typeof countdownNum === 'number' && !isAutoPaused) {
-            lastTickRef.current = Date.now();
+            if (sessionStartRef.current === null) {
+                sessionStartRef.current = Date.now();
+            }
+
             if (lastMovementTimeRef.current === 0) lastMovementTimeRef.current = Date.now();
             
             timerRef.current = setInterval(() => {
                 const now = Date.now();
                 
-                // Auto-pause detection (5 sec threshold) - Only if has moved once
+                // Auto-pause detection
                 if (mode === 'outdoor' && !isAutoPaused && hasMovedOnce) {
                     if (now - lastMovementTimeRef.current > 7000) { 
                         setIsAutoPaused(true);
                         speak("Treino pausado automaticamente. Volte a se movimentar para retomar.", true);
+                        if (sessionStartRef.current !== null) {
+                            accumulatedTimeRef.current += Math.floor((now - sessionStartRef.current) / 1000);
+                            sessionStartRef.current = null;
+                        }
+                        return;
                     }
                 }
 
-                const delta = Math.floor((now - lastTickRef.current) / 1000);
-                if (delta >= 1) {
-                    lastTickRef.current = now;
-                    setTotalTimeElapsed(prev => prev + delta);
+                if (sessionStartRef.current !== null) {
+                    const sessionDelta = Math.floor((now - sessionStartRef.current) / 1000);
+                    const newTotal = accumulatedTimeRef.current + sessionDelta;
                     
-                    if (!isFreeMode) {
-                        setSegmentTimeLeft(prev => {
-                            const newTime = prev - delta;
-                            if (newTime <= 5 && newTime > 0 && prev > 5) speak("Cinco. Quatro. Três. Dois. Um.");
-                            if (newTime <= 0) { handleNextSegment(); return 0; }
-                            return newTime;
-                        });
+                    if (newTotal !== totalTimeElapsed) {
+                        setTotalTimeElapsed(newTotal);
+                        
+                        if (!isFreeMode) {
+                            const tickDelta = newTotal - totalTimeElapsed;
+                            const next = segmentTimeLeftRef.current - tickDelta;
+                            
+                            // Speak FIRST to give TTS engine a head start
+                            if (next === 5) speak("Cinco", true);
+                            if (next === 4) speak("Quatro", true);
+                            if (next === 3) speak("Três", true);
+                            if (next === 2) speak("Dois", true);
+                            if (next === 1) speak("Um", true);
+                            
+                            segmentTimeLeftRef.current = next;
+                            setSegmentTimeLeft(next);
+
+                            if (next <= 0) { 
+                                handleNextSegment(); 
+                            }
+                        }
                     }
                 }
             }, 1000);
-        } else if (timerRef.current) {
-            clearInterval(timerRef.current);
+        } else {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (sessionStartRef.current !== null) {
+                accumulatedTimeRef.current += Math.floor((Date.now() - sessionStartRef.current) / 1000);
+                sessionStartRef.current = null;
+            }
         }
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [isRunning, isFinished, countdownNum, isAutoPaused, isFreeMode]);
+    }, [isRunning, isFinished, countdownNum, isAutoPaused, isFreeMode, totalTimeElapsed]);
 
     // Secondary effect to update average speed periodically without restarting timer
     useEffect(() => {
@@ -576,6 +737,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 date: workoutDate,
                 timestamp: Date.now(),
                 type: 'RUNNING',
+                photo: capturedPhoto,
                 runningStats: {
                     distance: Number(distance.toFixed(2)),
                     avgSpeed: Number(avgSpeed.toFixed(1)),
@@ -600,7 +762,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
 
     const handleNextSegment = (forceFinish = false) => {
         if (forceFinish || currentSegmentIndex + 1 >= segments.length) {
-            speak(forceFinish ? "Treino encerrado." : "Treino concluído! Parabéns!", true);
+            speak(forceFinish ? "Treino encerrado." : "FINAL DE TREINO!", true);
             setIsRunning(false);
             setIsFinished(true);
         } else {
@@ -613,11 +775,13 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 startCountdown(() => {
                     setCurrentSegmentIndex(nextIndex);
                     setSegmentTimeLeft(nextSegment.duration);
+                    segmentTimeLeftRef.current = nextSegment.duration;
                     announceSegment(nextSegment);
                 });
             } else {
                 setCurrentSegmentIndex(nextIndex);
                 setSegmentTimeLeft(nextSegment.duration);
+                segmentTimeLeftRef.current = nextSegment.duration;
                 announceSegment(nextSegment);
             }
         }
@@ -678,10 +842,41 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
     };
 
     const startWorkout = () => {
-        setSegmentTimeLeft(segments[0]?.duration || 0);
+        const initialDuration = segments[0]?.duration || 0;
+        setSegmentTimeLeft(initialDuration);
+        segmentTimeLeftRef.current = initialDuration;
         setSetupStep(4);
         speak(`Painel aberto. O seu primeiro bloco será ${segments[0]?.title}, com duração de ${getSpeechDuration(segments[0]?.duration)}. Pressione Play para começar.`, true);
     };
+
+    if (resumeDialog.show) {
+        return (
+            <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
+                <div className="w-20 h-20 bg-[#e2ff00]/10 rounded-full flex items-center justify-center mb-6 border border-[#e2ff00]/20">
+                    <Activity size={40} className="text-[#e2ff00] animate-pulse" />
+                </div>
+                <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white mb-2">Treino em Andamento!</h3>
+                <p className="text-zinc-400 text-sm mb-10 font-bold uppercase tracking-widest leading-relaxed">Detectamos um treino que não foi finalizado. Deseja retomar de onde parou?</p>
+                <div className="grid grid-cols-2 gap-4 w-full">
+                    <button 
+                        onClick={() => {
+                            localStorage.removeItem('abfit_run_active_session');
+                            setResumeDialog({show: false, state: null});
+                        }}
+                        className="py-5 rounded-2xl bg-zinc-900 text-zinc-500 font-black uppercase tracking-widest text-[10px] border border-white/5 active:scale-95 transition-all"
+                    >
+                        Descartar
+                    </button>
+                    <button 
+                        onClick={handleResume}
+                        className="py-5 rounded-2xl bg-[#e2ff00] text-black font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all shadow-lg shadow-[#e2ff00]/20"
+                    >
+                        Retomar Treino
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (setupStep === 1) {
         return (
@@ -771,51 +966,10 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 <div className="flex gap-4 mt-12">
                      <button onClick={() => setSetupStep(1)} className="py-5 px-6 bg-zinc-900 text-zinc-500 font-black uppercase text-xs tracking-widest rounded-2xl">Voltar</button>
                      <button 
-                        onClick={() => setSetupStep(3)}
+                        onClick={startWorkout}
                         className="flex-1 py-5 bg-white text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl active:scale-95 transition-all"
                     >
                         Próximo
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (setupStep === 3) {
-        return (
-            <div className="fixed inset-0 z-[1100] bg-black text-white p-6 font-sans flex flex-col justify-center max-w-md mx-auto">
-                <div className="text-center mb-10">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-[#e2ff00]">Treinador</h2>
-                    <p className="text-zinc-500 text-sm mt-2 font-bold uppercase tracking-widest">Feedback Vocal (1.2x)</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <button 
-                        onClick={() => initSpeechMode('female')}
-                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${
-                            gender === 'female' ? 'bg-pink-500 border-pink-500 text-white shadow-[0_0_20px_rgba(236,72,153,0.4)]' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                        }`}
-                    >
-                        <User size={36} />
-                        <span className="font-black uppercase tracking-widest text-xs">Feminina</span>
-                    </button>
-                    <button 
-                        onClick={() => initSpeechMode('male')}
-                        className={`p-8 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${
-                            gender === 'male' ? 'bg-blue-500 border-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                        }`}
-                    >
-                        <Users size={36} />
-                        <span className="font-black uppercase tracking-widest text-xs">Masculina</span>
-                    </button>
-                </div>
-
-                <div className="flex gap-4 mt-12">
-                     <button onClick={() => setSetupStep(2)} className="py-5 px-6 bg-zinc-900 text-zinc-500 font-black uppercase text-xs tracking-widest rounded-2xl">Voltar</button>
-                     <button 
-                        onClick={startWorkout}
-                        className="flex-1 py-6 bg-[#e2ff00] text-black font-black uppercase text-sm tracking-[0.2em] rounded-3xl active:scale-95 transition-all w-full animate-in fade-in"
-                    >
-                        Abrir Painel de Treino
                     </button>
                 </div>
             </div>
@@ -862,39 +1016,83 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     )}
                 </div>
 
-                {saveStatus === 'success' ? (
-                    <div className="bg-emerald-600/20 border border-emerald-500/30 p-8 rounded-[2.5rem] text-center mb-8 animate-in zoom-in duration-300">
-                        <Check size={48} className="text-emerald-500 mx-auto mb-4" />
-                        <p className="text-xl font-black italic uppercase text-white">Treino Salvo com Sucesso!</p>
-                        <p className="text-xs font-bold text-emerald-500/70 uppercase tracking-widest mt-2 font-sans">Sincronizado com seu histórico</p>
-                    </div>
-                ) : saveStatus === 'error' ? (
-                    <div className="bg-red-600/20 border border-red-500/30 p-8 rounded-[2.5rem] text-center mb-8 animate-in shake duration-500">
-                        <X size={48} className="text-red-500 mx-auto mb-4" />
-                        <p className="text-xl font-black italic uppercase text-white">Erro ao Salvar</p>
-                        <button onClick={saveWorkout} className="mt-4 px-6 py-2 bg-red-600 rounded-full text-xs font-black uppercase">Tentar Novamente</button>
-                    </div>
-                ) : (
-                    <button 
-                        onClick={saveWorkout}
-                        disabled={isSaving}
-                        className="w-full py-8 bg-[#e2ff00] text-black rounded-[2.5rem] font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-[#e2ff00]/20 active:scale-95 transition-all mb-8 flex items-center justify-center gap-4"
-                    >
-                        {isSaving ? (
-                            <>
-                                <Loader2 size={32} className="animate-spin" />
-                                SALVANDO...
-                            </>
+                <div className="bg-[#1a1a1a] rounded-[2.5rem] p-8 mb-8 border border-white/5 shadow-2xl">
+                    <div className="flex flex-col items-center mb-10">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4 italic">FOTO DA VITÓRIA (OPCIONAL)</span>
+                        {capturedPhoto ? (
+                             <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-[#e2ff00]/30 shadow-2xl group">
+                                 <img src={capturedPhoto} alt="Workout" className="w-full h-full object-cover" />
+                                 <button 
+                                    onClick={() => setCapturedPhoto(null)} 
+                                    className="absolute top-4 right-4 bg-black/60 backdrop-blur-md p-3 rounded-full text-white hover:bg-red-600 transition-colors"
+                                 >
+                                    <X size={20} />
+                                 </button>
+                             </div>
                         ) : (
-                            <>
-                                <Check size={32} />
-                                SALVAR TREINO
-                            </>
+                            <button 
+                                onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = (e: any) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (re: any) => setCapturedPhoto(re.target.result);
+                                            reader.readAsDataURL(file);
+                                        }
+                                    };
+                                    input.click();
+                                }}
+                                className="w-full aspect-video rounded-3xl bg-zinc-900 border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center gap-4 hover:border-[#e2ff00]/50 hover:bg-zinc-800/50 transition-all text-zinc-600"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center border border-white/5"><Camera size={32} /></div>
+                                <span className="text-[10px] font-black uppercase tracking-widest italic group-hover:text-white transition-colors">Tirar ou Anexar Foto</span>
+                            </button>
                         )}
-                    </button>
-                )}
+                    </div>
 
-                <button onClick={onClose} className="w-full py-6 bg-zinc-900 text-zinc-500 rounded-[2rem] font-black italic uppercase tracking-widest text-sm hover:text-white transition-all">DESCARTAR TREINO</button>
+                    {saveStatus === 'success' ? (
+                        <div className="bg-emerald-600/20 border border-emerald-500/30 p-8 rounded-[2rem] text-center animate-in zoom-in duration-300">
+                            <Check size={48} className="text-emerald-500 mx-auto mb-4" />
+                            <p className="text-xl font-black italic uppercase text-white">Treino Salvo!</p>
+                            <p className="text-xs font-bold text-emerald-500/70 uppercase tracking-widest mt-2">Sincronizado</p>
+                        </div>
+                    ) : saveStatus === 'error' ? (
+                        <div className="bg-red-600/20 border border-red-500/30 p-8 rounded-[2rem] text-center animate-in shake duration-500">
+                            <X size={48} className="text-red-500 mx-auto mb-4" />
+                            <p className="text-xl font-black italic uppercase text-white">Erro ao Salvar</p>
+                            <button onClick={saveWorkout} className="mt-4 px-6 py-2 bg-red-600 rounded-full text-xs font-black uppercase">Tentar Novamente</button>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={() => {
+                                localStorage.removeItem('abfit_run_active_session');
+                                saveWorkout();
+                            }}
+                            disabled={isSaving}
+                            className="w-full py-8 bg-[#e2ff00] text-black rounded-[2rem] font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-[#e2ff00]/20 active:scale-95 transition-all flex items-center justify-center gap-4"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 size={32} className="animate-spin" />
+                                    SALVANDO...
+                                </>
+                            ) : (
+                                <>
+                                    <Check size={32} />
+                                    SALVAR TREINO
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
+
+                <button onClick={() => {
+                    localStorage.removeItem('abfit_run_active_session');
+                    onClose();
+                }} className="w-full py-6 bg-transparent text-zinc-700 rounded-[2rem] font-black italic uppercase tracking-widest text-[10px] hover:text-white transition-all mb-4 italic">DESCARTAR DADOS DO TREINO</button>
 
                 <div className="bg-[#1a1a1a] rounded-[3rem] p-10 mt-12 mb-8 shadow-2xl relative border border-white/5">
                     <div className="flex justify-between items-center mb-10">
@@ -939,6 +1137,49 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                         >
                             {countdownNum}
                         </motion.span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* STOP CONFIRMATION MODAL */}
+            <AnimatePresence>
+                {showStopConfirm && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[1500] bg-black/90 backdrop-blur-md flex items-center justify-center p-8 text-center"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-zinc-900 border border-white/10 p-10 rounded-[3rem] shadow-2xl w-full max-w-sm"
+                        >
+                            <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-600/20">
+                                <Square size={32} className="text-red-600 animate-pulse" fill="currentColor" />
+                            </div>
+                            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white mb-2">Finalizar Treino?</h3>
+                            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-10 leading-relaxed">Seus dados serão processados e salvos no histórico.</p>
+                            
+                            <div className="flex flex-col gap-4">
+                                <button 
+                                    onClick={() => {
+                                        setShowStopConfirm(false);
+                                        handleNextSegment(true);
+                                    }}
+                                    className="w-full py-5 bg-red-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl active:scale-95 transition-all shadow-lg shadow-red-600/20"
+                                >
+                                    Sim, Finalizar
+                                </button>
+                                <button 
+                                    onClick={() => setShowStopConfirm(false)}
+                                    className="w-full py-5 bg-zinc-800 text-zinc-400 font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all"
+                                >
+                                    Continuar Treinando
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1024,32 +1265,10 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 <>
                     {/* GRID SUPERIOR DE DADOS */}
             <div className="px-6 grid grid-cols-4 gap-2 mb-4">
-                <button 
-                    onClick={toggleCameraHRM}
-                    className={`p-3 rounded-[20px] border flex flex-col items-center justify-center text-center transition-all relative overflow-hidden ${isCameraActive ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-zinc-900/40 border-zinc-800'}`}
-                >
-                    {isCameraActive && (
-                        <div className="absolute inset-0 opacity-10 pointer-events-none">
-                            <div className="w-full h-full bg-red-600 animate-pulse" />
-                        </div>
-                    )}
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1 z-10">{isCameraActive ? 'Captação' : 'Batimento'}</span>
-                    <p className="text-lg font-black text-red-500 z-10">
-                        {heartRate > 0 ? (
-                            <motion.span 
-                                key={heartRate}
-                                initial={{ scale: 1.2, opacity: 0.5 }} 
-                                animate={{ scale: 1, opacity: 1 }}
-                            >
-                                {heartRate}
-                            </motion.span>
-                        ) : (isCameraActive ? '--' : '--')}
-                        <span className="text-[8px] ml-0.5 text-zinc-500">bpm</span>
-                    </p>
-                    {isCameraActive && (
-                         <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                    )}
-                </button>
+                <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Velocidade</span>
+                    <p className="text-lg font-black text-[#e2ff00]">{currentSpeed.toFixed(1)}<span className="text-[8px] ml-0.5 text-zinc-500 italic">km/h</span></p>
+                </div>
                 <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
                     <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Cadência</span>
                     <p className="text-lg font-black text-green-400">{cadence > 0 ? cadence : '--'}<span className="text-[8px] ml-0.5 text-zinc-500">ppm</span></p>
@@ -1137,7 +1356,22 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             )}
 
             {/* CONTROLES DE AÇÃO / BOTOES */}
-            <div className="fixed bottom-8 left-0 right-0 px-10 flex justify-center items-center gap-8 z-[1050]">
+            <div className="fixed bottom-8 left-0 right-0 px-10 flex justify-center items-center gap-6 z-[1050]">
+                {/* STOP BUTTON (Visible when active or paused) */}
+                {(isRunning || totalTimeElapsed > 0) && !isFinished && (
+                    <button 
+                        onClick={() => {
+                            if (totalTimeElapsed > 0) {
+                                setShowStopConfirm(true);
+                            }
+                        }}
+                        className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center active:scale-90 transition-all border-2 border-red-600/30 group"
+                    >
+                        <Square size={20} className="text-red-500 group-hover:scale-110 transition-transform" fill="currentColor" />
+                    </button>
+                )}
+
+                {/* PLAY / PAUSE BUTTON */}
                 {!isRunning ? (
                     <button 
                         onClick={() => {
@@ -1148,32 +1382,30 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                                 setIsRunning(true);
                             }
                         }}
-                        className="w-24 h-24 bg-[#e2ff00] rounded-full flex items-center justify-center text-black shadow-[0_0_40px_rgba(226,255,0,0.3)] active:scale-90 transition-all border-[6px] border-black"
+                        className={`w-24 h-24 bg-[#e2ff00] rounded-full flex items-center justify-center text-black shadow-[0_0_40px_rgba(226,255,0,0.3)] active:scale-90 transition-all border-[6px] border-black ${isFinished ? 'opacity-0 scale-0' : ''}`}
                     >
                         <Play size={40} fill="black" />
                     </button>
                 ) : (
-                    <>
-                        <button 
-                            onClick={() => {
-                                speak("Treino pausado.", true);
-                                setIsRunning(false);
-                            }}
-                            className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center border-2 border-zinc-700 active:scale-95 transition-all"
-                        >
-                            <Pause size={28} fill="white" />
-                        </button>
-                        <button 
-                            onClick={() => {
-                                if(confirm("Deseja finalizar o treino agora?")) {
-                                    handleNextSegment(true);
-                                }
-                            }}
-                            className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center active:scale-95 transition-all border-2 border-red-500/50 shadow-lg"
-                        >
-                            <Square size={24} fill="white" />
-                        </button>
-                    </>
+                    <button 
+                        onClick={() => {
+                            speak("Treino pausado.", true);
+                            setIsRunning(false);
+                        }}
+                        className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-black shadow-[0_0_40px_rgba(255,255,255,0.2)] active:scale-90 transition-all border-[6px] border-black"
+                    >
+                        <Pause size={40} fill="black" />
+                    </button>
+                )}
+
+                {/* PLACEHOLDER OR VOLUME TOGGLE TO KEEP CENTERED BUTTONS */}
+                {(isRunning || totalTimeElapsed > 0) && !isFinished && (
+                    <button 
+                        onClick={() => setSoundEnabled(!soundEnabled)}
+                        className="w-16 h-16 bg-zinc-900/50 rounded-full flex items-center justify-center text-zinc-500 border border-zinc-800 active:scale-90 transition-all"
+                    >
+                        {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                    </button>
                 )}
             </div>
         </div>

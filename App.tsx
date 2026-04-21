@@ -635,6 +635,132 @@ export default function App() {
           physicalAssessments: [], 
           workoutHistory: [
             {
+              id: "hist-andre-20250113",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "32:45",
+              date: "13/01/2025",
+              timestamp: 1736740800000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 4.9,
+                avgPace: "6'41\"",
+                maxPace: "5'50\"",
+                cadence: 133,
+                elevation: 9,
+                calories: 385,
+                avgSpeed: 9.0,
+                maxSpeed: 10.3,
+                steps: 4365
+              }
+            },
+            {
+              id: "hist-andre-20250110",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "36:50",
+              date: "10/01/2025",
+              timestamp: 1736481600000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 5.55,
+                avgPace: "6'38\"",
+                maxPace: "5'25\"",
+                cadence: 134,
+                elevation: 14,
+                calories: 435,
+                avgSpeed: 9.0,
+                maxSpeed: 11.1,
+                steps: 4940
+              }
+            },
+            {
+              id: "hist-andre-20250108",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "34:40",
+              date: "08/01/2025",
+              timestamp: 1736308800000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 5.2,
+                avgPace: "6'40\"",
+                maxPace: "5'35\"",
+                cadence: 133,
+                elevation: 10,
+                calories: 410,
+                avgSpeed: 9.0,
+                maxSpeed: 10.7,
+                steps: 4625
+              }
+            },
+            {
+              id: "hist-andre-20250106",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "40:20",
+              date: "06/01/2025",
+              timestamp: 1736136000000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 6.1,
+                avgPace: "6'36\"",
+                maxPace: "5'20\"",
+                cadence: 134,
+                elevation: 15,
+                calories: 485,
+                avgSpeed: 9.1,
+                maxSpeed: 11.2,
+                steps: 5432
+              }
+            },
+            {
+              id: "hist-andre-20250103",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "32:15",
+              date: "03/01/2025",
+              timestamp: 1735876800000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 4.85,
+                avgPace: "6'39\"",
+                maxPace: "5'45\"",
+                cadence: 133,
+                elevation: 8,
+                calories: 375,
+                avgSpeed: 9.0,
+                maxSpeed: 10.4,
+                steps: 4310
+              }
+            },
+            {
+              id: "hist-andre-20250101",
+              workoutId: "andre-workout-0",
+              name: "Treino de Corrida",
+              athleteName: "André Brito",
+              duration: "35:00",
+              date: "01/01/2025",
+              timestamp: 1735704000000,
+              type: "RUNNING",
+              runningStats: {
+                distance: 5.42,
+                avgPace: "6'27\"",
+                maxPace: "5'12\"",
+                cadence: 137,
+                elevation: 12,
+                calories: 428,
+                avgSpeed: 9.3,
+                maxSpeed: 11.5,
+                steps: 4821
+              }
+            },
+            {
               id: 'hist-andre-run-01',
               workoutId: 'andre-workout-0',
               name: 'Intervalado',
@@ -1105,77 +1231,63 @@ export default function App() {
               const defaultProfile = defaultStudentsData.find(d => d.id === rawData.id || (d.email && rawData.email && d.email.toLowerCase() === rawData.email.toLowerCase()));
               
               if (defaultProfile) {
-                  if (!rawData.nome) rawData.nome = defaultProfile.nome;
-                  if (!rawData.email) rawData.email = defaultProfile.email;
+                  let hasCloudChanges = false;
+                  
+                  if (!rawData.nome) { rawData.nome = defaultProfile.nome; hasCloudChanges = true; }
+                  if (!rawData.email) { rawData.email = defaultProfile.email; hasCloudChanges = true; }
+                  
                   if (!rawData.periodization && defaultProfile.periodization) {
                       rawData.periodization = defaultProfile.periodization;
+                      hasCloudChanges = true;
                   } else if (rawData.periodization && defaultProfile.periodization) {
                       rawData.periodization!.targetVolume = defaultProfile.periodization.targetVolume;
                   }
 
-                  // Se o aluno não tiver treinos, adiciona os padrões
+                  // Workouts Sync
                   if (!rawData.workouts || rawData.workouts.length === 0) {
                       rawData.workouts = defaultProfile.workouts;
+                      hasCloudChanges = true;
                   }
                   
-                  // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
-                  if (!rawData.workoutHistory || rawData.workoutHistory.length === 0) {
-                      rawData.workoutHistory = defaultProfile.workoutHistory;
+                  // History Sync (Union based on ID)
+                  const currentHistory = rawData.workoutHistory || [];
+                  const defaultHistory = defaultProfile.workoutHistory || [];
+                  const mergedHistory = [...currentHistory];
+                  let historyModified = false;
+                  
+                  defaultHistory.forEach(defEntry => {
+                      if (!mergedHistory.some(h => h.id === defEntry.id)) {
+                          mergedHistory.push(defEntry);
+                          historyModified = true;
+                      }
+                  });
+                  
+                  if (historyModified) {
+                      rawData.workoutHistory = mergedHistory;
+                      hasCloudChanges = true;
                   }
 
-                  // Se o aluno não tiver analytics, adiciona o padrão
+                  // Analytics Sync
                   if (!rawData.analytics) {
                       rawData.analytics = defaultProfile.analytics;
+                      hasCloudChanges = true;
                   }
-              }
-              
-              // --- ONE-TIME FIX FOR ANDRE'S WORKOUT HISTORY ---
-              if (rawData.id === 'fixed-andre') {
-                  const history = rawData.workoutHistory || [];
-                  const treinoA = history.filter(h => h.name === 'TREINO A').length;
-                  const treinoB = history.filter(h => h.name === 'TREINO B').length;
-                  let updated = false;
-                  if (treinoA < 4) {
-                      for (let i = treinoA; i < 4; i++) {
-                          history.push({
-                              id: `fixed-andre-a-${i}-${Date.now()}`,
-                              workoutId: 'treino-a-andre',
-                              name: 'TREINO A',
-                              athleteName: 'André Brito',
-                              duration: '60 min',
-                              date: `2${i}/03/2026`,
-                              timestamp: 1741536000000 + i * 86400000,
-                              type: 'STRENGTH'
-                          });
-                      }
-                      updated = true;
-                  }
-                  if (treinoB < 4) {
-                      for (let i = treinoB; i < 4; i++) {
-                          history.push({
-                              id: `fixed-andre-b-${i}-${Date.now()}`,
-                              workoutId: 'treino-b-andre',
-                              name: 'TREINO B',
-                              athleteName: 'André Brito',
-                              duration: '60 min',
-                              date: `2${i}/03/2026`,
-                              timestamp: 1741536000000 + i * 86400000,
-                              type: 'STRENGTH'
-                          });
-                      }
-                      updated = true;
-                  }
-                  if (updated) {
-                      rawData.workoutHistory = history;
-                      const docRef = doc(db, path);
+
+                  // If we detected that local defaults were missing from cloud, sync them up
+                  if (hasCloudChanges) {
+                      const docRefSave = doc(db, path);
                       try {
-                          await setDoc(docRef, { workoutHistory: history }, { merge: true });
-                      } catch (e) {
-                          try {
-                              handleFirestoreError(e, OperationType.WRITE, path);
-                          } catch (err) {
-                              console.error("Firestore write error during auto-fix:", err);
-                          }
+                        console.log(`Sincronizando dados base de ${rawData.nome} para a nuvem...`);
+                        await setDoc(docRefSave, { 
+                            nome: rawData.nome, 
+                            email: rawData.email,
+                            workouts: rawData.workouts,
+                            workoutHistory: rawData.workoutHistory,
+                            periodization: rawData.periodization,
+                            analytics: rawData.analytics
+                        }, { merge: true });
+                      } catch (e: any) {
+                        console.warn("Silent sync error:", e);
                       }
                   }
               }
@@ -1185,7 +1297,7 @@ export default function App() {
               // Restaurar Treino em Andamento se necessário
               if ((window as any)._tempWorkoutId && rawData.workouts) {
                  const w = rawData.workouts.find(w => w.id === (window as any)._tempWorkoutId);
-                 if (w) setSelectedWorkout(w); // Isso fará a UI renderizar o componente correto se a view for WORKOUTS
+                 if (w) setSelectedWorkout(w); 
                  delete (window as any)._tempWorkoutId;
               }
           } else {

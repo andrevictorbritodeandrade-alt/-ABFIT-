@@ -437,6 +437,21 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                     </div>
                     
                     <div className="grid grid-cols-2 gap-10">
+                        {stats.avgSpeed && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Vel. Média</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgSpeed} <span className="text-[10px]">km/h</span></div>
+                            </div>
+                        )}
+                        {stats.maxSpeed && (
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Vel. Máxima</div>
+                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxSpeed} <span className="text-[10px]">km/h</span></div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-10">
                         {stats.elevation && (
                             <div>
                                 <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Elevação</div>
@@ -450,6 +465,13 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                             </div>
                         )}
                     </div>
+
+                    {stats.maxPace && (
+                        <div className="pt-6 border-t border-white/5">
+                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Melhor Pace</div>
+                            <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxPace} <span className="text-[10px]">/km</span></div>
+                        </div>
+                    )}
 
                     {stats.path && stats.path.length > 0 && (
                         <div className="h-64 w-full rounded-[2rem] overflow-hidden border border-white/5 relative mt-4 shadow-inner">
@@ -470,27 +492,33 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
                     )}
                     
                     {/* RESUMO DIÁRIO (IF DATA EXISTS) */}
-                    <div className="pt-8 mt-4 border-t border-white/5">
-                         <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                    <Activity size={10} className="text-white" />
+                    {(stats.steps || stats.sleep) && (
+                        <div className="pt-8 mt-4 border-t border-white/5">
+                             <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                                        <Activity size={10} className="text-white" />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">RESUMO DIÁRIO (HEALTH)</span>
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">RESUMO DIÁRIO (HEALTH)</span>
+                                <Heart size={14} className="text-blue-600 fill-blue-600" />
                             </div>
-                            <Heart size={14} className="text-blue-600 fill-blue-600" />
+                            <div className="grid grid-cols-2 gap-8">
+                                {stats.steps && (
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">PASSOS</p>
+                                        <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">{stats.steps.toLocaleString()} <span className="text-[10px] uppercase">steps</span></p>
+                                    </div>
+                                )}
+                                {stats.sleep && (
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">SONO</p>
+                                        <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">{stats.sleep}</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">PASSOS</p>
-                                <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">10,500 <span className="text-[10px] uppercase">steps</span></p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 italic">SONO</p>
-                                <p className="text-2xl font-black italic text-blue-500 tracking-tighter leading-none">7h 15m</p>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>
@@ -1085,15 +1113,15 @@ function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
                 segments.push({
                     type: 'stimulus',
                     duration: Math.round(stimulusMins * 60),
-                    title: `Tiro ${i + 1}/${totalIntervals}`,
+                    title: `${i + 1} de ${totalIntervals} - Corrida`,
                     speed: workout.speed
                 });
             }
-            if (recoveryMins > 0 && i < totalIntervals - 1) { 
+            if (recoveryMins > 0) { 
                 segments.push({
                     type: 'recovery',
                     duration: Math.round(recoveryMins * 60),
-                    title: `Recuperação ${i + 1}/${totalIntervals}`
+                    title: `${i + 1} de ${totalIntervals} - Caminhada`
                 });
             }
         }
@@ -1116,7 +1144,7 @@ function parseWorkoutSegments(workout: WorkoutModel): WorkoutSegment[] {
         segments.push({
             type: 'cooldown',
             duration: Math.round(cooldownMins * 60),
-            title: 'Desaquecimento'
+            title: 'Caminhada Regenerativa'
         });
     }
 
@@ -1140,39 +1168,27 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
 
     useEffect(() => {
         if (!student.id) return;
-        const hasSeeded = localStorage.getItem(`seeded_${student.id}_run_v9`);
-        if (!hasSeeded) {
-            const checkAndSeed = async () => {
-                try {
-                    await new Promise(r => setTimeout(r, 2000));
-                    
-                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
-                    const q = collection(db, path);
-                    const snap = await getDocs(q);
-                    const currentWorkouts = snap.docs
-                        .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
-                        .filter(w => w.studentId === student.id);
+        
+        const checkAndSeed = async () => {
+            try {
+                const path = `artifacts/${RUN_COLLECTION}/workouts`;
+                const q = collection(db, path);
+                const querySnapshot = await getDocs(q);
+                const currentWorkouts = querySnapshot.docs
+                    .map(d => ({id: d.id, ...d.data()} as WorkoutModel))
+                    .filter(w => w.studentId === student.id);
 
-                    if (['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
-                        for (const w of currentWorkouts) {
-                            const docPath = `artifacts/${RUN_COLLECTION}/workouts/${w.id}`;
-                            await deleteDoc(doc(db, docPath));
-                        }
-                        await seedWorkouts(student.id);
-                    }
-                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
-                } catch (err) {
-                    const path = `artifacts/${RUN_COLLECTION}/workouts`;
-                    try {
-                        handleFirestoreError(err, OperationType.GET, path);
-                    } catch (e) {
-                        console.error(e);
-                    }
-                    localStorage.setItem(`seeded_${student.id}_run_v9`, 'true');
+                // Only seed if there are NO workouts for this student
+                if (currentWorkouts.length === 0 && ['fixed-andre', 'fixed-liliane', 'fixed-marcelly'].includes(student.id)) {
+                    console.log(`Seeding initial workouts for ${student.nome}...`);
+                    await seedWorkouts(student.id);
                 }
-            };
-            checkAndSeed();
-        }
+            } catch (err) {
+                console.error("Error during workout check/seed:", err);
+            }
+        };
+        
+        checkAndSeed();
     }, [student.id]);
 
     useEffect(() => {

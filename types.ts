@@ -32,9 +32,13 @@ export interface Workout {
 export interface RunningStats {
   distance?: number;
   avgPace?: string;
+  maxPace?: string;
+  avgSpeed?: number;
+  maxSpeed?: number;
   avgHR?: number;
   maxHR?: number;
   cadence?: number;
+  steps?: number;
   vo2max?: number;
   elevation?: number;
   calories?: number;
