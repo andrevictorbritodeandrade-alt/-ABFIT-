@@ -40,12 +40,24 @@ export interface RunningStats {
   cadence?: number;
   steps?: number;
   vo2max?: number;
+  vo2maxClass?: 'green' | 'orange' | 'red';
   elevation?: number;
   calories?: number;
   strideLength?: number;
   verticalOscillation?: number;
   groundContactTime?: number;
   asymmetry?: string;
+  advancedMetricsColors?: {
+    asymmetry?: 'blue' | 'green' | 'orange' | 'red';
+    groundTime?: 'blue' | 'green' | 'orange' | 'red';
+    airTime?: 'blue' | 'green' | 'orange' | 'red';
+    regularity?: 'blue' | 'green' | 'orange' | 'red';
+    vertical?: 'blue' | 'green' | 'orange' | 'red';
+    stiffness?: 'blue' | 'green' | 'orange' | 'red';
+  };
+  sweatLoss?: number;
+  hydrationRecomendation?: number;
+  weather?: { temp: number; condition: string; humidity: number; wind: number };
   hrZones?: {
     max?: string;
     anaerobic?: string;
@@ -53,6 +65,7 @@ export interface RunningStats {
     weightControl?: string;
     lowIntensity?: string;
   };
+  splits?: { km: string; time: string; pace?: string; speed?: string }[];
   path?: [number, number][];
 }
 
@@ -184,4 +197,5 @@ export interface Student {
   totalGlobalA?: number;
   totalGlobalB?: number;
   runAlertsEnabled?: boolean;
+  _fixedHistoryApril2?: boolean;
 }

@@ -637,251 +637,162 @@ export default function App() {
             {
               id: "hist-andre-run-20260420",
               workoutId: "unplanned",
-              name: "TREINO LIVRE",
+              name: "Corrida",
               athleteName: "André Brito",
-              duration: "40:00",
+              duration: "46:20",
               date: "20/04/2026",
-              timestamp: 1745107200000,
+              timestamp: new Date('2026-04-20T17:32:00').getTime(),
               type: "RUNNING",
               runningStats: {
-                distance: 5.5,
-                avgPace: "7'15\"",
-                avgHR: 145,
-                calories: 450
+                distance: 4.50,
+                avgPace: "10'17\"",
+                avgHR: 131,
+                calories: 362,
+                cadence: 112,
+                elevation: 34,
+                vo2max: 36.1,
+                vo2maxClass: "red",
+                sweatLoss: 606,
+                hydrationRecomendation: 909,
+                hrZones: {
+                  max: "161-178 bpm (Uso Mínimo)",
+                  anaerobic: "143-160 bpm (Uso Moderado)",
+                  aerobic: "125-142 bpm (Uso Predominante/Longo)",
+                  weightControl: "107-124 bpm (Uso Baixo)",
+                  lowIntensity: "89-106 bpm (Uso Baixo)"
+                },
+                advancedMetricsColors: {
+                  asymmetry: "blue",
+                  groundTime: "orange",
+                  airTime: "green",
+                  regularity: "blue",
+                  vertical: "orange",
+                  stiffness: "orange"
+                },
+                splits: [
+                  { km: "1.00", time: "11:42", pace: "11'42\"" },
+                  { km: "1.00", time: "09:04", pace: "09'04\"" },
+                  { km: "1.00", time: "09:52", pace: "09'52\"" },
+                  { km: "1.00", time: "10:12", pace: "10'12\"" },
+                  { km: "0.50", time: "05:28", pace: "10'53\"" }
+                ]
               }
             },
             {
               id: "hist-andre-run-20260419",
               workoutId: "unplanned",
-              name: "TREINO LIVRE",
+              name: "Corrida (ritmo de caminhada)",
               athleteName: "André Brito",
-              duration: "30:00",
+              duration: "48:54",
               date: "19/04/2026",
-              timestamp: 1745020800000,
+              timestamp: new Date('2026-04-19T12:10:00').getTime(),
               type: "RUNNING",
               runningStats: {
-                distance: 4.8,
-                avgPace: "6'15\"",
-                avgHR: 135,
-                calories: 320
+                distance: 3.74,
+                avgPace: "13'04\"",
+                avgHR: 105,
+                calories: 223,
+                cadence: 101,
+                elevation: 32,
+                vo2max: 36.1,
+                vo2maxClass: "green",
+                sweatLoss: 317,
+                hydrationRecomendation: 475,
+                weather: { temp: 27, condition: "Sol entre nuvens", humidity: 76, wind: 23 },
+                hrZones: {
+                  max: "161-178 bpm (0%)",
+                  anaerobic: "143-160 bpm (0%)",
+                  aerobic: "125-142 bpm (Mínimo/Traço)",
+                  weightControl: "107-124 bpm (Presença significativa)",
+                  lowIntensity: "89-106 bpm (PREDOMINANTE)"
+                },
+                splits: [
+                  { km: "1.00", time: "13:57", pace: "13'57\"" },
+                  { km: "1.00", time: "12:56", pace: "12'56\"" },
+                  { km: "1.00", time: "12:34", pace: "12'34\"" },
+                  { km: "0.74", time: "09:26", pace: "12'43\"" }
+                ]
               }
             },
             {
               id: "hist-andre-run-20260416",
-              workoutId: "treino-rodagem", // Thursday (Rodagem)
-              name: "RODAGEM - Ter/Qui",
+              workoutId: "treino-rodagem",
+              name: "Caminhada",
               athleteName: "André Brito",
-              duration: "52:00",
+              duration: "33:15",
               date: "16/04/2026",
-              timestamp: 1744761600000,
+              timestamp: new Date('2026-04-16T22:22:00').getTime(),
               type: "RUNNING",
               runningStats: {
-                distance: 6.0,
-                avgPace: "8'40\"",
-                avgHR: 110,
-                calories: 380,
-                elevation: 10
+                distance: 3.52,
+                avgSpeed: 6.3,
+                avgHR: 115,
+                calories: 195,
+                steps: 3967,
+                elevation: 2,
+                vo2max: 36.1,
+                vo2maxClass: "green",
+                sweatLoss: 188,
+                hydrationRecomendation: 282,
+                weather: { temp: 23, condition: "Céu limpo/Noite", humidity: 88, wind: 11 },
+                hrZones: {
+                  max: "161-178 bpm (0%)",
+                  anaerobic: "143-160 bpm (Traço mínimo)",
+                  aerobic: "125-142 bpm (Presença moderada)",
+                  weightControl: "107-124 bpm (Predominante)",
+                  lowIntensity: "89-106 bpm (Presença moderada)"
+                },
+                splits: [
+                  { km: "1.00", time: "11:25", speed: "5.2 km/h" },
+                  { km: "1.00", time: "09:18", speed: "6.4 km/h" },
+                  { km: "1.00", time: "08:04", speed: "7.4 km/h" },
+                  { km: "0.52", time: "04:26", speed: "7.1 km/h" }
+                ]
               }
             },
             {
               id: "hist-andre-run-20260415",
-              workoutId: "treino-intervalado-desconfortavel", // Wednesday (Intervalado Desconfortável)
-              name: "INTERVALADO (Desconfortável) - Qua",
+              workoutId: "treino-intervalado-desconfortavel",
+              name: "Corrida",
               athleteName: "André Brito",
-              duration: "45:00",
+              duration: "38:18",
               date: "15/04/2026",
-              timestamp: 1744675200000,
+              timestamp: new Date('2026-04-15T21:06:00').getTime(),
               type: "RUNNING",
               runningStats: {
-                distance: 6.5,
-                avgPace: "6'55\"",
-                avgHR: 152,
-                calories: 512,
-                elevation: 15
+                distance: 3.12,
+                avgPace: "12'14\"",
+                avgHR: 110,
+                calories: 174,
+                cadence: 104,
+                elevation: 4,
+                vo2max: 36.1,
+                vo2maxClass: "orange",
+                sweatLoss: 252,
+                hydrationRecomendation: 378,
+                weather: { temp: 23, condition: "Céu limpo com nuvens", humidity: 91, wind: 5 },
+                hrZones: {
+                  max: "162-179 bpm (Inexistente)",
+                  anaerobic: "144-161 bpm (Inexistente)",
+                  aerobic: "126-143 bpm (Baixa presença)",
+                  weightControl: "108-125 bpm (PREDOMINANTE)",
+                  lowIntensity: "89-107 bpm (Presença moderada)"
+                },
+                advancedMetricsColors: {
+                  asymmetry: "blue",
+                  groundTime: "orange",
+                  airTime: "green",
+                  regularity: "blue",
+                  vertical: "orange",
+                  stiffness: "orange"
+                },
+                splits: [
+                  { km: "1.00", time: "11:52", pace: "11'52\"" },
+                  { km: "1.00", time: "13:21", pace: "13'21\"" },
+                  { km: "1.00", time: "13:26", pace: "13'26\"" },
+                  { km: "0.13", time: "01:37", pace: "12'46\"" }
+                ]
               }
-            },
-            {
-              id: "hist-andre-20250113",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "32:45",
-              date: "13/01/2025",
-              timestamp: 1736740800000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 4.9,
-                avgPace: "6'41\"",
-                maxPace: "5'50\"",
-                cadence: 133,
-                elevation: 9,
-                calories: 385,
-                avgSpeed: 9.0,
-                maxSpeed: 10.3,
-                steps: 4365
-              }
-            },
-            {
-              id: "hist-andre-20250110",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "36:50",
-              date: "10/01/2025",
-              timestamp: 1736481600000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 5.55,
-                avgPace: "6'38\"",
-                maxPace: "5'25\"",
-                cadence: 134,
-                elevation: 14,
-                calories: 435,
-                avgSpeed: 9.0,
-                maxSpeed: 11.1,
-                steps: 4940
-              }
-            },
-            {
-              id: "hist-andre-20250108",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "34:40",
-              date: "08/01/2025",
-              timestamp: 1736308800000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 5.2,
-                avgPace: "6'40\"",
-                maxPace: "5'35\"",
-                cadence: 133,
-                elevation: 10,
-                calories: 410,
-                avgSpeed: 9.0,
-                maxSpeed: 10.7,
-                steps: 4625
-              }
-            },
-            {
-              id: "hist-andre-20250106",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "40:20",
-              date: "06/01/2025",
-              timestamp: 1736136000000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 6.1,
-                avgPace: "6'36\"",
-                maxPace: "5'20\"",
-                cadence: 134,
-                elevation: 15,
-                calories: 485,
-                avgSpeed: 9.1,
-                maxSpeed: 11.2,
-                steps: 5432
-              }
-            },
-            {
-              id: "hist-andre-20250103",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "32:15",
-              date: "03/01/2025",
-              timestamp: 1735876800000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 4.85,
-                avgPace: "6'39\"",
-                maxPace: "5'45\"",
-                cadence: 133,
-                elevation: 8,
-                calories: 375,
-                avgSpeed: 9.0,
-                maxSpeed: 10.4,
-                steps: 4310
-              }
-            },
-            {
-              id: "hist-andre-20250101",
-              workoutId: "andre-workout-0",
-              name: "Treino de Corrida",
-              athleteName: "André Brito",
-              duration: "35:00",
-              date: "01/01/2025",
-              timestamp: 1735704000000,
-              type: "RUNNING",
-              runningStats: {
-                distance: 5.42,
-                avgPace: "6'27\"",
-                maxPace: "5'12\"",
-                cadence: 137,
-                elevation: 12,
-                calories: 428,
-                avgSpeed: 9.3,
-                maxSpeed: 11.5,
-                steps: 4821
-              }
-            },
-            {
-              id: 'hist-andre-run-01',
-              workoutId: 'andre-workout-0',
-              name: 'Intervalado',
-              athleteName: 'André Brito',
-              duration: '32 min',
-              date: '22/03/2026',
-              timestamp: 1742601600000,
-              type: 'RUNNING',
-              runningStats: {
-                distance: 4.5,
-                duration: '32 min',
-                avgPace: "7'06\"",
-                avgHR: 142,
-                calories: 380
-              }
-            },
-            {
-              id: 'hist-andre-04',
-              workoutId: 'treino-b-andre',
-              name: 'TREINO B',
-              athleteName: 'André Brito',
-              duration: '50 min',
-              date: '12/03/2026',
-              timestamp: 1741795200000,
-              type: 'STRENGTH'
-            },
-            {
-              id: 'hist-andre-03',
-              workoutId: 'treino-b-andre',
-              name: 'TREINO B',
-              athleteName: 'André Brito',
-              duration: '55 min',
-              date: '10/03/2026',
-              timestamp: 1741622400000,
-              type: 'STRENGTH'
-            },
-            {
-              id: 'hist-andre-02',
-              workoutId: 'treino-a-andre',
-              name: 'TREINO A',
-              athleteName: 'André Brito',
-              duration: '58 min',
-              date: '11/03/2026',
-              timestamp: 1741708800000,
-              type: 'STRENGTH'
-            },
-            {
-              id: 'hist-andre-01',
-              workoutId: 'treino-a-andre',
-              name: 'TREINO A',
-              athleteName: 'André Brito',
-              duration: '60 min',
-              date: '09/03/2026',
-              timestamp: 1741536000000,
-              type: 'STRENGTH'
             }
           ], 
           analytics: {
@@ -1316,8 +1227,16 @@ export default function App() {
                   }
                   
                   // History Sync (Union based on ID)
-                  const currentHistory = rawData.workoutHistory || [];
+                  let currentHistory = rawData.workoutHistory || [];
                   const defaultHistory = defaultProfile.workoutHistory || [];
+
+                  // Override for André Brito to ensure EXACTLY 4 entries (as requested)
+                  if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com' && !rawData._fixedHistoryApril2) {
+                      currentHistory = defaultHistory;
+                      (rawData as any)._fixedHistoryApril2 = true;
+                      hasCloudChanges = true;
+                  }
+
                   const mergedHistory = [...currentHistory];
                   let historyModified = false;
                   
@@ -1328,7 +1247,7 @@ export default function App() {
                       }
                   });
                   
-                  if (historyModified) {
+                  if (historyModified || hasCloudChanges) {
                       rawData.workoutHistory = mergedHistory;
                       hasCloudChanges = true;
                   }

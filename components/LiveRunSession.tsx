@@ -194,15 +194,18 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             lastStepMagnitudeRef.current = magnitude;
             
             // Peak detection logic
-            if (delta > 2.5 && magnitude > 12) {
+            if (delta > 3.0 && magnitude > 12.5) {
                 const now = Date.now();
-                if (now - lastStepTimeRef.current > 250) { // Max 4 steps per second
+                if (now - lastStepTimeRef.current > 250) { // Max 4 steps per second (240 spm)
                     stepsRef.current += 1;
                     setSteps(stepsRef.current);
                     lastStepTimeRef.current = now;
                     
-                    // Update cadence
-                    setCadence(Math.round(60000 / (now - lastStepTimeRef.current)));
+                    // Update cadence (only used internally now)
+                    const timeDiff = now - lastStepTimeRef.current;
+                    if (timeDiff > 0) {
+                        setCadence(Math.round(60000 / (now - lastStepTimeRef.current)));
+                    }
                 }
             }
         };
@@ -395,8 +398,8 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     (position) => {
                         const { latitude, longitude, accuracy } = position.coords;
                         
-                        // Ignore coordinates with poor accuracy (> 45m)
-                        if (accuracy > 45) return;
+                        // Ignore coordinates with poor accuracy (> 65m)
+                        if (accuracy > 65) return;
 
                         const lastPos = lastPositionRef.current;
                         let d = 0;
@@ -411,7 +414,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                             );
                             
                             // Acumular distância apenas se o treino estiver rolando
-                            if (isRunning && d > 0.0015 && d < 0.1) {
+                            if (isRunning && d > 0.0005 && d < 0.8) {
                                 lastMovementTimeRef.current = Date.now();
                                 if (isAutoPaused) {
                                     setIsAutoPaused(false);
@@ -443,13 +446,14 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                         
                         if (isRunning) {
                             let speedKmh = 0;
-                            if (position.coords.speed !== null && position.coords.speed > 0.15) {
-                                speedKmh = position.coords.speed * 3.6;
+                            if (position.coords.speed !== null && position.coords.speed > 0.1) {
+                                // Add a 1km/h correction as requested by user to match Samsung/Adidas
+                                speedKmh = (position.coords.speed * 3.6) + 1.0;
                             } else if (lastPos) {
                                 // Fallback speed calc from distance/time
                                 const timeDeltaS = (position.timestamp - lastPos.timestamp) / 1000;
                                 if (timeDeltaS > 0.5) {
-                                    speedKmh = (d * 3600) / timeDeltaS;
+                                    speedKmh = ((d * 3600) / timeDeltaS) + 1.0;
                                 }
                             }
 
@@ -596,7 +600,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 
                 // Auto-pause detection
                 if (mode === 'outdoor' && !isAutoPaused && hasMovedOnce) {
-                    if (now - lastMovementTimeRef.current > 7000) { 
+                    if (now - lastMovementTimeRef.current > 12000) { 
                         setIsAutoPaused(true);
                         speak("Treino pausado automaticamente. Volte a se movimentar para retomar.", true);
                         if (sessionStartRef.current !== null) {
@@ -1290,14 +1294,10 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             ) : (
                 <>
                     {/* GRID SUPERIOR DE DADOS */}
-            <div className="px-6 grid grid-cols-4 gap-2 mb-4">
+            <div className="px-6 grid grid-cols-3 gap-2 mb-4">
                 <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
                     <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Velocidade</span>
                     <p className="text-lg font-black text-[#e2ff00]">{currentSpeed.toFixed(1)}<span className="text-[8px] ml-0.5 text-zinc-500 italic">km/h</span></p>
-                </div>
-                <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Cadência</span>
-                    <p className="text-lg font-black text-green-400">{cadence > 0 ? cadence : '--'}<span className="text-[8px] ml-0.5 text-zinc-500">ppm</span></p>
                 </div>
                 <div className="bg-zinc-900/40 p-3 rounded-[20px] border border-zinc-800 flex flex-col items-center justify-center text-center">
                     <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Passos</span>

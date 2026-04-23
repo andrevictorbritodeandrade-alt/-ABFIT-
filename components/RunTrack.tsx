@@ -83,11 +83,12 @@ const parseToMinutes = (val: string | undefined, speedStr: string | undefined): 
     // 2. Explicit Distance (km or m)
     if (v.includes("km")) {
         const distKm = parseFloat(v);
-        return (distKm / speed) * 60;
+        // Add 15% buffer to distance-based segments to avoid ending too early
+        return ((distKm / speed) * 60) * 1.15;
     }
     if (v.includes("m") && !v.includes("min")) {
         const distM = parseFloat(v);
-        return (distM / 1000 / speed) * 60;
+        return ((distM / 1000 / speed) * 60) * 1.15;
     }
 
     // 3. Numeric Heuristic
@@ -311,48 +312,48 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
     }
 
     return (
-        <div className={`bg-zinc-900 border p-8 rounded-[3rem] relative group transition-all ${isToday ? 'border-red-600 ring-4 ring-red-600/20' : badge ? 'border-red-600/40 shadow-[0_0_30px_rgba(220,38,38,0.15)]' : 'border-zinc-800 hover:border-red-600/30'} ${isCompleted ? 'opacity-60' : ''}`}>
+        <div className={`bg-zinc-900 border p-5 rounded-3xl relative group transition-all overflow-hidden ${isToday ? 'border-red-600 ring-2 ring-red-600/20' : badge ? 'border-red-600/40 shadow-[0_0_20px_rgba(220,38,38,0.15)]' : 'border-zinc-800 hover:border-red-600/30'} ${isCompleted ? 'opacity-80' : ''}`}>
             {isToday && (
-                <div className="absolute -top-4 left-8 bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-xl z-10 animate-bounce">
+                <div className="absolute -top-3 left-6 bg-red-600 text-white text-[9px] font-black px-3 py-1.5 rounded-full shadow-xl z-10 animate-bounce">
                     TREINO DE HOJE
                 </div>
             )}
-            <div className="absolute top-8 right-8 flex items-center gap-3">
+            <div className="absolute top-4 right-4 flex items-center gap-2">
                 {onEdit && (
-                    <button onClick={onEdit} className="text-zinc-500 hover:text-white p-3 rounded-2xl transition-all bg-zinc-800 hover:bg-zinc-700">
-                        <Edit3 size={20} />
+                    <button onClick={onEdit} className="text-zinc-500 hover:text-white p-2 rounded-xl transition-all bg-zinc-800 hover:bg-zinc-700">
+                        <Edit3 size={16} />
                     </button>
                 )}
                 {onDelete && (
-                    <button onClick={onDelete} className="text-zinc-500 hover:text-red-500 p-3 rounded-2xl transition-all hover:bg-zinc-800">
-                        <Trash2 size={20} />
+                    <button onClick={onDelete} className="text-zinc-500 hover:text-red-500 p-2 rounded-xl transition-all hover:bg-zinc-800">
+                        <Trash2 size={16} />
                     </button>
                 )}
             </div>
             
-            <div className="flex flex-col mb-8">
+            <div className="flex flex-col mb-4">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-widest text-red-600 mb-2 flex items-center gap-2">
-                        <CalendarDays size={14} /> {adjusted.dayOfWeek}
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 flex items-center gap-1">
+                        <CalendarDays size={12} /> {adjusted.dayOfWeek}
                     </span>
                     {badge ? (
-                        <span className="bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-lg flex items-center gap-2 animate-pulse">
-                            <TrendingUp size={12} /> {badge}
+                        <span className="bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded-lg flex items-center gap-1 animate-pulse">
+                            <TrendingUp size={10} /> {badge}
                         </span>
                     ) : (
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-lg mr-20">
-                            <Timer size={12} /> {formatDuration(totalDuration)}
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-lg mr-16">
+                            <Timer size={10} /> {formatDuration(totalDuration)}
                         </span>
                     )}
                 </div>
-                <h4 className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter">
+                <h4 className="text-2xl font-black italic uppercase text-white leading-none tracking-tight">
                     {adjusted.type}
                 </h4>
             </div>
 
             {/* SINGLE BLOCK LAYOUT - UNIFIED TEXT */}
-            <div className="bg-black/40 p-8 rounded-3xl border border-white/5 mb-8 flex items-center justify-center text-center">
-                <p className="text-2xl md:text-3xl font-black italic uppercase text-white leading-relaxed tracking-wide">
+            <div className="bg-black/40 p-4 rounded-xl border border-white/5 mb-4 flex items-center justify-center text-center">
+                <p className="text-sm font-black italic uppercase text-white leading-snug tracking-wide">
                     {adjusted.customDisplay ? (
                         <span dangerouslySetInnerHTML={{ __html: adjusted.customDisplay }} />
                     ) : (
@@ -394,135 +395,234 @@ const WorkoutCard: React.FC<{ workout: WorkoutModel, onDelete?: () => void, onEd
             </div>
 
             {workout.description && (
-                <div className="p-4 rounded-xl border-l-2 border-red-600 bg-red-600/5 mb-6">
+                <div className="p-3 rounded-lg border-l-2 border-red-600 bg-red-600/5 mb-4">
                     <p className="text-xs text-zinc-300 font-medium leading-relaxed italic">"{workout.description}"</p>
                 </div>
             )}
 
             {stats && !stats.empty && (
-                <div className="bg-[#1a1a1a] p-8 rounded-[3rem] border border-white/5 space-y-8 overflow-hidden shadow-2xl">
+                <div className="bg-[#1a1a1a] p-5 rounded-3xl border border-white/5 space-y-4 overflow-hidden shadow-xl mt-2">
                     <div className="flex items-center justify-between">
-                        <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2 italic">
-                            <Activity size={12} className="text-red-600 animate-pulse" /> Resumo da Corrida
+                        <h5 className="text-[9px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-1 italic">
+                            <Activity size={10} className="text-red-600 animate-pulse" /> Resumo
                         </h5>
-                        <div className="bg-zinc-800 px-3 py-1 rounded-full text-[10px] font-black text-zinc-400 uppercase tracking-widest border border-white/5">
+                        <div className="bg-zinc-800 px-2 py-0.5 rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest border border-white/5">
                             {stats.duration}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-10">
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Distância</div>
-                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.distance} <span className="text-sm">km</span></div>
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Distância</div>
+                            <div className="text-3xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.distance} <span className="text-[10px]">km</span></div>
                         </div>
                         <div>
-                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Pace Médio</div>
-                            <div className="text-4xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgPace} <span className="text-sm">/km</span></div>
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Pace Médio</div>
+                            <div className="text-3xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgPace} <span className="text-[10px]">/km</span></div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-10 pt-6 border-t border-white/5">
-                        {stats.duration && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Tempo</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.duration} <span className="text-[10px]">min</span></div>
-                            </div>
-                        )}
+                    <div className="grid grid-cols-2 gap-y-5 gap-x-4 pt-3 border-t border-white/5 mt-3">
                         {stats.calories && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Calorias</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.calories} <span className="text-[10px]">kcal</span></div>
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-10">
-                        {stats.avgSpeed && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Vel. Média</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgSpeed} <span className="text-[10px]">km/h</span></div>
-                            </div>
-                        )}
-                        {stats.maxSpeed && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Vel. Máxima</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxSpeed} <span className="text-[10px]">km/h</span></div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-10">
-                        {stats.elevation && (
-                            <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Elevação</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.elevation} <span className="text-[10px]">m</span></div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Calorias</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.calories} <span className="text-[9px]">kcal</span></div>
                             </div>
                         )}
                         {stats.cadence && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Cadência</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.cadence} <span className="text-[10px]">spm</span></div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Cadência</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.cadence} <span className="text-[9px]">spm</span></div>
                             </div>
                         )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-10 pt-4">
+                        {stats.elevation && (
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Elevação</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.elevation} <span className="text-[9px]">m</span></div>
+                            </div>
+                        )}
                         {stats.avgHR && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Batimento Médio</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[10px]">bpm</span></div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">BPM Médio</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgHR} <span className="text-[9px]">bpm</span></div>
+                            </div>
+                        )}
+                        {stats.duration && (
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Tempo</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.duration} <span className="text-[9px]">min</span></div>
                             </div>
                         )}
                         {stats.maxHR && (
                             <div>
-                                <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Batimento Máx</div>
-                                <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxHR} <span className="text-[10px]">bpm</span></div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">BPM Máx</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxHR} <span className="text-[9px]">bpm</span></div>
+                            </div>
+                        )}
+                        {stats.avgSpeed && (
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Vel. Média</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.avgSpeed} <span className="text-[9px]">km/h</span></div>
+                            </div>
+                        )}
+                        {stats.maxSpeed && (
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Vel. Máxima</div>
+                                <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxSpeed} <span className="text-[9px]">km/h</span></div>
                             </div>
                         )}
                     </div>
 
                     {stats.maxPace && (
-                        <div className="pt-6 border-t border-white/5">
-                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Melhor Pace</div>
-                            <div className="text-2xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxPace} <span className="text-[10px]">/km</span></div>
+                        <div className="pt-3 border-t border-white/5">
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-0.5 italic">Melhor Pace</div>
+                            <div className="text-xl font-black text-[#e2ff00] italic tracking-tighter leading-none">{stats.maxPace} <span className="text-[9px]">/km</span></div>
                         </div>
                     )}
 
                     {stats.hrZones && (
-                        <div className="pt-6 border-t border-white/5 space-y-3">
-                            <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-3 italic">Zonas de Frequência Cardíaca</div>
+                        <div className="pt-3 border-t border-white/5 space-y-2">
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Zonas de Frequência</div>
                             
-                            {stats.hrZones.max && (
-                                <div className="flex justify-between items-center bg-red-950/20 px-3 py-2 rounded-xl">
-                                    <span className="text-xs font-black text-red-500 uppercase">Z5 - Máximo</span>
-                                    <span className="text-sm font-black text-white">{stats.hrZones.max}</span>
-                                </div>
-                            )}
-                            {stats.hrZones.anaerobic && (
-                                <div className="flex justify-between items-center bg-orange-950/20 px-3 py-2 rounded-xl">
-                                    <span className="text-xs font-black text-orange-500 uppercase">Z4 - Anaeróbico</span>
-                                    <span className="text-sm font-black text-white">{stats.hrZones.anaerobic}</span>
-                                </div>
-                            )}
-                            {stats.hrZones.aerobic && (
-                                <div className="flex justify-between items-center bg-emerald-950/20 px-3 py-2 rounded-xl">
-                                    <span className="text-xs font-black text-emerald-500 uppercase">Z3 - Aeróbico</span>
-                                    <span className="text-sm font-black text-white">{stats.hrZones.aerobic}</span>
-                                </div>
-                            )}
-                            {stats.hrZones.weightControl && (
-                                <div className="flex justify-between items-center bg-blue-950/20 px-3 py-2 rounded-xl">
-                                    <span className="text-xs font-black text-blue-500 uppercase">Z2 - Controle de Peso</span>
-                                    <span className="text-sm font-black text-white">{stats.hrZones.weightControl}</span>
-                                </div>
-                            )}
-                            {stats.hrZones.lowIntensity && (
-                                <div className="flex justify-between items-center bg-zinc-800/50 px-3 py-2 rounded-xl">
-                                    <span className="text-xs font-black text-zinc-400 uppercase">Z1 - Baixa Intensidade</span>
-                                    <span className="text-sm font-black text-white">{stats.hrZones.lowIntensity}</span>
-                                </div>
-                            )}
+                            <div className="grid grid-cols-1 gap-1">
+                                {stats.hrZones.max && (
+                                    <div className="flex justify-between items-center bg-red-950/20 px-2 py-1 rounded-lg border border-red-500/10">
+                                        <span className="text-[9px] font-black text-red-500 uppercase truncate">Z5 - Máx</span>
+                                        <span className="text-[10px] font-black text-white shrink-0">{stats.hrZones.max}</span>
+                                    </div>
+                                )}
+                                {stats.hrZones.anaerobic && (
+                                    <div className="flex justify-between items-center bg-orange-950/20 px-2 py-1 rounded-lg border border-orange-500/10">
+                                        <span className="text-[9px] font-black text-orange-500 uppercase truncate">Z4 - Anaeróbico</span>
+                                        <span className="text-[10px] font-black text-white shrink-0">{stats.hrZones.anaerobic}</span>
+                                    </div>
+                                )}
+                                {stats.hrZones.aerobic && (
+                                    <div className="flex justify-between items-center bg-emerald-950/20 px-2 py-1 rounded-lg border border-emerald-500/10">
+                                        <span className="text-[9px] font-black text-emerald-500 uppercase truncate">Z3 - Aeróbico</span>
+                                        <span className="text-[10px] font-black text-white shrink-0">{stats.hrZones.aerobic}</span>
+                                    </div>
+                                )}
+                                {stats.hrZones.weightControl && (
+                                    <div className="flex justify-between items-center bg-blue-950/20 px-2 py-1 rounded-lg border border-blue-500/10">
+                                        <span className="text-[9px] font-black text-blue-500 uppercase truncate">Z2 - C. Peso</span>
+                                        <span className="text-[10px] font-black text-white shrink-0">{stats.hrZones.weightControl}</span>
+                                    </div>
+                                )}
+                                {stats.hrZones.lowIntensity && (
+                                    <div className="flex justify-between items-center bg-zinc-800/50 px-2 py-1 rounded-lg border border-zinc-700/50">
+                                        <span className="text-[9px] font-black text-zinc-400 uppercase truncate">Z1 - Baixa Int.</span>
+                                        <span className="text-[10px] font-black text-white shrink-0">{stats.hrZones.lowIntensity}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                    )}
+
+                    {stats.splits && stats.splits.length > 0 && (
+                        <div className="pt-3 border-t border-white/5 space-y-2">
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Voltas (Splits)</div>
+                            <div className="space-y-1">
+                                {stats.splits.map((s: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center bg-zinc-900/50 px-2 py-1 rounded-md border border-white/5">
+                                        <span className="text-[9px] font-black text-zinc-500 w-4">{idx + 1}</span>
+                                        <span className="text-[10px] font-black text-white w-10">{s.km} <span className="text-[8px] text-zinc-500">km</span></span>
+                                        <span className="text-[10px] font-black text-[#e2ff00] w-10 text-center">{s.time}</span>
+                                        {s.pace && <span className="text-[9px] font-black text-zinc-400 w-14 text-right truncate">{s.pace}/km</span>}
+                                        {s.speed && <span className="text-[9px] font-black text-zinc-400 w-14 text-right truncate">{s.speed}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {stats.metricsColors && (!stats.advancedMetricsColors) && stats.metricsColors && !stats.advancedMetricsColors /* fallback */}
+                    {stats.advancedMetricsColors && (
+                        <div className="pt-3 border-t border-white/5 space-y-2">
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Métricas Avançadas</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { label: 'Assimetria', key: 'asymmetry' },
+                                    { label: 'T. no Solo', key: 'groundTime' },
+                                    { label: 'Tempo Ar', key: 'airTime' },
+                                    { label: 'Regularidade', key: 'regularity' },
+                                    { label: 'Vertical', key: 'vertical' },
+                                    { label: 'Rigidez', key: 'stiffness' }
+                                ].map(metric => {
+                                    const c = stats.advancedMetricsColors[metric.key as keyof typeof stats.advancedMetricsColors];
+                                    if (!c) return null;
+                                    let bg = 'bg-zinc-800';
+                                    let text = 'text-white';
+                                    if (c === 'red') { bg = 'bg-red-500'; text = 'text-white'; }
+                                    if (c === 'orange') { bg = 'bg-orange-500'; text = 'text-white'; }
+                                    if (c === 'yellow') { bg = 'bg-yellow-500'; text = 'text-black'; }
+                                    if (c === 'green') { bg = 'bg-emerald-500'; text = 'text-white'; }
+                                    if (c === 'blue') { bg = 'bg-blue-500'; text = 'text-white'; }
+                                    return (
+                                        <div key={metric.key} className="flex bg-zinc-900/50 rounded-md overflow-hidden border border-white/5 items-center justify-between">
+                                            <div className="text-[8px] text-zinc-400 uppercase font-black tracking-widest px-1.5 py-0.5 truncate">{metric.label}</div>
+                                            <div className={`px-1.5 py-0.5 flex justify-center shrink-0 w-12 ${bg}`}>
+                                                <span className={`text-[7px] font-black uppercase tracking-widest truncate ${text}`}>
+                                                    {c === 'red' ? 'Ruim' : c === 'orange' ? 'Laranja' : c === 'yellow' ? 'Médio' : c === 'green' ? 'Ótimo' : 'Tendência'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {(stats.vo2max || stats.sweatLoss || stats.weather) && (
+                         <div className="pt-3 border-t border-white/5 space-y-2">
+                            <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Performance</div>
+                            
+                            {stats.vo2max && (
+                                <div className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-lg border border-white/5">
+                                    <span className="text-[9px] font-black text-zinc-400 uppercase">VO2 Máx</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] font-black text-white italic">{stats.vo2max}</span>
+                                        {stats.vo2maxClass && (
+                                            <div className={`w-1.5 h-1.5 rounded-full ${stats.vo2maxClass === 'green' ? 'bg-emerald-500' : stats.vo2maxClass === 'orange' ? 'bg-orange-500' : 'bg-red-500'}`} />
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {stats.sweatLoss && (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="bg-zinc-900/50 p-1.5 rounded-lg border border-white/5 text-center flex flex-col justify-center">
+                                        <div className="text-[7px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Perda Suor</div>
+                                        <div className="text-[10px] font-black text-blue-400">{stats.sweatLoss} <span className="text-[7px]">ml</span></div>
+                                    </div>
+                                    {stats.hydrationRecomendation && (
+                                        <div className="bg-zinc-900/50 p-1.5 rounded-lg border border-white/5 text-center flex flex-col justify-center">
+                                            <div className="text-[7px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Repor (150%)</div>
+                                            <div className="text-[10px] font-black text-blue-500">{stats.hydrationRecomendation} <span className="text-[7px]">ml</span></div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {stats.weather && (
+                                <div className="bg-zinc-900/50 p-1.5 rounded-lg border border-white/5 flex justify-between items-center gap-2">
+                                    <div className="text-center flex-1">
+                                        <div className="text-[7px] text-zinc-500 uppercase font-black tracking-widest truncate">Clima</div>
+                                        <div className="text-[9px] font-black text-white truncate">{stats.weather.temp}°C</div>
+                                    </div>
+                                    <div className="w-px h-4 bg-white/5" />
+                                    <div className="text-center flex-1">
+                                        <div className="text-[7px] text-zinc-500 uppercase font-black tracking-widest truncate">Umidade</div>
+                                        <div className="text-[9px] font-black text-white truncate">{stats.weather.humidity}%</div>
+                                    </div>
+                                    <div className="w-px h-4 bg-white/5" />
+                                    <div className="text-center flex-1">
+                                        <div className="text-[7px] text-zinc-500 uppercase font-black tracking-widest truncate">Vento</div>
+                                        <div className="text-[9px] font-black text-white truncate">{stats.weather.wind}km/h</div>
+                                    </div>
+                                </div>
+                            )}
+                         </div>
                     )}
 
                     {stats.path && stats.path.length > 0 && (
@@ -1395,6 +1495,12 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
         setLoggingWorkout(null);
     };
 
+    const totalCalories = (student.workoutHistory || [])
+        .filter(h => h.type === 'RUNNING' && h.runningStats?.calories)
+        .reduce((sum, h) => sum + (Number(h.runningStats?.calories) || 0), 0);
+
+    const fatLossKg = (totalCalories / 7700).toFixed(2);
+
     return (
         <div className={`animate-in fade-in duration-500 text-left h-screen overflow-hidden bg-transparent flex flex-col relative ${isWatch ? 'rounded-full border-2 border-red-600 p-2' : ''}`}>
             {/* STICKY HEADER */}
@@ -1472,6 +1578,40 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                             <span className={`${isWatch ? 'text-xs' : 'text-2xl'} font-black italic text-zinc-500 uppercase tracking-tight`}>
                                 {formatDuration(weeklyVolume).split(' ')[1] || 'min'}
                             </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* TOTAL CALORIES & FAT LOSS */}
+                <div className={`${isWatch ? 'p-4 rounded-3xl' : 'p-8 rounded-[2.5rem]'} bg-gradient-to-br from-zinc-900 to-black border border-white/5 shadow-2xl relative overflow-hidden group`}>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/10 blur-3xl -mr-16 -mt-16 group-hover:bg-orange-600/20 transition-all" />
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-6">
+                            <span className={`${isWatch ? 'text-[8px]' : 'text-[10px]'} font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2`}>
+                                <Flame size={isWatch ? 10 : 14} className="text-orange-500" /> Metabolismo
+                            </span>
+                            <span className="text-[9px] font-black italic text-zinc-600 uppercase tracking-widest bg-zinc-800 px-2 py-1 rounded-md">Real Estimado</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Calorias Queimadas</div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className={`${isWatch ? 'text-2xl' : 'text-4xl'} font-black italic text-white tracking-tighter leading-none`}>
+                                        {totalCalories}
+                                    </span>
+                                    <span className="text-xs font-black italic text-zinc-500 uppercase tracking-tight">Kcal</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mb-1 italic">Massa Gorda (Bal.)</div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className={`${isWatch ? 'text-2xl' : 'text-4xl'} font-black italic text-orange-500 tracking-tighter leading-none`}>
+                                        -{fatLossKg}
+                                    </span>
+                                    <span className="text-xs font-black italic text-zinc-500 uppercase tracking-tight">Kg</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1569,7 +1709,7 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                                 {[...(student.workoutHistory || [])]
                                     .sort((a, b) => b.timestamp - a.timestamp)
                                     .filter(h => h.type === 'RUNNING')
-                                    .slice(0, 5)
+                                    .slice(0, 1)
                                     .map(h => {
                                         const workout = workouts.find(w => w.id === h.workoutId);
                                         return (
@@ -1683,9 +1823,8 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                         setLiveWorkout(null);
                         // Save immediately to history
                         const dateStr = new Date().toLocaleDateString('pt-BR');
-                        // stats might be a whole history entry or just stats object depending on implementation
-                        const runningStats = stats?.runningStats || stats;
-                        handleCheckIn(dateStr, liveWorkout, runningStats);
+                        // Ensure we pass the whole history entry object as the third argument
+                        handleCheckIn(dateStr, liveWorkout, stats);
                     }}
                 />
             )}
