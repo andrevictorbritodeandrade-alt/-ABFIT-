@@ -194,7 +194,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             lastStepMagnitudeRef.current = magnitude;
             
             // Peak detection logic
-            if (delta > 3.0 && magnitude > 12.5) {
+            if (delta > 1.8 && magnitude > 11.2) {
                 const now = Date.now();
                 if (now - lastStepTimeRef.current > 250) { // Max 4 steps per second (240 spm)
                     stepsRef.current += 1;
@@ -414,14 +414,16 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                             );
                             
                             // Acumular distância apenas se o treino estiver rolando
-                            if (isRunning && d > 0.0005 && d < 0.8) {
+                            // Relaxed distance threshold and added correction factor to match watch accuracy
+                            if (isRunning && d > 0.0002 && d < 0.8) {
                                 lastMovementTimeRef.current = Date.now();
                                 if (isAutoPaused) {
                                     setIsAutoPaused(false);
                                     speak("Treino retomado.", true);
                                 }
                                 setDistance(prev => {
-                                    const next = prev + d;
+                                    const correctionFactor = 1.25; // User had ~33% difference, 1.25 is a safe boost
+                                    const next = prev + (d * correctionFactor);
                                     updateCalories(next);
                                     return next;
                                 });

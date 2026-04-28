@@ -635,6 +635,42 @@ export default function App() {
           physicalAssessments: [], 
           workoutHistory: [
             {
+              id: "hist-andre-run-20260428",
+              workoutId: "unplanned",
+              name: "Corrida",
+              athleteName: "André Brito",
+              duration: "43:43",
+              date: "28/04/2026",
+              timestamp: new Date('2026-04-28T15:54:00').getTime(),
+              type: "RUNNING",
+              runningStats: {
+                distance: 3.71,
+                avgSpeed: 5.1,
+                avgHR: 113,
+                calories: 345,
+                steps: 4571,
+                elevation: 17,
+                vo2max: 36.1,
+                vo2maxClass: "ruim",
+                sweatLoss: 295,
+                hydrationRecomendation: 442,
+                weather: { temp: 28, condition: "Nublado", humidity: 81, wind: 18 },
+                hrZones: {
+                  max: "161-178 bpm",
+                  anaerobic: "143-160 bpm",
+                  aerobic: "125-142 bpm",
+                  weightControl: "107-124 bpm",
+                  lowIntensity: "89-106 bpm"
+                },
+                splits: [
+                  { km: "1.00", time: "12:00", speed: "4.9 km/h" },
+                  { km: "1.00", time: "11:37", speed: "5.1 km/h" },
+                  { km: "1.00", time: "11:46", speed: "5.0 km/h" },
+                  { km: "0.71", time: "08:19", speed: "5.1 km/h" }
+                ]
+              }
+            },
+            {
               id: "hist-andre-run-20260420",
               workoutId: "unplanned",
               name: "Corrida",
@@ -796,8 +832,8 @@ export default function App() {
             }
           ], 
           analytics: {
-            sessionsCompleted: 4,
-            streakDays: 2,
+            sessionsCompleted: 5,
+            streakDays: 1,
             exercises: {
               'Remada aberta na máquina': { completed: 1, skipped: 0 },
               'Puxada aberta com barra romana pulley alto': { completed: 1, skipped: 0 },
@@ -809,7 +845,7 @@ export default function App() {
               'Extensão de quadril e joelho em pé no cross': { completed: 1, skipped: 0 },
               'Mata-borrão isométrico no solo (super-man)': { completed: 1, skipped: 0 }
             } as Record<string, { completed: number; skipped: number }>,
-            lastSessionDate: '12/03/2026'
+            lastSessionDate: '28/04/2026'
           },
           sexo: 'Masculino', 
           periodization: {
