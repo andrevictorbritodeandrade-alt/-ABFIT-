@@ -1820,7 +1820,6 @@ export function RunTrackStudentView({ student, onBack, onSave, onToggleMenu }: {
                     studentPhoto={student.photoUrl}
                     athleteName={student.nome}
                     onFinish={(totalTime, stats) => {
-                        setLiveWorkout(null);
                         // Save immediately to history
                         const dateStr = new Date().toLocaleDateString('pt-BR');
                         // Ensure we pass the whole history entry object as the third argument

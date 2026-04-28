@@ -632,7 +632,48 @@ export default function App() {
           goal: 'health',
           medicalHistory: '⚠️ Patela esquerda já saiu do lugar 4 vezes em um intervalo de 14 meses.',
           medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
-          physicalAssessments: [], 
+          physicalAssessments: [
+            {
+              id: 'bio-andre-20260413',
+              data: '2026-04-13T20:30:00Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 103.0,
+              altura: 180,
+              imc: { value: 31.8, status: 'Alto', color: 'yellow' },
+              gordura: { value: 29.4, status: 'Obeso', color: 'red' },
+              pesoGordura: { value: 30.2, status: 'Obeso', color: 'red' },
+              percentualMassaMuscularEsqueletica: { value: 37.1, status: 'Saudável', color: 'green' },
+              pesoMassaMuscularEsqueletica: { value: 38.2, status: 'Saudável', color: 'green' },
+              registroMassaMuscular: { value: 65.0, status: 'Excelente', color: 'green' },
+              pesoMassaMuscular: { value: 66.9, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 50.2, status: 'Baixo', color: 'blue' },
+              pesoAgua: { value: 51.7, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 17.0, status: 'Obeso', color: 'red' },
+              ossos: { value: 3.1, status: 'Saudável', color: 'green' },
+              metabolismo: { value: 2050.0, status: 'Alto', color: 'yellow' },
+              proteina: { value: 16.5, status: 'Saudável', color: 'green' },
+              obesidade: { value: 34.2, status: 'Moderado', color: 'orange' },
+              idadeMetabolica: 46.0,
+              lbm: 72.8,
+              idadeReal: 35,
+              analiseComposicao: {
+                agua: 'Baixo',
+                gordura: 'Obeso',
+                proteina: 'Saudável',
+                ossos: 'Saudável'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Obesidade',
+                descricao: 'O seu tipo de corpo é obeso, com excesso de gordura corporal e peso. Como mestre em ciências do exercício, André, você sabe que isso requer atenção estratégica no treinamento de força.'
+              },
+              dicasControlePeso: {
+                pesoIdeal: 70.0,
+                pesoDiff: -22.4,
+                massaMuscularDiff: 6.9,
+                gorduraDiff: -12.2
+              }
+            }
+          ], 
           workoutHistory: [
             {
               id: "hist-andre-run-20260428",
@@ -1294,6 +1335,31 @@ export default function App() {
                       hasCloudChanges = true;
                   }
 
+                  // Physical Assessments Sync
+                  let currentAssessments = rawData.physicalAssessments || [];
+                  const defaultAssessments = defaultProfile.physicalAssessments || [];
+
+                  if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com' && !(rawData as any)._fixedAssessmentsApril28) {
+                      currentAssessments = defaultAssessments;
+                      (rawData as any)._fixedAssessmentsApril28 = true;
+                      hasCloudChanges = true;
+                  }
+
+                  const mergedAssessments = [...currentAssessments];
+                  let assessmentsModified = false;
+                  
+                  defaultAssessments.forEach(defEntry => {
+                      if (!mergedAssessments.some((a: any) => a.id === defEntry.id)) {
+                          mergedAssessments.push(defEntry);
+                          assessmentsModified = true;
+                      }
+                  });
+                  
+                  if (assessmentsModified || hasCloudChanges) {
+                      rawData.physicalAssessments = mergedAssessments;
+                      hasCloudChanges = true;
+                  }
+
                   // If we detected that local defaults were missing from cloud, sync them up
                   if (hasCloudChanges) {
                       const docRefSave = doc(db, path);
@@ -1305,7 +1371,9 @@ export default function App() {
                             workouts: rawData.workouts,
                             workoutHistory: rawData.workoutHistory,
                             periodization: rawData.periodization,
-                            analytics: rawData.analytics
+                            analytics: rawData.analytics,
+                            physicalAssessments: rawData.physicalAssessments,
+                            _fixedAssessmentsApril28: (rawData as any)._fixedAssessmentsApril28
                         }, { merge: true });
                       } catch (e: any) {
                         console.warn("Silent sync error:", e);

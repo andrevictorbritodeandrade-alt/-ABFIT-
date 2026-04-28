@@ -908,11 +908,18 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
   );
 }
 
+import { BioimpedanceView } from './BioimpedanceView';
+
 export function CoachAssessmentView({ student, onBack, onSave }: { student: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
   const [weight, setWeight] = useState<string>('');
   const [height, setHeight] = useState<string>('');
   const [bodyFat, setBodyFat] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
+
+  if (selectedAssessment && (selectedAssessment.type === 'BIOIMPEDANCE' || selectedAssessment.type === 'BIOIMPEDANCIA')) {
+    return <BioimpedanceView assessment={selectedAssessment} onBack={() => setSelectedAssessment(null)} />;
+  }
 
   const handleSave = async () => {
     if (!weight || !bodyFat) return; // Simple validation
@@ -994,11 +1001,21 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
       <div className="mt-8 space-y-4">
         <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] pl-2">Histórico Recente</h3>
         {(student.physicalAssessments || []).map(a => (
-           <div key={a.id} className="flex justify-between items-center p-4 bg-card rounded-2xl border border-border">
+           <div 
+             key={a.id} 
+             onClick={() => setSelectedAssessment(a)}
+             className="flex justify-between items-center p-4 bg-card rounded-2xl border border-border cursor-pointer hover:bg-card/80 transition-colors active:scale-95"
+           >
               <div>
-                 <p className="text-xs font-black text-foreground">{new Date(a.data).toLocaleDateString('pt-BR')}</p>
-                 <p className="text-[10px] text-muted-foreground mt-1">{a.peso}kg • {a.bio_percentual_gordura}% Gordura</p>
+                 <div className="flex items-center gap-2 mb-1">
+                   <p className="text-xs font-black text-foreground">{new Date(a.data).toLocaleDateString('pt-BR')}</p>
+                   {(a.type === 'BIOIMPEDANCE' || a.type === 'BIOIMPEDANCIA') && (
+                     <span className="bg-blue-500/10 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Bioimpedância</span>
+                   )}
+                 </div>
+                 <p className="text-[10px] text-muted-foreground">{a.peso}kg • {a.gordura?.value || a.bio_percentual_gordura}% Gordura</p>
               </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
            </div>
         ))}
       </div>
