@@ -1100,6 +1100,54 @@ export default function App() {
           totalGlobalB: 5,
           workouts: [
             {
+              id: 'treino-a-andre',
+              title: 'Treino A',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'a-a-1', name: 'Supino aberto no banco reto com halter barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-2', name: 'Supino aberto alternado no banco 30 graus com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-3', name: 'Crucifixo aberto no banco reto com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-4', name: 'Desenvolvimento aberto no banco 75 graus com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-5', name: 'Flexão de ombro alternado no banco 75 graus com halter de barra curta pegada neutra', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-6', name: 'Abdução de ombros em pé com halter de barra curta pegada pronada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-b-andre',
+              title: 'Treino B',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'a-b-1', name: 'Remada aberta em pé no cross na polia média com barra romana', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-2', name: 'Remada neutra na máquina sentada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-3', name: 'Crucifixo inverso no banco 30 graus com halter de barra curta em decúbito ventral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-4', name: 'Puxada aberta no pulley alto com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-5', name: 'Puxada supinada no pulley alto', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-6', name: 'Extensão de ombros em pé no cross com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-c-andre',
+              title: 'Treino C',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'a-c-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-2', name: 'Leg presso articulado', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-3', name: 'Cadeira extensora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-4', name: 'Agachamento sumô com halter de barra curta entre os quadris', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-5', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-6', name: 'Cadeira abdutora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
               id: 'treino-intervalado-confortavel',
               title: 'INTERVALADO (Confortável) - Seg/Sex',
               projectedSessions: 20,
@@ -1266,6 +1314,51 @@ export default function App() {
           totalGlobalA: 6,
           totalGlobalB: 5,
           workouts: [
+            {
+              id: 'treino-a-marcelly',
+              title: 'Treino A',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'm-a-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-2', name: 'Agachamento passada com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-3', name: 'Levantar e sentar no banco reto', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-4', name: 'Leg presso articulado', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-5', name: 'Leg presso articulado unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-6', name: 'Abdominal supra no bosu', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-b-marcelly',
+              title: 'Treino B',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'm-b-1', name: 'Agachamento sumô com halter de barra curta entre os quadris', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-2', name: 'Levantamento terra com halter de barra longa', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-3', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-4', name: 'Extensão de quadril e joelho no solo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-5', name: 'Cadeira flexora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-6', name: 'Mata-borrão isométrico no solo (super-man)', sets: '4', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-c-marcelly',
+              title: 'Treino C',
+              projectedSessions: 20,
+              frequencyWeekly: 2,
+              status: 'published',
+              exercises: [
+                { id: 'm-c-1', name: 'Supino aberto no banco reto com halter barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-2', name: 'Desenvolvimento aberto em pé com halter de barra longa', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-3', name: 'Remada aberta em pé no cross na polia média com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-4', name: 'Puxada neutra no pulley alto com triângulo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-5', name: 'Tríceps em pé no cross com barra reta pegada supinada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-6', name: 'Bíceps concentrado com HBC unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' }
+              ]
+            },
             {
               id: 'treino-intervalado-confortavel',
               title: 'INTERVALADO (Confortável) - Seg/Sex',
@@ -1437,8 +1530,27 @@ export default function App() {
                   }
 
                   // Workouts Sync
-                  if (!rawData.workouts || rawData.workouts.length === 0) {
-                      rawData.workouts = defaultProfile.workouts;
+                  let currentWorkouts = rawData.workouts || [];
+                  const defaultWorkouts = defaultProfile.workouts || [];
+                  let workoutsModified = false;
+                  
+                  defaultWorkouts.forEach(defWorkout => {
+                      if (!currentWorkouts.some(w => w.id === defWorkout.id)) {
+                          currentWorkouts.push(defWorkout);
+                          workoutsModified = true;
+                      } else {
+                          // Update exercises if different (useful if user changed Cadeira flexora for Marcelly B)
+                          const existingWorkout = currentWorkouts.find(w => w.id === defWorkout.id);
+                          if (existingWorkout) {
+                              existingWorkout.exercises = defWorkout.exercises;
+                              existingWorkout.title = defWorkout.title;
+                              workoutsModified = true;
+                          }
+                      }
+                  });
+                  
+                  if (workoutsModified || !rawData.workouts) {
+                      rawData.workouts = currentWorkouts;
                       hasCloudChanges = true;
                   }
                   
@@ -1586,10 +1698,19 @@ export default function App() {
                 merged[existingIndex].periodization!.targetVolume = def.periodization.targetVolume;
             }
 
-            // Se o aluno não tiver treinos, adiciona os padrões
-            if (!existing.workouts || existing.workouts.length === 0) {
-                merged[existingIndex].workouts = def.workouts;
-            }
+            // Workouts Sync
+            let currentWorkoutsForCoach = existing.workouts ? [...existing.workouts] : [];
+            const defaultWorkoutsForCoach = def.workouts || [];
+            
+            defaultWorkoutsForCoach.forEach(defWorkout => {
+                if (!currentWorkoutsForCoach.some(w => w.id === defWorkout.id)) {
+                    currentWorkoutsForCoach.push(defWorkout);
+                } else {
+                    const w = currentWorkoutsForCoach.find(w => w.id === defWorkout.id);
+                    if (w) { w.exercises = defWorkout.exercises; w.title = defWorkout.title; }
+                }
+            });
+            merged[existingIndex].workouts = currentWorkoutsForCoach;
             
             // Se o aluno não tiver histórico, adiciona o padrão (apenas se for um aluno fixo que nunca treinou)
             if (!existing.workoutHistory || existing.workoutHistory.length === 0) {
@@ -2048,7 +2169,7 @@ export default function App() {
           </div>
         )}
         {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} isProfessor={isCoach} onAddPost={!isCoach ? handleAddPost : undefined} />}
-        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} />}
+        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} isCoach={isCoach} />}
         {view === 'COACH_AI' && <AICoach onBack={isCoach ? handleBackNavigation : undefined} />}
         {view === 'SETTINGS' && <SettingsView onBack={isCoach ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
         {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}

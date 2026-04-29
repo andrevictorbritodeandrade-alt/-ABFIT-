@@ -30,7 +30,7 @@ const formatReps = (reps: any): string | null => {
 };
 
 // --- PRESCREVE AI CONSTANTS & DATABASE ---
-const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+const GEMINI_MODEL = "gemini-3-flash-preview";
 const IMAGEN_MODEL = "imagen-4.0-generate-001";
 
 // --- BANCO DE DADOS VISUAL (FALLBACK) ---
@@ -920,7 +920,9 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                   </div>
                   <div className="flex-1">
                      <p className="text-xs font-black uppercase italic text-foreground leading-tight">{ex.name}</p>
-                     <p className="text-[10px] text-muted-foreground font-bold">{ex.sets}x{formatReps(ex.reps)} • {ex.method || 'Série Estável'}</p>
+                     <p className="text-[10px] text-muted-foreground font-bold">
+                        {ex.sets}x{formatReps(ex.reps)}{ex.method ? ` • ${ex.method}` : ''}
+                     </p>
                   </div>
                   <button onClick={() => setExercises(exercises.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-red-600"><Trash2 size={16}/></button>
                 </div>

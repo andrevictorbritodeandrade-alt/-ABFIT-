@@ -12,15 +12,10 @@ const FILTROS_MUSCULARES = [
 
 const JERSEYS_DATA: Record<string, string> = {
   "BAHIA 88": "Authentic Bahia 1988 Tricolor kit jersey, bold vertical stripes in blue, red and white. Vintage Coca-Cola logo in white script on a red box background. Classic red Adidas Originals Trefoil logo on the chest.",
-  "FLAMENGO 81 (HOME)": "Authentic Flamengo 1981 Home kit jersey, wide horizontal black and red hoops. Classic white Adidas Originals Trefoil logo and white Lubrax sponsor. Traditional white V-neck collar.",
-  "FLAMENGO 81 (AWAY)": "Authentic Flamengo 1981 Away kit jersey, pure white base with red and black horizontal stripes on the sleeves and shoulders. Red Adidas Originals Trefoil logo and red Lubrax sponsor.",
   "REAL MADRID 81": "Authentic Real Madrid 1981 Home kit jersey, clean white base with purple Adidas stripes on shoulders and purple cuffs. Purple classic Adidas Originals Trefoil logo and purple Zanussi sponsor text.",
   "MÉXICO 26 (AWAY)": "Mexico 2026 Away kit jersey, white base with an intricate all-over light grey Aztec/Mayan geometric pattern. Green Adidas stripes on shoulders, red and green trim on the collar. Green Adidas Originals Trefoil logo.",
   "COLÔMBIA 26 (AWAY)": "Colombia 2026 Away kit jersey, dark teal/black base with a striking wavy graphic pattern in neon green and yellow. Neon green Adidas stripes and neon green Adidas Originals Trefoil logo.",
   "ARGÉLIA 26 (AWAY)": "Algeria 2026 Away kit jersey, vibrant emerald green with darker green vertical pinstripes. Red detailing on the collar. White Adidas stripes and white classic Adidas Originals Trefoil logo.",
-  "ARÁBIA SAUDITA 26 (AWAY)": "Saudi Arabia 2026 Away kit jersey, white base with a complex green and gold palm-leaf inspired graphic pattern. Green Adidas stripes and green classic Adidas Originals Trefoil logo.",
-  "PERU 26 (AWAY)": "Peru 2026 Away kit jersey, elegant black base with neon red and gold pattern on the side panels. Neon red Adidas stripes and neon red classic Adidas Originals Trefoil logo.",
-  "CURAÇAO 26 (AWAY)": "Curaçao 2026 Away kit jersey, bright yellow base with dark blue and red trim on the collar and sleeves. Dark blue Adidas stripes and Trefoil logo.",
   "VENEZUELA 26 (AWAY)": "Venezuela 2026 Away kit jersey, clean white base with gold stripes on the shoulders and gold classic Adidas Originals Trefoil logo.",
   "ÁFRICA DO SUL 26 (AWAY)": "South Africa 2026 Away kit jersey, dark green base with yellow and white geometric line patterns. Yellow Adidas stripes and Trefoil logo."
 };
@@ -142,7 +137,7 @@ REGRAS JSON:
 6. "citacao": Citação acadêmica.
 7. "guiaPassos": ARRAY de strings com passos numerados.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -170,16 +165,19 @@ REGRAS JSON:
       const result = await response.json();
       const data = JSON.parse(result.candidates[0].content.parts[0].text);
 
-      const imgResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+    const imgResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          instances: [{ prompt: data.visualPrompt }],
-          parameters: { sampleCount: 1 }
+          contents: [{ parts: [{ text: data.visualPrompt }] }]
         })
       });
       const imgResult = await imgResponse.json();
-      data.image = `data:image/png;base64,${imgResult.predictions[0].bytesBase64Encoded}`;
+      
+      const imgPart = imgResult.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+      if (!imgPart) throw new Error("Falha na geração da imagem");
+      
+      data.image = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
 
       setGeneratedData(data);
     } catch (err) {
@@ -228,11 +226,11 @@ REGRAS JSON:
       {/* HEADER PREMIUM ESTÁVEL */}
       <header className="max-w-6xl w-full flex flex-col items-start mb-12 pt-4">
         <div className="flex items-center gap-6">
-          <div className="bg-gradient-to-tr from-blue-600 to-emerald-400 p-4 rounded-2xl shadow-xl">
+          <div className="bg-gradient-to-tr from-red-600 to-orange-500 p-4 rounded-2xl shadow-xl">
             <Dumbbell size={36} className="text-white" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 leading-tight">
+            <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 leading-tight">
               PRESCREVEAI
             </h1>
             <p className="text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-widest border-t border-slate-200 mt-1 pt-1">
@@ -245,8 +243,7 @@ REGRAS JSON:
       {/* CONTROLES */}
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-          <button onClick={() => setEnvironment('ACADEMIA')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${environment === 'ACADEMIA' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}><Building2 size={18}/> Academia</button>
-          <button onClick={() => setEnvironment('OUTDOOR')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${environment === 'OUTDOOR' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}><TreePine size={18}/> Outdoor / Casa</button>
+          <button onClick={() => setEnvironment('ACADEMIA')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-red-600 text-white shadow-md"><Building2 size={18}/> Academia</button>
         </div>
         <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
           <button onClick={() => setSelectedModel('HOMEM')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${selectedModel === 'HOMEM' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}><User size={18}/> Homem</button>
@@ -260,7 +257,7 @@ REGRAS JSON:
           <button 
             key={team} 
             onClick={() => setSelectedJersey(team)} 
-            className={`flex-none flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold transition-all ${selectedJersey === team ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`flex-none flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold transition-all ${selectedJersey === team ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
           >
             <Shirt size={14} /> {team}
           </button>
@@ -270,9 +267,9 @@ REGRAS JSON:
       {/* BUSCA */}
       <section className="max-w-4xl w-full relative z-50 mb-12" ref={searchRef}>
         <div className="relative group">
-          <div className="absolute -inset-1 rounded-[3rem] blur-lg opacity-20 bg-gradient-to-r from-blue-600 to-emerald-400"></div>
+          <div className="absolute -inset-1 rounded-[3rem] blur-lg opacity-20 bg-gradient-to-r from-red-600 to-orange-500"></div>
           <div className="relative bg-white border border-slate-100 rounded-[3rem] p-2 flex items-center shadow-lg transition-all">
-            <div className="pl-6 pr-2"><Search size={26} className="text-blue-500" /></div>
+            <div className="pl-6 pr-2"><Search size={26} className="text-red-500" /></div>
             <input
               type="text"
               placeholder={`Buscar em ${activeFilter.toLowerCase()}...`}
@@ -282,7 +279,7 @@ REGRAS JSON:
               onFocus={() => setShowDropdown(true)}
             />
             {selectedExercise && (
-              <button onClick={handleGenerate} disabled={isGenerating} className="hidden md:flex ml-2 mr-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-8 py-4 rounded-full font-bold hover:scale-[1.02] active:scale-95 transition-all items-center gap-2 disabled:opacity-50 shadow-lg">
+              <button onClick={handleGenerate} disabled={isGenerating} className="hidden md:flex ml-2 mr-2 bg-gradient-to-r from-red-600 to-orange-500 text-white px-8 py-4 rounded-full font-bold hover:scale-[1.02] active:scale-95 transition-all items-center gap-2 disabled:opacity-50 shadow-lg">
                 {isGenerating ? <Loader2 className="animate-spin" size={20}/> : <Zap size={20}/>} Gerar Análise 8K
               </button>
             )}
@@ -291,7 +288,7 @@ REGRAS JSON:
 
         <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           {FILTROS_MUSCULARES.map(tag => (
-            <button key={tag} onClick={() => handleFilterClick(tag)} className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all shadow-sm ${activeFilter === tag ? 'bg-blue-600 text-white scale-105' : 'bg-white text-slate-400 border border-slate-200 hover:text-blue-600'}`}>{tag}</button>
+            <button key={tag} onClick={() => handleFilterClick(tag)} className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all shadow-sm ${activeFilter === tag ? 'bg-red-600 text-white scale-105' : 'bg-white text-slate-400 border border-slate-200 hover:text-red-600'}`}>{tag}</button>
           ))}
         </div>
 
@@ -302,10 +299,10 @@ REGRAS JSON:
                 filteredExercises.map((ex, idx) => (
                   <button key={idx} onClick={() => { setSelectedExercise(ex); setSearchTerm(ex.name); setShowDropdown(false); }} className="w-full text-left px-5 py-4 rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-between group border-b border-slate-50 last:border-0">
                     <div>
-                      <span className="text-[10px] font-black tracking-widest text-blue-500 uppercase mb-1 block">{ex.group}</span>
-                      <span className="text-base text-slate-700 font-bold capitalize group-hover:text-blue-600">{ex.name.toLowerCase()}</span>
+                      <span className="text-[10px] font-black tracking-widest text-red-500 uppercase mb-1 block">{ex.group}</span>
+                      <span className="text-base text-slate-700 font-bold capitalize group-hover:text-red-600">{ex.name.toLowerCase()}</span>
                     </div>
-                    <ChevronRight size={20} className="text-slate-300 group-hover:text-blue-500" />
+                    <ChevronRight size={20} className="text-slate-300 group-hover:text-red-500" />
                   </button>
                 ))
               ) : (
@@ -324,7 +321,7 @@ REGRAS JSON:
             <div className="bg-white border border-slate-100 p-5 rounded-[2.5rem] shadow-xl relative overflow-hidden h-fit">
                {isGenerating ? (
                  <div className="aspect-video flex flex-col items-center justify-center bg-slate-50 rounded-[2rem]">
-                    <Loader2 size={64} className="animate-spin text-blue-500 mb-4" strokeWidth={2.5}/>
+                    <Loader2 size={64} className="animate-spin text-red-500 mb-4" strokeWidth={2.5}/>
                     <p className="text-slate-700 font-black text-xl animate-pulse uppercase tracking-widest text-center">Modelando Biomecânica Adaptada...</p>
                  </div>
                ) : (
@@ -338,7 +335,7 @@ REGRAS JSON:
             {!isGenerating && (
               <div className="px-4 flex flex-col gap-4">
                 <div>
-                  <span className="text-sm font-black text-blue-600 uppercase tracking-[0.2em]">{environment} • {selectedExercise?.group || ""}</span>
+                  <span className="text-sm font-black text-red-600 uppercase tracking-[0.2em]">{environment} • {selectedExercise?.group || ""}</span>
                   <h2 className="text-4xl font-black text-slate-900 uppercase leading-none mt-2">{generatedData.nomeAdaptado}</h2>
                 </div>
                 
@@ -364,7 +361,7 @@ REGRAS JSON:
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-xl p-8 h-fit relative overflow-hidden">
                <div className="flex items-center gap-4 mb-8 pb-5 border-b border-slate-100 relative z-10">
-                  <div className="bg-blue-50 p-3 rounded-2xl"><FileText size={28} className="text-blue-500" /></div>
+                  <div className="bg-red-50 p-3 rounded-2xl"><FileText size={28} className="text-red-500" /></div>
                   <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Laudo Clínico</h2>
                </div>
 
@@ -375,18 +372,18 @@ REGRAS JSON:
                ) : (
                  <div className="space-y-6 text-sm font-medium text-slate-700 leading-relaxed relative z-10">
                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm">
-                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 uppercase tracking-widest text-xs mb-2">AGONISTAS</p>
+                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 uppercase tracking-widest text-xs mb-2">AGONISTAS</p>
                       <p>{generatedData.agonistas}</p>
                     </div>
                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm">
-                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 uppercase tracking-widest text-xs mb-2">SINERGISTAS</p>
+                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 uppercase tracking-widest text-xs mb-2">SINERGISTAS</p>
                       <p>{generatedData.sinergistas}</p>
                     </div>
                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm">
-                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 uppercase tracking-widest text-xs mb-2">CINESIOLOGIA</p>
+                      <p className="font-black text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 uppercase tracking-widest text-xs mb-2">CINESIOLOGIA</p>
                       <p>{generatedData.cinesiologia}</p>
                     </div>
-                    <div className="p-5 border border-blue-100 bg-blue-50/30 rounded-2xl italic font-bold text-slate-600">
+                    <div className="p-5 border border-red-100 bg-red-50/30 rounded-2xl italic font-bold text-slate-600">
                       "{generatedData.citacao}"
                     </div>
                  </div>

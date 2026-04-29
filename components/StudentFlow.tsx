@@ -357,9 +357,11 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
           <h4 className={`text-3xl font-black italic uppercase tracking-tighter leading-tight transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground'}`}>
             {ex.name}
           </h4>
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] italic">
-            {ex.method || 'Protocolo Mestre Padrão'}
-          </p>
+          {ex.method && (
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] italic">
+              {ex.method}
+            </p>
+          )}
         </div>
       </div>
 
@@ -420,7 +422,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
           <div className="col-span-2 mt-2">
             <button 
               onClick={onShowPrescreveAI}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-2xl font-black uppercase text-xs tracking-widest text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-orange-500 rounded-2xl font-black uppercase text-xs tracking-widest text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
             >
               <Sparkles size={16} /> Ver Biomecânica AI
             </button>
@@ -460,7 +462,7 @@ function getCurrentRepsForStudent(student: Student): string | null {
   return repsMatch ? formatReps(repsMatch[1]) : null;
 }
 
-export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void }) {
+export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void, isCoach?: boolean }) {
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -545,7 +547,7 @@ export function WorkoutSessionView({ user, onBack, onSave }: { user: Student, on
     const savedId = localStorage.getItem(`active_workout_id_${user.id}`);
     const savedProgress = localStorage.getItem(`workout_progress_${user.id}`);
     
-    if (savedStart && savedId && !activeWorkout) {
+    if (savedStart && savedId && !activeWorkout && !isCoach) {
       const start = parseInt(savedStart);
       setSessionStartTime(start);
       setElapsedTime(Math.floor((Date.now() - start) / 1000));

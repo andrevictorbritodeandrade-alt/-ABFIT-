@@ -31,7 +31,7 @@ async function run() {
     try {
       const prompt = `Professional athlete performing ${ex}, gym setting, 4k resolution, high quality, realistic, fitness photography`;
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
+        model: "gemini-2.5-flash-image",
         contents: prompt,
       });
 
