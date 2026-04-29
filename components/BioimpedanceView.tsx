@@ -114,7 +114,7 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
               <X size={18} className="text-white" />
             </button>
             <div className="flex flex-col">
-              <h2 className="text-lg font-black italic uppercase tracking-tighter leading-none">Avaliação Física</h2>
+              <h2 className="text-lg font-black italic uppercase tracking-tighter leading-none">AVALIAÇÃO FISICA</h2>
               <span className="text-[10px] text-blue-500 font-black uppercase tracking-[0.2em]">Bioimpedância</span>
             </div>
           </div>

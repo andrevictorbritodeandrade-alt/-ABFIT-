@@ -1126,7 +1126,7 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
            </button>
         </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Avaliação Mestre" />
+          <HeaderTitle text="AVALIAÇÃO FISICA" />
         </h2>
       </header>
       
