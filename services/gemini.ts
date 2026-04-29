@@ -4,13 +4,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
+// Robust API key detection for different environments (Vite, Cloud Run, etc)
+const getApiKey = () => {
+  return (
+    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+    (import.meta as any).env?.GEMINI_API_KEY ||
+    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
+    (typeof process !== 'undefined' ? process.env?.API_KEY : '') ||
+    ''
+  );
+};
+
 let genAIInstance: GoogleGenAI | null = null;
 
 function getGenAI() {
   if (!genAIInstance) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = getApiKey();
     if (!apiKey) {
-      // Return null or throw a more descriptive error that can be caught
       return null;
     }
     genAIInstance = new GoogleGenAI({ apiKey });

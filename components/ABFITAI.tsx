@@ -3,7 +3,18 @@ import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbe
 import { GoogleGenAI } from "@google/genai";
 import { db, handleFirestoreError, OperationType, doc, setDoc } from '../services/firebase';
 
-const apiKey = process.env.GEMINI_API_KEY || ""; 
+// Robust API key detection for different environments (Vite, Cloud Run, etc)
+const getApiKey = () => {
+  return (
+    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+    (import.meta as any).env?.GEMINI_API_KEY ||
+    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
+    (typeof process !== 'undefined' ? process.env?.API_KEY : '') ||
+    ''
+  );
+};
+
+const apiKey = getApiKey(); 
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const MODEL_TEXT = 'gemini-3-flash-preview';

@@ -3,7 +3,18 @@ import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbe
 import { GoogleGenAI } from "@google/genai";
 import { BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 
-const apiKey = process.env.GEMINI_API_KEY || "";
+// Robust API key detection for different environments (Vite, Cloud Run, etc)
+const getApiKey = () => {
+  return (
+    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+    (import.meta as any).env?.GEMINI_API_KEY ||
+    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
+    (typeof process !== 'undefined' ? process.env?.API_KEY : '') ||
+    ''
+  );
+};
+
+const apiKey = getApiKey();
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // ==========================================
