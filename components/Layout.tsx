@@ -90,11 +90,11 @@ export function Logo({ size = "text-4xl", subSize = "text-xs", collapsed = false
     );
   }
   return (
-    <div className="text-center group select-none flex flex-col items-center justify-center w-full overflow-hidden px-4">
-      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter transition-all text-foreground uppercase leading-[0.9] px-2`} style={{ textShadow: '1px 1px 0px currentColor, -1px -1px 0px currentColor, 1px -1px 0px currentColor, -1px 1px 0px currentColor' }}>
+    <div className="text-center group select-none flex flex-col items-center justify-center w-full overflow-hidden px-2">
+      <h1 className={`${size} font-black italic mb-0 transform -skew-x-12 tracking-tighter transition-all text-foreground uppercase leading-[0.9] px-1`} style={{ textShadow: '1px 1px 0px currentColor, -1px -1px 0px currentColor, 1px -1px 0px currentColor, -1px 1px 0px currentColor' }}>
         AB<span className="text-red-600">FIT</span>
       </h1>
-      <p className={`${subSize} text-muted-foreground tracking-widest sm:tracking-[0.25em] uppercase font-bold leading-none mt-4 opacity-80 whitespace-nowrap`}>Assessoria em Treinamentos Físicos</p>
+      <p className={`${subSize} text-muted-foreground tracking-tight sm:tracking-[0.25em] uppercase font-bold leading-none mt-3 sm:mt-4 opacity-80 whitespace-nowrap overflow-hidden text-ellipsis w-full`}>Assessoria em Treinamentos Físicos</p>
     </div>
   );
 }

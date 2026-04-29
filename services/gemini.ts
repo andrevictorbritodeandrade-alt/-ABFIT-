@@ -38,20 +38,21 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
 
     const brainResult = JSON.parse(brainResponse.text || "{}");
     
+    // Use gemini-2.5-flash-image for generation via generateContent
     const imageResponse = await ai.models.generateContent({
       model: MODEL_IMAGE,
       contents: brainResult.visualPrompt || `Professional athlete performing ${exerciseName}, gym setting, 4k resolution`,
       config: {
         imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "4K"
+          aspectRatio: "1:1"
         }
       }
     });
     
     let imageUrl = null;
-    if (imageResponse.candidates?.[0]?.content?.parts) {
-      for (const part of imageResponse.candidates[0].content.parts) {
+    const parts = imageResponse.candidates?.[0]?.content?.parts;
+    if (parts) {
+      for (const part of parts) {
         if (part.inlineData) {
           imageUrl = `data:image/png;base64,${part.inlineData.data}`;
           break;
@@ -201,20 +202,6 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
       ],
       config: { 
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              sets: { type: Type.STRING },
-              reps: { type: Type.STRING },
-              rest: { type: Type.STRING },
-              method: { type: Type.STRING }
-            },
-            required: ["name"]
-          }
-        }
       }
     });
 

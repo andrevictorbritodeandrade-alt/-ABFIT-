@@ -324,83 +324,66 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   };
 
   return (
-    <div className={`relative bg-card/30 border rounded-3xl overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
+    <div className={`relative bg-card/10 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-5 shadow-xl group/card 
       ${allSetsCompleted 
-        ? 'border-emerald-500 border-2 shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-emerald-950/20' 
-        : 'border-border hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
+        ? 'border-emerald-500 border-2 shadow-[0_0_30px_rgba(16,185,129,0.2)] bg-emerald-950/10' 
+        : 'border-border hover:border-red-600/20 hover:shadow-[0_20px_50px_rgba(220,38,38,0.1)]'
       }`}
     >
-      <div className={`flex flex-col items-center text-center mb-8 p-4 border-2 rounded-3xl bg-background/20 ${getGroupBorderColor(ex.groupId)}`}>
-        <div className="relative mb-2">
-          {allSetsCompleted && (
-             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-600 text-white shadow-lg animate-in zoom-in spin-in-90 duration-300 z-10 border-4 border-background mx-auto mb-2">
-               <Check size={20} />
-             </div>
-          )}
+      <div className={`flex flex-col items-center text-center mb-4 p-3 border-2 rounded-[2rem] bg-background/20 ${getGroupBorderColor(ex.groupId)}`}>
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <span className={`text-[9px] font-black italic uppercase tracking-[0.3em] leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>
+            {idx + 1}º Exercício
+          </span>
+          {allSetsCompleted && <Check size={14} className="text-emerald-500" />}
         </div>
         
-        <div className="space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            <span className={`text-xs font-black italic uppercase tracking-[0.3em] leading-none ${allSetsCompleted ? 'text-emerald-500' : 'text-red-600'}`}>
-              {idx + 1}º Exercício
-            </span>
-            {!allSetsCompleted && onSkip && (
-              <button 
-                onClick={() => onSkip(ex.id!)}
-                className="p-1 text-muted-foreground hover:text-red-600 transition-colors"
-                title="Pular Exercício"
-              >
-                <FastForward size={14} />
-              </button>
-            )}
-          </div>
-          <h4 className={`text-3xl font-black italic uppercase tracking-tighter leading-tight transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground'}`}>
-            {ex.name}
-          </h4>
-          {ex.method && (
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] italic">
-              {ex.method}
-            </p>
-          )}
-        </div>
+        <h4 className={`text-xl font-black italic uppercase tracking-tighter leading-tight transition-colors ${allSetsCompleted ? 'text-emerald-500' : 'text-foreground'}`}>
+          {ex.name}
+        </h4>
+        {ex.method && (
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] italic mt-1">
+            {ex.method}
+          </p>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-6 flex flex-col items-center shadow-inner">
-          <div className="flex flex-wrap justify-center gap-4">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2 bg-background/20 border border-border/50 rounded-2xl p-4 flex flex-col items-center">
+          <div className="flex flex-wrap justify-center gap-3">
             {Array.from({ length: totalSets }).map((_, sIdx) => (
               <button 
                 key={sIdx}
                 onClick={() => onMarkSet(ex.id || '', sIdx, ex.rest || '30')}
-                className={`w-14 h-14 rounded-full flex items-center justify-center font-black italic text-lg transition-all border-2 
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-black italic text-base transition-all border-2 
                   ${progress.completedSets.includes(sIdx) 
-                    ? 'bg-red-600 border-red-600 text-white shadow-[0_0_25px_rgba(220,38,38,0.6)] scale-110' 
-                    : 'bg-card border-border text-muted-foreground hover:border-red-600/50 hover:text-foreground'
+                    ? 'bg-red-600 border-red-600 text-white shadow-lg' 
+                    : 'bg-card border-border text-muted-foreground'
                   }`}
               >
                 {sIdx + 1}
               </button>
             ))}
           </div>
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-4 italic">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-3 italic">
             {allSetsCompleted ? <span className="text-emerald-500">SÉRIE CONCLUÍDA</span> : "Registro de Séries"}
           </p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
-          <span className="text-3xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
-          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-2 italic">Reps Alvo</p>
+        <div className="bg-background/20 border border-border/50 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
+          <span className="text-2xl font-black text-foreground italic leading-none tracking-tighter">{totalReps}</span>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1.5 italic">Reps Alvo</p>
         </div>
 
-        <div className="bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
+        <div className="bg-background/20 border border-border/50 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
-            <span className="text-[10px] font-black text-muted-foreground uppercase italic">KG</span>
+            <span className="text-xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
+            <span className="text-[8px] font-black text-muted-foreground uppercase italic">KG</span>
           </div>
           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Última Carga</p>
         </div>
 
-        <div className="col-span-2 bg-background/40 border border-border rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner min-h-[100px]">
+        <div className="col-span-2 bg-background/20 border border-border/50 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
           <div className="flex items-baseline gap-1">
             <input 
               type="number" 
@@ -411,9 +394,9 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
                 onUpdateLoad(ex.id!, e.target.value, true);
               }}
               onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
-              className="bg-transparent border-none p-0 text-3xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
+              className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
             />
-            <span className="text-[10px] font-black text-red-600 uppercase italic">KG</span>
+            <span className="text-[9px] font-black text-red-600 uppercase italic">KG</span>
           </div>
           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual</p>
         </div>
@@ -937,35 +920,36 @@ export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { 
 
   return (
     <div className="p-6 pb-48 text-foreground overflow-y-auto h-screen text-left custom-scrollbar bg-background animate-in fade-in duration-500">
-      <header className="flex items-center justify-between mb-8 sticky top-0 bg-background/90 backdrop-blur-md z-40 py-6 -mx-6 px-6 border-b border-border">
-        <div className="flex-1 flex items-center gap-3">
-           <button onClick={onBack} className="p-3 bg-card rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
-              <LayoutGrid size={20}/>
+      <div className="max-w-xl mx-auto">
+        <header className="flex items-center justify-between mb-8 sticky top-0 bg-background/90 backdrop-blur-md z-40 py-4 -mx-6 px-4 border-b border-border">
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+           <button onClick={onBack} className="p-2 sm:p-3 bg-card rounded-xl sm:rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg shrink-0">
+              <LayoutGrid size={18}/>
            </button>
-           <button onClick={cancelSession} className="p-3 bg-muted rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg">
-              <ArrowLeft size={20}/>
+           <button onClick={cancelSession} className="p-2 sm:p-3 bg-muted rounded-xl sm:rounded-2xl text-muted-foreground hover:text-foreground transition-colors shadow-lg shrink-0">
+              <ArrowLeft size={18}/>
            </button>
-           <div className="flex flex-col hidden xs:flex">
-              <span className="text-[11px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
-              <h2 className="text-lg font-black italic uppercase tracking-tighter text-foreground leading-none">{activeWorkout.title}</h2>
+           <div className="flex flex-col hidden sm:flex min-w-0">
+              <span className="text-[9px] font-black text-red-600 uppercase tracking-[0.3em] italic leading-none mb-1">Status Ativo</span>
+              <h2 className="text-sm font-black italic uppercase tracking-tighter text-foreground leading-none truncate">{activeWorkout.title}</h2>
            </div>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-           <div className="flex items-center gap-2">
-             <Clock size={24} className="text-red-600 animate-pulse" />
-             <span className="text-3xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
+        <div className={`flex flex-col items-center shrink-0 mx-2 ${allExercisesCompleted ? 'hidden sm:flex' : ''}`}>
+           <div className="flex items-center gap-1.5">
+             <Clock size={16} className="text-red-600 animate-pulse sm:w-6 sm:h-6" />
+             <span className="text-xl sm:text-3xl font-black text-foreground italic tracking-tighter tabular-nums leading-none">{formatTime(elapsedTime)}</span>
            </div>
-           <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Tempo Total</span>
+           <span className="text-[8px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Tempo</span>
         </div>
 
         <div className="flex-1 flex flex-col items-end">
            {allExercisesCompleted ? (
-             <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-6 py-2 rounded-full font-black text-[12px] uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest animate-pulse hover:bg-emerald-700 transition-all">
+             <button onClick={() => setShowCompletionModal(true)} className="bg-emerald-600 px-4 sm:px-6 py-2 rounded-full font-black text-xs uppercase shadow-lg shadow-emerald-900/30 text-white tracking-widest sm:animate-pulse hover:bg-emerald-700 transition-all shrink-0">
                 SALVAR
              </button>
            ) : (
-             <span className="text-[11px] font-black uppercase text-muted-foreground tracking-widest hidden xs:block">EM ANDAMENTO</span>
+             <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest hidden sm:block">ANDAMENTO</span>
            )}
         </div>
       </header>
@@ -1082,6 +1066,7 @@ export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { 
 
       {exerciseDetail && <ABFITDetailModal ex={exerciseDetail} dbExercise={dbExercises[exerciseDetail.name]} onClose={() => setExerciseDetail(null)} />}
       <AppFooter />
+      </div>
     </div>
   );
 }

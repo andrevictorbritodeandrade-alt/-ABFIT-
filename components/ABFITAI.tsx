@@ -1,8 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Save, Video, X } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { db, handleFirestoreError, OperationType, doc, setDoc } from '../services/firebase';
 
-const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || ""; 
+const apiKey = process.env.GEMINI_API_KEY || ""; 
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const MODEL_TEXT = 'gemini-3-flash-preview';
+const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
 const FILTROS_MUSCULARES = [
   'TODOS', 'PEITORAL', 'DORSAIS', 'OMBROS', 'BÍCEPS', 'TRÍCEPS', 
@@ -112,6 +117,8 @@ export const ABFITAIModule: React.FC<{ studentName?: string, onClose?: () => voi
     setShowDropdown(false);
 
     try {
+      if (!genAI) throw new Error("A chave da IA (GEMINI_API_KEY) não está configurada.");
+
       const jerseyPrompt = JERSEYS_DATA[selectedJersey];
       
       const modelSpecs = selectedModel === 'HOMEM' 
@@ -137,47 +144,42 @@ REGRAS JSON:
 6. "citacao": Citação acadêmica.
 7. "guiaPassos": ARRAY de strings com passos numerados.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}` }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { 
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                visualPrompt: { type: "STRING" },
-                nomeAdaptado: { type: "STRING" },
-                agonistas: { type: "STRING" },
-                sinergistas: { type: "STRING" },
-                cinesiologia: { type: "STRING" },
-                citacao: { type: "STRING" },
-                guiaPassos: { type: "ARRAY", items: { type: "STRING" } }
-              },
-              required: ["visualPrompt", "nomeAdaptado", "agonistas", "sinergistas", "cinesiologia", "citacao", "guiaPassos"]
-            }
+      const textResponse = await genAI.models.generateContent({
+        model: MODEL_TEXT,
+        contents: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}`,
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+        }
+      });
+      
+      const data = JSON.parse(textResponse.text || "{}");
+
+      // Use gemini-2.5-flash-image for generation via generateContent
+      const imgResponse = await genAI.models.generateContent({
+        model: MODEL_IMAGE,
+        contents: data.visualPrompt,
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1"
           }
-        })
+        }
       });
 
-      const result = await response.json();
-      const data = JSON.parse(result.candidates[0].content.parts[0].text);
+      let imageUrl = null;
+      const parts = imgResponse.candidates?.[0]?.content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+      }
 
-    const imgResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          contents: [{ parts: [{ text: data.visualPrompt }] }]
-        })
-      });
-      const imgResult = await imgResponse.json();
+      if (!imageUrl) throw new Error("Falha na geração da imagem");
       
-      const imgPart = imgResult.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
-      if (!imgPart) throw new Error("Falha na geração da imagem");
-      
-      data.image = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+      data.image = imageUrl;
 
       setGeneratedData(data);
     } catch (err) {

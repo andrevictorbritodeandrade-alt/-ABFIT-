@@ -11,7 +11,7 @@ import { GoogleGenAI } from "@google/genai";
 import { AppFooter } from './Layout';
 
 // Using recommended models as per guidelines
-const MODEL_TEXT = 'gemini-3-flash-preview';
+const MODEL_TEXT = 'gemini-flash-latest';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
 const EXERCISE_DATABASE: Record<string, string[]> = {

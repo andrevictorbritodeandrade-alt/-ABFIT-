@@ -1954,48 +1954,43 @@ export default function App() {
     const isUrgent = diffDays <= 7;
 
     return (
-      <div className={`w-full max-w-xl mb-8 p-6 rounded-[2.5rem] border-2 shadow-2xl relative overflow-hidden transition-all
+      <div className={`w-full max-w-xl h-[92px] p-4 rounded-[2.5rem] border-2 shadow-xl relative overflow-hidden transition-all flex flex-row items-center gap-5 backdrop-blur-md
         ${isOverdue 
-          ? 'bg-red-950/40 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.4)] animate-pulse' 
+          ? 'bg-red-950/40 border-red-600 shadow-red-600/20 animate-pulse' 
           : isUrgent
-            ? 'bg-amber-950/30 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.2)]'
+            ? 'bg-amber-950/30 border-amber-500 shadow-amber-600/10'
             : 'bg-zinc-900 border-zinc-800'
         }`}
       >
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          {isOverdue ? <AlertTriangle size={80} className="text-red-500" /> : <Calendar size={80} className="text-zinc-600" />}
+        <div className="absolute top-0 right-0 p-4 opacity-5">
+          {isOverdue ? <AlertTriangle size={40} className="text-red-500" /> : <Calendar size={40} className="text-zinc-600" />}
         </div>
 
-        <div className="flex items-start gap-4 relative z-10">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg
-            ${isOverdue ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}
+        <div className={`w-16 h-16 rounded-[1.8rem] flex items-center justify-center shrink-0 shadow-lg relative z-10
+          ${isOverdue ? 'bg-red-600 text-white shadow-red-600/40' : 'bg-zinc-800 text-zinc-400'}
+        `}>
+           <Activity size={32} />
+        </div>
+        
+        <div className="flex-1 text-left relative z-10">
+          <p className={`text-[8px] font-black uppercase tracking-[0.2em] italic mb-1
+            ${isOverdue ? 'text-red-500' : 'text-zinc-500'}
           `}>
-             <Activity size={32} />
-          </div>
-          
-          <div className="text-left">
-            <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 italic
-              ${isOverdue ? 'text-red-500' : 'text-zinc-500'}
-            `}>
-              {isOverdue ? "MISSÃO OBRIGATÓRIA ATRASADA" : "MARCO MENSAL: AVALIAÇÃO COMPLETA"}
-            </p>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-white leading-none mb-2">
-              Próxima Auditoria Corporal
-            </h3>
-            <p className="text-zinc-400 text-[10px] leading-relaxed font-bold uppercase italic">
-              Bio + Relógio + Dobras + Fitas
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-               <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest
-                 ${isOverdue ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}
-               `}>
-                 {isOverdue 
-                   ? `ATRASADO ${Math.abs(diffDays)} DIAS` 
-                   : `DAQUI A ${diffDays} DIAS`
-                 }
-               </div>
-               <span className="text-[10px] font-black text-white/50 uppercase italic">Ref: {nextDate.toLocaleDateString('pt-BR')}</span>
-            </div>
+            {isOverdue ? "MISSÃO OBRIGATÓRIA ATRASADA" : "AVALIAÇÃO FÍSICA COMPLETA"}
+          </p>
+          <h3 className="text-xs font-black italic uppercase tracking-widest text-white leading-tight">
+            Próxima Auditoria Corporal
+          </h3>
+          <div className="mt-1 flex items-center gap-2">
+             <span className={`text-[9px] font-black uppercase italic
+               ${isOverdue ? 'text-red-500' : isUrgent ? 'text-amber-500' : 'text-zinc-400'}
+             `}>
+               {isOverdue 
+                 ? `ATRASADO ${Math.abs(diffDays)} DIAS` 
+                 : `DAQUI A ${diffDays} DIAS`
+               }
+             </span>
+             <span className="text-[8px] font-black text-white/30 uppercase italic">Ref: {nextDate.toLocaleDateString('pt-BR')}</span>
           </div>
         </div>
       </div>
@@ -2104,8 +2099,8 @@ export default function App() {
               <WeatherWidget />
             </header>
             
-            <Logo size="text-6xl" subSize="text-[9px] sm:text-xs" />
-            <div className="relative mt-8 mb-8">
+            <Logo size="text-4xl" subSize="text-[8px] sm:text-[10px]" />
+            <div className="relative mt-4 mb-8">
                <div className="relative group/photo cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                  <div className="w-28 h-28 rounded-[2.5rem] bg-zinc-900 border-2 border-red-600 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] relative">
                     {studentForView.photoUrl ? ( <img src={studentForView.photoUrl} className="w-full h-full object-cover" alt="Perfil"/> ) : ( <div className="w-full h-full flex items-center justify-center bg-zinc-800"><UserIcon size={40} className="text-zinc-600" /></div> )}

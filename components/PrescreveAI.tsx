@@ -1,12 +1,16 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Sparkles, BrainCircuit, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 
-const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = process.env.GEMINI_API_KEY || "";
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // ==========================================
 // CONSTANTES DE CONFIGURAÇÃO
 // ==========================================
+const MODEL_TEXT = 'gemini-3-flash-preview';
+const MODEL_IMAGE = 'gemini-2.5-flash-image';
 const FILTROS_MUSCULARES = [
   'TODOS', 'PEITORAL', 'DORSAIS', 'OMBROS', 'BÍCEPS', 'TRÍCEPS', 
   'QUADRÍCEPS', 'POSTERIORES DE COXA', 'GLÚTEOS', 'ADUTORES', 
@@ -117,6 +121,8 @@ export function PrescreveAI({ onBack, initialExerciseName }: { onBack?: () => vo
     setShowDropdown(false);
 
     try {
+      if (!genAI) throw new Error("A chave da IA (GEMINI_API_KEY) não está configurada.");
+
       const jerseyPrompt = JERSEYS_DATA[selectedJersey as keyof typeof JERSEYS_DATA];
       
       const modelSpecs = selectedModel === 'HOMEM' 
@@ -157,39 +163,41 @@ REGRAS JSON:
 6. "citacao": Citação acadêmica realista.
 7. "guiaPassos": ARRAY de strings numeradas com os passos de execução precisos.`;
 
-      const data = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Modo: ${environment}. Exercício: ${exerciseName}` }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { 
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                visualPrompt: { type: "STRING" },
-                nomeAdaptado: { type: "STRING" },
-                agonistas: { type: "STRING" },
-                sinergistas: { type: "STRING" },
-                cinesiologia: { type: "STRING" },
-                citacao: { type: "STRING" },
-                guiaPassos: { type: "ARRAY", items: { type: "STRING" } }
-              },
-              required: ["visualPrompt", "nomeAdaptado", "agonistas", "sinergistas", "cinesiologia", "citacao", "guiaPassos"]
-            }
-          }
-        })
-      }).then((res: any) => JSON.parse(res.candidates[0].content.parts[0].text));
-
-      const imgResult = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: data.visualPrompt }] }] })
+      const textResponse = await genAI.models.generateContent({
+        model: MODEL_TEXT,
+        contents: `Modo: ${environment}. Exercício: ${exerciseName}`,
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+        }
       });
-      const imgPart = imgResult.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
-      if (!imgPart) throw new Error("Falha na geração da imagem");
-      data.image = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+      
+      const data = JSON.parse(textResponse.text || "{}");
+
+      // Use gemini-2.5-flash-image for generation via generateContent
+      const imgResponse = await genAI.models.generateContent({
+        model: MODEL_IMAGE,
+        contents: data.visualPrompt,
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1"
+          }
+        }
+      });
+
+      let imageUrl = null;
+      const parts = imgResponse.candidates?.[0]?.content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+      }
+
+      if (!imageUrl) throw new Error("Falha na geração da imagem");
+      data.image = imageUrl;
 
       setGeneratedData(data);
     } catch (err: any) {
@@ -204,31 +212,23 @@ REGRAS JSON:
     if (!generatedData) return;
     setIsGeneratingInsight(true);
     try {
+      if (!genAI) throw new Error("A chave da IA (GEMINI_API_KEY) não está configurada.");
+
       const insightPrompt = `Como Doutor em Performance, gere uma análise avançada para o exercício: ${generatedData.nomeAdaptado}.
       Retorne um JSON com:
       - "mentoria": Uma dica de mestre sobre cadência ou contração de pico.
       - "erros": Um erro biomecânico perigoso e como evitar.
       - "intensidade": Sugestão de RPE (0-10) e método de progressão (ex: Drop-set, Cluster-set).`;
 
-      const insightData = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: insightPrompt }] }],
-          generationConfig: { 
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                mentoria: { type: "STRING" },
-                erros: { type: "STRING" },
-                intensidade: { type: "STRING" }
-              }
-            }
-          }
-        })
-      }).then((res: any) => JSON.parse(res.candidates[0].content.parts[0].text));
+      const insightResponse = await genAI.models.generateContent({
+        model: MODEL_TEXT,
+        contents: insightPrompt,
+        config: { 
+          responseMimeType: "application/json",
+        }
+      });
 
+      const insightData = JSON.parse(insightResponse.text || "{}");
       setPerformanceInsight(insightData);
     } catch (err) {
       console.error(err);
@@ -251,14 +251,14 @@ REGRAS JSON:
             <span>Voltar</span>
           </button>
         )}
-        <div className="bg-gradient-to-tr from-red-600 to-orange-500 p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl shrink-0">
-          <Dumbbell size={52} className="text-white" strokeWidth={2.5} />
+        <div className="bg-gradient-to-tr from-red-600 to-orange-500 p-3 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] shadow-2xl shrink-0 overflow-hidden">
+          <Dumbbell size={32} className="text-white sm:w-[52px] sm:h-[52px]" strokeWidth={2.5} />
         </div>
-        <div className="flex flex-col justify-center">
-          <h1 className="text-5xl sm:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 leading-[0.85] uppercase">
+        <div className="flex flex-col justify-center min-w-0">
+          <h1 className="text-3xl sm:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 leading-[0.85] uppercase truncate">
             PRESCREVEAI
           </h1>
-          <p className="text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-widest border-t border-slate-200 mt-2 pt-1">
+          <p className="text-[8px] sm:text-sm font-bold text-slate-500 uppercase tracking-tight sm:tracking-widest border-t border-slate-200 mt-2 pt-1 truncate">
             PRESCRIÇÃO E BIOMECÂNICA DE ALTA PERFORMANCE
           </p>
         </div>
