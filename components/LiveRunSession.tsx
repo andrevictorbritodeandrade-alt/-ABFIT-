@@ -1018,7 +1018,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     </div>
                 </div>
 
-                <div className="bg-[#1a1a1a] rounded-[3rem] p-10 mb-8 shadow-2xl relative overflow-hidden border border-white/5">
+                <div className="bg-[#1a1a1a] rounded-3xl p-10 mb-8 shadow-2xl relative overflow-hidden border border-white/5">
                     <div className="flex items-center gap-3 mb-10">
                         <Activity size={20} className="text-red-600 animate-pulse" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">MÉTRICAS DE PERFORMANCE</span>
@@ -1034,7 +1034,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     </div>
                 </div>
 
-                <div className="w-full h-64 rounded-[2.5rem] bg-[#1a1a1a] mb-8 overflow-hidden relative border border-white/5 shadow-2xl">
+                <div className="w-full h-64 rounded-3xl bg-[#1a1a1a] mb-8 overflow-hidden relative border border-white/5 shadow-2xl">
                     {mode === 'outdoor' && path.length > 0 ? (
                         <MapContainer center={[path[0].lat, path[0].lng]} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={false} scrollWheelZoom={false} touchZoom={false}>
                             <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
@@ -1048,7 +1048,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                     )}
                 </div>
 
-                <div className="bg-[#1a1a1a] rounded-[2.5rem] p-8 mb-8 border border-white/5 shadow-2xl">
+                <div className="bg-[#1a1a1a] rounded-3xl p-8 mb-8 border border-white/5 shadow-2xl">
                     <div className="flex flex-col items-center mb-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4 italic">FOTO DA VITÓRIA (OPCIONAL)</span>
                         {capturedPhoto ? (
@@ -1104,7 +1104,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                                 saveWorkout();
                             }}
                             disabled={isSaving}
-                            className="w-full py-8 bg-[#e2ff00] text-black rounded-[2rem] font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-[#e2ff00]/20 active:scale-95 transition-all flex items-center justify-center gap-4"
+                            className="w-full py-8 bg-[#e2ff00] text-black rounded-3xl font-black italic uppercase tracking-widest text-2xl shadow-2xl shadow-[#e2ff00]/20 active:scale-95 transition-all flex items-center justify-center gap-4"
                         >
                             {isSaving ? (
                                 <>
@@ -1124,9 +1124,9 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 <button onClick={() => {
                     localStorage.removeItem('abfit_run_active_session');
                     onClose();
-                }} className="w-full py-6 bg-transparent text-zinc-700 rounded-[2rem] font-black italic uppercase tracking-widest text-[10px] hover:text-white transition-all mb-4 italic">DESCARTAR DADOS DO TREINO</button>
+                }} className="w-full py-6 bg-transparent text-zinc-700 rounded-3xl font-black italic uppercase tracking-widest text-[10px] hover:text-white transition-all mb-4 italic">DESCARTAR DADOS DO TREINO</button>
 
-                <div className="bg-[#1a1a1a] rounded-[3rem] p-10 mt-12 mb-8 shadow-2xl relative border border-white/5">
+                <div className="bg-[#1a1a1a] rounded-3xl p-10 mt-12 mb-8 shadow-2xl relative border border-white/5">
                     <div className="flex justify-between items-center mb-10">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40"><Activity size={16} className="text-white" /></div>
@@ -1186,7 +1186,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-zinc-900 border border-white/10 p-10 rounded-[3rem] shadow-2xl w-full max-w-sm"
+                            className="bg-zinc-900 border border-white/10 p-10 rounded-3xl shadow-2xl w-full max-w-sm"
                         >
                             <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-600/20">
                                 <Square size={32} className="text-red-600 animate-pulse" fill="currentColor" />
@@ -1225,7 +1225,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center"
                     >
-                        <div className="bg-zinc-900 border-4 border-[#e2ff00] p-10 rounded-[3rem] shadow-[0_0_50px_rgba(226,255,0,0.3)] animate-pulse">
+                        <div className="bg-zinc-900 border-4 border-[#e2ff00] p-10 rounded-3xl shadow-[0_0_50px_rgba(226,255,0,0.3)] animate-pulse">
                             <Pause size={64} className="text-[#e2ff00] mx-auto mb-6" fill="#e2ff00" />
                             <h2 className="text-4xl font-black italic uppercase text-white tracking-widest mb-2">AUTO-PAUSE</h2>
                             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Retome o movimento para continuar</p>
@@ -1333,7 +1333,7 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
             </div>
 
             {/* PAINEL CENTRAL REGRESSIVO */}
-            <div className="mx-6 flex-1 flex flex-col items-center justify-center bg-zinc-900/30 rounded-[45px] border border-zinc-800/50 shadow-2xl p-8 mb-4 relative overflow-hidden">
+            <div className="mx-6 flex-1 flex flex-col items-center justify-center bg-zinc-900/30 rounded-3xl border border-zinc-800/50 shadow-2xl p-8 mb-4 relative overflow-hidden">
                 <div 
                     className="absolute bottom-0 left-0 h-1.5 bg-[#e2ff00] transition-all duration-1000 shadow-[0_0_15px_rgba(226,255,0,0.5)]"
                     style={{ width: `${(isFreeMode ? 100 : (segmentTimeLeft / (currentSegment?.duration || 1)) * 100)}%` }}

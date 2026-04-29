@@ -5,7 +5,7 @@ import {
   Camera, Brain, Ruler, Footprints,
   Info, LogOut, Layout, Bell,
   BarChart3, ChevronRight, Activity, Settings2, Bot, ArrowLeft, Menu, MapPin,
-  AlertTriangle, Sparkles
+  AlertTriangle, Sparkles, Calendar
 } from 'lucide-react';
 import { Logo, BackgroundWrapper, AppFooter, WeatherWidget, GlobalSyncIndicator, Card, NotificationBadge, SideNav, HeaderTitle } from './components/Layout';
 import { ProfessorDashboard, StudentManagement, WorkoutEditorView, CoachAssessmentView, PeriodizationView, RunTrackManager, StudentWorkoutHistoryView } from './components/CoachFlow';
@@ -634,8 +634,143 @@ export default function App() {
           medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
           physicalAssessments: [
             {
+              id: 'bio-andre-20260427',
+              data: '2026-04-27T12:56:07Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 100.1,
+              altura: 180,
+              imc: { value: 30.9, status: 'Alto', color: 'yellow' },
+              gordura: { value: 30.0, status: 'Obeso', color: 'red' },
+              pesoGordura: { value: 30.0, status: 'Obeso', color: 'red' },
+              percentualMassaMuscularEsqueletica: { value: 36.9, status: 'Saudável', color: 'green' },
+              pesoMassaMuscularEsqueletica: { value: 36.9, status: 'Saudável', color: 'green' },
+              registroMassaMuscular: { value: 67.1, status: 'Excelente', color: 'green' },
+              pesoMassaMuscular: { value: 67.2, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 51.0, status: 'Baixo', color: 'blue' },
+              pesoAgua: { value: 51.0, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 19.0, status: 'Obeso', color: 'red' },
+              ossos: { value: 2.92, status: 'Saudável', color: 'green' },
+              metabolismo: { value: 2025.0, status: 'Alto', color: 'yellow' },
+              proteina: { value: 16.1, status: 'Saudável', color: 'green' },
+              obesidade: { value: 43.0, status: 'Moderado', color: 'orange' },
+              idadeMetabolica: 46.0,
+              lbm: 70.09,
+              idadeReal: 36,
+              analiseComposicao: {
+                agua: 'Baixo',
+                gordura: 'Obeso',
+                proteina: 'Saudável',
+                ossos: 'Saudável'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Obesidade',
+                descricao: 'O seu tipo de corpo é obeso, com excesso de gordura corporal e peso. Como mestre em ciências do exercício, André, você sabe que isso requer atenção estratégica no treinamento de força.'
+              },
+              dicasControlePeso: {
+                pesoIdeal: 70.0,
+                pesoDiff: -22.4,
+                massaMuscularDiff: 6.9,
+                gorduraDiff: -12.2
+              },
+              veredictoMestre: 'André, comparando com 23/04/2026, você teve uma variação de -0.40kg no peso total. A massa muscular subiu (+0.40kg), o que é excelente para manter a taxa metabólica ativa.'
+            },
+            {
+              id: 'bio-andre-20260423',
+              data: '2026-04-23T10:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 100.5,
+              altura: 180,
+              gordura: { value: 28.0, status: 'Obeso', color: 'red' },
+              pesoMassaMuscular: { value: 66.8, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 51.2, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 16.2, status: 'Obeso', color: 'red' },
+              metabolismo: { value: 2010.0, status: 'Alto', color: 'yellow' },
+              idadeReal: 36,
+            },
+            {
+              id: 'bio-andre-20260421',
+              data: '2026-04-21T08:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 100.8,
+              altura: 180,
+              imc: { value: 31.1, status: 'Alto', color: 'yellow' },
+              gordura: { value: 28.2, status: 'Obeso', color: 'red' },
+              pesoGordura: { value: 28.4, status: 'Obeso', color: 'red' },
+              percentualMassaMuscularEsqueletica: { value: 37.4, status: 'Saudável', color: 'green' },
+              pesoMassaMuscularEsqueletica: { value: 37.7, status: 'Saudável', color: 'green' },
+              pesoMassaMuscular: { value: 66.7, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 51.0, status: 'Baixo', color: 'blue' },
+              pesoAgua: { value: 51.4, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 16.4, status: 'Obeso', color: 'red' },
+              metabolismo: { value: 2015.0, status: 'Alto', color: 'yellow' },
+              idadeReal: 36,
+              analiseComposicao: {
+                agua: 'Baixo',
+                gordura: 'Obeso',
+                proteina: 'Saudável',
+                ossos: 'Saudável'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Obesidade',
+                descricao: 'O seu tipo de corpo é obeso, com excesso de gordura corporal e peso. Como mestre em ciências do exercício, André, você sabe que isso requer atenção estratégica no treinamento de força.'
+              },
+              dicasControlePeso: {
+                pesoIdeal: 70.0,
+                pesoDiff: -22.4,
+                massaMuscularDiff: 6.9,
+                gorduraDiff: -12.2
+              },
+              veredictoMestre: 'André, comparando com 20/04/2026, você teve uma variação de -2.2kg no peso total. A massa muscular subiu, o que é excelente para manter a taxa metabólica ativa.'
+            },
+            {
+              id: 'bio-andre-20260420',
+              data: '2026-04-20T09:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              notes: 'Avaliação Física Completa (Bio + Relógio + Dobras + Fitas)',
+              peso: 100.9,
+              altura: 180,
+              gordura: { value: 28.3, status: 'Obeso', color: 'red' },
+              pesoMassaMuscular: { value: 66.7, status: 'Excelente', color: 'green' },
+              idadeReal: 36,
+            },
+            {
+              id: 'bio-andre-20260418',
+              data: '2026-04-18T08:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 101.0,
+              altura: 180,
+              imc: { value: 31.2, status: 'Alto', color: 'yellow' },
+              gordura: { value: 28.5, status: 'Obeso', color: 'red' },
+              pesoGordura: { value: 28.8, status: 'Obeso', color: 'red' },
+              percentualMassaMuscularEsqueletica: { value: 37.3, status: 'Saudável', color: 'green' },
+              pesoMassaMuscularEsqueletica: { value: 37.7, status: 'Saudável', color: 'green' },
+              pesoMassaMuscular: { value: 66.7, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 50.8, status: 'Baixo', color: 'blue' },
+              pesoAgua: { value: 51.3, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 16.5, status: 'Obeso', color: 'red' },
+              metabolismo: { value: 2020.0, status: 'Alto', color: 'yellow' },
+              idadeReal: 36,
+              analiseComposicao: {
+                agua: 'Baixo',
+                gordura: 'Obeso',
+                proteina: 'Saudável',
+                ossos: 'Saudável'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Obesidade',
+                descricao: 'O seu tipo de corpo é obeso, com excesso de gordura corporal e peso. Como mestre em ciências do exercício, André, você sabe que isso requer atenção estratégica no treinamento de força.'
+              },
+              dicasControlePeso: {
+                pesoIdeal: 70.0,
+                pesoDiff: -22.4,
+                massaMuscularDiff: 6.9,
+                gorduraDiff: -12.2
+              },
+              veredictoMestre: 'André, comparando com 13/04/2026, você teve uma variação de -2.0kg no peso total. Atenção à massa muscular, busque manter os estímulos de força.'
+            },
+            {
               id: 'bio-andre-20260413',
-              data: '2026-04-13T20:30:00Z',
+              data: '2026-04-13T08:00:00Z',
               type: 'BIOIMPEDANCIA',
               peso: 103.0,
               altura: 180,
@@ -644,18 +779,12 @@ export default function App() {
               pesoGordura: { value: 30.2, status: 'Obeso', color: 'red' },
               percentualMassaMuscularEsqueletica: { value: 37.1, status: 'Saudável', color: 'green' },
               pesoMassaMuscularEsqueletica: { value: 38.2, status: 'Saudável', color: 'green' },
-              registroMassaMuscular: { value: 65.0, status: 'Excelente', color: 'green' },
               pesoMassaMuscular: { value: 66.9, status: 'Excelente', color: 'green' },
               aguaPercentual: { value: 50.2, status: 'Baixo', color: 'blue' },
               pesoAgua: { value: 51.7, status: 'Baixo', color: 'blue' },
               gorduraVisceral: { value: 17.0, status: 'Obeso', color: 'red' },
-              ossos: { value: 3.1, status: 'Saudável', color: 'green' },
               metabolismo: { value: 2050.0, status: 'Alto', color: 'yellow' },
-              proteina: { value: 16.5, status: 'Saudável', color: 'green' },
-              obesidade: { value: 34.2, status: 'Moderado', color: 'orange' },
-              idadeMetabolica: 46.0,
-              lbm: 72.8,
-              idadeReal: 35,
+              idadeReal: 36,
               analiseComposicao: {
                 agua: 'Baixo',
                 gordura: 'Obeso',
@@ -672,6 +801,16 @@ export default function App() {
                 massaMuscularDiff: 6.9,
                 gorduraDiff: -12.2
               }
+            },
+            {
+              id: 'bio-andre-20260407',
+              data: '2026-04-07T08:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              peso: 102.0,
+              altura: 180,
+              gordura: { value: 29.0, status: 'Obeso', color: 'red' },
+              pesoMassaMuscular: { value: 66.2, status: 'Excelente', color: 'green' },
+              idadeReal: 36,
             }
           ], 
           workoutHistory: [
@@ -692,7 +831,7 @@ export default function App() {
                 steps: 4571,
                 elevation: 17,
                 vo2max: 36.1,
-                vo2maxClass: "ruim",
+                vo2maxClass: "red",
                 sweatLoss: 295,
                 hydrationRecomendation: 442,
                 weather: { temp: 28, condition: "Nublado", humidity: 81, wind: 18 },
@@ -1677,6 +1816,71 @@ export default function App() {
     return !studentForView?.disabledFeatures?.includes(item.id);
   });
 
+  const AssessmentAlert = ({ student }: { student: Student }) => {
+    // Definimos o marco da última avaliação completa (Bio + Dobras + Fitas + Relogio)
+    // Para o André, o usuário informou que foi 20 de Abril
+    const lastFullDate = student.id === 'fixed-andre' ? '2026-04-20' : null;
+    if (!lastFullDate) return null;
+
+    const nextDate = new Date(lastFullDate);
+    nextDate.setDate(nextDate.getDate() + 30);
+    const now = new Date();
+    const diffTime = nextDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Mostra o alerta se faltar menos de 30 dias ou se estiver atrasado
+    const isOverdue = diffDays <= 0;
+    const isUrgent = diffDays <= 7;
+
+    return (
+      <div className={`w-full max-w-xl mb-8 p-6 rounded-[2.5rem] border-2 shadow-2xl relative overflow-hidden transition-all
+        ${isOverdue 
+          ? 'bg-red-950/40 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.4)] animate-pulse' 
+          : isUrgent
+            ? 'bg-amber-950/30 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.2)]'
+            : 'bg-zinc-900 border-zinc-800'
+        }`}
+      >
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          {isOverdue ? <AlertTriangle size={80} className="text-red-500" /> : <Calendar size={80} className="text-zinc-600" />}
+        </div>
+
+        <div className="flex items-start gap-4 relative z-10">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg
+            ${isOverdue ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}
+          `}>
+             <Activity size={32} />
+          </div>
+          
+          <div className="text-left">
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 italic
+              ${isOverdue ? 'text-red-500' : 'text-zinc-500'}
+            `}>
+              {isOverdue ? "MISSÃO OBRIGATÓRIA ATRASADA" : "MARCO MENSAL: AVALIAÇÃO COMPLETA"}
+            </p>
+            <h3 className="text-xl font-black italic uppercase tracking-tighter text-white leading-none mb-2">
+              Próxima Auditoria Corporal
+            </h3>
+            <p className="text-zinc-400 text-[10px] leading-relaxed font-bold uppercase italic">
+              Bio + Relógio + Dobras + Fitas
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+               <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest
+                 ${isOverdue ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}
+               `}>
+                 {isOverdue 
+                   ? `ATRASADO ${Math.abs(diffDays)} DIAS` 
+                   : `DAQUI A ${diffDays} DIAS`
+                 }
+               </div>
+               <span className="text-[10px] font-black text-white/50 uppercase italic">Ref: {nextDate.toLocaleDateString('pt-BR')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <ErrorBoundary>
       <BackgroundWrapper>
@@ -1793,7 +1997,9 @@ export default function App() {
             </div>
             <p className="text-xl font-black text-white italic uppercase tracking-[0.3em] mt-2">{studentForView.nome}</p>
             
-            <div className="w-full mt-6 space-y-4 pb-20 flex flex-col max-w-xl mx-auto">
+            <div className="w-full mt-10 space-y-4 pb-20 flex flex-col max-w-xl mx-auto px-4 sm:px-0">
+              <AssessmentAlert student={studentForView} />
+              
               {visibleDashboardItems.map(item => {
                 const isPeriodization = item.id === 'STUDENT_PERIODIZATION';
                 const isWorkouts = item.id === 'WORKOUTS';
@@ -1814,20 +2020,23 @@ export default function App() {
                 return (
                   <div 
                     key={item.id} 
-                    className={`p-4 bg-zinc-950/80 border border-${item.color}-600/30 group cursor-pointer active:scale-95 transition-all shadow-lg shadow-${item.color}-600/10 flex flex-row items-center gap-4 rounded-[2rem] backdrop-blur-sm`} 
+                    className={`w-full h-[92px] p-4 bg-zinc-950/80 border-2 border-${item.color}-600/30 group cursor-pointer active:scale-95 transition-all shadow-xl shadow-${item.color}-600/10 flex flex-row items-center gap-5 rounded-[2.5rem] backdrop-blur-md hover:border-${item.color}-600/60`} 
                     onClick={() => setView(item.id)}
                   >
-                    <div className={`w-14 h-14 bg-${item.color}-600 rounded-2xl flex items-center justify-center shadow-lg shadow-${item.color}-600/40 shrink-0`}> 
-                      <item.icon className="text-white" size={28} /> 
+                    <div className={`w-16 h-16 bg-${item.color}-600 rounded-[1.8rem] flex items-center justify-center shadow-lg shadow-${item.color}-600/40 shrink-0`}> 
+                      <item.icon className="text-white" size={32} /> 
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="text-sm font-black uppercase text-white italic tracking-[0.1em]">{item.label}</h3>
-                      {(isPeriodization || isWorkouts) && progress > 0 && (
-                        <div className="mt-2 w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className={`h-full bg-${item.color}-600`} style={{ width: `${progress}%` }} />
+                      <h3 className="text-xs font-black uppercase text-white italic tracking-[0.2em] leading-tight">{item.label}</h3>
+                      {(isPeriodization || isWorkouts) && progress > 0 ? (
+                        <div className="mt-2 w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className={`h-full bg-${item.color}-600 shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-all duration-1000`} style={{ width: `${progress}%` }} />
                         </div>
+                      ) : (
+                        <div className="mt-2 text-[8px] font-black uppercase text-zinc-600 tracking-widest italic">Acesse sua jornada</div>
                       )}
                     </div>
+                    <ChevronRight size={16} className={`text-${item.color}-600 opacity-30 group-hover:opacity-100 transition-opacity mr-2`} />
                   </div>
                 );
               })}

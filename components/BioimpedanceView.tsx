@@ -3,8 +3,8 @@ import { Card } from './Layout';
 import { ArrowLeft, Monitor, RefreshCw, X, ChevronRight, Activity, Bone, Droplets, Target, Weight, HeartPulse } from 'lucide-react';
 import { PhysicalAssessment } from '../types';
 
-export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalAssessment, onBack: () => void }) {
-  const [tab, setTab] = useState<'METRICAS' | 'ANALISE'>('METRICAS');
+export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { assessment: PhysicalAssessment, allAssessments?: PhysicalAssessment[], onBack: () => void }) {
+  const [tab, setTab] = useState<'METRICAS' | 'ANALISE' | 'COMPARATIVO'>('METRICAS');
 
   const getColorClass = (color: string) => {
     switch (color) {
@@ -15,6 +15,59 @@ export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalA
       case 'orange': return 'text-orange-500 border-orange-500/30 bg-orange-500/10';
       default: return 'text-zinc-400 border-zinc-700 bg-zinc-800';
     }
+  };
+
+  const sortedAssessments = [...allAssessments].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  const currentIndex = sortedAssessments.findIndex(a => a.id === assessment.id);
+  const previousAssessment = currentIndex >= 0 && currentIndex + 1 < sortedAssessments.length ? sortedAssessments[currentIndex + 1] : null;
+
+  const renderComparativeRow = (label: string, field: string, alternativeField: string, unit: string) => {
+    let currValRaw = assessment[field]?.value ?? assessment[field] ?? assessment[alternativeField]?.value ?? assessment[alternativeField];
+    let prevValRaw = previousAssessment ? (previousAssessment[field]?.value ?? previousAssessment[field] ?? previousAssessment[alternativeField]?.value ?? previousAssessment[alternativeField]) : null;
+    
+    const currVal = parseFloat(currValRaw) || 0;
+    const prevVal = parseFloat(prevValRaw) || 0;
+    
+    if (!previousAssessment || prevValRaw == null || isNaN(prevVal)) {
+      return (
+        <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
+           <div>
+             <span className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">{label}</span><br />
+             <span className="text-zinc-600 text-xs font-bold italic">Sem dados</span>
+           </div>
+           <span className="text-zinc-600">---</span>
+        </div>
+      );
+    }
+
+    const diff = currVal - prevVal;
+    const isPositive = diff > 0;
+    const percentDiff = prevVal > 0 ? (diff / prevVal) * 100 : 0;
+    
+    let colorClass = 'text-zinc-400';
+    if (field === 'peso' || field === 'gordura' || field === 'gorduraVisceral' || field === 'obesidade' || alternativeField === 'bio_percentual_gordura') {
+        colorClass = isPositive ? 'text-red-500' : 'text-emerald-500';
+    } else {
+        colorClass = isPositive ? 'text-emerald-500' : 'text-red-500';
+    }
+    
+    return (
+        <div className="flex justify-between items-center py-4 border-b border-white/5 last:border-0">
+           <div>
+             <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">{label}</span><br />
+             <span className="text-white flex items-baseline gap-1 font-black italic tracking-tighter text-sm">
+                 {currVal.toFixed(1)} <span className="text-[9px] tracking-widest text-zinc-500 lowercase">{unit}</span>
+             </span>
+           </div>
+           <div className={`text-right ${colorClass}`}>
+             <div className="flex items-center justify-end gap-1">
+               <span className="font-black italic text-[13px] tracking-tighter">{isPositive ? '+' : ''}{diff.toFixed(2)} {unit}</span>
+               {isPositive ? <Activity size={12} className="mb-0.5" /> : <Activity size={12} className="mb-0.5 rotate-180" />}
+             </div>
+             <span className="text-[8px] font-black uppercase tracking-widest opacity-80 block mt-0.5">{isPositive ? '+' : ''}{percentDiff.toFixed(1)}% vs anterior</span>
+           </div>
+        </div>
+    );
   };
 
   const getMetricIcon = (key: string) => {
@@ -72,7 +125,7 @@ export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalA
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-zinc-900 rounded-full p-1 border border-zinc-800">
+        <div className="flex bg-zinc-900 rounded-3xl p-1 border border-zinc-800">
           <button 
             onClick={() => setTab('METRICAS')}
             className={`flex-1 py-3 px-4 rounded-full text-xs font-black uppercase tracking-widest transition-all ${tab === 'METRICAS' ? 'bg-blue-600 shadow-lg shadow-blue-500/20 text-white' : 'text-zinc-500 hover:text-white'}`}
@@ -84,6 +137,12 @@ export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalA
             className={`flex-1 py-3 px-4 rounded-full text-xs font-black uppercase tracking-widest transition-all ${tab === 'ANALISE' ? 'bg-blue-600 shadow-lg shadow-blue-500/20 text-white' : 'text-zinc-500 hover:text-white'}`}
           >
             Análise
+          </button>
+          <button 
+            onClick={() => setTab('COMPARATIVO')}
+            className={`flex-1 py-3 px-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${tab === 'COMPARATIVO' ? 'bg-blue-600 shadow-lg shadow-blue-500/20 text-white' : 'text-zinc-500 hover:text-white'}`}
+          >
+            Comparativo
           </button>
         </div>
       </div>
@@ -99,7 +158,7 @@ export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalA
             <div className="flex flex-col items-center justify-center py-6 bg-zinc-900/40 rounded-[2rem] border border-zinc-800">
                <h1 className="text-6xl font-black italic tracking-tighter text-white drop-shadow-lg">{assessment.peso}</h1>
                <span className="text-[11px] text-zinc-500 font-black uppercase tracking-[0.3em] mt-1">Kilogramas</span>
-               <span className="text-[10px] text-zinc-600 font-bold mt-2">{new Date(assessment.data).toLocaleString('pt-BR')}</span>
+               <span className="text-[10px] text-zinc-600 font-bold mt-2">{new Date(assessment.data).toLocaleDateString('pt-BR')}</span>
             </div>
 
             <Card className="p-4 bg-zinc-900/60 border-zinc-800 rounded-3xl shadow-xl flex flex-col pt-2">
@@ -198,6 +257,40 @@ export function BioimpedanceView({ assessment, onBack }: { assessment: PhysicalA
                 </div>
               </Card>
             </section>
+          </div>
+        )}
+
+        {tab === 'COMPARATIVO' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+             {previousAssessment ? (
+               <div className="space-y-6">
+                 <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 tracking-widest bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                    <Activity size={14} />
+                    <span>Comparativo: {new Date(previousAssessment.data).toLocaleDateString('pt-BR')} &rarr; {new Date(assessment.data).toLocaleDateString('pt-BR')}</span>
+                 </div>
+                 
+                 <Card className="p-4 bg-zinc-900/60 border-zinc-800 rounded-3xl shadow-xl flex flex-col pt-2">
+                    {renderComparativeRow('Peso', 'peso', 'peso', 'Kg')}
+                    {renderComparativeRow('Gordura Corporal', 'gordura', 'bio_percentual_gordura', '%')}
+                    {renderComparativeRow('Massa Muscular', 'pesoMassaMuscular', 'pesoMassaMuscular', 'Kg')}
+                    {renderComparativeRow('Água', 'aguaPercentual', 'aguaPercentual', '%')}
+                    {renderComparativeRow('Gordura Visceral', 'gorduraVisceral', 'gorduraVisceral', '')}
+                    {renderComparativeRow('Metabolismo', 'metabolismo', 'metabolismo', 'kcal')}
+                 </Card>
+
+                 {assessment.veredictoMestre && (
+                   <Card className="p-5 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-600/20 border-0">
+                     <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-90">Veredito do Mestre</h4>
+                     <p className="text-sm font-medium leading-relaxed">{assessment.veredictoMestre}</p>
+                   </Card>
+                 )}
+               </div>
+             ) : (
+               <div className="text-center py-12 px-6 border-2 border-dashed border-zinc-800 rounded-[3rem]">
+                 <p className="text-[13px] font-black italic uppercase tracking-widest text-zinc-600">Sem Avaliação Anterior</p>
+                 <p className="text-xs text-zinc-500 mt-2">Esta é a primeira avaliação bioimpedanciométrica registrada.</p>
+               </div>
+             )}
           </div>
         )}
       </div>

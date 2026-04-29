@@ -5,8 +5,11 @@ import {
   Loader2, Clock, Target, Award, ShieldCheck, Brain,
   Camera, CheckCircle2, X, Trash2, FastForward, Check,
   Trophy, AlertCircle, Info, ChevronDown, ChevronUp,
-  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu, Sparkles, AlertTriangle, LayoutGrid
+  Zap, Scan, Shield, Maximize2, Calendar, RefreshCw, Menu, Sparkles, AlertTriangle, LayoutGrid, TrendingUp
 } from 'lucide-react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LabelList 
+} from 'recharts';
 import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 import { PrescreveAI } from './PrescreveAI';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
@@ -321,7 +324,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   };
 
   return (
-    <div className={`relative bg-card/30 border rounded-[2.5rem] overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
+    <div className={`relative bg-card/30 border rounded-3xl overflow-hidden transition-all duration-500 ease-out mb-4 p-6 shadow-2xl group/card 
       ${allSetsCompleted 
         ? 'border-emerald-500 border-2 shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-emerald-950/20' 
         : 'border-border hover:border-red-600/30 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(220,38,38,0.15)]'
@@ -1085,9 +1088,28 @@ import { BioimpedanceView } from './BioimpedanceView';
 
 export function StudentAssessmentView({ student, onBack, onToggleMenu }: { student: Student, onBack: () => void, onToggleMenu?: () => void }) {
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
+  const [chartMetric, setChartMetric] = useState<'peso' | 'gordura' | 'massa'>('peso');
+
+  const sortedAssessments = useMemo(() => {
+    if (!student.physicalAssessments) return [];
+    return [...student.physicalAssessments].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  }, [student.physicalAssessments]);
+
+  const chartData = useMemo(() => {
+    if (!student.physicalAssessments) return [];
+    return [...student.physicalAssessments]
+      .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+      .map(pa => ({
+        date: new Date(pa.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        fullDate: new Date(pa.data).toLocaleDateString('pt-BR'),
+        peso: typeof pa.peso === 'number' ? pa.peso : parseFloat(pa.peso),
+        gordura: pa.gordura?.value || pa.bio_percentual_gordura || 0,
+        massa: pa.pesoMassaMuscular?.value || 0
+      }));
+  }, [student.physicalAssessments]);
 
   if (selectedAssessment && (selectedAssessment.type === 'BIOIMPEDANCE' || selectedAssessment.type === 'BIOIMPEDANCIA')) {
-    return <BioimpedanceView assessment={selectedAssessment} onBack={() => setSelectedAssessment(null)} />;
+    return <BioimpedanceView assessment={selectedAssessment} allAssessments={student.physicalAssessments} onBack={() => setSelectedAssessment(null)} />;
   }
 
   return (
@@ -1107,9 +1129,106 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
           <HeaderTitle text="Avaliação Mestre" />
         </h2>
       </header>
+      
       <div className="space-y-6">
-        {student.physicalAssessments && student.physicalAssessments.length > 0 ? (
-          student.physicalAssessments.map(pa => (
+        {/* Gráfico de Evolução */}
+        {chartData.length > 1 && (
+          <Card className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col mb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp size={16} className="text-red-500" />
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Análise de Tendência</p>
+              </div>
+              <h3 className="text-xl font-black italic uppercase text-white tracking-tighter leading-none mb-4">Evolução Corporal</h3>
+              
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'peso', label: 'Peso (kg)', color: 'text-white bg-zinc-800' },
+                  { id: 'gordura', label: 'Gordura (%)', color: 'text-red-500 bg-red-950/20' },
+                  { id: 'massa', label: 'Massa Musc. (kg)', color: 'text-emerald-500 bg-emerald-950/20' }
+                ].map(metric => (
+                  <button
+                    key={metric.id}
+                    onClick={() => setChartMetric(metric.id as any)}
+                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
+                      ${chartMetric === metric.id ? 'ring-2 ring-red-600 scale-105' : 'opacity-40 hover:opacity-100'}
+                      ${metric.color}
+                    `}
+                  >
+                    {metric.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-64 w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 35, right: 35, left: 35, bottom: 25 }}>
+                  <defs>
+                    <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" opacity={0.3} />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#666', fontSize: 10, fontWeight: 'black' }}
+                    dy={12}
+                    interval={0}
+                  />
+                  <YAxis 
+                    hide 
+                    domain={['dataMin - 2', 'dataMax + 2']}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}
+                    itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                    labelStyle={{ color: '#ef4444', marginBottom: '4px', fontWeight: '900', fontSize: '10px' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey={chartMetric} 
+                    stroke={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} 
+                    strokeWidth={4} 
+                    fillOpacity={1} 
+                    fill="url(#colorMetric)"
+                    animationDuration={1500}
+                    dot={{ r: 4, fill: chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981', strokeWidth: 2, stroke: '#18181b' }}
+                  >
+                    <LabelList 
+                      dataKey={chartMetric} 
+                      position="top" 
+                      offset={12}
+                      content={(props: any) => {
+                        const { x, y, value } = props;
+                        
+                        return (
+                          <text 
+                            x={x} 
+                            y={y - 12} 
+                            fill={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} 
+                            fontSize={11} 
+                            fontWeight="900" 
+                            textAnchor="middle"
+                            className="italic text-[11px] drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                          >
+                            {value?.toFixed(1)}
+                          </text>
+                        );
+                      }}
+                    />
+                  </Area>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
+
+        {sortedAssessments.length > 0 ? (
+          sortedAssessments.map(pa => (
             <Card key={pa.id} onClick={() => setSelectedAssessment(pa)} className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-xl cursor-pointer hover:bg-zinc-800 transition-all active:scale-95 group">
                <div className="flex justify-between items-start mb-4">
                   <h4 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none group-hover:text-red-500 transition-colors">
@@ -1122,11 +1241,11 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                </div>
                
                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5">
+                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5 text-center">
                     <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic mb-1">Massa Corporal</p>
                     <p className="text-xl font-black text-white group-hover:text-red-600 transition-colors italic tracking-tighter leading-none">{pa.peso}KG</p>
                   </div>
-                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5">
+                  <div className="p-4 bg-black/60 rounded-2xl border border-white/5 text-center">
                     <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic mb-1">Gordura Bio</p>
                     <p className="text-xl font-black text-white group-hover:text-red-600 transition-colors italic tracking-tighter leading-none">{pa.gordura?.value || pa.bio_percentual_gordura}%</p>
                   </div>

@@ -107,10 +107,30 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
   notifications?: AppNotification[]
 }) {
   const alerts = useMemo(() => {
-    const list: { studentId: string; studentName: string; type: 'STRENGTH' | 'RUNNING'; current: number; total: number; workoutTitle: string }[] = [];
+    const list: { studentId: string; studentName: string; type: 'STRENGTH' | 'RUNNING' | 'ASSESSMENT'; current?: number; total?: number; workoutTitle?: string; daysLeft?: number; nextDate?: string }[] = [];
     
     students.forEach(s => {
-      // Strength Workouts
+      // 1. Alertas de Avaliação Completa (Específico André/Recorrente)
+      if (s.id === 'fixed-andre') {
+        const lastFullDate = '2026-04-20';
+        const nextDate = new Date(lastFullDate);
+        nextDate.setDate(nextDate.getDate() + 30);
+        const now = new Date();
+        const diffTime = nextDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 7) {
+          list.push({ 
+            studentId: s.id, 
+            studentName: s.nome, 
+            type: 'ASSESSMENT', 
+            daysLeft: diffDays, 
+            nextDate: nextDate.toLocaleDateString('pt-BR') 
+          });
+        }
+      }
+
+      // 2. Strength Workouts
       const strengthWorkouts = (s.workouts || []).filter(w => w.status === 'published');
       strengthWorkouts.forEach(w => {
         const completed = (s.workoutHistory || []).filter(h => h.workoutId === w.id).length;
@@ -171,12 +191,23 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
             {alerts.map((alert, idx) => (
               <Card key={`${alert.studentId}-${idx}`} className="p-4 bg-red-600/10 border-red-600/30 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl bg-background ${alert.type === 'STRENGTH' ? 'text-orange-500' : 'text-rose-500'}`}>
-                    {alert.type === 'STRENGTH' ? <Dumbbell size={16} /> : <Footprints size={16} />}
+                  <div className={`p-2 rounded-xl bg-background ${
+                    alert.type === 'STRENGTH' ? 'text-orange-500' : 
+                    alert.type === 'ASSESSMENT' ? 'text-emerald-500' : 'text-rose-500'
+                  }`}>
+                    {alert.type === 'STRENGTH' ? <Dumbbell size={16} /> : 
+                     alert.type === 'ASSESSMENT' ? <Activity size={16} /> : <Footprints size={16} />}
                   </div>
                   <div>
                     <p className="text-[11px] font-black uppercase text-foreground italic">{alert.studentName}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase">{alert.workoutTitle} • {alert.current}/{alert.total}</p>
+                    {alert.type === 'ASSESSMENT' ? (
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase">
+                        AVALIAÇÃO COMPLETA • {alert.daysLeft! <= 0 ? 'ATRASADO' : `EM ${alert.daysLeft} DIAS`} ({alert.nextDate})
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase">{alert.workoutTitle} • {alert.current}/{alert.total}</p>
+                    )
+                    }
                   </div>
                 </div>
                 <button 
@@ -220,7 +251,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
               <button 
                 key={s.id} 
                 onClick={() => onSelect(s)} 
-                className="w-full bg-card/50 p-4 rounded-[1.8rem] border border-border hover:border-red-600/40 transition-all text-left shadow-lg flex items-center justify-between group active:scale-[0.98]"
+                className="w-full bg-card/50 p-4 rounded-3xl border border-border hover:border-red-600/40 transition-all text-left shadow-lg flex items-center justify-between group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center overflow-hidden border border-border shadow-inner">
@@ -474,7 +505,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
         </button>
 
         {/* Corre RJ 2026 */}
-        <button onClick={() => onNavigate('CORRE_RJ')} className="w-full p-4 rounded-[2rem] bg-yellow-950/20 border border-yellow-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-yellow-600/50">
+        <button onClick={() => onNavigate('CORRE_RJ')} className="w-full p-4 rounded-3xl bg-yellow-950/20 border border-yellow-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-yellow-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-600/20">
                  <MapPin size={20} className="text-white" />
@@ -485,7 +516,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
         </button>
 
         {/* Feed Performance */}
-        <button onClick={() => onNavigate('FEED')} className="w-full p-4 rounded-[2rem] bg-red-950/20 border border-red-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-red-600/50">
+        <button onClick={() => onNavigate('FEED')} className="w-full p-4 rounded-3xl bg-red-950/20 border border-red-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-red-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/20">
                  <Layout size={20} className="text-white" />
@@ -496,7 +527,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
         </button>
 
         {/* Análise de Dados */}
-        <button onClick={() => onNavigate('ANALYTICS_COACH')} className="w-full p-4 rounded-[2rem] bg-blue-950/20 border border-blue-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-blue-600/50">
+        <button onClick={() => onNavigate('ANALYTICS_COACH')} className="w-full p-4 rounded-3xl bg-blue-950/20 border border-blue-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-blue-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
                  <BarChart3 size={20} className="text-white" />
@@ -507,7 +538,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
         </button>
 
         {/* Histórico de Treinos */}
-        <button onClick={() => onNavigate('WORKOUT_HISTORY')} className="w-full p-4 rounded-[2rem] bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
+        <button onClick={() => onNavigate('WORKOUT_HISTORY')} className="w-full p-4 rounded-3xl bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
                  <History size={20} className="text-white" />
@@ -518,7 +549,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
         </button>
 
         {/* Sobre a ABFIT */}
-        <button onClick={() => onNavigate('ABOUT_ABFIT')} className="w-full p-4 rounded-[2rem] bg-zinc-900 border border-zinc-800 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-zinc-700">
+        <button onClick={() => onNavigate('ABOUT_ABFIT')} className="w-full p-4 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-zinc-700">
            <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg shadow-zinc-800/20">
                  <Info size={20} className="text-white" />
@@ -565,7 +596,7 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
          </div>
          <div className="space-y-3">
             {(student.workouts || []).filter(w => !w.title.toUpperCase().includes('RUN')).map(w => (
-              <div key={w.id} className="p-6 rounded-[2rem] border border-border bg-card/50 flex flex-col gap-4 group transition-all shadow-lg hover:border-orange-600/30">
+              <div key={w.id} className="p-6 rounded-3xl border border-border bg-card/50 flex flex-col gap-4 group transition-all shadow-lg hover:border-orange-600/30">
                  <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
                        <span className="font-black uppercase italic text-lg text-white leading-none">{w.title}</span>
@@ -596,20 +627,20 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
                </div>
             ))}
             {(!student.workouts || student.workouts.length === 0) && (
-              <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-[2rem] space-y-3">
+              <div className="text-center py-6 border-2 border-dashed border-zinc-900 rounded-3xl space-y-3">
                  <p className="text-zinc-700 text-[10px] font-black uppercase">Nenhuma planilha ativa</p>
                  <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="px-6 py-2 bg-red-600 rounded-full text-[10px] font-black uppercase text-white shadow-lg">Criar Novo Treino</button>
               </div>
             )}
             
             {/* Botão de Criação Rápida */}
-            <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem] text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
+            <button onClick={() => { onEditWorkout(null); onNavigate('WORKOUT_EDITOR'); }} className="w-full py-4 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-3xl text-zinc-500 hover:text-white hover:border-red-600/50 transition-all flex items-center justify-center gap-2 group">
               <Plus size={16} className="group-hover:text-red-600 transition-colors"/>
               <span className="text-[10px] font-black uppercase tracking-widest">Novo Treino (Editor Padrão)</span>
             </button>
 
             {/* Botão ABFIT AI */}
-            <button onClick={() => setAbrirPrescritor(true)} className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 rounded-[2rem] text-white font-black uppercase tracking-widest hover:shadow-lg hover:shadow-red-600/20 transition-all flex items-center justify-center gap-2 group mt-4 active:scale-95">
+            <button onClick={() => setAbrirPrescritor(true)} className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 rounded-3xl text-white font-black uppercase tracking-widest hover:shadow-lg hover:shadow-red-600/20 transition-all flex items-center justify-center gap-2 group mt-4 active:scale-95">
               <Sparkles size={16} className="text-white animate-pulse"/>
               <span className="text-[10px]">CRIAR TREINO (ABFIT AI)</span>
             </button>
@@ -899,7 +930,7 @@ export function WorkoutEditorView({ student, workoutToEdit, onBack, onSave }: { 
                 </div>
              </div>
            ))}
-           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-border rounded-[2rem] text-muted-foreground text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
+           <button onClick={() => onBack()} className="w-full py-6 border-2 border-dashed border-border rounded-3xl text-muted-foreground text-[10px] font-black uppercase hover:border-red-600/30 hover:text-red-600 transition-all">
              Voltar
            </button>
         </div>
@@ -918,7 +949,7 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
 
   if (selectedAssessment && (selectedAssessment.type === 'BIOIMPEDANCE' || selectedAssessment.type === 'BIOIMPEDANCIA')) {
-    return <BioimpedanceView assessment={selectedAssessment} onBack={() => setSelectedAssessment(null)} />;
+    return <BioimpedanceView assessment={selectedAssessment} allAssessments={student.physicalAssessments} onBack={() => setSelectedAssessment(null)} />;
   }
 
   const handleSave = async () => {
@@ -990,7 +1021,7 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
         <button 
           onClick={handleSave} 
           disabled={saving}
-          className="w-full py-4 bg-red-600 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-white"
+          className="w-full py-4 bg-red-600 rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-white"
         >
           {saving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
           Salvar Avaliação
@@ -1140,7 +1171,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
              <textarea rows={3} value={bioTips} onChange={e => setBioTips(e.target.value)} className="w-full bg-background/50 border border-indigo-900/30 p-4 rounded-2xl text-muted-foreground text-sm outline-none focus:border-indigo-600 resize-none" placeholder="Dicas práticas (uma por linha)..." />
          </Card>
 
-         <button onClick={handleSave} className="w-full py-5 bg-foreground text-background rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:bg-muted-foreground transition-all">
+         <button onClick={handleSave} className="w-full py-5 bg-foreground text-background rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-muted-foreground transition-all">
             Salvar Periodização
          </button>
       </div>
