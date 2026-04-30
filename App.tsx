@@ -1031,7 +1031,7 @@ export default function App() {
           periodization: {
             id: 'per-andre-01',
             titulo: 'Periodização Científica',
-            startDate: '2026-03-09T16:00:06',
+            startDate: '2026-04-30T10:00:00',
             type: 'STRENGTH',
             phaseTitle: 'Mesociclo de Recomposição Corporal, Mitigação de Sarcopenia Pós-Bariátrica e Estabilização Patelofemoral - 12 Semanas',
             generalStrategy: "O perfil do aluno Andre apresenta alta complexidade fisiologica devido ao status pos-cirurgia bariatrica, demandando foco absoluto na mitigacao da sarcopenia (retencao de massa magra) e estimulo a sintese proteica para suportar o deficit calorico continuo rumo aos 87kg. A instabilidade patelar cronica (4 luxacoes) exige prescricao biomecanica restritiva, priorizando o fortalecimento do Vasto Medial Obliquo (VMO) e gluteo medio em cadeia cinetica fechada para realinhamento patelofemoral. O espectro autista (TEA) combinado ao TDAH sugere a necessidade de previsibilidade macroestrutural ambiental para conforto cognitivo, aliada a microvariacoes nos estimulos (gamificacao de carga e metodo) para engajamento dopaminergico continuo.",
@@ -1200,6 +1200,47 @@ export default function App() {
           medications: 'Nada',
           physicalAssessments: [
             {
+              id: 'marcelly-assessment-2024-07-07',
+              data: '2024-07-07T10:45:22',
+              peso: 59.9,
+              altura: 167,
+              imc: 21.5,
+              bio_percentual_gordura: 27.2,
+              pesoGordura: 16.3,
+              percentualMassaMuscularEsqueletica: 40.4,
+              pesoMassaMuscularEsqueletica: 24.2,
+              registroMassaMuscular: 68.6,
+              pesoMassaMuscular: 41.1,
+              aguaPercentual: 50.7,
+              pesoAgua: 30.4,
+              gorduraVisceral: 3.5,
+              ossos: 2.54,
+              metabolismo: 1302.8,
+              proteina: 17.9,
+              obesidade: 2.9,
+              idadeMetabolica: 26.0,
+              lbm: 43.62,
+              idadeReal: 32,
+              type: 'BIOIMPEDANCE',
+              analiseComposicao: {
+                agua: 'Saudável',
+                gordura: 'Saudável',
+                proteina: 'Saudável',
+                ossos: 'Excelente'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Saudável',
+                descricao: "Excelente desenvolvimento muscular para a idade, com controle calórico ideal."
+              },
+              dicasControlePeso: {
+                pesoDiff: 0,
+                pesoIdeal: 59.9,
+                massaMuscularDiff: 0,
+                gorduraDiff: 0
+              },
+              veredictoMestre: "O relatório de 2024 mostra Marcelly em um estado físico fenomenal, com uma massa muscular esquelética acima da média (40.4%) e gordura visceral baixíssima. Mantendo esse padrão, a longevidade e performance estão garantidas."
+            },
+            {
               id: 'marcelly-assessment-2026-04-30',
               data: '2026-04-30T10:00:00',
               peso: 61.2,
@@ -1302,7 +1343,7 @@ export default function App() {
           periodization: {
             id: 'per-marcelly-01',
             titulo: 'Periodização Científica',
-            startDate: '2026-03-03T21:59:08',
+            startDate: '2026-04-30T10:00:00',
             type: 'STRENGTH',
             phaseTitle: 'Macrociclo de Hipertrofia Progressiva e Choque Tensional - 12 Semanas',
             generalStrategy: "A periodização de Marcelly foca no ganho de 2kg de massa muscular limpa (hipertrofia) otimizando uma janela de 60 minutos diários, 5 vezes por semana. A fisiologia da hipertrofia exige tensão mecânica, estresse metabólico e dano muscular. O plano utiliza uma Periodização Ondulatória para garantir estímulos constantes. Considerando o quadro suspeito de TDAH, o treinamento foi estruturado com alta densidade, métodos avançados dinâmicos e pausas ativas ou curtas para manter altos níveis de dopamina e noradrenalina, otimizando o engajamento cognitivo e o foco durante as sessões.",
@@ -2025,7 +2066,7 @@ export default function App() {
   const allDashboardItems = [
     { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell, color: 'orange' },
     { id: 'RUNTRACK_STUDENT', label: 'ABFIT RUN', icon: Footprints, color: 'rose' },
-    { id: 'STUDENT_PERIODIZATION', label: 'Periodização Mestre', icon: Brain, color: 'indigo' },
+    { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain, color: 'indigo' },
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },

@@ -1253,7 +1253,7 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
         </header>
         <div className="flex flex-col items-center justify-center py-20">
           <Brain className="text-zinc-800 mb-6" size={64} />
-          <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Aguardando configuração de macrociclo<br/>pelo seu treinador Mestre.</p>
+          <p className="text-zinc-500 font-black uppercase text-xs italic text-center">Aguardando configuração de macrociclo<br/>pelo seu treinador.</p>
         </div>
       </div>
     );

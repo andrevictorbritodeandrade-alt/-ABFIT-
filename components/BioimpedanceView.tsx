@@ -79,10 +79,39 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
   };
 
   const renderMetric = (label: string, data: any, unit: string) => {
-    if (!data) return null;
+    if (data === undefined || data === null) return null;
     const value = typeof data === 'object' ? data.value : data;
-    const status = typeof data === 'object' ? data.status : null;
-    const color = typeof data === 'object' ? data.color : 'default';
+    
+    // Status Logic
+    let status = typeof data === 'object' ? data.status : null;
+    let color = typeof data === 'object' ? data.color : 'default';
+
+    // Se o status não vier no 'data', tentamos inferir do analiseComposicao do assessment
+    if (!status) {
+      const lowerLabel = label.toLowerCase();
+      if (lowerLabel.includes('gordura')) {
+        status = assessment.analiseComposicao?.gordura;
+        color = status === 'Baixo' ? 'blue' : status === 'Saudável' ? 'green' : (status === 'Alto' || status === 'Obeso') ? 'red' : 'default';
+      } else if (lowerLabel.includes('músculo') || lowerLabel.includes('muscular') || lowerLabel.includes('massa muscular')) {
+        status = 'Excelente'; // Mock or based on registry
+        color = 'green';
+      } else if (lowerLabel.includes('água')) {
+        status = assessment.analiseComposicao?.agua;
+        color = status === 'Saudável' ? 'green' : 'blue';
+      } else if (lowerLabel.includes('osso')) {
+        status = assessment.analiseComposicao?.ossos;
+        color = 'green';
+      } else if (lowerLabel.includes('proteína')) {
+        status = assessment.analiseComposicao?.proteina;
+        color = 'green';
+      } else if (lowerLabel.includes('obesidade')) {
+        status = assessment.obesidade > 10 ? 'Alto' : 'Saudável';
+        color = status === 'Alto' ? 'red' : 'green';
+      } else if (lowerLabel.includes('imc')) {
+        status = assessment.imc > 25 ? 'Alto' : 'Saudável';
+        color = status === 'Alto' ? 'red' : 'green';
+      }
+    }
 
     return (
       <div className="flex justify-between items-center py-4 border-b border-zinc-800 last:border-0 hover:bg-zinc-900/50 transition-colors px-2 rounded-xl">
@@ -92,13 +121,15 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
           </div>
           <span className="text-xs font-black text-zinc-300 italic uppercase tracking-wider">{label}</span>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-lg font-black text-white italic tracking-tighter shrink-0">{value}<span className="text-[10px] text-zinc-500 ml-0.5">{unit}</span></span>
-          {status && (
-            <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase font-black tracking-widest border ${getColorClass(color)}`}>
-              {status}
-            </span>
-          )}
+        <div className="flex flex-col items-end gap-1 text-right">
+          <div className="flex items-center gap-2">
+            {status && (
+              <span className={`text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest border shrink-0 ${getColorClass(color)}`}>
+                {status}
+              </span>
+            )}
+            <span className="text-lg font-black text-white italic tracking-tighter shrink-0">{value}<span className="text-[10px] text-zinc-500 ml-0.5">{unit}</span></span>
+          </div>
         </div>
       </div>
     );
@@ -152,7 +183,9 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
           <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-black italic uppercase tracking-tighter">Métricas corporais</h3>
-              <span className="bg-red-500/10 text-red-500 border border-red-500/30 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest mr-2">Obeso</span>
+              <span className={`${assessment.analiseTipoCorpo?.tipo === 'Saudável' || assessment.analiseTipoCorpo?.tipo === 'Atleta' ? 'bg-green-500/10 text-green-500 border-green-500/30' : 'bg-red-500/10 text-red-500 border-red-500/30'} border px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest mr-2`}>
+                {assessment.analiseTipoCorpo?.tipo || 'N/A'}
+              </span>
             </div>
 
             <div className="flex flex-col items-center justify-center py-6 bg-zinc-900/40 rounded-[2rem] border border-zinc-800">
@@ -309,7 +342,7 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
 
                  {assessment.veredictoMestre && (
                    <Card className="p-5 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-600/20 border-0">
-                     <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-90">Veredito do Mestre</h4>
+                     <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-90">Veredito da Periodização</h4>
                      <p className="text-sm font-medium leading-relaxed">{assessment.veredictoMestre}</p>
                    </Card>
                  )}

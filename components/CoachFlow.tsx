@@ -283,7 +283,7 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
 const FEATURE_LIST = [
   { id: 'FEED', label: 'Feed Performance', icon: LayoutGrid },
   { id: 'WORKOUTS', label: 'Planilhas Ativas', icon: Dumbbell },
-  { id: 'STUDENT_PERIODIZATION', label: 'Periodização Mestre', icon: Brain },
+  { id: 'STUDENT_PERIODIZATION', label: 'Periodização', icon: Brain },
   { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler },
   { id: 'RUNTRACK_STUDENT', label: 'RunTrack ABFIT', icon: Footprints },
   { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3 },
@@ -482,13 +482,13 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
             ))}
         </div>
 
-        {/* Periodização Mestre */}
+        {/* Periodização */}
         <button onClick={() => onNavigate('PERIODIZATION')} className="w-full p-3.5 rounded-3xl bg-indigo-950/20 border border-indigo-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-indigo-600/50">
            <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
                  <Brain size={18} className="text-white" />
               </div>
-              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Periodização Mestre</span>
+              <span className="font-black italic uppercase text-foreground tracking-wider text-sm">Periodização</span>
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -1107,7 +1107,7 @@ export function PeriodizationView({ student, onBack, onProceedToWorkout, onSave 
         <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-card rounded-full hover:bg-red-600 transition-colors shadow-lg"><ArrowLeft size={20}/></button>
            <h2 className="text-xl font-black italic uppercase tracking-tighter text-foreground">
-             <HeaderTitle text="Periodização Mestre" />
+             <HeaderTitle text="Periodização" />
            </h2>
         </div>
         <button onClick={onProceedToWorkout} className="text-[10px] font-black uppercase text-muted-foreground hover:text-foreground flex items-center gap-1">
