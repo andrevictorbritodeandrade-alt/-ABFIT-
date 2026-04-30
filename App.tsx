@@ -1512,7 +1512,13 @@ export default function App() {
           } else {
             setSyncStatus(prev => prev === 'syncing' ? 'synced' : prev);
           }
-          const updatedStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Student));
+          const updatedStudents = snapshot.docs.map(d => {
+            const student = { id: d.id, ...d.data() } as Student;
+            if (student.nome === 'Marcelly Bispo' && student.workouts) {
+              student.workouts = student.workouts.filter(w => !(w.title === 'Treino A' && (!w.exercises || w.exercises.length === 0)));
+            }
+            return student;
+          });
           console.log("Updated Students:", updatedStudents);
           setStudents(updatedStudents);
           // Atualiza o aluno selecionado em tempo real se ele estiver aberto
@@ -1595,6 +1601,16 @@ export default function App() {
 
                   // Workouts Sync
                   let currentWorkouts = rawData.workouts || [];
+                  
+                  // FIX: Clean empty Treino A if it's Marcelly
+                  if (rawData.nome === 'Marcelly Bispo') {
+                    const originalLength = currentWorkouts.length;
+                    currentWorkouts = currentWorkouts.filter(w => !(w.title === 'Treino A' && (!w.exercises || w.exercises.length === 0)));
+                    if (currentWorkouts.length !== originalLength) {
+                        workoutsModified = true;
+                    }
+                  }
+                  
                   const defaultWorkouts = defaultProfile.workouts || [];
                   let workoutsModified = false;
                   

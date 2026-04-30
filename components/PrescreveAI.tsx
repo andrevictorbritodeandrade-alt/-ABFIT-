@@ -7,7 +7,7 @@ import { callAI } from '../services/gemini';
 // CONSTANTES DE CONFIGURAÇÃO
 // ==========================================
 const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'gemini-2.5-flash-image';
+const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 const FILTROS_MUSCULARES = [
   'TODOS', 'PEITORAL', 'DORSAIS', 'OMBROS', 'BÍCEPS', 'TRÍCEPS', 
   'QUADRÍCEPS', 'POSTERIORES DE COXA', 'GLÚTEOS', 'ADUTORES', 
