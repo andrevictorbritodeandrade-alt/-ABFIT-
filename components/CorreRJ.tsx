@@ -21,78 +21,41 @@ const BG_IMAGES = [
 ];
 
 // --- COMPONENTE DE FIGURA (BANNER DE CABEÇALHO DO MÊS) ---
-const MonthArt = ({ month }: { month: string }) => {
-  const arts: Record<string, string> = {
-    "Janeiro": "https://images.unsplash.com/photo-1596464716127-f9a0859b4bce?q=80&w=800&auto=format&fit=crop",
-    "Fevereiro": "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?q=80&w=800&auto=format&fit=crop",
-    "Março": "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=800&auto=format&fit=crop",
-    "Abril": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=800&auto=format&fit=crop",
-    "Maio": "https://images.unsplash.com/photo-1533561052604-c3beb6d55760?q=80&w=800&auto=format&fit=crop",
-    "Junho": "https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=800&auto=format&fit=crop",
-    "Julho": "https://images.unsplash.com/photo-1571008887538-b36bb32f4571?q=80&w=800&auto=format&fit=crop",
-    "Agosto": "https://images.unsplash.com/photo-1502904550040-7534597429ae?q=80&w=800&auto=format&fit=crop",
-    "Setembro": "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?q=80&w=800&auto=format&fit=crop",
-    "Outubro": "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?q=80&w=800&auto=format&fit=crop",
-    "Novembro": "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=800&auto=format&fit=crop",
-    "Dezembro": "https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=800&auto=format&fit=crop"
+const MonthArt = ({ month, raceCount }: { month: string; raceCount: number }) => {
+  const monthThemes: Record<string, string> = {
+    "Janeiro": "Verão & Férias ☀️🌴",
+    "Fevereiro": "Carnaval 🎉🏃‍♂️",
+    "Março": "Mês da Mulher 👩🏽‍🦱💪",
+    "Abril": "Páscoa 🐰🍫",
+    "Maio": "Dia das Mães 👩‍👧‍👦❤️",
+    "Junho": "Festas Juninas 🌽🔥",
+    "Julho": "Festas Julinas 🥜🎉",
+    "Agosto": "Inverno ❄️⛄",
+    "Setembro": "Primavera 🌸🌻",
+    "Outubro": "Dia das Crianças 🧸🎈",
+    "Novembro": "Proclamação da República 🇧🇷",
+    "Dezembro": "Natal 🎄🎅"
   };
 
-  const img = arts[month];
+  const themeText = monthThemes[month];
 
   return (
-    <div className="w-full h-40 rounded-3xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden mb-6 bg-white flex items-center justify-center relative group">
-      {img ? (
-        <>
-          <img 
-            src={img} 
-            alt={month} 
-            className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-700"
-          />
-          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
-             <h3 className="text-4xl font-poppins font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{month}</h3>
-             {month === "Janeiro" && (
-               <span className="text-sm font-black text-orange-400 uppercase tracking-widest drop-shadow-md mt-1">Verão & Férias ☀️🌴</span>
-             )}
-             {month === "Fevereiro" && (
-               <span className="text-sm font-black text-pink-400 uppercase tracking-widest drop-shadow-md mt-1">Carnaval 🎉🏃‍♂️</span>
-             )}
-             {month === "Março" && (
-               <span className="text-sm font-black text-purple-400 uppercase tracking-widest drop-shadow-md mt-1">Mês da Mulher 👩🏽‍🦱💪</span>
-             )}
-             {month === "Abril" && (
-               <span className="text-sm font-black text-amber-400 uppercase tracking-widest drop-shadow-md mt-1">Páscoa 🐰🍫</span>
-             )}
-             {month === "Maio" && (
-               <span className="text-sm font-black text-rose-400 uppercase tracking-widest drop-shadow-md mt-1">Dia das Mães 👩‍👧‍👦❤️</span>
-             )}
-             {month === "Junho" && (
-               <span className="text-sm font-black text-yellow-400 uppercase tracking-widest drop-shadow-md mt-1">Festas Juninas 🌽🔥</span>
-             )}
-             {month === "Julho" && (
-               <span className="text-sm font-black text-yellow-500 uppercase tracking-widest drop-shadow-md mt-1">Festas Julinas 🥜🎉</span>
-             )}
-             {month === "Agosto" && (
-               <span className="text-sm font-black text-blue-300 uppercase tracking-widest drop-shadow-md mt-1">Inverno ❄️⛄</span>
-             )}
-             {month === "Setembro" && (
-               <span className="text-sm font-black text-pink-300 uppercase tracking-widest drop-shadow-md mt-1">Primavera 🌸🌻</span>
-             )}
-             {month === "Outubro" && (
-               <span className="text-sm font-black text-cyan-400 uppercase tracking-widest drop-shadow-md mt-1">Dia das Crianças 🧸🎈</span>
-             )}
-             {month === "Novembro" && (
-               <span className="text-sm font-black text-green-400 uppercase tracking-widest drop-shadow-md mt-1">Proclamação da República 🇧🇷</span>
-             )}
-             {month === "Dezembro" && (
-               <span className="text-sm font-black text-red-500 uppercase tracking-widest drop-shadow-md mt-1">Natal 🎄🎅</span>
-             )}
-          </div>
-        </>
-      ) : (
-        <div className="w-full h-32 bg-slate-200 flex items-center justify-center">
-           <span className="font-poppins font-black uppercase text-slate-400">Mês {month}</span>
-        </div>
-      )}
+    <div className="w-full h-40 rounded-3xl border-4 border-zinc-800 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.05)] overflow-hidden mb-8 bg-zinc-950 flex items-center justify-center relative group">
+      <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 via-transparent to-zinc-900/50" />
+      
+      {/* Badge de Provas */}
+      <div className="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded-full border-2 border-zinc-800 shadow-xl z-20">
+        <span className="text-[9px] font-black uppercase text-white tracking-widest leading-none">
+          {raceCount} {raceCount === 1 ? 'Prova' : 'Provas'}
+        </span>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+         <h2 className="text-5xl font-poppins font-black text-white uppercase italic tracking-tighter drop-shadow-2xl">{month}</h2>
+         {themeText && (
+           <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mt-2 opacity-80">{themeText}</span>
+         )}
+      </div>
     </div>
   );
 };
@@ -180,32 +143,32 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
   const isCompleted = new Date(race.dataIso).getTime() < Date.now();
 
   return (
-    <div className={`bg-white rounded-[20px] p-4 border-2 border-black britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden ${isCompleted ? 'opacity-70 grayscale-[0.5]' : ''}`}>
+    <div className={`bg-zinc-900 rounded-[20px] p-4 border-2 border-zinc-800 britto-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all group relative overflow-hidden ${isCompleted ? 'opacity-70 grayscale-[0.5]' : ''}`}>
       {isCompleted && (
-        <div className="absolute top-0 left-0 bg-green-500 text-white px-3 py-1 rounded-br-xl border-b-2 border-r-2 border-black text-[9px] font-black uppercase tracking-widest flex items-center gap-1 z-20 shadow-sm">
+        <div className="absolute top-0 left-0 bg-green-500 text-white px-3 py-1 rounded-br-xl border-b-2 border-r-2 border-zinc-800 text-[9px] font-black uppercase tracking-widest flex items-center gap-1 z-20 shadow-sm">
           <CheckCircle size={10} /> Check In
         </div>
       )}
-      <div className="flex justify-between items-center mb-3 text-slate-900 mt-4">
+      <div className="flex justify-between items-center mb-3 text-white mt-4">
       <div className="flex items-center gap-2 overflow-hidden">
-        <div className={`w-2 h-6 ${isCompleted ? 'bg-green-500' : 'bg-orange-600'} rounded-full shrink-0`}></div>
-        <h4 className={`text-sm font-poppins font-black leading-none uppercase italic truncate ${isCompleted ? 'text-green-700' : 'group-hover:text-orange-600'} transition-colors tracking-tight`}>
+        <div className={`w-2 h-6 ${isCompleted ? 'bg-green-500' : 'bg-red-600'} rounded-full shrink-0`}></div>
+        <h4 className={`text-sm font-poppins font-black leading-none uppercase italic truncate ${isCompleted ? 'text-green-700' : 'group-hover:text-red-600'} transition-colors tracking-tight`}>
           {race.nome}
         </h4>
       </div>
       <p className="text-xl font-poppins font-black tracking-tighter leading-none shrink-0 ml-2">{race.data}</p>
     </div>
 
-    <div className="flex items-center gap-4 mb-3 text-[10px] font-bold text-slate-500">
-      <div className="flex items-center gap-1"><Clock size={12} className="text-blue-500" />{race.horario}</div>
+    <div className="flex items-center gap-4 mb-3 text-[10px] font-bold text-zinc-400">
+      <div className="flex items-center gap-1"><Clock size={12} className="text-red-500" />{race.horario}</div>
       <div className="flex items-center gap-1"><DollarSign size={12} className="text-green-600" />{race.valor}</div>
-      <div className="flex items-center gap-1 flex-1 truncate"><MapPin size={12} className="text-red-500" />{race.largada}</div>
+      <div className="flex items-center gap-1 flex-1 truncate"><MapPin size={12} className="text-zinc-500" />{race.largada}</div>
     </div>
 
     <div className="flex gap-2">
       <button 
         onClick={onTips} 
-        className="flex-1 py-2 bg-orange-500 text-white border-2 border-black rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        className="flex-1 py-2 bg-red-600 text-white border-2 border-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)]"
       >
         <Zap size={11} fill="white" /> Estratégia IA
       </button>
@@ -213,13 +176,13 @@ const RaceCard: React.FC<{ race: any; onTips: () => void }> = ({ race, onTips })
         href={INFO_LINK} 
         target="_blank" 
         rel="noopener noreferrer" 
-        className="flex-1 py-2 bg-blue-500 text-white border-2 border-black rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        className="flex-1 py-2 bg-zinc-800 text-zinc-100 border-2 border-zinc-700 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-[2px_2px_0px_0px_rgba(255,255,255,0.1)]"
       >
         Informações <ExternalLink size={11} />
       </a>
     </div>
 
-    <div className="mt-3 pt-3 border-t-2 border-black/10 flex items-center gap-1.5 opacity-40 text-slate-900">
+    <div className="mt-3 pt-3 border-t-2 border-zinc-800 flex items-center gap-1.5 opacity-40 text-zinc-400">
       <Info size={10} />
       <p className="text-[8px] font-black uppercase italic truncate">"{race.info}"</p>
     </div>
@@ -348,54 +311,47 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   }, [races]);
 
   return (
-    <div className="fixed inset-0 z-50 min-h-screen bg-slate-100 overflow-x-hidden text-slate-900 selection:bg-orange-100 font-sans animate-in slide-in-from-bottom-10 duration-500">
+    <div className="fixed inset-0 z-50 min-h-screen bg-black overflow-x-hidden text-white selection:bg-red-900/30 font-sans animate-in slide-in-from-bottom-10 duration-500">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,700;0,800;0,900;1,900&family=Inter:wght@400;500;600;700;800&display=swap');
         .font-poppins { font-family: 'Poppins', sans-serif; }
-        .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
-        .britto-shadow { box-shadow: 4px 4px 0px 0px rgba(0,0,0,1); }
+        .glass-header { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); }
+        .britto-shadow { box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.05); }
       `}</style>
 
       {/* BACKGROUND CARROSSEL */}
 
       <div className="relative z-10 pb-20 h-screen overflow-y-auto custom-scrollbar">
-        <header className="sticky top-0 z-50 glass-header border-b border-black/5 px-4 py-5 shadow-sm">
+        <header className="sticky top-0 z-50 glass-header border-b border-zinc-800 px-4 py-5 shadow-xl">
           <div className="max-w-xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={onBack} className="p-2 bg-black/10 rounded-full hover:bg-black/20 transition-colors">
-                 <ArrowLeft size={24} className="text-slate-900" />
+              <button onClick={onBack} className="p-2 bg-zinc-800/50 rounded-full hover:bg-zinc-700 transition-colors">
+                 <ArrowLeft size={24} className="text-white" />
               </button>
               <div>
-                <h1 className="text-2xl font-poppins font-black italic tracking-tighter uppercase leading-none text-slate-900">
-                  CORRE<span className="text-orange-600">RJ</span>
+                <h1 className="text-2xl font-poppins font-black italic tracking-tighter uppercase leading-none text-white">
+                  CORRE<span className="text-red-600">RJ</span>
                 </h1>
-                <p className="text-[10px] font-bold text-slate-600 opacity-80 uppercase tracking-widest mt-1">Calendário 2026</p>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Calendário 2026</p>
               </div>
             </div>
-            <Bell size={20} className="opacity-30 text-slate-900" />
+            <Bell size={20} className="opacity-30 text-white" />
           </div>
         </header>
 
         <main className="max-w-xl mx-auto px-4 pt-6">
           {loading ? (
             <div className="py-20 text-center flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-white/10 border-t-orange-600 rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-white/10 border-t-red-600 rounded-full animate-spin"></div>
               <p className="text-[9px] font-black opacity-40 uppercase tracking-widest text-white">Carregando provas...</p>
             </div>
           ) : (
             <div className="space-y-16 pb-24">
               {monthsOrder.map(month => groupedRaces[month] && (
-                <section key={month} className="group">
-                  <div className="flex items-center gap-4 mb-6 sticky top-[85px] z-40 glass-header py-2 px-4 rounded-full border border-black/5 shadow-md backdrop-blur-md mx-2">
-                    <div className="w-3 h-3 bg-orange-600 rounded-full animate-pulse"></div>
-                    <h3 className="text-xl font-poppins font-black uppercase italic tracking-tighter text-slate-900 leading-none">{month}</h3>
-                    <div className="h-px flex-1 bg-black/10"></div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{groupedRaces[month].length} Provas</span>
-                  </div>
+                <section key={month} className="mb-12">
+                  <MonthArt month={month} raceCount={groupedRaces[month].length} />
 
-                  <MonthArt month={month} />
-
-                  <div className="space-y-4">
+                  <div className="space-y-4 px-2">
                     {groupedRaces[month].map((race: any) => (
                       <RaceCard key={race.id} race={race} onTips={() => handleGenerateRaceTips(race)} />
                     ))}
@@ -413,27 +369,27 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
         </footer>
 
         {showIaModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[70vh] border-4 border-black britto-shadow">
-              <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between bg-yellow-400">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-zinc-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[70vh] border-4 border-zinc-800 britto-shadow">
+              <div className="px-5 py-4 border-b-4 border-zinc-800 flex items-center justify-between bg-red-600">
                 <div className="flex items-center gap-2">
-                  <Zap size={20} fill="black" className="text-black" />
-                  <h3 className="font-poppins font-black text-xs uppercase text-black">Estratégia IA</h3>
+                  <Zap size={20} fill="white" className="text-white" />
+                  <h3 className="font-poppins font-black text-xs uppercase text-white">Estratégia IA</h3>
                 </div>
-                <button onClick={() => setShowIaModal(false)} className="bg-black text-white rounded-full p-1 hover:bg-slate-800 transition-colors"><X size={16} /></button>
+                <button onClick={() => setShowIaModal(false)} className="bg-black/20 text-white rounded-full p-1 hover:bg-black/40 transition-colors"><X size={16} /></button>
               </div>
-              <div className="p-6 overflow-y-auto flex-1 custom-scrollbar text-black font-semibold text-xs leading-relaxed bg-white">
+              <div className="p-6 overflow-y-auto flex-1 custom-scrollbar text-zinc-100 font-semibold text-xs leading-relaxed bg-zinc-950">
                 {iaLoading ? (
                     <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin"></div>
-                        <span className="text-[10px] font-black uppercase">Analisando percurso...</span>
+                        <div className="w-6 h-6 border-2 border-white/10 border-t-red-600 rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-black uppercase text-zinc-500">Analisando percurso...</span>
                     </div>
                 ) : (
                     <div className="space-y-2 whitespace-pre-line">{iaContent}</div>
                 )}
               </div>
-              <div className="p-4 bg-slate-50 flex justify-center border-t border-black/5">
-                <button onClick={() => setShowIaModal(false)} className="px-8 py-3 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 shadow-lg hover:bg-slate-900">Entendido!</button>
+              <div className="p-4 bg-zinc-900 flex justify-center border-t border-zinc-800">
+                <button onClick={() => setShowIaModal(false)} className="px-8 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 shadow-lg hover:bg-red-700">Entendido!</button>
               </div>
             </div>
           </div>

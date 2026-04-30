@@ -1031,7 +1031,7 @@ export default function App() {
           periodization: {
             id: 'per-andre-01',
             titulo: 'Periodização Científica',
-            startDate: new Date().toISOString(),
+            startDate: '2026-04-30T10:00:00Z',
             type: 'STRENGTH',
             phaseTitle: 'Mesociclo de Recomposição Corporal, Mitigação de Sarcopenia Pós-Bariátrica e Estabilização Patelofemoral - 12 Semanas',
             generalStrategy: "O perfil do aluno Andre apresenta alta complexidade fisiologica devido ao status pos-cirurgia bariatrica, demandando foco absoluto na mitigacao da sarcopenia (retencao de massa magra) e estimulo a sintese proteica para suportar o deficit calorico continuo rumo aos 87kg. A instabilidade patelar cronica (4 luxacoes) exige prescricao biomecanica restritiva, priorizando o fortalecimento do Vasto Medial Obliquo (VMO) e gluteo medio em cadeia cinetica fechada para realinhamento patelofemoral. O espectro autista (TEA) combinado ao TDAH sugere a necessidade de previsibilidade macroestrutural ambiental para conforto cognitivo, aliada a microvariacoes nos estimulos (gamificacao de carga e metodo) para engajamento dopaminergico continuo.",
@@ -1343,7 +1343,7 @@ export default function App() {
           periodization: {
             id: 'per-marcelly-01',
             titulo: 'Periodização Científica',
-            startDate: new Date().toISOString(),
+            startDate: '2026-04-30T10:00:00Z',
             type: 'STRENGTH',
             phaseTitle: 'Macrociclo de Hipertrofia Progressiva e Choque Tensional - 12 Semanas',
             generalStrategy: "A periodização de Marcelly foca no ganho de 2kg de massa muscular limpa (hipertrofia) otimizando uma janela de 60 minutos diários, 5 vezes por semana. A fisiologia da hipertrofia exige tensão mecânica, estresse metabólico e dano muscular. O plano utiliza uma Periodização Ondulatória para garantir estímulos constantes. Considerando o quadro suspeito de TDAH, o treinamento foi estruturado com alta densidade, métodos avançados dinâmicos e pausas ativas ou curtas para manter altos níveis de dopamina e noradrenalina, otimizando o engajamento cognitivo e o foco durante as sessões.",
@@ -1514,8 +1514,8 @@ export default function App() {
           }
           const updatedStudents = snapshot.docs.map(d => {
             const student = { id: d.id, ...d.data() } as Student;
-            if (student.nome === 'Marcelly Bispo' && student.workouts) {
-              student.workouts = student.workouts.filter(w => !(w.title === 'Treino A' && (!w.exercises || w.exercises.length === 0)));
+            if (student.nome?.includes('Marcelly') && student.workouts) {
+              student.workouts = student.workouts.filter(w => !((w.title?.toUpperCase() === 'TREINO A') && (!w.exercises || w.exercises.length === 0)));
             }
             return student;
           });
@@ -1601,18 +1601,18 @@ export default function App() {
 
                   // Workouts Sync
                   let currentWorkouts = rawData.workouts || [];
+                  let workoutsModified = false;
                   
                   // FIX: Clean empty Treino A if it's Marcelly
-                  if (rawData.nome === 'Marcelly Bispo') {
+                  if (rawData.nome?.includes('Marcelly')) {
                     const originalLength = currentWorkouts.length;
-                    currentWorkouts = currentWorkouts.filter(w => !(w.title === 'Treino A' && (!w.exercises || w.exercises.length === 0)));
+                    currentWorkouts = currentWorkouts.filter(w => !((w.title?.toUpperCase() === 'TREINO A') && (!w.exercises || w.exercises.length === 0)));
                     if (currentWorkouts.length !== originalLength) {
                         workoutsModified = true;
                     }
                   }
                   
                   const defaultWorkouts = defaultProfile.workouts || [];
-                  let workoutsModified = false;
                   
                   defaultWorkouts.forEach(defWorkout => {
                       if (!currentWorkouts.some(w => w.id === defWorkout.id)) {
