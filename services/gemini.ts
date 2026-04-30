@@ -1,26 +1,79 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
-// Robust API key detection removed - we now use backend
-// const getApiKey = () => { ... }
+let genAI: GoogleGenAI | null = null;
+
+function getAI() {
+  const key = process.env.GEMINI_API_KEY || "";
+  if (!genAI && key) {
+    genAI = new GoogleGenAI({ apiKey: key });
+  }
+  return genAI;
+}
 
 export async function callAI(params: any) {
+  const aiInstance = getAI();
+  if (!aiInstance) {
+    console.error("GEMINI_API_KEY is not set in the environment.");
+    throw new Error("A chave da IA não foi configurada. Por favor, verifique as configurações.");
+  }
+
   try {
-    const response = await fetch("/api/ai/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params)
-    });
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Erro na API do servidor");
+    const { 
+      model: modelName, 
+      prompt, 
+      systemInstruction, 
+      responseMimeType, 
+      isImageGeneration,
+      isImageAnalysis,
+      imageBase64 
+    } = params;
+
+    const model = modelName || MODEL_TEXT;
+
+    let contents: any;
+    if (isImageAnalysis && imageBase64) {
+      const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+      contents = {
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+          { text: prompt }
+        ]
+      };
+    } else {
+      contents = prompt;
     }
-    return await response.json();
+
+    const result = await aiInstance.models.generateContent({
+      model: model,
+      contents,
+      config: systemInstruction || responseMimeType ? { 
+        systemInstruction,
+        responseMimeType 
+      } : undefined,
+    });
+
+    if (isImageGeneration || modelName === 'gemini-2.5-flash-image' || modelName === 'gemini-3.1-flash-image-preview') {
+      let imageUrl = null;
+      // Use the helper property from the response if available, or iterate
+      const parts = result.candidates?.[0]?.content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+            break;
+          }
+        }
+      }
+      return { imageUrl };
+    }
+
+    return { text: result.text };
   } catch (e: any) {
-    console.error("AI Proxy Error:", e);
+    console.error("AI Error:", e);
     throw e;
   }
 }
