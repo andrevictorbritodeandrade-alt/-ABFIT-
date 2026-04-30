@@ -1203,7 +1203,7 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                   <h4 className="text-lg font-black italic uppercase text-white tracking-tighter leading-none group-hover:text-red-500 transition-colors">
                     <HeaderTitle text={new Date(pa.data).toLocaleDateString('pt-BR')} />
                     {(pa.type === 'BIOIMPEDANCE' || pa.type === 'BIOIMPEDANCIA') && (
-                      <span className="block mt-1 text-[10px] text-blue-500 uppercase tracking-widest italic">Bioimpedância (Detalhada)</span>
+                      <span className="block mt-1 text-[10px] text-white uppercase tracking-widest italic">Bioimpedância (Detalhada)</span>
                     )}
                   </h4>
                   <div className="bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase text-white tracking-widest shadow-lg">Validada</div>
@@ -1283,19 +1283,19 @@ export function StudentPeriodizationView({ student, onBack, onToggleMenu }: { st
           <div>
             <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 italic">Progresso do Macrociclo</p>
             <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">
-              Semana {Math.min(12, Math.max(1, Math.ceil((Date.now() - new Date(plan.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000))))} <span className="text-red-600">de 12</span>
+              Semana {Math.min(12, Math.max(1, Math.ceil((Date.now() - new Date(plan.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000))))} <span className="text-white">de 12</span>
             </h3>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 italic">Conclusão</p>
-            <p className="text-sm font-black italic text-red-600">
+            <p className="text-sm font-black italic text-white">
               {Math.min(100, Math.round(((Date.now() - new Date(plan.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100))}%
             </p>
           </div>
         </div>
         <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-1000" 
+            className="h-full bg-white transition-all duration-1000" 
             style={{ width: `${Math.min(100, ((Date.now() - new Date(plan.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100)}%` }}
           />
         </div>

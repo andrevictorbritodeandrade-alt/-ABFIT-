@@ -109,6 +109,7 @@ export interface PhysicalAssessment {
   peso: string | number;
   altura: string | number;
   bio_percentual_gordura?: string | number;
+  veredictoPeriodizacao?: string;
   [key: string]: any;
 }
 

@@ -492,6 +492,9 @@ export function StudentManagement({ student, runningWorkouts, onBack, onNavigate
            </div>
            <ChevronRight className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
         </button>
+        <button onClick={() => onSave(student.id, { periodization: { ...student.periodization, startDate: new Date().toISOString() } })} className="w-full mt-2 p-2 bg-red-900/50 text-[10px] uppercase font-black tracking-widest text-white rounded-xl shadow-lg active:scale-95 transition-all">
+          Reiniciar Macrociclo (Semana 1)
+        </button>
 
         {/* Avaliação Física */}
         <button onClick={() => onNavigate('COACH_ASSESSMENT')} className="w-full p-3.5 rounded-3xl bg-emerald-950/20 border border-emerald-600/20 flex items-center justify-between group active:scale-95 transition-all shadow-lg hover:border-emerald-600/50">
@@ -1043,7 +1046,7 @@ export function CoachAssessmentView({ student, onBack, onSave }: { student: Stud
                  <div className="flex items-center gap-2 mb-1">
                    <p className="text-xs font-black text-foreground">{new Date(a.data).toLocaleDateString('pt-BR')}</p>
                    {(a.type === 'BIOIMPEDANCE' || a.type === 'BIOIMPEDANCIA') && (
-                     <span className="bg-blue-500/10 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Bioimpedância</span>
+                     <span className="bg-white/10 text-white border border-white/30 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Bioimpedância</span>
                    )}
                  </div>
                  <p className="text-[10px] text-muted-foreground">{a.peso}kg • {a.gordura?.value || a.bio_percentual_gordura}% Gordura</p>

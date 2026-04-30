@@ -146,7 +146,7 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
             </button>
             <div className="flex flex-col">
               <h2 className="text-lg font-black italic uppercase tracking-tighter leading-none">AVALIAÇÃO FISICA</h2>
-              <span className="text-[10px] text-blue-500 font-black uppercase tracking-[0.2em]">Bioimpedância</span>
+              <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Bioimpedância</span>
             </div>
           </div>
           <div className="flex items-center gap-3 text-zinc-500">
@@ -340,10 +340,10 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
                     {renderComparativeRow('Metabolismo', 'metabolismo', 'metabolismo', 'kcal')}
                  </Card>
 
-                 {assessment.veredictoMestre && (
+                 {assessment.veredictoPeriodizacao && (
                    <Card className="p-5 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-600/20 border-0">
                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-90">Veredito da Periodização</h4>
-                     <p className="text-sm font-medium leading-relaxed">{assessment.veredictoMestre}</p>
+                     <p className="text-sm font-medium leading-relaxed">{assessment.veredictoPeriodizacao}</p>
                    </Card>
                  )}
                </div>

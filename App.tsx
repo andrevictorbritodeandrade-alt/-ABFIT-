@@ -672,7 +672,7 @@ export default function App() {
                 massaMuscularDiff: 6.9,
                 gorduraDiff: -12.2
               },
-              veredictoMestre: 'André, comparando com 23/04/2026, você teve uma variação de -0.40kg no peso total. A massa muscular subiu (+0.40kg), o que é excelente para manter a taxa metabólica ativa.'
+              veredictoPeriodizacao: 'André, comparando com 23/04/2026, você teve uma variação de -0.40kg no peso total. A massa muscular subiu (+0.40kg), o que é excelente para manter a taxa metabólica ativa.'
             },
             {
               id: 'bio-andre-20260423',
@@ -720,7 +720,7 @@ export default function App() {
                 massaMuscularDiff: 6.9,
                 gorduraDiff: -12.2
               },
-              veredictoMestre: 'André, comparando com 20/04/2026, você teve uma variação de -2.2kg no peso total. A massa muscular subiu, o que é excelente para manter a taxa metabólica ativa.'
+              veredictoPeriodizacao: 'André, comparando com 20/04/2026, você teve uma variação de -2.2kg no peso total. A massa muscular subiu, o que é excelente para manter a taxa metabólica ativa.'
             },
             {
               id: 'bio-andre-20260420',
@@ -766,7 +766,7 @@ export default function App() {
                 massaMuscularDiff: 6.9,
                 gorduraDiff: -12.2
               },
-              veredictoMestre: 'André, comparando com 13/04/2026, você teve uma variação de -2.0kg no peso total. Atenção à massa muscular, busque manter os estímulos de força.'
+              veredictoPeriodizacao: 'André, comparando com 13/04/2026, você teve uma variação de -2.0kg no peso total. Atenção à massa muscular, busque manter os estímulos de força.'
             },
             {
               id: 'bio-andre-20260413',
@@ -1031,7 +1031,7 @@ export default function App() {
           periodization: {
             id: 'per-andre-01',
             titulo: 'Periodização Científica',
-            startDate: '2026-04-30T10:00:00',
+            startDate: new Date().toISOString(),
             type: 'STRENGTH',
             phaseTitle: 'Mesociclo de Recomposição Corporal, Mitigação de Sarcopenia Pós-Bariátrica e Estabilização Patelofemoral - 12 Semanas',
             generalStrategy: "O perfil do aluno Andre apresenta alta complexidade fisiologica devido ao status pos-cirurgia bariatrica, demandando foco absoluto na mitigacao da sarcopenia (retencao de massa magra) e estimulo a sintese proteica para suportar o deficit calorico continuo rumo aos 87kg. A instabilidade patelar cronica (4 luxacoes) exige prescricao biomecanica restritiva, priorizando o fortalecimento do Vasto Medial Obliquo (VMO) e gluteo medio em cadeia cinetica fechada para realinhamento patelofemoral. O espectro autista (TEA) combinado ao TDAH sugere a necessidade de previsibilidade macroestrutural ambiental para conforto cognitivo, aliada a microvariacoes nos estimulos (gamificacao de carga e metodo) para engajamento dopaminergico continuo.",
@@ -1238,7 +1238,7 @@ export default function App() {
                 massaMuscularDiff: 0,
                 gorduraDiff: 0
               },
-              veredictoMestre: "O relatório de 2024 mostra Marcelly em um estado físico fenomenal, com uma massa muscular esquelética acima da média (40.4%) e gordura visceral baixíssima. Mantendo esse padrão, a longevidade e performance estão garantidas."
+              veredictoPeriodizacao: "O relatório de 2024 mostra Marcelly em um estado físico fenomenal, com uma massa muscular esquelética acima da média (40.4%) e gordura visceral baixíssima. Mantendo esse padrão, a longevidade e performance estão garantidas."
             },
             {
               id: 'marcelly-assessment-2026-04-30',
@@ -1298,7 +1298,7 @@ export default function App() {
                 massaMuscularDiff: 0.5,
                 gorduraDiff: -1.2
               },
-              veredictoMestre: "Marcelly, sua massa muscular esquelética está excelente (39.8%). O foco agora é reduzir levemente o percentual de gordura (28.3%) mantendo essa base muscular. As medidas antropométricas mostram uma boa simetria de membros inferiores. Continue firme no plano de hipertrofia com foco metabólico."
+              veredictoPeriodizacao: "Marcelly, sua massa muscular esquelética está excelente (39.8%). O foco agora é reduzir levemente o percentual de gordura (28.3%) mantendo essa base muscular. As medidas antropométricas mostram uma boa simetria de membros inferiores. Continue firme no plano de hipertrofia com foco metabólico."
             }
           ], 
           workoutHistory: [
@@ -1343,7 +1343,7 @@ export default function App() {
           periodization: {
             id: 'per-marcelly-01',
             titulo: 'Periodização Científica',
-            startDate: '2026-04-30T10:00:00',
+            startDate: new Date().toISOString(),
             type: 'STRENGTH',
             phaseTitle: 'Macrociclo de Hipertrofia Progressiva e Choque Tensional - 12 Semanas',
             generalStrategy: "A periodização de Marcelly foca no ganho de 2kg de massa muscular limpa (hipertrofia) otimizando uma janela de 60 minutos diários, 5 vezes por semana. A fisiologia da hipertrofia exige tensão mecânica, estresse metabólico e dano muscular. O plano utiliza uma Periodização Ondulatória para garantir estímulos constantes. Considerando o quadro suspeito de TDAH, o treinamento foi estruturado com alta densidade, métodos avançados dinâmicos e pausas ativas ou curtas para manter altos níveis de dopamina e noradrenalina, otimizando o engajamento cognitivo e o foco durante as sessões.",
@@ -1425,10 +1425,10 @@ export default function App() {
               exercises: [
                 { id: 'm-a-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-2', name: 'Agachamento passada com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-3', name: 'Levantar e sentar no banco reto', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-3', name: 'Levantar e sentar no banco reto com HBC', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-4', name: 'Leg presso articulado', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-5', name: 'Leg presso articulado unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-6', name: 'Abdominal supra no bosu', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'm-a-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1443,7 +1443,7 @@ export default function App() {
                 { id: 'm-b-3', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-b-4', name: 'Extensão de quadril e joelho no solo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-b-5', name: 'Cadeira flexora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-6', name: 'Mata-borrão isométrico no solo (super-man)', sets: '4', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'm-b-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1458,45 +1458,7 @@ export default function App() {
                 { id: 'm-c-3', name: 'Remada aberta em pé no cross na polia média com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-c-4', name: 'Puxada neutra no pulley alto com triângulo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-c-5', name: 'Tríceps em pé no cross com barra reta pegada supinada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-6', name: 'Bíceps concentrado com HBC unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' }
-              ]
-            },
-            {
-              id: 'treino-intervalado-confortavel',
-              title: 'INTERVALADO (Confortável) - Seg/Sex',
-              projectedSessions: 20,
-              frequencyWeekly: 2,
-              status: 'published',
-              exercises: [
-                { id: 'ex-aq-1', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
-                { id: 'ex-b1-1', name: 'Bloco 1: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
-                { id: 'ex-tr-1', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
-                { id: 'ex-b2-1', name: 'Bloco 2: Corrida Leve / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve permitir conversa fácil.' },
-                { id: 'ex-dq-1', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
-              ]
-            },
-            {
-              id: 'treino-intervalado-desconfortavel',
-              title: 'INTERVALADO (Desconfortável) - Qua',
-              projectedSessions: 10,
-              frequencyWeekly: 1,
-              status: 'published',
-              exercises: [
-                { id: 'ex-aq-2', name: 'Aquecimento: Caminhada', sets: '1', reps: '10 min', rest: '0s', executionType: 'Simples' },
-                { id: 'ex-b1-2', name: 'Bloco 1: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 1:30 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
-                { id: 'ex-tr-2', name: 'Transição: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' },
-                { id: 'ex-b2-2', name: 'Bloco 2: Corrida Moderada/Forte / Caminhada', sets: '4', reps: '1:30 min / 2:00 min', rest: '0s', executionType: 'Simples', description: 'Ritmo deve ser desafiador, dificultando a fala durante o tiro.' },
-                { id: 'ex-dq-2', name: 'Desaquecimento: Caminhada', sets: '1', reps: '8:30 min', rest: '0s', executionType: 'Simples' }
-              ]
-            },
-            {
-              id: 'treino-rodagem',
-              title: 'RODAGEM - Ter/Qui',
-              projectedSessions: 20,
-              frequencyWeekly: 2,
-              status: 'published',
-              exercises: [
-                { id: 'ex-rod-1', name: 'Caminhada Contínua a 5,5 km/h', sets: '1', reps: '50 min', rest: '0s', executionType: 'Simples' }
+                { id: 'm-c-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             }
           ]
