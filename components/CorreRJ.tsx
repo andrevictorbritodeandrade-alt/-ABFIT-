@@ -4,7 +4,7 @@ import {
   Trophy, MapPin, Clock, ExternalLink, Bell, ArrowLeft, 
   DollarSign, TrendingUp, Zap, X, Info, CheckCircle 
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { callAI } from '../services/gemini';
 import { db, appId, handleFirestoreError, OperationType, collection, doc, setDoc, onSnapshot, deleteDoc } from '../services/firebase';
 import { BackgroundCarousel } from './Layout';
 
@@ -316,20 +316,10 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
   const callGemini = async (prompt: string, systemInstruction: string, race: any) => {
     setIaLoading(true); setIaContent(null); setActiveRace(race); setShowIaModal(true);
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        setIaContent("A chave da IA (GEMINI_API_KEY) não está configurada.");
-        setIaLoading(false);
-        return;
-      }
-      
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
+      const response = await callAI({
         model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-            systemInstruction: systemInstruction
-        }
+        prompt: prompt,
+        systemInstruction: systemInstruction
       });
       setIaContent(response.text || "Sem resposta da IA.");
     } catch (error) { 

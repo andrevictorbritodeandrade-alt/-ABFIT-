@@ -1,22 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronRight, Activity, Download, FileText, AlertCircle, Dumbbell, Zap, Target, Loader2, Building2, TreePine, ClipboardList, BookOpen, User, Users, Image as ImageIcon, Shirt, Save, Video, X } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { db, handleFirestoreError, OperationType, doc, setDoc } from '../services/firebase';
+import { callAI } from '../services/gemini';
 
-// Robust API key detection for different environments (Vite, Cloud Run, etc)
-const getApiKey = () => {
-  return (
-    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-    (import.meta as any).env?.GEMINI_API_KEY ||
-    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
-    (typeof process !== 'undefined' ? process.env?.API_KEY : '') ||
-    ''
-  );
-};
-
-const apiKey = getApiKey(); 
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
-
+// ==========================================
+// CONSTANTES DE CONFIGURAÇÃO
+// ==========================================
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
@@ -128,8 +117,6 @@ export const ABFITAIModule: React.FC<{ studentName?: string, onClose?: () => voi
     setShowDropdown(false);
 
     try {
-      if (!genAI) throw new Error("A chave da IA (GEMINI_API_KEY) não está configurada.");
-
       const jerseyPrompt = JERSEYS_DATA[selectedJersey];
       
       const modelSpecs = selectedModel === 'HOMEM' 
@@ -155,42 +142,25 @@ REGRAS JSON:
 6. "citacao": Citação acadêmica.
 7. "guiaPassos": ARRAY de strings com passos numerados.`;
 
-      const textResponse = await genAI.models.generateContent({
+      const textResponse = await callAI({
         model: MODEL_TEXT,
-        contents: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}`,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-        }
+        prompt: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}`,
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
       });
       
       const data = JSON.parse(textResponse.text || "{}");
 
-      // Use gemini-2.5-flash-image for generation via generateContent
-      const imgResponse = await genAI.models.generateContent({
+      // Use gemini-2.5-flash-image for generation via backend
+      const imgResult = await callAI({
         model: MODEL_IMAGE,
-        contents: data.visualPrompt,
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1"
-          }
-        }
+        prompt: data.visualPrompt,
+        isImageGeneration: true
       });
 
-      let imageUrl = null;
-      const parts = imgResponse.candidates?.[0]?.content?.parts;
-      if (parts) {
-        for (const part of parts) {
-          if (part.inlineData) {
-            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-            break;
-          }
-        }
-      }
-
-      if (!imageUrl) throw new Error("Falha na geração da imagem");
+      if (!imgResult.imageUrl) throw new Error("Falha na geração da imagem");
       
-      data.image = imageUrl;
+      data.image = imgResult.imageUrl;
 
       setGeneratedData(data);
     } catch (err) {

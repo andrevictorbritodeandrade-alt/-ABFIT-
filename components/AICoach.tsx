@@ -7,7 +7,7 @@ import {
   Calendar, Stethoscope, BrainCircuit, Timer, FileText, TrendingUp,
   AlertTriangle, CheckCircle2, Download, Lightbulb, ShieldCheck, X, Menu, ArrowLeft, Plus
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { callAI } from '../services/gemini';
 import { AppFooter } from './Layout';
 
 // Using recommended models as per guidelines
@@ -100,20 +100,12 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        setMessages(prev => [...prev, { role: 'model', text: "A chave da IA (GEMINI_API_KEY) não está configurada. Por favor, configure-a nas configurações do app." }]);
-        setLoading(false);
-        return;
-      }
-      
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
+      const systemInstruction = "Você é o Coach AI da ABFIT. Você é um especialista Mestre em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE));
+
+      const response = await callAI({
         model: MODEL_TEXT,
-        contents: userMsg,
-        config: {
-          systemInstruction: "Você é o Coach AI da ABFIT. Você é um especialista Mestre em biomecânica e fisiologia do exercício. Ajude o atleta com orientações técnicas baseadas em ciência. Seja encorajador, preciso e profissional. Se o usuário perguntar sobre exercícios, use o banco de dados disponível se necessário: " + JSON.stringify(Object.keys(EXERCISE_DATABASE)),
-        }
+        prompt: userMsg,
+        systemInstruction: systemInstruction
       });
 
       // Extracting text output from GenerateContentResponse using the .text property

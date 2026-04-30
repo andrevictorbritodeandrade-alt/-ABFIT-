@@ -4,33 +4,28 @@ import { GoogleGenAI, Type } from "@google/genai";
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_IMAGE = 'gemini-2.5-flash-image';
 
-// Robust API key detection for different environments (Vite, Cloud Run, etc)
-const getApiKey = () => {
-  return (
-    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-    (import.meta as any).env?.GEMINI_API_KEY ||
-    (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '') ||
-    (typeof process !== 'undefined' ? process.env?.API_KEY : '') ||
-    ''
-  );
-};
+// Robust API key detection removed - we now use backend
+// const getApiKey = () => { ... }
 
-let genAIInstance: GoogleGenAI | null = null;
-
-function getGenAI() {
-  if (!genAIInstance) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      return null;
+export async function callAI(params: any) {
+  try {
+    const response = await fetch("/api/ai/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params)
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Erro na API do servidor");
     }
-    genAIInstance = new GoogleGenAI({ apiKey });
+    return await response.json();
+  } catch (e: any) {
+    console.error("AI Proxy Error:", e);
+    throw e;
   }
-  return genAIInstance;
 }
 
 export async function analyzeExerciseAndGenerateImage(exerciseName: string, studentProfile?: any): Promise<any> {
-  const ai = getGenAI();
-  if (!ai) return null;
   try {
     const brainPrompt = `Analise o exercício "${exerciseName}". 
     Instruções biomecânicas de Mestre:
@@ -40,37 +35,21 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
     
     Forneça JSON puro: {"description": "descrição curta", "benefits": "3 benefícios principais", "visualPrompt": "Detailed 4k gym prompt for imagen of a black athlete"}`;
 
-    const brainResponse = await ai.models.generateContent({
+    const brainResultRaw = await callAI({
       model: MODEL_TEXT,
-      contents: brainPrompt,
-      config: { responseMimeType: "application/json" }
+      prompt: brainPrompt,
+      responseMimeType: "application/json"
     });
 
-    const brainResult = JSON.parse(brainResponse.text || "{}");
+    const brainResult = JSON.parse(brainResultRaw.text || "{}");
     
-    // Use gemini-2.5-flash-image for generation via generateContent
-    const imageResponse = await ai.models.generateContent({
+    const imageResult = await callAI({
       model: MODEL_IMAGE,
-      contents: brainResult.visualPrompt || `Professional athlete performing ${exerciseName}, gym setting, 4k resolution`,
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1"
-        }
-      }
+      prompt: brainResult.visualPrompt || `Professional athlete performing ${exerciseName}, gym setting, 4k resolution`,
+      isImageGeneration: true
     });
     
-    let imageUrl = null;
-    const parts = imageResponse.candidates?.[0]?.content?.parts;
-    if (parts) {
-      for (const part of parts) {
-        if (part.inlineData) {
-          imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-          break;
-        }
-      }
-    }
-
-    return { ...brainResult, imageUrl };
+    return { ...brainResult, imageUrl: imageResult.imageUrl };
   } catch (e) {
     console.error("Erro GenAI:", e);
     return null;
@@ -78,9 +57,6 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
 }
 
 export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
-  const ai = getGenAI();
-  if (!ai) return [];
-  
   const systemInstruction = `
     Você é o ABFIT AI, um treinador Mestre. 
     Gere uma lista de exercícios baseada no pedido do usuário.
@@ -89,13 +65,11 @@ export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await callAI({
       model: MODEL_TEXT,
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-        systemInstruction: systemInstruction
-      }
+      prompt: prompt,
+      systemInstruction: systemInstruction,
+      responseMimeType: "application/json"
     });
 
     const text = response.text || "[]";
@@ -108,78 +82,62 @@ export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
 }
 
 export async function generateRunningPlan(anamneseData: any): Promise<any> {
-  const ai = getGenAI();
-  if (!ai) return null;
   const prompt = `Gere planilha de corrida para: ${JSON.stringify(anamneseData)}. Responda JSON: {"workouts": [{"dayOfWeek": "Segunda", "type": "Tiro", "warmupTime": 10, "sets": 1, "reps": 8, "stimulusTime": "400m", "recoveryTime": 60, "cooldownTime": 5, "totalTime": 45, "pace": "4:30"}]}`;
   try {
-    const res = await ai.models.generateContent({
+    const res = await callAI({
       model: MODEL_TEXT,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
+      prompt: prompt,
+      responseMimeType: "application/json"
     });
     return JSON.parse(res.text || "{}");
   } catch (e) { return null; }
 }
 
 export async function generateTechnicalCue(exerciseName: string) {
-  const ai = getGenAI();
-  if (!ai) return "Mantenha a estabilidade do core.";
   try {
-    const res = await ai.models.generateContent({
+    const res = await callAI({
       model: MODEL_TEXT,
-      contents: `Dica biomecânica rápida de Mestre para ${exerciseName}.`
+      prompt: `Dica biomecânica rápida de Mestre para ${exerciseName}.`
     });
     return res.text;
   } catch (e) { return "Mantenha a estabilidade do core."; }
 }
 
 export async function generateBioInsight(profile: any) {
-  const ai = getGenAI();
-  if (!ai) return "";
   try {
-    const res = await ai.models.generateContent({
+    const res = await callAI({
       model: MODEL_TEXT,
-      contents: `Forneça 3 dicas de segurança clínica para o aluno: ${profile.name || 'Atleta'}. Foco em fisiologia.`
+      prompt: `Forneça 3 dicas de segurança clínica para o aluno: ${profile.name || 'Atleta'}. Foco em fisiologia.`
     });
     return res.text;
   } catch (e) { return ""; }
 }
 
 export async function generateAIMealPlan(profile: any): Promise<any> {
-  const ai = getGenAI();
-  if (!ai) return null;
   const prompt = `Gere um plano alimentar diário para: ${JSON.stringify(profile)}. Responda JSON: {"id": "1", "date": "2024-01-01", "breakfast": "...", "lunch": "...", "dinner": "...", "snacks": "..."}`;
   try {
-    const res = await ai.models.generateContent({
+    const res = await callAI({
       model: MODEL_TEXT,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
+      prompt: prompt,
+      responseMimeType: "application/json"
     });
     return JSON.parse(res.text || "{}");
   } catch (e) { return null; }
 }
 
 export async function estimateFoodMacros(foodInput: string): Promise<any> {
-  const ai = getGenAI();
-  if (!ai) return null;
   const prompt = `Estime macros para: "${foodInput}". Responda JSON: {"calories": 0, "protein": 0, "carbs": 0, "fat": 0}`;
   try {
-    const res = await ai.models.generateContent({
+    const res = await callAI({
       model: MODEL_TEXT,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
+      prompt: prompt,
+      responseMimeType: "application/json"
     });
     return JSON.parse(res.text || "{}");
   } catch (e) { return null; }
 }
 
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
-  const ai = getGenAI();
-  if (!ai) return [];
-  
-  // Limpeza de header base64 caso exista
-  const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-
   const prompt = `
     Analyze the image which contains a list of gym exercises.
     Return a JSON ARRAY containing the exercises found.
@@ -199,20 +157,12 @@ export async function extractWorkoutFromImage(imageBase64: string): Promise<any[
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await callAI({
       model: MODEL_TEXT,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-            { text: prompt }
-          ]
-        }
-      ],
-      config: { 
-        responseMimeType: "application/json",
-      }
+      prompt: prompt,
+      isImageAnalysis: true,
+      imageBase64: imageBase64,
+      responseMimeType: "application/json"
     });
 
     const text = response.text || "[]";

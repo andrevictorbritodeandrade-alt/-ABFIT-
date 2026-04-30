@@ -147,16 +147,22 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
       </header>
 
       {/* CARDS DE RESUMO RÁPIDO */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-         <Card className="p-5 bg-zinc-900/50 border-zinc-800 text-center">
-            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Total de Sessões</h3>
-            <p className="text-4xl font-black text-white italic tracking-tighter">{history.length}</p>
+      <div className="grid grid-cols-3 gap-3 mb-8">
+         <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
+            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Ciclo Atual</h3>
+            <p className="text-2xl font-black text-red-600 italic tracking-tighter">
+              {student.trainingProgress?.completedCount || 0}<span className="text-zinc-600 text-xs mx-1">/</span>{student.trainingProgress?.targetCount || 20}
+            </p>
          </Card>
-         <Card className="p-5 bg-zinc-900/50 border-red-900/20 text-center">
-            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Streak (Dias)</h3>
-            <div className="flex items-center justify-center gap-2">
-               <p className="text-4xl font-black text-red-600 italic tracking-tighter">{analytics.streakDays || 0}</p>
-               <TrendingUp size={16} className="text-red-600 animate-pulse"/>
+         <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
+            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Histórico Total</h3>
+            <p className="text-2xl font-black text-white italic tracking-tighter">{history.length}</p>
+         </Card>
+         <Card className="p-4 bg-zinc-900/50 border-red-900/20 text-center">
+            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Streak</h3>
+            <div className="flex items-center justify-center gap-1">
+               <p className="text-2xl font-black text-red-600 italic tracking-tighter">{analytics.streakDays || 0}</p>
+               <TrendingUp size={12} className="text-red-600 animate-pulse"/>
             </div>
          </Card>
       </div>

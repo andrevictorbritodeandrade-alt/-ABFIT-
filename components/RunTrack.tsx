@@ -10,7 +10,7 @@ import {
   db, handleFirestoreError, OperationType,
   collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, getDocs 
 } from '../services/firebase';
-import { GoogleGenAI } from "@google/genai";
+import { callAI } from '../services/gemini';
 import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -24,18 +24,7 @@ if (typeof window !== 'undefined') {
     });
 }
 
-let genAIInstance: GoogleGenAI | null = null;
-
-function getGenAI() {
-    if (!genAIInstance) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not set. Please configure it in the settings.");
-        }
-        genAIInstance = new GoogleGenAI({ apiKey });
-    }
-    return genAIInstance;
-}
+const MODEL_TEXT = 'gemini-3-flash-preview';
 
 import { Student, WorkoutHistoryEntry } from '../types';
 import { HeaderTitle, Card, AppFooter, BackgroundCarousel, RUNNING_IMAGES } from './Layout';
@@ -1856,15 +1845,11 @@ const LogWorkoutModal = ({ workout, onClose, onSave, initialStats }: { workout: 
                 
                 const prompt = "Analise esta foto de uma esteira ou print de app de corrida e extraia os seguintes dados em formato JSON: distance (km), duration (minutos), avgPace (ritmo médio), avgHR (batimentos cardíacos), calories (kcal). Se não encontrar algum dado, deixe em branco. Retorne APENAS o JSON.";
                 
-                const ai = getGenAI();
-                const response = await ai.models.generateContent({
+                const response = await callAI({
                     model: "gemini-3-flash-preview",
-                    contents: {
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { data: base64, mimeType: file.type } }
-                        ]
-                    }
+                    prompt: prompt,
+                    isImageAnalysis: true,
+                    imageBase64: base64
                 });
                 
                 const text = response.text || "";

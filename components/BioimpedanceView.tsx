@@ -182,6 +182,35 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
                {renderMetric('Idade real', assessment.idadeReal, '')}
                {renderMetric('Altura', assessment.altura, 'cm')}
             </Card>
+
+            {/* Antropometria Section */}
+            {(assessment.torax || assessment.dobraAbdominal) && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                <h3 className="text-xl font-black italic uppercase tracking-tighter mt-10">Perímetros e Dobras</h3>
+                <Card className="p-4 bg-zinc-900/60 border-zinc-800 rounded-3xl shadow-xl flex flex-col pt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <div className="space-y-0 text-left">
+                       <h4 className="text-[10px] font-black uppercase text-red-600 tracking-[0.3em] mt-4 mb-2 px-2">Perímetros (cm)</h4>
+                       {renderMetric('Tórax', assessment.torax, 'cm')}
+                       {renderMetric('Cintura', assessment.cintura, 'cm')}
+                       {renderMetric('Abdômen', assessment.abdomen, 'cm')}
+                       {renderMetric('Quadril', assessment.quadril, 'cm')}
+                       {renderMetric('Coxa Pr. D/E', `${assessment.coxaProximalDireita}/${assessment.coxaProximalEsquerda}`, 'cm')}
+                       {renderMetric('Coxa Di. D/E', `${assessment.coxaDistalDireita}/${assessment.coxaDistalEsquerda}`, 'cm')}
+                       {renderMetric('Panturrilha D/E', `${assessment.panturrilhaDireita}/${assessment.panturrilhaEsquerda}`, 'cm')}
+                       {renderMetric('Braço D/E', `${assessment.bracoDireito}/${assessment.bracoEsquerdo}`, 'cm')}
+                       {renderMetric('Antebraço D/E', `${assessment.antebracoDireito}/${assessment.antebracoEsquerdo}`, 'cm')}
+                    </div>
+                    <div className="space-y-0 text-left">
+                       <h4 className="text-[10px] font-black uppercase text-red-600 tracking-[0.3em] mt-4 mb-2 px-2">Dobras Cutâneas (mm)</h4>
+                       {renderMetric('Subescapular', assessment.dobraSubescapular, 'mm')}
+                       {renderMetric('Abdominal', assessment.dobraAbdominal, 'mm')}
+                       {renderMetric('Coxa', assessment.dobraCoxa, 'mm')}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            )}
           </div>
         )}
 

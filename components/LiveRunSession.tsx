@@ -3,8 +3,8 @@ import { Play, Pause, Square, ChevronRight, Volume2, VolumeX, X, User, Users, Ma
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Polyline, useMap, Marker, Circle } from 'react-leaflet';
 import L from 'leaflet';
-import { GoogleGenAI } from "@google/genai";
 import { Logo } from './Layout';
+import { callAI } from '../services/gemini';
 
 // Fix Leaflet marker icon issue
 if (typeof window !== 'undefined') {
@@ -44,18 +44,6 @@ function MapUpdater({ center }: { center: [number, number] }) {
         map.setView(center, map.getZoom());
     }, [center, map]);
     return null;
-}
-
-let genAIInstance: GoogleGenAI | null = null;
-function getGenAI() {
-    if (!genAIInstance) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not set. Please configure it in the settings.");
-        }
-        genAIInstance = new GoogleGenAI({ apiKey });
-    }
-    return genAIInstance;
 }
 
 export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, studentWeight, studentHeight, studentPhoto, athleteName, isFreeMode }: LiveRunSessionProps) {
@@ -718,15 +706,11 @@ export function LiveRunSession({ segments, workoutTitle, onClose, onFinish, stud
                 Seja preciso. Retorne APENAS o JSON no formato: 
                 {"distance": float, "duration": int, "calories": int, "avgHR": int, "steps": int, "elevation": int, "date": "dd/mm/aaaa"}`;
                 
-                const ai = getGenAI();
-                const response = await ai.models.generateContent({
+                const response = await callAI({
                     model: "gemini-3-flash-preview",
-                    contents: {
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { data: base64, mimeType: file.type } }
-                        ]
-                    }
+                    prompt: prompt,
+                    base64Image: base64,
+                    mimeType: file.type
                 });
                 
                 const text = response.text || "";

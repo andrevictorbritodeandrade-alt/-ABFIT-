@@ -445,7 +445,13 @@ function getCurrentRepsForStudent(student: Student): string | null {
   return repsMatch ? formatReps(repsMatch[1]) : null;
 }
 
-export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { user: Student, onBack: () => void, onSave: (id: string, data: any) => void, isCoach?: boolean }) {
+export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCoach = false }: { 
+  user: Student, 
+  onBack: () => void, 
+  onSave: (id: string, data: any) => void, 
+  onFinishWorkout?: (post: WorkoutHistoryEntry) => void,
+  isCoach?: boolean 
+}) {
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -459,6 +465,8 @@ export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { 
   const [exerciseProgress, setExerciseProgress] = useState<Record<string, { completedSets: number[], isFinished: boolean }>>({});
   const [dbExercises, setDbExercises] = useState<Record<string, any>>({});
   const [prescreveAIExercise, setPrescreveAIExercise] = useState<string | null>(null);
+
+  const tProgress = user.trainingProgress || { completedCount: 0, targetCount: 20 };
 
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
@@ -663,89 +671,57 @@ export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { 
         photoUrl: selfieUrl || undefined,
         type: 'STRENGTH'
       };
-      const updatedProtocolDate = user.protocolStartDate || now.toISOString();
-      const updatedHistory = [entry, ...(user.workoutHistory || [])];
-      
-      // Update analytics
-      const currentAnalytics = user.analytics || { sessionsCompleted: 0, streakDays: 0, exercises: {} };
-      const newExercises = { ...currentAnalytics.exercises };
-      
-      activeWorkout.exercises.forEach(ex => {
-        const prog = exerciseProgress[ex.id || ''];
-        const totalSets = parseInt(ex.sets || '3') || 3;
-        const isCompleted = prog && prog.completedSets.length >= totalSets;
-        
-        if (!newExercises[ex.name]) {
-          newExercises[ex.name] = { completed: 0, skipped: 0 };
-        }
-        
-        if (isCompleted) {
-          newExercises[ex.name].completed += 1;
-        } else {
-          newExercises[ex.name].skipped += 1;
-        }
-      });
 
-      // Calculate streak
-      let newStreak = currentAnalytics.streakDays || 0;
-      const lastDateStr = currentAnalytics.lastSessionDate;
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const todayStr = now.toLocaleDateString('pt-BR');
-      
-      if (lastDateStr) {
-        const [lastDay, lastMonth, lastYear] = lastDateStr.split('/');
-        const lastDate = new Date(parseInt(lastYear), parseInt(lastMonth) - 1, parseInt(lastDay));
-        
-        // Diferença em dias considerando apenas as datas (meia-noite)
-        const diffTime = today.getTime() - lastDate.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) {
-          newStreak += 1;
-        } else if (diffDays > 1) {
-          newStreak = 1;
-        } else if (diffDays === 0) {
-          // Já treinou hoje, mantém o streak atual
-        }
+      if (onFinishWorkout) {
+        await onFinishWorkout(entry);
       } else {
-        newStreak = 1;
+        const updatedProtocolDate = user.protocolStartDate || now.toISOString();
+        const updatedHistory = [entry, ...(user.workoutHistory || [])];
+        const currentAnalytics = user.analytics || { sessionsCompleted: 0, streakDays: 0, exercises: {} };
+        const newExercises = { ...currentAnalytics.exercises };
+        
+        activeWorkout.exercises.forEach(ex => {
+          const prog = exerciseProgress[ex.id || ''];
+          const totalSets = parseInt(ex.sets || '3') || 3;
+          if (prog && prog.completedSets.length >= totalSets) {
+            newExercises[ex.name] = { ...newExercises[ex.name], completed: (newExercises[ex.name]?.completed || 0) + 1 };
+          }
+        });
+
+        const updatedAnalytics = {
+          ...currentAnalytics,
+          sessionsCompleted: (currentAnalytics.sessionsCompleted || 0) + 1,
+          lastSessionDate: now.toLocaleDateString('pt-BR'),
+          exercises: newExercises
+        };
+
+        const updates: any = {
+          workoutHistory: updatedHistory,
+          protocolStartDate: updatedProtocolDate,
+          analytics: updatedAnalytics
+        };
+
+        const title = activeWorkout.title.toLowerCase();
+        if (title.includes('treino a')) {
+          updates.faseAjusteA = (user.faseAjusteA || 0) + 1;
+          updates.totalGlobalA = (user.totalGlobalA || 0) + 1;
+        } else if (title.includes('treino b')) {
+          updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
+          updates.totalGlobalB = (user.totalGlobalB || 0) + 1;
+        }
+
+        await onSave(user.id, updates);
       }
 
-      const updatedAnalytics = {
-        ...currentAnalytics,
-        sessionsCompleted: currentAnalytics.sessionsCompleted + 1,
-        streakDays: newStreak,
-        lastSessionDate: todayStr,
-        exercises: newExercises
-      };
-
-      // Atualiza os contadores de progresso
-      const updates: Partial<Student> = {
-        workoutHistory: updatedHistory, 
-        protocolStartDate: updatedProtocolDate,
-        analytics: updatedAnalytics
-      };
-
-      const title = activeWorkout.title.toLowerCase();
-      if (title.includes('treino a')) {
-        updates.faseAjusteA = (user.faseAjusteA || 0) + 1;
-        updates.totalGlobalA = (user.totalGlobalA || 0) + 1;
-      } else if (title.includes('treino b')) {
-        updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
-        updates.totalGlobalB = (user.totalGlobalB || 0) + 1;
-      }
-
-      // Salva o histórico e a data do protocolo
-      await onSave(user.id, updates);
-
-      // Limpa o estado local
       localStorage.removeItem(`workout_start_${user.id}`);
       localStorage.removeItem(`active_workout_id_${user.id}`);
       localStorage.removeItem(`workout_progress_${user.id}`);
       setSessionStartTime(null);
       setActiveWorkout(null);
+      setSelfieUrl(null);
       setIsFinishing(false);
       setShowPhotoStep(false);
+      setShowCompletionModal(false);
       onBack();
     } catch (error) {
       console.error("Erro ao finalizar sessão:", error);
@@ -846,13 +822,19 @@ export function WorkoutSessionView({ user, onBack, onSave, isCoach = false }: { 
   if (!activeWorkout) {
     return (
       <div className="p-6 pb-48 text-foreground overflow-y-auto h-screen text-left custom-scrollbar bg-background animate-in fade-in">
-        <header className="flex items-center gap-4 mb-10 sticky top-0 bg-background/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-border">
-          <button onClick={onBack} className="p-2 bg-card rounded-full shadow-lg text-foreground hover:bg-red-600 transition-colors shadow-xl">
-            <ArrowLeft size={20}/>
-          </button>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">
-            <HeaderTitle text="Planilhas de Treino" />
-          </h2>
+        <header className="flex flex-col mb-10 sticky top-0 bg-background/90 backdrop-blur-md py-4 z-40 -mx-6 px-6 border-b border-border">
+           <div className="flex items-center justify-between mb-4">
+              <button onClick={onBack} className="p-2 bg-card rounded-full shadow-lg text-foreground hover:bg-red-600 transition-colors shadow-xl">
+                <ArrowLeft size={20}/>
+              </button>
+              <div className="bg-card border border-border px-4 py-2 rounded-full flex items-center gap-2">
+                 <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Treino {tProgress.completedCount} de {tProgress.targetCount}</span>
+              </div>
+           </div>
+           <h2 className="text-xl font-black italic uppercase tracking-tighter">
+             <HeaderTitle text="Planilhas de Treino" />
+           </h2>
         </header>
         <div className="space-y-4">
           {(user.workouts || []).filter(w => !['treino-intervalado-confortavel', 'treino-intervalado-desconfortavel', 'treino-rodagem'].includes(w.id)).length > 0 ? (

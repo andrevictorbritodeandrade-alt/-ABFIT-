@@ -159,6 +159,11 @@ export interface AnalyticsData {
   lastSessionDate?: string;
 }
 
+export interface TrainingProgress {
+  completedCount: number;
+  targetCount: number;
+}
+
 export interface Student {
   id: string;
   nome: string;
@@ -170,6 +175,7 @@ export interface Student {
   physicalAssessments?: PhysicalAssessment[];
   periodization?: PeriodizationPlan;
   analytics?: AnalyticsData;
+  trainingProgress?: TrainingProgress;
   nutrition?: NutritionProfile;
   notifications?: AppNotification[];
   disabledFeatures?: string[];

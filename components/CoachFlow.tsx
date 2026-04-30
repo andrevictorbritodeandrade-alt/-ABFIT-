@@ -10,8 +10,8 @@ import {
   BarChart3, ZapIcon, Settings2, Link as LinkIcon, Send, Menu, Layout, AlertTriangle, Scan, Upload, Copy,
   CheckCircle2, MapPin, History, Download
 } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { Card, AppFooter, Logo, HeaderTitle, NotificationBadge, WeatherWidget } from './Layout';
+import { callAI } from '../services/gemini';
 import { Student, Exercise, PhysicalAssessment, Workout, AppNotification, PeriodizationPlan } from '../types';
 import { analyzeExerciseAndGenerateImage, extractWorkoutFromImage, generateBioInsight } from '../services/gemini';
 import { RunTrackCoachView } from './RunTrack';

@@ -1193,12 +1193,73 @@ export default function App() {
           email: 'marcellybispo92@gmail.com', 
           photoUrl: 'https://image.pollinations.ai/prompt/Disney%20style%203d%20animation%20of%20a%20black%20woman%20named%20Marcelly%20Bispo%2C%20voluminous%20curly%20afro%20hair%2C%20wearing%20a%20yellow%20leopard%20print%20one-shoulder%20top%20and%20skirt%2C%20standing%20in%20a%20colorful%20Brazilian%20colonial%20street?width=400&height=400&nologo=true',
           age: 34,
-          weight: 60,
+          weight: 61.2,
           height: 167,
           goal: 'health',
           medicalHistory: '⚠️ Nada',
           medications: 'Nada',
-          physicalAssessments: [], 
+          physicalAssessments: [
+            {
+              id: 'marcelly-assessment-2026-04-30',
+              data: '2026-04-30T10:00:00',
+              peso: 61.2,
+              altura: 167,
+              imc: 21.9,
+              bio_percentual_gordura: 28.3,
+              pesoGordura: 17.3,
+              percentualMassaMuscularEsqueletica: 39.8,
+              pesoMassaMuscularEsqueletica: 24.4,
+              registroMassaMuscular: 67.5,
+              pesoMassaMuscular: 41.3,
+              aguaPercentual: 50.3,
+              pesoAgua: 30.8,
+              gorduraVisceral: 4.0,
+              ossos: 2.61,
+              metabolismo: 1308.8,
+              proteina: 17.2,
+              obesidade: 5.2,
+              idadeMetabolica: 29.0,
+              lbm: 43.9,
+              idadeReal: 34,
+              type: 'BIOIMPEDANCE',
+              // Perímetros
+              torax: 85,
+              cintura: 73,
+              abdomen: 76,
+              quadril: 96,
+              coxaProximalDireita: 58.5,
+              coxaProximalEsquerda: 59.5,
+              coxaDistalDireita: 45,
+              coxaDistalEsquerda: 44.5,
+              panturrilhaDireita: 35.5,
+              panturrilhaEsquerda: 35.5,
+              bracoDireito: 27,
+              bracoEsquerdo: 27,
+              antebracoDireito: 22.5,
+              antebracoEsquerdo: 22,
+              // Dobras
+              dobraSubescapular: 16,
+              dobraAbdominal: 20,
+              dobraCoxa: 27,
+              analiseComposicao: {
+                agua: 'Saudável',
+                gordura: 'Alto',
+                proteina: 'Saudável',
+                ossos: 'Excelente'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Saudável',
+                descricao: "Equilíbrio entre massa magra e gordura, mas com margem para redução de gordura subcutânea."
+              },
+              dicasControlePeso: {
+                pesoDiff: 1.3,
+                pesoIdeal: 59.9,
+                massaMuscularDiff: 0.5,
+                gorduraDiff: -1.2
+              },
+              veredictoMestre: "Marcelly, sua massa muscular esquelética está excelente (39.8%). O foco agora é reduzir levemente o percentual de gordura (28.3%) mantendo essa base muscular. As medidas antropométricas mostram uma boa simetria de membros inferiores. Continue firme no plano de hipertrofia com foco metabólico."
+            }
+          ], 
           workoutHistory: [
             {
               id: 'hist-marcelly-03',
@@ -1596,6 +1657,12 @@ export default function App() {
                       hasCloudChanges = true;
                   }
 
+                  if (defaultProfile.email === 'marcellybispo92@gmail.com' && !(rawData as any)._fixedAssessmentsApril30) {
+                      currentAssessments = defaultAssessments;
+                      (rawData as any)._fixedAssessmentsApril30 = true;
+                      hasCloudChanges = true;
+                  }
+
                   const mergedAssessments = [...currentAssessments];
                   let assessmentsModified = false;
                   
@@ -1857,9 +1924,17 @@ export default function App() {
     // Dispara o indicador de sync
     setSyncStatus('syncing');
     const path = `artifacts/${appId}/public/data/students/${sid}`;
+    
+    // Autônomo Logic: If saving periodization, reset progress and analytics
+    const finalData = { ...data };
+    if (data.periodization) {
+      finalData.trainingProgress = { completedCount: 0, targetCount: 20 }; // Default target 20, coach can adjust
+      finalData.analytics = { sessionsCompleted: 0, streakDays: 0, exercises: {}, lastSessionDate: undefined };
+    }
+
     try { 
       const docRef = doc(db, path);
-      await setDoc(docRef, { ...data, lastUpdateTimestamp: Date.now() }, { merge: true });
+      await setDoc(docRef, { ...finalData, lastUpdateTimestamp: Date.now() }, { merge: true });
       // O syncStatus voltará a 'synced' automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       setSyncStatus('offline');
@@ -1869,6 +1944,33 @@ export default function App() {
         console.error("Failed to sync save data:", err);
       }
     }
+  };
+
+  const handleFinishWorkout = async (post: WorkoutHistoryEntry) => {
+    if (!studentForView) return;
+    
+    const currentHistory = studentForView.workoutHistory || [];
+    const updatedHistory = [post, ...currentHistory];
+    
+    const currentProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 24 };
+    const updatedProgress = {
+      ...currentProgress,
+      completedCount: currentProgress.completedCount + 1
+    };
+
+    // Update Analytics sessions
+    const currentAnalytics = studentForView.analytics || { sessionsCompleted: 0, streakDays: 0, exercises: {} };
+    const updatedAnalytics = {
+      ...currentAnalytics,
+      sessionsCompleted: (currentAnalytics.sessionsCompleted || 0) + 1,
+      lastSessionDate: new Date().toLocaleDateString('pt-BR')
+    };
+
+    await handleSaveData(studentForView.id, { 
+      workoutHistory: updatedHistory,
+      trainingProgress: updatedProgress,
+      analytics: updatedAnalytics
+    });
   };
 
   const handleAddPost = async (post: WorkoutHistoryEntry) => {
@@ -2121,16 +2223,13 @@ export default function App() {
                 const isWorkouts = item.id === 'WORKOUTS';
                 
                 let progress = 0;
+                let progressText = "";
                 if (isPeriodization && studentForView?.periodization?.startDate) {
                   progress = Math.min(100, Math.round(((Date.now() - new Date(studentForView.periodization.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100));
-                } else if (isWorkouts && studentForView?.workouts?.length) {
-                  const history = studentForView.workoutHistory || [];
-                  const totalProgress = studentForView.workouts.reduce((acc, w) => {
-                    const completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
-                    const total = w.projectedSessions || 20;
-                    return acc + (completed / total);
-                  }, 0);
-                  progress = Math.min(100, Math.round((totalProgress / studentForView.workouts.length) * 100));
+                } else if (isWorkouts) {
+                  const tProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 24 };
+                  progress = Math.min(100, Math.round((tProgress.completedCount / tProgress.targetCount) * 100));
+                  progressText = `${tProgress.completedCount} de ${tProgress.targetCount} treinos`;
                 }
 
                 return (
@@ -2143,12 +2242,18 @@ export default function App() {
                       <item.icon className="text-white" size={32} /> 
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="text-xs font-black uppercase text-white italic tracking-[0.2em] leading-tight">{item.label}</h3>
-                      {(isPeriodization || isWorkouts) && progress > 0 ? (
+                      <div className="flex justify-between items-baseline">
+                        <h3 className="text-xs font-black uppercase text-white italic tracking-[0.2em] leading-tight">{item.label}</h3>
+                        {isWorkouts && progressText && (
+                          <span className="text-[9px] font-black uppercase text-red-600 italic tracking-widest">{progressText}</span>
+                        )}
+                      </div>
+                      {(isPeriodization || isWorkouts) && (
                         <div className="mt-2 w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                           <div className={`h-full bg-${item.color}-600 shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-all duration-1000`} style={{ width: `${progress}%` }} />
                         </div>
-                      ) : (
+                      )}
+                      {!isPeriodization && !isWorkouts && (
                         <div className="mt-2 text-[8px] font-black uppercase text-zinc-600 tracking-widest italic">Acesse sua jornada</div>
                       )}
                     </div>
@@ -2164,7 +2269,7 @@ export default function App() {
           </div>
         )}
         {view === 'FEED' && <WorkoutFeed history={globalFeedHistory} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} isProfessor={isCoach} onAddPost={!isCoach ? handleAddPost : undefined} />}
-        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} isCoach={isCoach} />}
+        {view === 'WORKOUTS' && studentForView && <WorkoutSessionView user={studentForView} onBack={handleBackNavigation} onSave={handleSaveData} onFinishWorkout={handleFinishWorkout} isCoach={isCoach} />}
         {view === 'COACH_AI' && <AICoach onBack={isCoach ? handleBackNavigation : undefined} />}
         {view === 'SETTINGS' && <SettingsView onBack={isCoach ? () => setView('PROFESSOR_DASH') : toggleSidebar} />}
         {view === 'STUDENT_PERIODIZATION' && studentForView && <StudentPeriodizationView student={studentForView} onBack={isCoach ? handleBackNavigation : () => setView('DASHBOARD')} onToggleMenu={toggleSidebar} />}
