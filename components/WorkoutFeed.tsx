@@ -176,6 +176,16 @@ export function WorkoutFeed({ history, onBack, onToggleMenu, isProfessor = false
                       <span className="text-xs font-black uppercase italic">Missão Cumprida</span>
                     </div>
                     <p className="text-lg font-black italic uppercase text-white leading-none">{post.name}</p>
+                    {post.exercises && (
+                        <div className="mt-4 space-y-1">
+                           {post.exercises.map((ex, i) => (
+                              <div key={i} className="flex justify-between text-[10px] text-zinc-400 font-bold">
+                                 <span>{ex.name}</span>
+                                 <span>{ex.load} {ex.loadUnit || 'Kg'}</span>
+                              </div>
+                           ))}
+                        </div>
+                    )}
                     <p className="text-[9px] text-zinc-500 mt-2 font-bold uppercase italic">Treino finalizado com excelência técnica.</p>
                   </div>
                 ) : null}

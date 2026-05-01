@@ -669,7 +669,8 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         date: now.toLocaleDateString('pt-BR'),
         timestamp: Date.now(),
         photoUrl: selfieUrl || undefined,
-        type: 'STRENGTH'
+        type: 'STRENGTH',
+        exercises: activeWorkout.exercises
       };
 
       if (onFinishWorkout) {

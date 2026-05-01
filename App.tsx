@@ -1985,6 +1985,14 @@ export default function App() {
       lastSessionDate: new Date().toLocaleDateString('pt-BR')
     };
 
+    // Manually update local state immediately for faster UI feedback
+    setSelectedStudent({
+        ...studentForView,
+        workoutHistory: updatedHistory,
+        trainingProgress: updatedProgress,
+        analytics: updatedAnalytics
+    });
+
     await handleSaveData(studentForView.id, { 
       workoutHistory: updatedHistory,
       trainingProgress: updatedProgress,
