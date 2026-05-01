@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'gemini-2.5-flash-image';
+const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 
 let genAI: GoogleGenAI | null = null;
 
