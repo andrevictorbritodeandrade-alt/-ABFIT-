@@ -467,7 +467,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
   const [prescreveAIExercise, setPrescreveAIExercise] = useState<string | null>(null);
 
   const tProgress = user.trainingProgress || { completedCount: 0, targetCount: 20 };
-
+  const totalCompleted = Math.max(tProgress.completedCount, (user.workoutHistory || []).length);
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
   const timerRef = useRef<any>(null);
@@ -510,11 +510,15 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
     if (title.includes('treino a')) {
       const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
       totalGlobal = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
-      completed = user.faseAjusteA !== undefined ? user.faseAjusteA : completed;
+      completed = totalGlobal;
     } else if (title.includes('treino b')) {
       const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
       totalGlobal = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
-      completed = user.faseAjusteB !== undefined ? user.faseAjusteB : completed;
+      completed = totalGlobal;
+    } else if (title.includes('treino c')) {
+      const historyC = history.filter(h => h.name.toLowerCase().includes('treino c'));
+      totalGlobal = user.totalGlobalC !== undefined ? user.totalGlobalC : historyC.length;
+      completed = totalGlobal;
     } else {
       completed = history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length;
     }
@@ -713,6 +717,9 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         } else if (title.includes('treino b')) {
           updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
           updates.totalGlobalB = (user.totalGlobalB || 0) + 1;
+        } else if (title.includes('treino c')) {
+          updates.faseAjusteC = (user.faseAjusteC || 0) + 1;
+          updates.totalGlobalC = (user.totalGlobalC || 0) + 1;
         }
 
         await onSave(user.id, updates);
@@ -834,7 +841,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
               </button>
               <div className="bg-card border border-border px-4 py-2 rounded-full flex items-center gap-2">
                  <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Treino {tProgress.completedCount} de {tProgress.targetCount}</span>
+                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Treino {totalCompleted} de {tProgress.targetCount}</span>
               </div>
            </div>
            <h2 className="text-xl font-black italic uppercase tracking-tighter">
@@ -847,22 +854,18 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
               const title = w.title.toLowerCase();
               const history = user.workoutHistory || [];
               
-              // Parcial: treinos concluídos com este ID exato (se a série foi ajustada/recriada, zera)
               let completed = history.filter(h => h.workoutId === w.id).length;
-              // Global: todos os treinos com o mesmo nome base
-              let totalGlobal: number | null = null;
               
-              // Se for Treino A ou B, usamos a fase de ajuste específica ou calculamos do histórico
               if (title.includes('treino a')) {
                 const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
-                totalGlobal = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
-                completed = user.faseAjusteA !== undefined ? user.faseAjusteA : completed;
+                completed = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
               } else if (title.includes('treino b')) {
                 const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
-                totalGlobal = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
-                completed = user.faseAjusteB !== undefined ? user.faseAjusteB : completed;
+                completed = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
+              } else if (title.includes('treino c')) {
+                const historyC = history.filter(h => h.name.toLowerCase().includes('treino c'));
+                completed = user.totalGlobalC !== undefined ? user.totalGlobalC : historyC.length;
               } else {
-                // Para outros treinos, mantém o comportamento padrão
                 completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
               }
 
@@ -878,9 +881,6 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
                       <h4 className="text-xl font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none truncate pr-2">{w.title}</h4>
                       <div className="flex flex-col items-end shrink-0">
                         <span className="text-sm font-black italic text-red-600 uppercase tracking-tighter leading-none">{completed}<span className="text-[10px] text-muted-foreground mx-0.5">/</span>{total}</span>
-                        {totalGlobal !== null && (
-                          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Total: {totalGlobal}</span>
-                        )}
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em] mb-3">{w.exercises.length} Exercícios Prescritos</p>
@@ -964,9 +964,6 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
                        <span className="text-lg font-black text-foreground italic tracking-tighter leading-none">{workoutStats.completed}</span>
                        <span className="text-[11px] font-black text-muted-foreground italic">/{workoutStats.total}</span>
                     </div>
-                    {workoutStats.totalGlobal > 0 && (
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1 block">Total: {workoutStats.totalGlobal}</span>
-                    )}
                  </div>
                  <div className="text-right hidden xs:block">
                     <span className="text-[13px] font-black text-muted-foreground uppercase tracking-widest italic mb-1 block">Renovação</span>
