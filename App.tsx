@@ -1094,10 +1094,13 @@ export default function App() {
               }
             ]
           },
-          faseAjusteA: 1,
+          faseAjusteA: 2,
           faseAjusteB: 0,
-          totalGlobalA: 6,
-          totalGlobalB: 5,
+          faseAjusteC: 0,
+          totalGlobalA: 2,
+          totalGlobalB: 0,
+          totalGlobalC: 0,
+          trainingProgress: { completedCount: 2, targetCount: 20 },
           workouts: [
             {
               id: 'treino-a-andre',
@@ -1301,43 +1304,12 @@ export default function App() {
               veredictoPeriodizacao: "Marcelly, sua massa muscular esquelética está excelente (39.8%). O foco agora é reduzir levemente o percentual de gordura (28.3%) mantendo essa base muscular. As medidas antropométricas mostram uma boa simetria de membros inferiores. Continue firme no plano de hipertrofia com foco metabólico."
             }
           ], 
-          workoutHistory: [
-            {
-              id: 'hist-marcelly-03',
-              workoutId: 'w-marcelly-02',
-              name: 'Treino B',
-              athleteName: 'Marcelly Bispo',
-              duration: '50 min',
-              date: '10/03/2026',
-              timestamp: 1741622400000,
-              type: 'STRENGTH'
-            },
-            {
-              id: 'hist-marcelly-02',
-              workoutId: 'w-marcelly-01',
-              name: 'Treino A',
-              athleteName: 'Marcelly Bispo',
-              duration: '52 min',
-              date: '11/03/2026',
-              timestamp: 1741708800000,
-              type: 'STRENGTH'
-            },
-            {
-              id: 'hist-marcelly-01',
-              workoutId: 'w-marcelly-01',
-              name: 'Treino A',
-              athleteName: 'Marcelly Bispo',
-              duration: '60 min',
-              date: '09/03/2026',
-              timestamp: 1741536000000,
-              type: 'STRENGTH'
-            }
-          ], 
+          workoutHistory: [],
           analytics: {
-            sessionsCompleted: 3,
-            streakDays: 1,
+            sessionsCompleted: 0,
+            streakDays: 0,
             exercises: {},
-            lastSessionDate: '11/03/2026'
+            lastSessionDate: ''
           },
           sexo: 'Feminino',
           periodization: {
@@ -1411,10 +1383,13 @@ export default function App() {
               }
             ]
           },
-          faseAjusteA: 1,
+          faseAjusteA: 2,
           faseAjusteB: 0,
-          totalGlobalA: 6,
-          totalGlobalB: 5,
+          faseAjusteC: 0,
+          totalGlobalA: 2,
+          totalGlobalB: 0,
+          totalGlobalC: 0,
+          trainingProgress: { completedCount: 2, targetCount: 20 },
           workouts: [
             {
               id: 'treino-a-marcelly',
@@ -1807,6 +1782,21 @@ export default function App() {
             if (!existing.analytics) {
                 merged[existingIndex].analytics = def.analytics;
             }
+
+            // Se o aluno não tiver trainingProgress, adiciona o padrão
+            if (!existing.trainingProgress && def.trainingProgress) {
+                merged[existingIndex].trainingProgress = def.trainingProgress;
+            } else if (!existing.trainingProgress) {
+                merged[existingIndex].trainingProgress = { completedCount: 0, targetCount: 24 };
+            }
+
+            // Sync scalar fields for Treino A/B/C counters
+            if (existing.faseAjusteA === undefined && def.faseAjusteA !== undefined) merged[existingIndex].faseAjusteA = def.faseAjusteA;
+            if (existing.faseAjusteB === undefined && def.faseAjusteB !== undefined) merged[existingIndex].faseAjusteB = def.faseAjusteB;
+            if (existing.faseAjusteC === undefined && def.faseAjusteC !== undefined) merged[existingIndex].faseAjusteC = def.faseAjusteC;
+            if (existing.totalGlobalA === undefined && def.totalGlobalA !== undefined) merged[existingIndex].totalGlobalA = def.totalGlobalA;
+            if (existing.totalGlobalB === undefined && def.totalGlobalB !== undefined) merged[existingIndex].totalGlobalB = def.totalGlobalB;
+            if (existing.totalGlobalC === undefined && def.totalGlobalC !== undefined) merged[existingIndex].totalGlobalC = def.totalGlobalC;
         }
     });
 
@@ -1985,19 +1975,31 @@ export default function App() {
       lastSessionDate: new Date().toLocaleDateString('pt-BR')
     };
 
-    // Manually update local state immediately for faster UI feedback
-    setSelectedStudent({
-        ...studentForView,
-        workoutHistory: updatedHistory,
-        trainingProgress: updatedProgress,
-        analytics: updatedAnalytics
-    });
-
-    await handleSaveData(studentForView.id, { 
+    const title = post.name.toLowerCase();
+    const updates: any = { 
       workoutHistory: updatedHistory,
       trainingProgress: updatedProgress,
       analytics: updatedAnalytics
+    };
+
+    if (title.includes('treino a')) {
+      updates.faseAjusteA = (studentForView.faseAjusteA || 0) + 1;
+      updates.totalGlobalA = (studentForView.totalGlobalA || 0) + 1;
+    } else if (title.includes('treino b')) {
+      updates.faseAjusteB = (studentForView.faseAjusteB || 0) + 1;
+      updates.totalGlobalB = (studentForView.totalGlobalB || 0) + 1;
+    } else if (title.includes('treino c')) {
+      updates.faseAjusteC = (studentForView.faseAjusteC || 0) + 1;
+      updates.totalGlobalC = (studentForView.totalGlobalC || 0) + 1;
+    }
+
+    // Manually update local state immediately for faster UI feedback
+    setSelectedStudent({
+        ...studentForView,
+        ...updates
     });
+
+    await handleSaveData(studentForView.id, updates);
   };
 
   const handleAddPost = async (post: WorkoutHistoryEntry) => {

@@ -202,8 +202,10 @@ export interface Student {
   plannedSessions?: string;
   faseAjusteA?: number;
   faseAjusteB?: number;
+  faseAjusteC?: number;
   totalGlobalA?: number;
   totalGlobalB?: number;
+  totalGlobalC?: number;
   runAlertsEnabled?: boolean;
   _fixedHistoryApril2?: boolean;
 }

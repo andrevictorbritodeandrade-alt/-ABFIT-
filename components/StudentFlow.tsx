@@ -526,7 +526,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
     const total = activeWorkout.projectedSessions || 20;
     const startDateDisplay = user.protocolStartDate ? new Date(user.protocolStartDate).toLocaleDateString('pt-BR') : 'Aguardando 1º Treino';
     return { completed, total, totalGlobal, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
-  }, [activeWorkout, user.workoutHistory, user.protocolStartDate, user.faseAjusteA, user.faseAjusteB, user.totalGlobalA, user.totalGlobalB]);
+  }, [activeWorkout, user.workoutHistory, user.protocolStartDate, user.faseAjusteA, user.faseAjusteB, user.faseAjusteC, user.totalGlobalA, user.totalGlobalB, user.totalGlobalC]);
 
   const allExercisesCompleted = useMemo(() => {
     if (!activeWorkout) return false;
