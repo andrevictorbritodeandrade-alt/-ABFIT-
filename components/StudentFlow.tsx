@@ -699,7 +699,11 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         const updates: any = {
           workoutHistory: updatedHistory,
           protocolStartDate: updatedProtocolDate,
-          analytics: updatedAnalytics
+          analytics: updatedAnalytics,
+          trainingProgress: {
+            completedCount: (user.trainingProgress?.completedCount || 0) + 1,
+            targetCount: user.trainingProgress?.targetCount || 24
+          }
         };
 
         const title = activeWorkout.title.toLowerCase();
