@@ -97,7 +97,7 @@ async function startServer() {
     }
     try {
       const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      const ai = new GoogleGenAI({});
       const result = await ai.models.generateContent({
         model: model || 'gemini-1.5-flash',
         contents: prompt,
