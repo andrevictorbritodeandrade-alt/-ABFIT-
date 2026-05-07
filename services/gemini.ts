@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
+const MODEL_IMAGE = 'imagen-3.0-generate-002';
 
 let genAI: GoogleGenAI | null = null;
 
@@ -15,6 +15,26 @@ function getAI() {
 }
 
 export async function callAI(params: any) {
+  const { 
+    model: modelName, 
+    prompt, 
+    systemInstruction, 
+    responseMimeType, 
+    isImageGeneration,
+    isImageAnalysis,
+    imageBase64 
+  } = params;
+
+  if (isImageGeneration) {
+    const response = await fetch('/api/generateImage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, model: modelName || MODEL_IMAGE })
+    });
+    if (!response.ok) throw new Error("Erro ao gerar imagem no servidor");
+    return await response.json();
+  }
+
   const aiInstance = getAI();
   if (!aiInstance) {
     console.error("GEMINI_API_KEY is not set in the environment.");
@@ -22,16 +42,6 @@ export async function callAI(params: any) {
   }
 
   try {
-    const { 
-      model: modelName, 
-      prompt, 
-      systemInstruction, 
-      responseMimeType, 
-      isImageGeneration,
-      isImageAnalysis,
-      imageBase64 
-    } = params;
-
     const model = modelName || MODEL_TEXT;
 
     let contents: any;
@@ -55,22 +65,7 @@ export async function callAI(params: any) {
         responseMimeType 
       } : undefined,
     });
-
-    if (isImageGeneration || modelName === 'gemini-2.5-flash-image' || modelName === 'gemini-3.1-flash-image-preview') {
-      let imageUrl = null;
-      // Use the helper property from the response if available, or iterate
-      const parts = result.candidates?.[0]?.content?.parts;
-      if (parts) {
-        for (const part of parts) {
-          if (part.inlineData) {
-            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-            break;
-          }
-        }
-      }
-      return { imageUrl };
-    }
-
+    
     return { text: result.text };
   } catch (e: any) {
     console.error("AI Error:", e);

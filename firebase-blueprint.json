@@ -37,16 +37,34 @@
         "plannedSessions": { "type": "string" },
         "faseAjusteA": { "type": "number" },
         "faseAjusteB": { "type": "number" },
+        "faseAjusteC": { "type": "number" },
         "totalGlobalA": { "type": "number" },
-        "totalGlobalB": { "type": "number" }
+        "totalGlobalB": { "type": "number" },
+        "totalGlobalC": { "type": "number" }
       },
       "required": ["id", "nome", "email"]
+    },
+    "WorkoutCompletion": {
+      "title": "WorkoutCompletion",
+      "description": "Log of a completed workout session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "treinoId": { "type": "string" },
+        "data": { "type": "string", "format": "date-time" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "treinoId", "data", "timestamp"]
     }
   },
   "firestore": {
     "/artifacts/{appId}/public/data/students": {
       "schema": "Student",
       "description": "Collection of student profiles."
+    },
+    "/artifacts/{appId}/public/data/students/{userId}/treinosConcluidos/{completionId}": {
+      "schema": "WorkoutCompletion",
+      "description": "Subcollection of completed workout logs for each student."
     }
   }
 }

@@ -677,6 +677,15 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         exercises: activeWorkout.exercises
       };
 
+      const response = await fetch('/api/finalizarTreino', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id, treinoId: activeWorkout.id }),
+      });
+      const result = await response.json();
+
       if (onFinishWorkout) {
         await onFinishWorkout(entry);
       } else {
@@ -705,24 +714,28 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
           protocolStartDate: updatedProtocolDate,
           analytics: updatedAnalytics,
           trainingProgress: {
-            completedCount: (user.trainingProgress?.completedCount || 0) + 1,
-            targetCount: user.trainingProgress?.targetCount || 24
+            completedCount: result.totalGlobal,
+            targetCount: 60
           }
         };
 
         const title = activeWorkout.title.toLowerCase();
         if (title.includes('treino a')) {
           updates.faseAjusteA = (user.faseAjusteA || 0) + 1;
-          updates.totalGlobalA = (user.totalGlobalA || 0) + 1;
+          updates.totalGlobalA = result.total;
         } else if (title.includes('treino b')) {
           updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
-          updates.totalGlobalB = (user.totalGlobalB || 0) + 1;
+          updates.totalGlobalB = result.total;
         } else if (title.includes('treino c')) {
           updates.faseAjusteC = (user.faseAjusteC || 0) + 1;
-          updates.totalGlobalC = (user.totalGlobalC || 0) + 1;
+          updates.totalGlobalC = result.total;
         }
 
         await onSave(user.id, updates);
+        
+        if (result.mensagem) {
+            alert(result.mensagem);
+        }
       }
 
       localStorage.removeItem(`workout_start_${user.id}`);

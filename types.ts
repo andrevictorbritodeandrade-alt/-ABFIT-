@@ -84,6 +84,13 @@ export interface WorkoutHistoryEntry {
   exercises?: Exercise[]; // Adicionado campo de exercícios com cargas
 }
 
+export interface WorkoutCompletion {
+  id: string;
+  treinoId: string;
+  data: string;
+  timestamp: number;
+}
+
 export interface PeriodizationPlan {
   id: string;
   titulo: string;
