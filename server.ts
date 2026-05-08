@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import fs from "fs";
 import cors from "cors";
 import { fileURLToPath } from 'url';
 import admin from 'firebase-admin';
@@ -13,6 +14,10 @@ const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
+
+// Read config once
+const firebaseConfig = JSON.parse(fs.readFileSync('./firebase-applet-config.json', 'utf8'));
+const projectId = firebaseConfig.projectId;
 
 async function startServer() {
   const app = express();
@@ -34,42 +39,45 @@ async function startServer() {
 
     try {
       const db = admin.firestore();
-      
+      const userPath = `artifacts/${projectId}/public/data/students/${userId}`;
+      const userDocRef = db.doc(userPath);
+      const completesCollection = userDocRef.collection('treinosConcluidos');
+
       // 1. Busca o documento do treino para saber a meta
+      let meta = 20;
+      let nomeTreino = "Treino";
+
       const treinoDoc = await db.collection('treinos').doc(treinoId).get();
-      if (!treinoDoc.exists) {
-        return res.status(404).json({ error: 'Treino não encontrado.' });
+      if (treinoDoc.exists) {
+        meta = treinoDoc.data()?.meta || 20;
+        nomeTreino = treinoDoc.data()?.nome || "Treino";
+      } else {
+        // Se não achou na coleção global, tenta no documento do usuário
+        const userDoc = await userDocRef.get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          const workouts: any[] = userData?.workouts || [];
+          const workout = workouts.find((w: any) => w.id === treinoId);
+          if (workout) {
+            meta = workout.meta || 20;
+            nomeTreino = workout.title || workout.nome || "Treino";
+          }
+        }
       }
-      const meta = treinoDoc.data()?.meta || 20;
 
       // 2. Registra o treino concluído na subcoleção do usuário
-      await db
-        .collection('usuarios')
-        .doc(userId)
-        .collection('treinosConcluidos')
-        .add({
-          treinoId: treinoId,
-          data: admin.firestore.FieldValue.serverTimestamp(),
-          timestamp: Date.now()
-        });
+      await completesCollection.add({
+        treinoId: treinoId,
+        data: admin.firestore.FieldValue.serverTimestamp(),
+        timestamp: Date.now()
+      });
 
       // 3. Conta quantos treinos desse tipo o usuário já fez
-      const registros = await db
-        .collection('usuarios')
-        .doc(userId)
-        .collection('treinosConcluidos')
-        .where('treinoId', '==', treinoId)
-        .get();
-
+      const registros = await completesCollection.where('treinoId', '==', treinoId).get();
       const total = registros.size;
 
       // 3b. Conta TODOS os treinos que o usuário já fez
-      const registrosTotais = await db
-        .collection('usuarios')
-        .doc(userId)
-        .collection('treinosConcluidos')
-        .get();
-
+      const registrosTotais = await completesCollection.get();
       const totalGlobal = registrosTotais.size;
 
       // 4. Retorna os dados
@@ -80,7 +88,7 @@ async function startServer() {
         meta: meta,
         metaAtingida: total >= meta,
         mensagem: total >= meta
-          ? `Parabéns! Você completou as ${meta} repetições do ${treinoDoc.data()?.nome}. Considere trocar a planilha.`
+          ? `Parabéns! Você completou as ${meta} repetições do ${nomeTreino}. Considere trocar a planilha.`
           : null
       });
     } catch (error) {
@@ -97,7 +105,7 @@ async function startServer() {
     }
     try {
       const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({});
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
       const result = await ai.models.generateContent({
         model: model || 'gemini-1.5-flash',
         contents: prompt,

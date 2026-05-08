@@ -663,13 +663,18 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
   const finishSession = async () => {
     if (!activeWorkout) return;
     setIsFinishing(true);
+    
+    // Para o timer imediatamente para feedback visual
+    setSessionStartTime(null);
+    const finalElapsedTime = elapsedTime;
+
     try {
       const now = new Date();
       const entry: WorkoutHistoryEntry = {
         id: Date.now().toString(),
         workoutId: activeWorkout.id,
         name: activeWorkout.title,
-        duration: formatTime(elapsedTime),
+        duration: formatTime(finalElapsedTime),
         date: now.toLocaleDateString('pt-BR'),
         timestamp: Date.now(),
         photoUrl: selfieUrl || undefined,
@@ -677,14 +682,24 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         exercises: activeWorkout.exercises
       };
 
-      const response = await fetch('/api/finalizarTreino', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id, treinoId: activeWorkout.id }),
-      });
-      const result = await response.json();
+      let result: any = { total: (user.totalGlobalA || 0) + 1, totalGlobal: (user.trainingProgress?.completedCount || 0) + 1 };
+      
+      try {
+        const response = await fetch('/api/finalizarTreino', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.id, treinoId: activeWorkout.id }),
+        });
+        
+        if (response.ok) {
+          const apiResult = await response.json();
+          result = { ...result, ...apiResult };
+        }
+      } catch (apiErr) {
+        console.warn("API de finalização falhou, usando fallback local:", apiErr);
+      }
 
       if (onFinishWorkout) {
         await onFinishWorkout(entry);
@@ -714,7 +729,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
           protocolStartDate: updatedProtocolDate,
           analytics: updatedAnalytics,
           trainingProgress: {
-            completedCount: result.totalGlobal,
+            completedCount: result.totalGlobal || (user.trainingProgress?.completedCount || 0) + 1,
             targetCount: 60
           }
         };
@@ -722,13 +737,13 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         const title = activeWorkout.title.toLowerCase();
         if (title.includes('treino a')) {
           updates.faseAjusteA = (user.faseAjusteA || 0) + 1;
-          updates.totalGlobalA = result.total;
+          updates.totalGlobalA = result.total || (user.totalGlobalA || 0) + 1;
         } else if (title.includes('treino b')) {
           updates.faseAjusteB = (user.faseAjusteB || 0) + 1;
-          updates.totalGlobalB = result.total;
+          updates.totalGlobalB = result.total || (user.totalGlobalB || 0) + 1;
         } else if (title.includes('treino c')) {
           updates.faseAjusteC = (user.faseAjusteC || 0) + 1;
-          updates.totalGlobalC = result.total;
+          updates.totalGlobalC = result.total || (user.totalGlobalC || 0) + 1;
         }
 
         await onSave(user.id, updates);

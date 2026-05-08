@@ -1993,6 +1993,8 @@ export default function App() {
       updates.totalGlobalC = (studentForView.totalGlobalC || 0) + 1;
     }
 
+    await handleSaveData(studentForView.id, updates);
+
     // Manually update local state immediately for faster UI feedback
     setSelectedStudent({
         ...studentForView,
