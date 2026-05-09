@@ -556,8 +556,8 @@ export default function App() {
               title: 'TREINO A - Musculação',
               status: 'published',
               exercises: [
-                { id: 'l-a-1', name: 'LEG PRESS horizontal', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-2', name: 'LEG PRESS horizontal unilateral', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-1', name: 'LEG PRESS HORIZONTAL', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-2', name: 'LEG PRESS HORIZONTAL unilateral', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
                 { id: 'l-a-3', name: 'sentar e levantar do banco reto com HBC', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
                 { id: 'l-a-4', name: 'cadeira extensora', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
                 { id: 'l-a-5', name: 'crucifixo aberto com HBC no banco reto', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
@@ -1104,7 +1104,7 @@ export default function App() {
           workouts: [
             {
               id: 'treino-a-andre',
-              title: 'Treino A',
+              title: 'TREINO A (segundas e quintas)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
@@ -1120,7 +1120,7 @@ export default function App() {
             },
             {
               id: 'treino-b-andre',
-              title: 'Treino B',
+              title: 'TREINO B (terças e sextas)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
@@ -1136,13 +1136,13 @@ export default function App() {
             },
             {
               id: 'treino-c-andre',
-              title: 'Treino C',
+              title: 'TREINO C (quartas e sábados)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
                 { id: 'a-c-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-2', name: 'Leg presso articulado', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-2', name: 'LEG PRESS HORIZONTAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'a-c-3', name: 'Cadeira extensora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'a-c-4', name: 'Agachamento sumô com halter de barra curta entre os quadris', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'a-c-5', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
@@ -1393,7 +1393,7 @@ export default function App() {
           workouts: [
             {
               id: 'treino-a-marcelly',
-              title: 'Treino A',
+              title: 'TREINO A (segundas e quintas)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
@@ -1401,14 +1401,14 @@ export default function App() {
                 { id: 'm-a-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-2', name: 'Agachamento passada com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-3', name: 'Levantar e sentar no banco reto com HBC', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-4', name: 'Leg presso articulado', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-5', name: 'Leg presso articulado unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-4', name: 'LEG PRESS HORIZONTAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-5', name: 'LEG PRESS HORIZONTAL unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
               id: 'treino-b-marcelly',
-              title: 'Treino B',
+              title: 'TREINO B (terças e sextas)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
@@ -1423,7 +1423,7 @@ export default function App() {
             },
             {
               id: 'treino-c-marcelly',
-              title: 'Treino C',
+              title: 'TREINO C (quartas e sábados)',
               projectedSessions: 20,
               frequencyWeekly: 2,
               status: 'published',
