@@ -1936,6 +1936,14 @@ export default function App() {
     
     // Autônomo Logic: If saving periodization, reset progress and analytics
     const finalData = { ...data };
+    
+    // Remove undefined values to prevent Firestore errors
+    Object.keys(finalData).forEach(key => {
+      if (finalData[key] === undefined) {
+        delete finalData[key];
+      }
+    });
+
     if (data.periodization) {
       finalData.trainingProgress = { completedCount: 0, targetCount: 20 }; // Default target 20, coach can adjust
       finalData.analytics = { sessionsCompleted: 0, streakDays: 0, exercises: {}, lastSessionDate: undefined };
