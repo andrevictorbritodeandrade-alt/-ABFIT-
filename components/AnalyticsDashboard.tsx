@@ -1,10 +1,11 @@
 
-import React, { useMemo } from 'react';
-import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu, Layers } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2, Activity, BarChart3, Calendar, Menu, Layers, Filter } from 'lucide-react';
 import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
-import { Student } from '../types';
+import { Student, WorkoutHistoryEntry } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, Cell } from 'recharts';
 import { EXERCISE_DATABASE } from '../constants/exercises';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../services/firebase';
 
 interface AnalyticsProps {
   student: Student;
@@ -13,9 +14,89 @@ interface AnalyticsProps {
 }
 
 export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsProps) {
+  const [periodFilter, setPeriodFilter] = useState<'7d' | '30d' | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'Treino A' | 'Treino B' | 'Treino C'>('all');
+  const [logs, setLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const logsRef = collection(db, 'alunos', student.id, 'logsTreino');
+    const unsubscribe = onSnapshot(logsRef, (snapshot) => {
+      setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      try {
+        handleFirestoreError(error, OperationType.LIST, `alunos/${student.id}/logsTreino`);
+      } catch (e) {
+        console.warn("Silent logsTreino fetch error in Analytics:", e);
+      }
+    });
+    return () => unsubscribe();
+  }, [student.id]);
+
   // Garantia de dados iniciais para evitar crash
-  const history = useMemo(() => student.workoutHistory || [], [student.workoutHistory]);
-  const analytics = useMemo(() => student.analytics || { exercises: {}, sessionsCompleted: 0, streakDays: 0 }, [student.analytics]);
+  const rawHistory = useMemo(() => {
+    // Combine logs and workoutHistory
+    const combined: any[] = [...(student.workoutHistory || [])];
+    
+    logs.forEach(log => {
+        const timestamp = log.dataHora || log.timestamp || Date.now();
+        // Check if already in history by timestamp (within 1 min)
+        const exists = combined.some(h => Math.abs((h.timestamp || 0) - timestamp) < 60000);
+        if (!exists) {
+            combined.push({
+                id: log.id,
+                workoutId: log.treinoId,
+                name: log.nome || 'Treino',
+                timestamp,
+                date: new Date(timestamp).toLocaleDateString('pt-BR'),
+                duration: log.duracaoMinutos ? `${log.duracaoMinutos}:00` : '00:00',
+                type: 'STRENGTH',
+                exercises: log.exercises || []
+            });
+        }
+    });
+
+    return combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  }, [student.workoutHistory, logs]);
+
+  const history = useMemo(() => {
+    let filtered = [...rawHistory];
+
+    // Filter by type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(h => h.name.toUpperCase().includes(typeFilter.toUpperCase()));
+    }
+
+    // Filter by period
+    if (periodFilter !== 'all') {
+      const now = Date.now();
+      const days = periodFilter === '7d' ? 7 : 30;
+      const ms = days * 24 * 60 * 60 * 1000;
+      filtered = filtered.filter(h => (now - h.timestamp) <= ms);
+    }
+
+    return filtered;
+  }, [rawHistory, typeFilter, periodFilter]);
+
+  const analytics = useMemo(() => {
+    if (periodFilter === 'all' && typeFilter === 'all') return student.analytics || { exercises: {}, sessionsCompleted: 0, streakDays: 0 };
+    
+    // Re-calculate basic counts if filtered
+    const exercises: Record<string, any> = {};
+    history.forEach(h => {
+        if (h.exercises) {
+            h.exercises.forEach(ex => {
+                if (!exercises[ex.name]) exercises[ex.name] = { completed: 0, skipped: 0 };
+                exercises[ex.name].completed += 1;
+            });
+        }
+    });
+
+    return {
+        exercises,
+        sessionsCompleted: history.length,
+        streakDays: (student.analytics?.streakDays || 0) // streak is harder to recalculate exactly, keep original for now
+    };
+  }, [history, periodFilter, typeFilter, student.analytics]);
 
   // 1. Preparação dos dados de Exercícios (Gráfico de Barras)
   const exerciseData = useMemo(() => {
@@ -117,6 +198,31 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
     volumeAnalysis.reduce((acc, curr) => acc + curr.target, 0)
   , [volumeAnalysis]);
 
+  // 4. Evolução de Cargas (Novo)
+  const loadEvolutionData = useMemo(() => {
+    const exercisesWithLoads: Record<string, { date: string, load: number }[]> = {};
+    
+    // Varre o histórico (do mais antigo para o mais novo para o gráfico)
+    [...history].sort((a, b) => a.timestamp - b.timestamp).forEach(session => {
+        if (session.exercises) {
+            session.exercises.forEach(ex => {
+                if (ex.load) {
+                    const cleanLoad = parseFloat(ex.load.toString().replace(',', '.'));
+                    if (!isNaN(cleanLoad)) {
+                        if (!exercisesWithLoads[ex.name]) exercisesWithLoads[ex.name] = [];
+                        exercisesWithLoads[ex.name].push({
+                            date: session.date,
+                            load: cleanLoad
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+    return exercisesWithLoads;
+  }, [history]);
+
   // Componente de Estado Vazio
   const EmptyState = ({ message }: { message: string }) => (
     <div className="flex flex-col items-center justify-center py-10 opacity-20">
@@ -127,7 +233,7 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
 
   return (
     <div className="p-6 pb-48 animate-in fade-in duration-500 text-white overflow-y-auto h-screen custom-scrollbar text-left bg-transparent relative">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+      <header className="flex items-center gap-4 mb-6 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center gap-3">
            {onToggleMenu && (
              <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
@@ -146,12 +252,68 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
         </h2>
       </header>
 
+      {/* FILTROS INTEGRADOS */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Filter size={12} className="text-red-500" />
+            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest italic">Período de Análise</span>
+          </div>
+          <div className="flex gap-2">
+            {[
+              { id: '7d', label: '7 DIAS' },
+              { id: '30d', label: '30 DIAS' },
+              { id: 'all', label: 'TUDO' }
+            ].map(p => (
+              <button
+                key={p.id}
+                onClick={() => setPeriodFilter(p.id as any)}
+                className={`flex-1 py-3 text-[10px] font-black rounded-2xl border transition-all ${
+                  periodFilter === p.id 
+                    ? 'bg-red-600 border-red-600 shadow-lg shadow-red-900/30' 
+                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-500'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Activity size={12} className="text-red-500" />
+            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest italic">Filtro de Treino</span>
+          </div>
+          <div className="flex gap-2 p-1 bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-x-auto no-scrollbar">
+            {[
+              { id: 'all', label: 'TODOS' },
+              { id: 'Treino A', label: 'T. A' },
+              { id: 'Treino B', label: 'T. B' },
+              { id: 'Treino C', label: 'T. C' }
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTypeFilter(t.id as any)}
+                className={`px-6 py-2.5 text-[10px] font-black rounded-xl transition-all whitespace-nowrap ${
+                  typeFilter === t.id 
+                    ? 'bg-white text-black' 
+                    : 'text-zinc-500 hover:text-white'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* CARDS DE RESUMO RÁPIDO */}
       <div className="grid grid-cols-3 gap-3 mb-8">
          <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
             <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Ciclo Atual</h3>
             <p className="text-2xl font-black text-red-600 italic tracking-tighter">
-              {student.trainingProgress?.completedCount || 0}<span className="text-zinc-600 text-xs mx-1">/</span>{student.trainingProgress?.targetCount || 20}
+              {student.trainingProgress?.completedCount || 0}<span className="text-zinc-600 text-xs mx-1">/</span>{student.trainingProgress?.targetCount || 60}
             </p>
          </Card>
          <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
@@ -272,6 +434,41 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
                ) : <EmptyState message="Sem dados de frequência" />}
             </div>
          </div>
+
+          {/* EVOLUÇÃO DE CARGAS */}
+          <div className="space-y-4">
+             <h3 className="text-[11px] font-black uppercase text-zinc-400 tracking-widest pl-2 flex items-center gap-3 italic">
+               <TrendingUp size={14} className="text-emerald-500"/> Evolução de Carga (Kg)
+             </h3>
+             <div className="space-y-4">
+                {Object.keys(loadEvolutionData).length > 0 ? (
+                  Object.entries(loadEvolutionData).slice(0, 4).map(([exName, loads], idx) => (
+                    <div key={idx} className="bg-zinc-900/30 rounded-[2rem] border border-white/5 p-6 shadow-inner">
+                       <p className="text-[10px] font-black uppercase text-white italic mb-4">{exName}</p>
+                       <div className="h-32 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                             <LineChart data={loads}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                                <XAxis dataKey="date" hide />
+                                <Tooltip 
+                                   contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px', fontSize: '10px' }}
+                                   itemStyle={{ color: '#10b981' }}
+                                />
+                                <Line 
+                                   type="monotone" 
+                                   dataKey="load" 
+                                   stroke="#10b981" 
+                                   strokeWidth={3} 
+                                   dot={{ r: 3, fill: '#10b981' }} 
+                                />
+                             </LineChart>
+                          </ResponsiveContainer>
+                       </div>
+                    </div>
+                  ))
+                ) : <EmptyState message="Aguardando registros com carga" />}
+             </div>
+          </div>
 
          {/* GRÁFICO DE EXERCÍCIOS */}
          <div className="space-y-4">

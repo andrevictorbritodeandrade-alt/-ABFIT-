@@ -31,7 +31,7 @@ async function startServer() {
 
   // Finalizar Treino Endpoint
   app.post("/api/finalizarTreino", async (req, res) => {
-    const { userId, treinoId } = req.body;
+    const { userId, treinoId, duracaoMinutos, calorias, cargas } = req.body;
     
     if (!userId || !treinoId) {
       return res.status(400).json({ error: 'userId e treinoId são obrigatórios.' });
@@ -39,56 +39,59 @@ async function startServer() {
 
     try {
       const db = admin.firestore();
-      const userPath = `artifacts/${projectId}/public/data/students/${userId}`;
-      const userDocRef = db.doc(userPath);
-      const completesCollection = userDocRef.collection('treinosConcluidos');
+      const alunoRef = db.collection('alunos').doc(userId);
+      const logsRef = alunoRef.collection('logsTreino');
+      const prescricoesRef = alunoRef.collection('prescricoes');
 
-      // 1. Busca o documento do treino para saber a meta
-      let meta = 20;
+      // 1. Registra o log do treino
+      const newLog = {
+        prescricaoId: treinoId,
+        dataHora: admin.firestore.FieldValue.serverTimestamp(),
+        duracaoMinutos: duracaoMinutos || 0,
+        calorias: calorias || 0,
+        cargas: cargas || [],
+        concluido: true,
+        timestamp: Date.now()
+      };
+      await logsRef.add(newLog);
+
+      // 2. Busca todas as prescrições para calcular a meta global
+      const prescricoesSnap = await prescricoesRef.get();
+      let targetGlobal = 0;
+      let targetPerWorkout = 20;
       let nomeTreino = "Treino";
 
-      const treinoDoc = await db.collection('treinos').doc(treinoId).get();
-      if (treinoDoc.exists) {
-        meta = treinoDoc.data()?.meta || 20;
-        nomeTreino = treinoDoc.data()?.nome || "Treino";
-      } else {
-        // Se não achou na coleção global, tenta no documento do usuário
-        const userDoc = await userDocRef.get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          const workouts: any[] = userData?.workouts || [];
-          const workout = workouts.find((w: any) => w.id === treinoId);
-          if (workout) {
-            meta = workout.meta || 20;
-            nomeTreino = workout.title || workout.nome || "Treino";
-          }
+      prescricoesSnap.forEach(doc => {
+        const data = doc.data();
+        targetGlobal += (data.totalSessoes || 0);
+        if (doc.id === treinoId) {
+          targetPerWorkout = data.totalSessoes || 20;
+          nomeTreino = data.nome || "Treino";
         }
-      }
-
-      // 2. Registra o treino concluído na subcoleção do usuário
-      await completesCollection.add({
-        treinoId: treinoId,
-        data: admin.firestore.FieldValue.serverTimestamp(),
-        timestamp: Date.now()
       });
 
-      // 3. Conta quantos treinos desse tipo o usuário já fez
-      const registros = await completesCollection.where('treinoId', '==', treinoId).get();
-      const total = registros.size;
+      // 3. Busca todos os logs para calcular o progresso
+      const logsSnap = await logsRef.where('concluido', '==', true).get();
+      let totalGlobal = logsSnap.size;
+      let totalPerWorkout = 0;
 
-      // 3b. Conta TODOS os treinos que o usuário já fez
-      const registrosTotais = await completesCollection.get();
-      const totalGlobal = registrosTotais.size;
+      logsSnap.forEach(doc => {
+        if (doc.data().prescricaoId === treinoId) {
+          totalPerWorkout++;
+        }
+      });
 
       // 4. Retorna os dados
       res.json({
         treinoId: treinoId,
-        total: total,
+        total: totalPerWorkout, // total for this workout
+        meta: targetPerWorkout,   // meta for this workout
         totalGlobal: totalGlobal,
-        meta: meta,
-        metaAtingida: total >= meta,
-        mensagem: total >= meta
-          ? `Parabéns! Você completou as ${meta} repetições do ${nomeTreino}. Considere trocar a planilha.`
+        metaGlobal: targetGlobal,
+        nomeTreino: nomeTreino,
+        metaAtingida: totalPerWorkout >= targetPerWorkout,
+        mensagem: totalPerWorkout >= targetPerWorkout
+          ? `Parabéns! Você completou as ${targetPerWorkout} sessões do ${nomeTreino}.`
           : null
       });
     } catch (error) {

@@ -16,7 +16,7 @@ import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import AICoach from './components/AICoach';
 import { CorreRJView } from './components/CorreRJ';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { auth, db, appId, handleFirestoreError, OperationType, collection, query, onSnapshot, doc, setDoc } from './services/firebase';
+import { auth, db, appId, handleFirestoreError, OperationType, collection, query, onSnapshot, doc, setDoc, addDoc } from './services/firebase';
 import { Student, Workout, AppNotification, WorkoutHistoryEntry } from './types';
 import { useTheme } from './components/ThemeContext';
 
@@ -228,6 +228,7 @@ export default function App() {
   }, [syncStatus]);
   const [loginError, setLoginError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [totalExecuted, setTotalExecuted] = useState(0);
   
   // SESSION RESTORE STATE
   const [restoredSession, setRestoredSession] = useState(false);
@@ -1094,13 +1095,13 @@ export default function App() {
               }
             ]
           },
-          faseAjusteA: 2,
-          faseAjusteB: 0,
-          faseAjusteC: 0,
-          totalGlobalA: 2,
-          totalGlobalB: 0,
-          totalGlobalC: 0,
-          trainingProgress: { completedCount: 2, targetCount: 20 },
+          faseAjusteA: 4,
+          faseAjusteB: 2,
+          faseAjusteC: 1,
+          totalGlobalA: 4,
+          totalGlobalB: 2,
+          totalGlobalC: 1,
+          trainingProgress: { completedCount: 7, targetCount: 60 },
           workouts: [
             {
               id: 'treino-a-andre',
@@ -1384,12 +1385,12 @@ export default function App() {
             ]
           },
           faseAjusteA: 2,
-          faseAjusteB: 0,
-          faseAjusteC: 0,
+          faseAjusteB: 2,
+          faseAjusteC: 1,
           totalGlobalA: 2,
-          totalGlobalB: 0,
-          totalGlobalC: 0,
-          trainingProgress: { completedCount: 2, targetCount: 20 },
+          totalGlobalB: 2,
+          totalGlobalC: 1,
+          trainingProgress: { completedCount: 5, targetCount: 60 },
           workouts: [
             {
               id: 'treino-a-marcelly',
@@ -1466,7 +1467,7 @@ export default function App() {
 
     if (view !== 'LOGIN' && isCoach) {
       console.log('Tentando buscar dados de alunos (Coach)...');
-      const path = `artifacts/${appId}/public/data/students`;
+      const path = `alunos`;
       const q = collection(db, path);
       
       // Timeout para carregamento de dados
@@ -1535,7 +1536,7 @@ export default function App() {
       }
 
       console.log(`Tentando buscar dados do aluno ${targetId}...`);
-      const path = `artifacts/${appId}/public/data/students/${targetId}`;
+      const path = `alunos/${targetId}`;
       const docRef = doc(db, path);
 
       // Timeout para carregamento de dados do aluno
@@ -1613,6 +1614,17 @@ export default function App() {
                   let currentHistory = rawData.workoutHistory || [];
                   const defaultHistory = defaultProfile.workoutHistory || [];
 
+                  // Force global counts for Andre
+                  if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com') {
+                    if (rawData.totalGlobalA === undefined) { rawData.totalGlobalA = 4; hasCloudChanges = true; }
+                    if (rawData.totalGlobalB === undefined) { rawData.totalGlobalB = 2; hasCloudChanges = true; }
+                    if (rawData.totalGlobalC === undefined) { rawData.totalGlobalC = 1; hasCloudChanges = true; }
+                    if (rawData.trainingProgress?.targetCount !== 60) {
+                        rawData.trainingProgress = { completedCount: 7, targetCount: 60 };
+                        hasCloudChanges = true;
+                    }
+                  }
+
                   // Override for André Brito to ensure EXACTLY 4 entries (as requested)
                   if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com' && !rawData._fixedHistoryApril2) {
                       currentHistory = defaultHistory;
@@ -1684,9 +1696,29 @@ export default function App() {
                             workoutHistory: rawData.workoutHistory,
                             periodization: rawData.periodization,
                             analytics: rawData.analytics,
+                            trainingProgress: rawData.trainingProgress,
+                            totalGlobalA: rawData.totalGlobalA,
+                            totalGlobalB: rawData.totalGlobalB,
+                            totalGlobalC: rawData.totalGlobalC,
+                            faseAjusteA: rawData.faseAjusteA,
+                            faseAjusteB: rawData.faseAjusteB,
+                            faseAjusteC: rawData.faseAjusteC,
                             physicalAssessments: rawData.physicalAssessments,
                             _fixedAssessmentsApril28: (rawData as any)._fixedAssessmentsApril28
                         }, { merge: true });
+
+                        // Also sync to prescricoes subcollection for server-side endpoints
+                        if (rawData.workouts && Array.isArray(rawData.workouts)) {
+                            for (const w of rawData.workouts) {
+                                const pRef = doc(db, `alunos/${docId}/prescricoes`, w.id);
+                                await setDoc(pRef, {
+                                    nome: w.title,
+                                    totalSessoes: w.projectedSessions || 20,
+                                    ativo: true,
+                                    lastUpdate: Date.now()
+                                }, { merge: true });
+                            }
+                        }
                       } catch (e: any) {
                         console.warn("Silent sync error:", e);
                       }
@@ -1811,6 +1843,16 @@ export default function App() {
     return selectedStudent;
   }, [selectedStudent, view, isCoach]);
 
+  useEffect(() => {
+    if (studentForView) {
+      const logsRef = collection(db, 'alunos', studentForView.id, 'logsTreino');
+      const unsubscribe = onSnapshot(logsRef, (snapshot) => {
+        setTotalExecuted(snapshot.size);
+      });
+      return () => unsubscribe();
+    }
+  }, [studentForView]);
+
   // --- 3. CONTROLE DE VOLTAR (HARDWARE BACK BUTTON) ---
   const handleBackNavigation = () => {
       // Se for professor
@@ -1932,7 +1974,7 @@ export default function App() {
   const handleSaveData = async (sid: string, data: any) => {
     // Dispara o indicador de sync
     setSyncStatus('syncing');
-    const path = `artifacts/${appId}/public/data/students/${sid}`;
+    const path = `alunos/${sid}`;
     
     // Autônomo Logic: If saving periodization, reset progress and analytics
     const finalData = { ...data };
@@ -1952,6 +1994,19 @@ export default function App() {
     try { 
       const docRef = doc(db, path);
       await setDoc(docRef, { ...finalData, lastUpdateTimestamp: Date.now() }, { merge: true });
+
+      // If workouts are updated, sync to prescricoes subcollection
+      if (finalData.workouts && Array.isArray(finalData.workouts)) {
+          for (const w of finalData.workouts) {
+              const pRef = doc(db, `alunos/${sid}/prescricoes`, w.id);
+              await setDoc(pRef, {
+                  nome: w.title,
+                  totalSessoes: w.projectedSessions || 20,
+                  ativo: true,
+                  lastUpdate: Date.now()
+              }, { merge: true });
+          }
+      }
       // O syncStatus voltará a 'synced' automaticamente via onSnapshot quando a escrita confirmar
     } catch (e: any) { 
       setSyncStatus('offline');
@@ -1969,7 +2024,35 @@ export default function App() {
     const currentHistory = studentForView.workoutHistory || [];
     const updatedHistory = [post, ...currentHistory];
     
-    const currentProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 24 };
+    // Calculate stats for logsTreino
+    const duracaoMinutos = post.duration ? parseInt(post.duration.split(':')[0]) * 60 + parseInt(post.duration.split(':')[1]) : 0;
+    const calorias = Math.ceil(duracaoMinutos / 60) * 7;
+    const cargas = post.exercises.map(ex => ({
+      exercicio: ex.name,
+      carga: ex.load || '0',
+      unidade: ex.loadUnit || 'Kg'
+    }));
+
+    // Save to logsTreino subcollection
+    const logsRef = collection(db, 'alunos', studentForView.id, 'logsTreino');
+    const newLog = {
+      treinoId: post.workoutId,
+      prescricaoId: post.workoutId, // assume they are same for now
+      nome: post.name,
+      dataHora: post.timestamp,
+      duracaoMinutos,
+      calorias,
+      cargas,
+      concluido: true
+    };
+
+    try {
+      await addDoc(logsRef, newLog);
+    } catch (e) {
+      console.warn("Falha ao salvar logTreino:", e);
+    }
+    
+    const currentProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 60 };
     const updatedProgress = {
       ...currentProgress,
       completedCount: currentProgress.completedCount + 1
@@ -2068,7 +2151,7 @@ export default function App() {
     { id: 'STUDENT_ASSESSMENT', label: 'Avaliação Física', icon: Ruler, color: 'emerald' },
     { id: 'CORRE_RJ', label: 'Corre RJ 2026', icon: MapPin, color: 'yellow' },
     { id: 'FEED', label: 'Feed Performance', icon: Layout, color: 'red' },
-    { id: 'ANALYTICS', label: 'Análise de Dados', icon: BarChart3, color: 'blue' },
+    {id: 'ANALYTICS', label: 'Evolução e Dados', icon: BarChart3, color: 'blue' },
     { id: 'ABOUT_ABFIT', label: 'Sobre a ABFIT', icon: Info, color: 'zinc' }
   ];
 
@@ -2266,9 +2349,14 @@ export default function App() {
                 if (isPeriodization && studentForView?.periodization?.startDate) {
                   progress = Math.min(100, Math.round(((Date.now() - new Date(studentForView.periodization.startDate).getTime()) / (12 * 7 * 24 * 60 * 60 * 1000)) * 100));
                 } else if (isWorkouts) {
-                  const tProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 24 };
-                  progress = Math.min(100, Math.round((tProgress.completedCount / tProgress.targetCount) * 100));
-                  progressText = `${tProgress.completedCount} de ${tProgress.targetCount} treinos`;
+                  const tProgress = studentForView.trainingProgress || { completedCount: 0, targetCount: 60 };
+                  // Sum total sessions from all workouts
+                  const activeWorkoutsTotal = (studentForView.workouts || []).reduce((acc: number, w: any) => acc + (w.projectedSessions || 20), 0);
+                  const targetCount = activeWorkoutsTotal || tProgress.targetCount || 60;
+                  const completedCount = Math.max(totalExecuted, tProgress.completedCount || 0);
+
+                  progress = Math.min(100, Math.round((completedCount / targetCount) * 100));
+                  progressText = `Global: ${completedCount} de ${targetCount}`;
                 }
 
                 return (

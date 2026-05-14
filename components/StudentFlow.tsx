@@ -466,8 +466,20 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
   const [dbExercises, setDbExercises] = useState<Record<string, any>>({});
   const [prescreveAIExercise, setPrescreveAIExercise] = useState<string | null>(null);
 
-  const tProgress = user.trainingProgress || { completedCount: 0, targetCount: 20 };
-  const totalCompleted = Math.max(tProgress.completedCount, (user.workoutHistory || []).length);
+  const [totalExecuted, setTotalExecuted] = useState(0);
+  const [logs, setLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const logsRef = collection(db, 'alunos', user.id, 'logsTreino');
+    const unsubscribe = onSnapshot(logsRef, (snapshot) => {
+      setTotalExecuted(snapshot.size);
+      setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, [user.id]);
+
+  const tProgress = user.trainingProgress || { completedCount: 0, targetCount: 60 };
+  const totalCompleted = Math.max(totalExecuted, tProgress.completedCount || 0, (user.workoutHistory || []).length);
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
 
   const timerRef = useRef<any>(null);
@@ -504,29 +516,30 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
     const title = activeWorkout.title.toLowerCase();
     const history = user.workoutHistory || [];
     
-    let completed = history.filter(h => h.workoutId === activeWorkout.id).length;
-    let totalGlobal = 0;
+    let logCount = logs.filter(l => l.treinoId === activeWorkout.id || l.prescricaoId === activeWorkout.id).length;
+    let historyCount = history.filter(h => h.workoutId === activeWorkout.id).length;
+    let completed = Math.max(logCount, historyCount);
 
     if (title.includes('treino a')) {
       const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
-      totalGlobal = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
-      completed = totalGlobal;
+      const logsA = logs.filter(l => l.nome?.toLowerCase().includes('treino a'));
+      completed = Math.max(user.totalGlobalA || 0, historyA.length, logsA.length);
     } else if (title.includes('treino b')) {
       const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
-      totalGlobal = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
-      completed = totalGlobal;
+      const logsB = logs.filter(l => l.nome?.toLowerCase().includes('treino b'));
+      completed = Math.max(user.totalGlobalB || 0, historyB.length, logsB.length);
     } else if (title.includes('treino c')) {
       const historyC = history.filter(h => h.name.toLowerCase().includes('treino c'));
-      totalGlobal = user.totalGlobalC !== undefined ? user.totalGlobalC : historyC.length;
-      completed = totalGlobal;
+      const logsC = logs.filter(l => l.nome?.toLowerCase().includes('treino c'));
+      completed = Math.max(user.totalGlobalC || 0, historyC.length, logsC.length);
     } else {
-      completed = history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length;
+      completed = Math.max(logCount, history.filter(h => h.workoutId === activeWorkout.id || h.name === activeWorkout.title).length);
     }
 
     const total = activeWorkout.projectedSessions || 20;
     const startDateDisplay = user.protocolStartDate ? new Date(user.protocolStartDate).toLocaleDateString('pt-BR') : 'Aguardando 1º Treino';
-    return { completed, total, totalGlobal, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
-  }, [activeWorkout, user.workoutHistory, user.protocolStartDate, user.faseAjusteA, user.faseAjusteB, user.faseAjusteC, user.totalGlobalA, user.totalGlobalB, user.totalGlobalC]);
+    return { completed, total, totalGlobal: totalCompleted, startDate: startDateDisplay, rawStartDate: user.protocolStartDate };
+  }, [activeWorkout, user.workoutHistory, user.protocolStartDate, user.totalGlobalA, user.totalGlobalB, user.totalGlobalC, logs, totalCompleted]);
 
   const allExercisesCompleted = useMemo(() => {
     if (!activeWorkout) return false;
@@ -667,6 +680,13 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
     // Para o timer imediatamente para feedback visual
     setSessionStartTime(null);
     const finalElapsedTime = elapsedTime;
+    const duracaoMinutos = Math.ceil(finalElapsedTime / 60);
+    const calorias = duracaoMinutos * 7;
+    const cargas = activeWorkout.exercises.map(ex => ({
+      exercicio: ex.name,
+      carga: ex.load || '0',
+      unidade: ex.loadUnit || 'Kg'
+    }));
 
     try {
       const now = new Date();
@@ -682,7 +702,11 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
         exercises: activeWorkout.exercises
       };
 
-      let result: any = { total: (user.totalGlobalA || 0) + 1, totalGlobal: (user.trainingProgress?.completedCount || 0) + 1 };
+      let result: any = { 
+        total: (user.totalGlobalA || 0) + 1, 
+        totalGlobal: (user.trainingProgress?.completedCount || 0) + 1,
+        metaGlobal: 60 
+      };
       
       try {
         const response = await fetch('/api/finalizarTreino', {
@@ -690,7 +714,13 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userId: user.id, treinoId: activeWorkout.id }),
+          body: JSON.stringify({ 
+            userId: user.id, 
+            treinoId: activeWorkout.id,
+            duracaoMinutos,
+            calorias,
+            cargas
+          }),
         });
         
         if (response.ok) {
@@ -719,7 +749,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
 
         const updatedAnalytics = {
           ...currentAnalytics,
-          sessionsCompleted: (currentAnalytics.sessionsCompleted || 0) + 1,
+          sessionsCompleted: result.totalGlobal || (currentAnalytics.sessionsCompleted || 0) + 1,
           lastSessionDate: now.toLocaleDateString('pt-BR'),
           exercises: newExercises
         };
@@ -730,7 +760,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
           analytics: updatedAnalytics,
           trainingProgress: {
             completedCount: result.totalGlobal || (user.trainingProgress?.completedCount || 0) + 1,
-            targetCount: 60
+            targetCount: result.metaGlobal || 60
           }
         };
 
@@ -869,7 +899,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
               </button>
               <div className="bg-card border border-border px-4 py-2 rounded-full flex items-center gap-2">
                  <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Treino {totalCompleted} de {tProgress.targetCount}</span>
+                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest italic">Global: {totalCompleted} de {tProgress.targetCount || 60}</span>
               </div>
            </div>
            <h2 className="text-xl font-black italic uppercase tracking-tighter">
@@ -882,17 +912,22 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
               const title = w.title.toLowerCase();
               const history = user.workoutHistory || [];
               
-              let completed = history.filter(h => h.workoutId === w.id).length;
+              let logCount = logs.filter(l => l.treinoId === w.id || l.prescricaoId === w.id).length;
+              let historyCount = history.filter(h => h.workoutId === w.id).length;
+              let completed = Math.max(logCount, historyCount);
               
               if (title.includes('treino a')) {
                 const historyA = history.filter(h => h.name.toLowerCase().includes('treino a'));
-                completed = user.totalGlobalA !== undefined ? user.totalGlobalA : historyA.length;
+                const logsA = logs.filter(l => l.nome?.toLowerCase().includes('treino a'));
+                completed = Math.max(user.totalGlobalA || 0, historyA.length, logsA.length);
               } else if (title.includes('treino b')) {
                 const historyB = history.filter(h => h.name.toLowerCase().includes('treino b'));
-                completed = user.totalGlobalB !== undefined ? user.totalGlobalB : historyB.length;
+                const logsB = logs.filter(l => l.nome?.toLowerCase().includes('treino b'));
+                completed = Math.max(user.totalGlobalB || 0, historyB.length, logsB.length);
               } else if (title.includes('treino c')) {
                 const historyC = history.filter(h => h.name.toLowerCase().includes('treino c'));
-                completed = user.totalGlobalC !== undefined ? user.totalGlobalC : historyC.length;
+                const logsC = logs.filter(l => l.nome?.toLowerCase().includes('treino c'));
+                completed = Math.max(user.totalGlobalC || 0, historyC.length, logsC.length);
               } else {
                 completed = history.filter(h => h.workoutId === w.id || h.name === w.title).length;
               }
@@ -908,7 +943,8 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
                     <div className="flex justify-between items-center mb-1 pr-10">
                       <h4 className="text-xl font-black italic uppercase text-foreground tracking-tighter group-hover:text-red-600 transition-colors leading-none truncate pr-2">{w.title}</h4>
                       <div className="flex flex-col items-end shrink-0">
-                        <span className="text-sm font-black italic text-red-600 uppercase tracking-tighter leading-none">{completed}<span className="text-[10px] text-muted-foreground mx-0.5">/</span>{total}</span>
+                        <span className="text-xs font-black italic text-red-600 uppercase tracking-tighter leading-none">{completed} Executados</span>
+                        <span className="text-[9px] font-black italic text-muted-foreground uppercase tracking-tighter leading-none mt-1">{Math.max(0, total - completed)} Faltam</span>
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em] mb-3">{w.exercises.length} Exercícios Prescritos</p>

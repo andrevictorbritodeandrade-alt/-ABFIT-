@@ -31,12 +31,30 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
+    match /alunos/{alunoId} {
+      allow read: if isAuthenticated(); // Allow all authenticated users to read for the coach/dashboard logic
+      allow write: if isAuthenticated(); // Allow for profile updates and data management
+      
+      match /logsTreino/{logId} {
+        allow read, write: if isAuthenticated();
+      }
+      
+      match /prescricoes/{prescId} {
+        allow read, write: if isAuthenticated();
+      }
+      
+      match /biometria/{bioId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
     match /artifacts/{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
     match /exercise_database/{docId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     match /users/{userId} {
