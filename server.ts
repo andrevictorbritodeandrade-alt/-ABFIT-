@@ -41,12 +41,15 @@ async function startServer() {
       return res.status(500).json({ error: "Gemini API Key não configurada no servidor." });
     }
 
-    const { model: modelName, prompt, systemInstruction, responseMimeType, isImageGeneration, isImageAnalysis, imageBase64 } = req.body;
+    const { model: modelName, prompt, systemInstruction, responseMimeType, isImageGeneration, isImageAnalysis, imageBase64, config } = req.body;
 
     try {
       let resolvedModel = modelName || "gemini-3.5-flash";
       if (resolvedModel === "gemini-1.5-flash" || resolvedModel === "gemini-1.5-pro") {
         resolvedModel = "gemini-3.5-flash";
+      }
+      if (resolvedModel === "gemini-2.5-flash-image") {
+        // Keep it as is or resolve to latest if needed
       }
 
       let contents: any;
@@ -72,6 +75,7 @@ async function startServer() {
         config: {
           systemInstruction: systemInstruction || undefined,
           responseMimeType: responseMimeType || undefined,
+          ...config
         }
       });
 

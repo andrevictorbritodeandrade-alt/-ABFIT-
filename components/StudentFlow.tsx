@@ -11,7 +11,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, LabelList 
 } from 'recharts';
 import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
-import { PrescreveAI } from './PrescreveAI';
+import GeraAi from './GeraAi';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
 import { db, handleFirestoreError, OperationType, doc, getDoc, collection, query, onSnapshot, setDoc } from '../services/firebase';
 
@@ -845,7 +845,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
   }
 
   if (prescreveAIExercise) {
-    return <PrescreveAI onBack={() => setPrescreveAIExercise(null)} initialExerciseName={prescreveAIExercise} />;
+    return <GeraAi onBack={() => setPrescreveAIExercise(null)} initialExerciseName={prescreveAIExercise} />;
   }
 
   if (showCompletionModal) {
@@ -1944,8 +1944,24 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                       <stop offset="5%" stopColor={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} stopOpacity={0.3}/>
                       <stop offset="95%" stopColor={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} stopOpacity={0}/>
                     </linearGradient>
+                    <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                      {chartData.map((entry, index) => {
+                        if (index === 0) return null;
+                        const prev = chartData[index - 1][chartMetric];
+                        const curr = entry[chartMetric];
+                        const color = curr < prev ? '#10B981' : curr > prev ? '#DC2626' : '#FFFFFF';
+                        const startOffset = ((index - 1) / (chartData.length - 1)) * 100;
+                        const endOffset = (index / (chartData.length - 1)) * 100;
+                        return (
+                          <React.Fragment key={index}>
+                            <stop offset={`${startOffset}%`} stopColor={color} />
+                            <stop offset={`${endOffset}%`} stopColor={color} />
+                          </React.Fragment>
+                        );
+                      })}
+                    </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" opacity={0.3} />
+                  <CartesianGrid vertical={false} horizontal={false} stroke="none" />
                   <XAxis 
                     dataKey="date" 
                     axisLine={false} 
@@ -1966,12 +1982,19 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                   <Area 
                     type="monotone" 
                     dataKey={chartMetric} 
-                    stroke={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} 
+                    stroke="url(#strokeGradient)" 
                     strokeWidth={4} 
                     fillOpacity={1} 
                     fill="url(#colorMetric)"
                     animationDuration={1500}
-                    dot={{ r: 4, fill: chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981', strokeWidth: 2, stroke: '#18181b' }}
+                    dot={(props: any) => {
+                      const { cx, cy, index, payload } = props;
+                      if (index === 0) return <circle cx={cx} cy={cy} r={5} fill="#FFFFFF" stroke="#18181b" strokeWidth={2} />;
+                      const prev = chartData[index - 1][chartMetric];
+                      const curr = payload[chartMetric];
+                      const color = curr < prev ? '#10B981' : curr > prev ? '#DC2626' : '#FFFFFF';
+                      return <circle cx={cx} cy={cy} r={5} fill={color} stroke="#18181b" strokeWidth={2} />;
+                    }}
                   >
                     <LabelList 
                       dataKey={chartMetric} 
@@ -1984,7 +2007,7 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
                           <text 
                             x={x} 
                             y={y - 12} 
-                            fill={chartMetric === 'peso' ? '#FFFFFF' : chartMetric === 'gordura' ? '#DC2626' : '#10B981'} 
+                            fill="#FFFFFF" 
                             fontSize={11} 
                             fontWeight="900" 
                             textAnchor="middle"

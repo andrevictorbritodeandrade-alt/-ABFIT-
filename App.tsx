@@ -176,7 +176,7 @@ function LoginScreen({ onLogin, error, students }: { onLogin: (val: string) => v
   );
 }
 
-import { PrescreveAI } from './components/PrescreveAI';
+import GeraAi from './components/GeraAi';
 
 export default function App() {
   const [view, setView] = useState('LOGIN');
@@ -1244,12 +1244,12 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a-c-1', name: 'AGACHAMENTO LIVRE COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-2', name: 'LEG PRESS HORIZONTAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-3', name: 'CADEIRA EXTENSORA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-4', name: 'AGACHAMENTO SUMÔ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-5', name: 'STIFF EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-6', name: 'CADEIRA ABDUTORA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-1', name: 'Elevação de quadril no banco (Hip Thrust)', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-2', name: 'Leg press horizontal (amplitude reduzida)', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-3', name: 'Mesa flexora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-4', name: 'Cadeira abdutora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-5', name: 'Stiff unilateral com halter', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-6', name: 'Panturrilha em pé no smith', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'a-c-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
@@ -2075,6 +2075,37 @@ export default function App() {
         });
       }
     });
+
+    // Assessment check
+    const assessments = studentForView.physicalAssessments || [];
+    if (assessments.length === 0) {
+        notifications.push({
+            id: 'assessment-first',
+            title: 'Avaliação Física',
+            message: 'Você ainda não possui uma avaliação física registrada. Agende agora!',
+            date: new Date().toLocaleDateString('pt-BR'),
+            read: false,
+            type: 'SYSTEM'
+        });
+    } else {
+        const lastAssessment = assessments[assessments.length - 1];
+        const lastDate = new Date(lastAssessment.data);
+        if (!isNaN(lastDate.getTime())) {
+            const diffTime = Date.now() - lastDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 45) { // Needs renewal
+                notifications.push({
+                    id: 'assessment-renewal',
+                    title: 'Avaliação Física',
+                    message: `Sua última avaliação foi há ${diffDays} dias. Agende uma nova.`,
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    read: false,
+                    type: 'SYSTEM'
+                });
+            }
+        }
+    }
+
     return notifications;
   }, [studentForView]);
 
@@ -2569,7 +2600,7 @@ export default function App() {
         {view === 'RUNTRACK_MANAGER' && selectedStudent && <RunTrackManager student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
         {view === 'ANALYTICS_COACH' && selectedStudent && <AnalyticsDashboard student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} onToggleMenu={undefined} />}
         {view === 'WORKOUT_HISTORY' && selectedStudent && <StudentWorkoutHistoryView student={selectedStudent} onBack={() => setView('STUDENT_MGMT')} />}
-        {view === 'PRESCREVE_AI' && <PrescreveAI onBack={() => setView(isCoach ? 'PROFESSOR_DASH' : 'DASHBOARD')} />}
+        {view === 'PRESCREVE_AI' && <GeraAi onBack={() => setView(isCoach ? 'PROFESSOR_DASH' : 'DASHBOARD')} />}
       </main>
     </BackgroundWrapper>
   </ErrorBoundary>

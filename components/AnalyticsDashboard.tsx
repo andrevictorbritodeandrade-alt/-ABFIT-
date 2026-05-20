@@ -198,29 +198,57 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
     volumeAnalysis.reduce((acc, curr) => acc + curr.target, 0)
   , [volumeAnalysis]);
 
-  // 4. Evolução de Cargas (Novo)
-  const loadEvolutionData = useMemo(() => {
-    const exercisesWithLoads: Record<string, { date: string, load: number }[]> = {};
-    
-    // Varre o histórico (do mais antigo para o mais novo para o gráfico)
-    [...history].sort((a, b) => a.timestamp - b.timestamp).forEach(session => {
-        if (session.exercises) {
-            session.exercises.forEach((ex: any) => {
-                if (ex.load) {
-                    const cleanLoad = parseFloat(ex.load.toString().replace(',', '.'));
-                    if (!isNaN(cleanLoad)) {
-                        if (!exercisesWithLoads[ex.name]) exercisesWithLoads[ex.name] = [];
-                        exercisesWithLoads[ex.name].push({
-                            date: session.date,
-                            load: cleanLoad
-                        });
-                    }
-                }
-            });
-        }
+  // 4. Evolução de Cargas e Novos Métricos
+  const analyticsCalculations = useMemo(() => {
+    const muscleGroupsData: Record<string, { totalSets: number; totalVolumeKg: number }> = {};
+    const loadEvolution: Record<string, { date: string; load: number }[]> = {};
+    let totalVolumeNewton = 0;
+
+    // Helper para extrair número de séries e carga
+    const parseSets = (setsStr: string | undefined): number => {
+      if (!setsStr) return 0;
+      const match = setsStr.match(/(\d+)/);
+      return match ? parseInt(match[0]) : 0;
+    };
+    const parseLoad = (loadStr: string | undefined): number => {
+      if (!loadStr) return 0;
+      const cleanLoad = parseFloat(loadStr.toString().replace(',', '.'));
+      return isNaN(cleanLoad) ? 0 : cleanLoad;
+    };
+
+    // Mapeamento reverso do banco de exercícios: Nome -> Grupo
+    const exerciseToGroup: Record<string, string> = {};
+    Object.entries(EXERCISE_DATABASE).forEach(([group, exercises]) => {
+      exercises.forEach(ex => {
+        exerciseToGroup[ex.toLowerCase()] = group;
+      });
     });
 
-    return exercisesWithLoads;
+    // Analisa todo o histórico
+    [...history].sort((a,b) => a.timestamp - b.timestamp).forEach(session => {
+        session.exercises?.forEach((ex: any) => {
+            const group = exerciseToGroup[ex.name.toLowerCase()] || 'Outros';
+            const sets = parseSets(ex.sets);
+            const load = parseLoad(ex.load);
+            const reps = parseSets(ex.reps);
+
+            // Volume por grupo
+            if (!muscleGroupsData[group]) muscleGroupsData[group] = { totalSets: 0, totalVolumeKg: 0 };
+            muscleGroupsData[group].totalSets += sets;
+            muscleGroupsData[group].totalVolumeKg += (sets * reps * load);
+
+            // Evolução de Carga
+            if (load > 0) {
+               if (!loadEvolution[ex.name]) loadEvolution[ex.name] = [];
+               loadEvolution[ex.name].push({ date: session.date, load });
+            }
+
+            // Volume Total (estimativa simples: rep * load * sets)
+            totalVolumeNewton += (sets * reps * load * 9.8); // Ajuste para Newtons força
+        });
+    });
+
+    return { muscleGroupsData, loadEvolution, totalVolumeNewton };
   }, [history]);
 
   // Componente de Estado Vazio
@@ -248,7 +276,7 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
            </button>
         </div>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="Performance Analytics" />
+          <HeaderTitle text="Análise de Dados" />
         </h2>
       </header>
 
@@ -309,7 +337,13 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
       </div>
 
       {/* CARDS DE RESUMO RÁPIDO */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-2 gap-3 mb-8">
+         <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center col-span-2">
+            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-1 italic">Volume Total Estimado (Força)</h3>
+            <p className="text-xl font-black text-red-600 italic tracking-tighter">
+              {(analyticsCalculations.totalVolumeNewton / 1000).toFixed(1)} kN
+            </p>
+         </Card>
          <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
             <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Ciclo Atual</h3>
             <p className="text-2xl font-black text-red-600 italic tracking-tighter">
@@ -319,13 +353,6 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
          <Card className="p-4 bg-zinc-900/50 border-zinc-800 text-center">
             <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Histórico Total</h3>
             <p className="text-2xl font-black text-white italic tracking-tighter">{history.length}</p>
-         </Card>
-         <Card className="p-4 bg-zinc-900/50 border-red-900/20 text-center">
-            <h3 className="text-[8px] font-black uppercase text-zinc-500 tracking-widest mb-2 italic">Streak</h3>
-            <div className="flex items-center justify-center gap-1">
-               <p className="text-2xl font-black text-red-600 italic tracking-tighter">{analytics.streakDays || 0}</p>
-               <TrendingUp size={12} className="text-red-600 animate-pulse"/>
-            </div>
          </Card>
       </div>
 
@@ -441,8 +468,8 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
                <TrendingUp size={14} className="text-emerald-500"/> Evolução de Carga (Kg)
              </h3>
              <div className="space-y-4">
-                {Object.keys(loadEvolutionData).length > 0 ? (
-                  Object.entries(loadEvolutionData).slice(0, 4).map(([exName, loads], idx) => (
+                {Object.keys(analyticsCalculations.loadEvolution).length > 0 ? (
+                  Object.entries(analyticsCalculations.loadEvolution).slice(0, 4).map(([exName, loads], idx) => (
                     <div key={idx} className="bg-zinc-900/30 rounded-[2rem] border border-white/5 p-6 shadow-inner">
                        <p className="text-[10px] font-black uppercase text-white italic mb-4">{exName}</p>
                        <div className="h-32 w-full">

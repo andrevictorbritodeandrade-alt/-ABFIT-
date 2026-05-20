@@ -235,8 +235,8 @@ export function ProfessorDashboard({ students, onLogout, onSelect, onToggleMenu,
             <div className="p-2 bg-secondary w-fit rounded-xl mb-3">
               <Sparkles className="text-blue-500" size={18} />
             </div>
-            <h3 className="text-[13px] font-black uppercase italic text-foreground tracking-widest">PrescreveAI</h3>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Gerador de Biomecânica</p>
+            <h3 className="text-[13px] font-black uppercase italic text-foreground tracking-widest">GeraAi</h3>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Biomecânica por IA</p>
           </Card>
         </div>
 

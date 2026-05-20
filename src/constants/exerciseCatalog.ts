@@ -1,4 +1,13 @@
 
+export interface ExerciseDatabase {
+  [key: string]: string[];
+}
+
+export const GEMINI_MODEL = "gemini-2.0-flash"; 
+export const GEMINI_PRO_MODEL = "gemini-2.0-pro-exp-02-05";
+export const GEMINI_FLASH_LITE_MODEL = "gemini-2.0-flash-lite-preview-02-05";
+export const IMAGEN_MODEL = "gemini-2.0-flash"; // For image generation logic
+
 export const EXERCISE_CATALOG: Record<string, string[]> = {
   "PEITORAL": [
     "SUPINO ABERTO COM HALTER", 
@@ -64,6 +73,7 @@ export const EXERCISE_CATALOG: Record<string, string[]> = {
     "LEG PRESS 45 GRAUS", 
     "LEG PRESS 90 GRAUS", 
     "LEG PRESS HORIZONTAL",
+    "LEG PRESS HORIZONTAL (AMPLITUDE REDUZIDA)",
     "LEG PRESS HORIZONTAL UNILATERAL",
     "CADEIRA EXTENSORA", 
     "AGACHAMENTO NO BANCO COM HALTER",
@@ -79,6 +89,7 @@ export const EXERCISE_CATALOG: Record<string, string[]> = {
   "GLÚTEOS": [
     "AGACHAMENTO SUMÔ COM HALTER", 
     "ELEVAÇÃO DE QUADRIL NO SOLO",
+    "ELEVAÇÃO DE QUADRIL NO BANCO (HIP THRUST)",
     "ELEVAÇÃO DE QUADRIL NO SMITH", 
     "EXTENSÃO DE QUADRIL EM PÉ COM CANELEIRA",
     "ABDUÇÃO DE QUADRIL EM PÉ COM CANELEIRA",
@@ -93,12 +104,14 @@ export const EXERCISE_CATALOG: Record<string, string[]> = {
     "FLEXÃO DE JOELHO NÓRDICA", 
     "MESA FLEXORA", 
     "STIFF UNILATERAL", 
+    "STIFF UNILATERAL COM HALTER",
     "FLEXÃO DE JOELHO NA BOLA"
   ],
   "PANTURRILHA": [
     "FLEXÃO PLANTAR NO LEG PRESS", 
     "FLEXÃO PLANTAR EM PÉ", 
     "FLEXÃO PLANTAR NO SMITH", 
+    "PANTURRILHA EM PÉ NO SMITH",
     "FLEXÃO PLANTAR NO DEGRAU"
   ],
   "PARAVERTEBRAIS": [
