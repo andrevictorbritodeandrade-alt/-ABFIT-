@@ -284,9 +284,10 @@ export function ABFITDetailModal({ ex, dbExercise, onClose }: { ex: Exercise, db
   );
 }
 
-function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, onShowPrescreveAI, currentReps, onSkip }: { 
+function ExerciseCard({ ex, dbExercise, lastLoad, idx, progress, onToggleFinish, onMarkSet, onUpdateLoad, onUpdateUnit, onShowDetail, onShowPrescreveAI, currentReps, onSkip }: { 
   ex: Exercise, 
   dbExercise?: any,
+  lastLoad?: string,
   idx: number, 
   progress: { completedSets: number[], isFinished: boolean },
   onToggleFinish: (id: string) => void,
@@ -300,7 +301,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
   key?: React.Key
 }) {
   const [localLoad, setLocalLoad] = useState(ex.load || '');
-  const previousLoad = useRef(ex.load || '--').current;
+  const displayLoad = lastLoad || '--';
 
   useEffect(() => {
     setLocalLoad(ex.load || '');
@@ -377,7 +378,7 @@ function ExerciseCard({ ex, dbExercise, idx, progress, onToggleFinish, onMarkSet
 
         <div className="bg-background/20 border border-border/50 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-muted-foreground italic tracking-tighter">{previousLoad}</span>
+            <span className="text-xl font-black text-muted-foreground italic tracking-tighter">{displayLoad}</span>
             <span className="text-[8px] font-black text-muted-foreground uppercase italic">KG</span>
           </div>
           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Última Carga</p>
@@ -481,6 +482,20 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
   const tProgress = user.trainingProgress || { completedCount: 0, targetCount: 60 };
   const totalCompleted = Math.max(totalExecuted, tProgress.completedCount || 0, (user.workoutHistory || []).length);
   const currentReps = useMemo(() => getCurrentRepsForStudent(user), [user]);
+
+  const lastLoads = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (!user.workoutHistory) return map;
+    const history = [...user.workoutHistory].sort((a,b) => b.timestamp - a.timestamp);
+    for (const entry of history) {
+      if (entry.exercises) {
+        for (const ex of entry.exercises) {
+          if (!map[ex.name] && ex.load) map[ex.name] = ex.load;
+        }
+      }
+    }
+    return map;
+  }, [user.workoutHistory]);
 
   const timerRef = useRef<any>(null);
   const restTimerRef = useRef<any>(null);
@@ -1051,6 +1066,7 @@ export function WorkoutSessionView({ user, onBack, onSave, onFinishWorkout, isCo
               key={ex.id || idx} 
               ex={ex} 
               dbExercise={dbExercises[ex.name]}
+              lastLoad={lastLoads[ex.name]}
               idx={idx} 
               progress={progress} 
               currentReps={currentReps}
