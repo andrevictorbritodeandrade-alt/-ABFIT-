@@ -15,7 +15,16 @@ const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
-const genAI = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
+const genAI = GEMINI_API_KEY 
+  ? new GoogleGenAI({ 
+      apiKey: GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    }) 
+  : null;
 
 // Read config once
 const firebaseConfig = JSON.parse(fs.readFileSync('./firebase-applet-config.json', 'utf8'));
@@ -35,34 +44,40 @@ async function startServer() {
     const { model: modelName, prompt, systemInstruction, responseMimeType, isImageGeneration, isImageAnalysis, imageBase64 } = req.body;
 
     try {
-      const model = genAI.getGenerativeModel({ 
-        model: modelName || "gemini-1.5-flash",
-        systemInstruction: systemInstruction ? { role: 'system', parts: [{ text: systemInstruction }] } : undefined
-      });
+      let resolvedModel = modelName || "gemini-3.5-flash";
+      if (resolvedModel === "gemini-1.5-flash" || resolvedModel === "gemini-1.5-pro") {
+        resolvedModel = "gemini-3.5-flash";
+      }
 
       let contents: any;
       if (isImageAnalysis && imageBase64) {
         const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-        contents = {
-          parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-            { text: prompt }
-          ]
+        const imagePart = {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Data
+          }
         };
+        const textPart = {
+          text: prompt
+        };
+        contents = { parts: [imagePart, textPart] };
       } else {
         contents = { parts: [{ text: prompt }] };
       }
 
-      const result = await model.generateContent({
+      const result = await genAI.models.generateContent({
+        model: resolvedModel,
         contents: [contents],
-        generationConfig: responseMimeType === 'application/json' ? { responseMimeType: 'application/json' } : undefined
+        config: {
+          systemInstruction: systemInstruction || undefined,
+          responseMimeType: responseMimeType || undefined,
+        }
       });
-
-      const response = result.response;
 
       if (isImageGeneration) {
         let imageUrl = null;
-        const parts = response.candidates?.[0]?.content?.parts || [];
+        const parts = result.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
           if (part.inlineData) {
             imageUrl = `data:image/png;base64,${part.inlineData.data}`;
@@ -72,7 +87,7 @@ async function startServer() {
         return res.json({ imageUrl });
       }
 
-      res.json({ text: response.text() });
+      res.json({ text: result.text || "" });
     } catch (error: any) {
       console.error("Server-side AI Error:", error);
       res.status(500).json({ error: error.message || "Erro desconhecido na IA." });

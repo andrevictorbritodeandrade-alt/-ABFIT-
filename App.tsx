@@ -642,6 +642,76 @@ export default function App() {
           medications: 'BUP, Venvanse, Vitaminas bariátricas, Topiramato, Sertralina',
           physicalAssessments: [
             {
+              id: 'bio-andre-20260520',
+              data: '2026-05-20T12:00:00Z',
+              type: 'BIOIMPEDANCIA',
+              notes: 'Avaliação Física Completa (Bio + Relógio + Dobras + Fitas)',
+              peso: 98.7,
+              altura: 180,
+              imc: { value: 30.5, status: 'Alto', color: 'red' },
+              gordura: { value: 29.5, status: 'Obeso', color: 'red' },
+              bio_percentual_gordura: 29.5,
+              pesoGordura: { value: 29.1, status: 'Obeso', color: 'red' },
+              percentualMassaMuscularEsqueletica: { value: 37.2, status: 'Saudável', color: 'green' },
+              pesoMassaMuscularEsqueletica: { value: 36.7, status: 'Saudável', color: 'green' },
+              registroMassaMuscular: { value: 67.5, status: 'Excelente', color: 'green' },
+              pesoMassaMuscular: { value: 66.6, status: 'Excelente', color: 'green' },
+              aguaPercentual: { value: 51.2, status: 'Baixo', color: 'blue' },
+              pesoAgua: { value: 50.5, status: 'Baixo', color: 'blue' },
+              gorduraVisceral: { value: 18.5, status: 'Obeso', color: 'red' },
+              ossos: { value: 2.92, status: 'Saudável', color: 'green' },
+              metabolismo: { value: 2006.6, status: 'Alto', color: 'yellow' },
+              proteina: { value: 16.3, status: 'Saudável', color: 'green' },
+              obesidade: { value: 41.0, status: 'Moderado', color: 'orange' },
+              idadeMetabolica: 46.0,
+              lbm: 69.55,
+              idadeReal: 36,
+              galaxyWatch: {
+                peso: 98.7,
+                massaGorda: 34.4,
+                musculoEsqueletico: 33.9,
+                aguaCorporal: 47.1,
+                gorduraCorporalPercentual: 34.8,
+                tmb: 1759,
+                imc: 30.5
+              },
+              peitoral: 116,
+              torax: 116,
+              cintura: 97,
+              abdomen: 107,
+              quadril: 116,
+              coxaProximalDireita: 71,
+              coxaDistalDireita: 47,
+              coxaProximalEsquerda: 71,
+              coxaDistalEsquerda: 48,
+              panturrilhaDireita: 40,
+              panturrilhaEsquerda: 40,
+              bracoDireito: 34,
+              bracoEsquerdo: 34.5,
+              antebracoDireito: 27,
+              antebracoEsquerdo: 27.5,
+              dobraPeitoral: 13.67,
+              dobraAbdominal: 23,
+              dobraCoxa: 19,
+              analiseComposicao: {
+                agua: 'Baixo',
+                gordura: 'Obeso',
+                proteina: 'Saudável',
+                ossos: 'Saudável'
+              },
+              analiseTipoCorpo: {
+                tipo: 'Obesidade',
+                descricao: 'O seu tipo de corpo é obeso, com excesso de gordura corporal e peso. Mas nota-se evolução positiva com o ganho de massa magra e diminuição do peso total.'
+              },
+              dicasControlePeso: {
+                pesoIdeal: 70.3,
+                pesoDiff: -28.4,
+                massaMuscularDiff: 6.5,
+                gorduraDiff: -13.5
+              },
+              veredictoPeriodizacao: 'André, comparando com 27/04/2026, você teve uma excelente redução no peso total de 100.1kg para 98.7kg (-1.4kg)! A gordura visceral reduziu de 19.0 para 18.5, e sua massa muscular se manteve forte e estável. As fitas e dobras foram coletadas em triplicata com média impecável, garantindo excelente precisão métrica. Continue firme no planejamento de cargas tencionais!'
+            },
+            {
               id: 'bio-andre-20260427',
               data: '2026-04-27T12:56:07Z',
               type: 'BIOIMPEDANCIA',
@@ -821,38 +891,25 @@ export default function App() {
               idadeReal: 36,
             }
           ], 
-          workouts: [
-            {
-              id: 'treino-a-andre',
-              title: 'TREINO A - Musculação',
-              status: 'published',
-              exercises: [
-                { id: 'a-a-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-2', name: 'SUPINO ABERTO ALTERNADO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-3', name: 'CRUCIFIXO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-4', name: 'DESENVOLVIMENTO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-5', name: 'FLEXÃO DE OMBRO ALTERNADO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-6', name: 'ABDUÇÃO DE OMBROS EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
-              ]
-            },
-            {
-              id: 'treino-b-andre',
-              title: 'TREINO B - Musculação',
-              status: 'published',
-              exercises: [
-                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
-              ]
-            },
-          ],
- 
           workoutHistory: [
+            {
+              id: "hist-andre-treino-b-20260519",
+              workoutId: "treino-b-andre",
+              name: "TREINO B (terças e sextas)",
+              duration: "28:48",
+              date: "19/05/2026",
+              timestamp: new Date('2026-05-19T17:00:00').getTime(),
+              type: "STRENGTH",
+              exercises: [
+                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '30' },
+                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '15' },
+                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '4' },
+                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '20' },
+                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples', load: '' }
+              ]
+            },
             {
               id: "hist-andre-run-20260428",
               workoutId: "unplanned",
@@ -1051,8 +1108,8 @@ export default function App() {
             }
           ], 
           analytics: {
-            sessionsCompleted: 5,
-            streakDays: 1,
+            sessionsCompleted: 6,
+            streakDays: 2,
             exercises: {
               'Remada aberta na máquina': { completed: 1, skipped: 0 },
               'Puxada aberta com barra romana pulley alto': { completed: 1, skipped: 0 },
@@ -1062,9 +1119,16 @@ export default function App() {
               'Agachamento sumô com HBC': { completed: 1, skipped: 0 },
               'Subida no step': { completed: 1, skipped: 0 },
               'Extensão de quadril e joelho em pé no cross': { completed: 1, skipped: 0 },
-              'Mata-borrão isométrico no solo (super-man)': { completed: 1, skipped: 0 }
+              'Mata-borrão isométrico no solo (super-man)': { completed: 1, skipped: 0 },
+              'REMADA ABERTA EM PÉ NO CROSS': { completed: 1, skipped: 0 },
+              'REMADA NEUTRA NA MÁQUINA SENTADA': { completed: 1, skipped: 0 },
+              'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER': { completed: 1, skipped: 0 },
+              'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA': { completed: 1, skipped: 0 },
+              'PUXADA SUPINADA NO PULLEY ALTO': { completed: 1, skipped: 0 },
+              'EXTENSÃO DE OMBROS EM PÉ NO CROSS': { completed: 1, skipped: 0 },
+              'ABDOMINAL SUPRA NO SOLO': { completed: 1, skipped: 0 }
             } as Record<string, { completed: number; skipped: number }>,
-            lastSessionDate: '28/04/2026'
+            lastSessionDate: '19/05/2026'
           },
           sexo: 'Masculino', 
           periodization: {
@@ -1134,12 +1198,12 @@ export default function App() {
             ]
           },
           faseAjusteA: 4,
-          faseAjusteB: 2,
+          faseAjusteB: 3,
           faseAjusteC: 1,
           totalGlobalA: 4,
-          totalGlobalB: 2,
+          totalGlobalB: 3,
           totalGlobalC: 1,
-          trainingProgress: { completedCount: 7, targetCount: 60 },
+          trainingProgress: { completedCount: 8, targetCount: 60 },
           workouts: [
             {
               id: 'treino-a-andre',
@@ -1164,13 +1228,13 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '30' },
+                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '15' },
+                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '4' },
+                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '20' },
+                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples', load: '' }
               ]
             },
             {
@@ -1532,7 +1596,7 @@ export default function App() {
                 student.workouts = [
                     {
                       id: 'treino-a-andre',
-                      title: 'TREINO A - Musculação',
+                      title: 'TREINO A (segundas e quintas)',
                       status: 'published',
                       exercises: [
                         { id: 'a-a-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
@@ -1546,16 +1610,16 @@ export default function App() {
                     },
                     {
                       id: 'treino-b-andre',
-                      title: 'TREINO B - Musculação',
+                      title: 'TREINO B (terças e sextas)',
                       status: 'published',
                       exercises: [
-                        { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                        { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                        { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '30' },
+                        { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '15' },
+                        { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '4' },
+                        { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                        { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '25' },
+                        { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples', load: '20' },
+                        { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples', load: '' }
                       ]
                     },
                 ];
@@ -1686,19 +1750,20 @@ export default function App() {
 
                   // Force global counts for Andre
                   if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com') {
-                    if (rawData.totalGlobalA === undefined) { rawData.totalGlobalA = 4; hasCloudChanges = true; }
-                    if (rawData.totalGlobalB === undefined) { rawData.totalGlobalB = 2; hasCloudChanges = true; }
-                    if (rawData.totalGlobalC === undefined) { rawData.totalGlobalC = 1; hasCloudChanges = true; }
-                    if (rawData.trainingProgress?.targetCount !== 60) {
-                        rawData.trainingProgress = { completedCount: 7, targetCount: 60 };
+                    if (rawData.totalGlobalA === undefined || rawData.totalGlobalA < 4) { rawData.totalGlobalA = 4; hasCloudChanges = true; }
+                    if (rawData.totalGlobalB === undefined || rawData.totalGlobalB < 3) { rawData.totalGlobalB = 3; hasCloudChanges = true; }
+                    if (rawData.totalGlobalC === undefined || rawData.totalGlobalC < 1) { rawData.totalGlobalC = 1; hasCloudChanges = true; }
+                    if (rawData.faseAjusteB === undefined || rawData.faseAjusteB < 3) { rawData.faseAjusteB = 3; hasCloudChanges = true; }
+                    if (!rawData.trainingProgress || rawData.trainingProgress.completedCount < 8) {
+                        rawData.trainingProgress = { completedCount: 8, targetCount: 60 };
                         hasCloudChanges = true;
                     }
                   }
 
-                  // Override for André Brito to ensure EXACTLY 4 entries (as requested)
-                  if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com' && !rawData._fixedHistoryApril2) {
+                  // Override for André Brito to ensure PERFECTLY sync history and weights (as requested)
+                  if (defaultProfile.email === 'andrevictorbritodeandrade@gmail.com' && !(rawData as any)._fixedHistoryMay19) {
                       currentHistory = defaultHistory;
-                      (rawData as any)._fixedHistoryApril2 = true;
+                      (rawData as any)._fixedHistoryMay19 = true;
                       hasCloudChanges = true;
                   }
 
@@ -2226,9 +2291,34 @@ export default function App() {
 
   const AssessmentAlert = ({ student }: { student: Student }) => {
     // Definimos o marco da última avaliação completa (Bio + Dobras + Fitas + Relogio)
-    // Para o André, o usuário informou que foi 20 de Abril
-    const lastFullDate = student.id === 'fixed-andre' ? '2026-04-20' : null;
-    if (!lastFullDate) return null;
+    // Se o aluno tiver avaliações registradas, usamos a data da mais recente.
+    // Senão, se for o André, usamos '2026-04-20' como fallback, senão podemos mostrar um banner convidativo para registrar sua primeira avaliação física!
+    let lastFullDate = '';
+    
+    if (student.physicalAssessments && student.physicalAssessments.length > 0) {
+      // Obtém a data da avaliação física mais recente
+      const sorted = [...student.physicalAssessments].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+      lastFullDate = sorted[0].data.split('T')[0];
+    } else if (student.id === 'fixed-andre') {
+      lastFullDate = '2026-04-20';
+    } else {
+      // Banner convidativo para alunos novos sem avaliações
+      return (
+        <div 
+          onClick={() => setView('STUDENT_ASSESSMENT')}
+          className="w-full max-w-xl p-4 rounded-[2.5rem] border-2 border-dashed border-red-650 bg-red-950/10 shadow-xl relative overflow-hidden transition-all flex flex-row items-center gap-5 cursor-pointer hover:scale-[1.01] active:scale-[0.99] animate-pulse"
+        >
+          <div className="w-16 h-16 rounded-[1.8rem] bg-red-600 text-white shadow-lg shrink-0 flex items-center justify-center">
+             <Sparkles size={24} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[8px] font-black uppercase tracking-[0.2em] italic mb-1 text-red-500">REQUISITO ABFIT</p>
+            <h3 className="text-xs font-black italic uppercase tracking-widest text-white leading-tight">Cadastrar Primeira Avaliação Física</h3>
+            <p className="text-[9px] text-zinc-400 mt-1 uppercase tracking-wide">Toque aqui para enviar seu print de Bioimpedância ou digitar suas medidas corporais.</p>
+          </div>
+        </div>
+      );
+    }
 
     const nextDate = new Date(lastFullDate);
     nextDate.setDate(nextDate.getDate() + 30);
@@ -2241,7 +2331,9 @@ export default function App() {
     const isUrgent = diffDays <= 7;
 
     return (
-      <div className={`w-full max-w-xl h-[92px] p-4 rounded-[2.5rem] border-2 shadow-xl relative overflow-hidden transition-all flex flex-row items-center gap-5 backdrop-blur-md
+      <div 
+        onClick={() => setView('STUDENT_ASSESSMENT')}
+        className={`w-full max-w-xl h-[92px] p-4 rounded-[2.5rem] border-2 shadow-xl relative overflow-hidden transition-all flex flex-row items-center gap-5 backdrop-blur-md cursor-pointer hover:scale-[1.01] active:scale-[0.99]
         ${isOverdue 
           ? 'bg-red-950/40 border-red-600 shadow-red-600/20 animate-pulse' 
           : isUrgent
@@ -2256,7 +2348,7 @@ export default function App() {
         <div className={`w-16 h-16 rounded-[1.8rem] flex items-center justify-center shrink-0 shadow-lg relative z-10
           ${isOverdue ? 'bg-red-600 text-white shadow-red-600/40' : 'bg-zinc-800 text-zinc-400'}
         `}>
-           <Activity size={32} />
+          <Activity size={32} />
         </div>
         
         <div className="flex-1 text-left relative z-10">

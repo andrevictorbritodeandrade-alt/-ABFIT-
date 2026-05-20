@@ -21,6 +21,58 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
   const currentIndex = sortedAssessments.findIndex(a => a.id === assessment.id);
   const previousAssessment = currentIndex >= 0 && currentIndex + 1 < sortedAssessments.length ? sortedAssessments[currentIndex + 1] : null;
 
+  // Helper constants for calculations
+  const age = parseFloat(assessment.idadeReal?.toString() ?? '36');
+  const peso = parseFloat(assessment.peso?.toString() ?? '98.7');
+
+  // 1. Bioimpedância (Balança)
+  const scaleBF = parseFloat(assessment.gordura?.value?.toString() ?? assessment.gordura?.toString() ?? assessment.bio_percentual_gordura?.toString() ?? '0');
+  const scaleMMPercent = parseFloat(assessment.percentualMassaMuscularEsqueletica?.value?.toString() ?? assessment.percentualMassaMuscularEsqueletica?.toString() ?? assessment.registroMassaMuscular?.value?.toString() ?? assessment.registroMassaMuscular?.toString() ?? '0');
+  const scaleMMWeight = parseFloat(assessment.pesoMassaMuscularEsqueletica?.value?.toString() ?? assessment.pesoMassaMuscularEsqueletica?.toString() ?? assessment.pesoMassaMuscular?.value?.toString() ?? assessment.pesoMassaMuscular?.toString() ?? '0');
+  const scaleWater = parseFloat(assessment.aguaPercentual?.toString() ?? '0');
+
+  // 2. Galaxy Watch (Relógio)
+  const watchBF = parseFloat(assessment.galaxyWatch?.gorduraCorporalPercentual?.toString() ?? '0');
+  const watchMMWeight = parseFloat(assessment.galaxyWatch?.musculoEsqueletico?.toString() ?? '0');
+  const watchMMPercent = peso > 0 && watchMMWeight > 0 ? (watchMMWeight / peso) * 100 : 0;
+  const watchWater = peso > 0 && assessment.galaxyWatch?.aguaCorporal ? (parseFloat(assessment.galaxyWatch.aguaCorporal.toString()) / peso) * 100 : 0;
+
+  // 3. Dobras Cutâneas (Adipômetro)
+  const peitoral = parseFloat(assessment.dobraPeitoral?.toString() ?? '0');
+  const abdominal = parseFloat(assessment.dobraAbdominal?.toString() ?? '0');
+  const coxa = parseFloat(assessment.dobraCoxa?.toString() ?? '0');
+  const subescapular = parseFloat(assessment.dobraSubescapular?.toString() ?? '0');
+
+  let dobrasSoma = 0;
+  let dobrasDensity = 0;
+  let dobrasBF = 0;
+  let dobrasMMPercent = 0;
+  let dobrasMMWeight = 0;
+
+  if (peitoral > 0 || abdominal > 0 || coxa > 0 || subescapular > 0) {
+    const chestFold = peitoral > 0 ? peitoral : subescapular;
+    if (chestFold > 0 && abdominal > 0 && coxa > 0) {
+      dobrasSoma = chestFold + abdominal + coxa;
+      dobrasDensity = 1.10938 - (0.0008267 * dobrasSoma) + (0.0000016 * dobrasSoma * dobrasSoma) - (0.0002574 * age);
+      dobrasBF = (4.95 / dobrasDensity) - 4.5;
+      dobrasBF = dobrasBF * 100;
+      
+      const lbmPercent = 100 - dobrasBF;
+      dobrasMMPercent = lbmPercent * 0.52; // standard bone/viscera factor for skeletal muscle
+      dobrasMMWeight = (dobrasMMPercent / 100) * peso;
+    }
+  }
+
+  // Averages for Analise
+  const bfSources = [scaleBF, watchBF, dobrasBF].filter(v => v > 0);
+  const bfAverage = bfSources.length > 0 ? bfSources.reduce((a, b) => a + b, 0) / bfSources.length : 0;
+
+  const mmPercentSources = [scaleMMPercent, watchMMPercent, dobrasMMPercent].filter(v => v > 0);
+  const mmPercentAverage = mmPercentSources.length > 0 ? mmPercentSources.reduce((a, b) => a + b, 0) / mmPercentSources.length : 0;
+
+  const waterSources = [scaleWater, watchWater].filter(v => v > 0);
+  const waterAverage = waterSources.length > 0 ? waterSources.reduce((a, b) => a + b, 0) / waterSources.length : 0;
+
   const renderComparativeRow = (label: string, field: string, alternativeField: string, unit: string) => {
     let currValRaw = assessment[field]?.value ?? assessment[field] ?? assessment[alternativeField]?.value ?? assessment[alternativeField];
     let prevValRaw = previousAssessment ? (previousAssessment[field]?.value ?? previousAssessment[field] ?? previousAssessment[alternativeField]?.value ?? previousAssessment[alternativeField]) : null;
@@ -194,6 +246,105 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
                <span className="text-[10px] text-zinc-600 font-bold mt-2">{new Date(assessment.data).toLocaleDateString('pt-BR')}</span>
             </div>
 
+            {/* Comparativo de Métodos Card */}
+            <Card className="p-5 bg-zinc-900/80 border-zinc-800 rounded-3xl shadow-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+                <Activity size={16} className="text-red-500 animate-pulse" />
+                <h4 className="text-xs font-black uppercase tracking-wider italic">Composição Corporal por Método de Medição</h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 1. Bioimpedância (Balança) */}
+                <div className="p-4 bg-zinc-950/60 rounded-2xl border border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Bioimpedância (Balança)</span>
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-bold text-zinc-400">Gordura Corporal</span>
+                      <span className="text-base font-black italic text-white">{scaleBF > 0 ? `${scaleBF.toFixed(1)}%` : 'N/A'}</span>
+                    </div>
+                    {scaleMMPercent > 0 && (
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[10px] font-bold text-zinc-400">Massa Muscular</span>
+                        <span className="text-base font-black italic text-white">
+                          {scaleMMPercent.toFixed(1)}%
+                          {scaleMMWeight > 0 && <span className="text-[10px] text-zinc-500 ml-1">({scaleMMWeight.toFixed(1)}kg)</span>}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Galaxy Watch (Relógio) */}
+                <div className="p-4 bg-zinc-950/60 rounded-2xl border border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Galaxy Watch (Relógio)</span>
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-bold text-zinc-400">Gordura Corporal</span>
+                      <span className="text-base font-black italic text-white">{watchBF > 0 ? `${watchBF.toFixed(1)}%` : 'N/A'}</span>
+                    </div>
+                    {watchMMWeight > 0 && (
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[10px] font-bold text-zinc-400">Massa Muscular</span>
+                        <span className="text-base font-black italic text-white">
+                          {watchMMPercent > 0 ? `${watchMMPercent.toFixed(1)}%` : 'N/A'}
+                          <span className="text-[10px] text-zinc-500 ml-1">({watchMMWeight.toFixed(1)}kg)</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Dobras Cutâneas (Adipômetro) */}
+                <div className="p-4 bg-zinc-950/60 rounded-2xl border border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Dobras Cutâneas (Adipômetro)</span>
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-bold text-zinc-400">Gordura Corporal</span>
+                      <span className="text-base font-black italic text-white">{dobrasBF > 0 ? `${dobrasBF.toFixed(1)}%` : 'N/A'}</span>
+                    </div>
+                    {dobrasMMPercent > 0 && (
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[10px] font-bold text-zinc-400">Massa Muscular (SMM Est.)</span>
+                        <span className="text-base font-black italic text-white">
+                          {dobrasMMPercent.toFixed(1)}%
+                          <span className="text-[10px] text-zinc-500 ml-1">({dobrasMMWeight.toFixed(1)}kg)</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Média dos Métodos */}
+                <div className="p-4 bg-blue-900/20 rounded-2xl border border-blue-500/30 space-y-2 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Média Geral (Entre Metodologias)</span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-bold text-blue-300">Gordura Corporal</span>
+                      <span className="text-base font-black italic text-blue-100">{bfAverage > 0 ? `${bfAverage.toFixed(1)}%` : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[10px] font-bold text-blue-300">Massa Muscular</span>
+                      <span className="text-base font-black italic text-blue-100">
+                        {mmPercentAverage > 0 ? `${mmPercentAverage.toFixed(1)}%` : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
             <Card className="p-4 bg-zinc-900/60 border-zinc-800 rounded-3xl shadow-xl flex flex-col pt-2">
                {renderMetric('Peso', assessment.peso, 'Kg')}
                {renderMetric('IMC', assessment.imc, '')}
@@ -217,28 +368,40 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
             </Card>
 
             {/* Antropometria Section */}
-            {(assessment.torax || assessment.dobraAbdominal) && (
+            {(assessment.torax || assessment.dobraAbdominal || assessment.pescoco || assessment.ombro || assessment.dobraPeitoral) && (
               <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
                 <h3 className="text-xl font-black italic uppercase tracking-tighter mt-10">Perímetros e Dobras</h3>
                 <Card className="p-4 bg-zinc-900/60 border-zinc-800 rounded-3xl shadow-xl flex flex-col pt-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                     <div className="space-y-0 text-left">
                        <h4 className="text-[10px] font-black uppercase text-red-600 tracking-[0.3em] mt-4 mb-2 px-2">Perímetros (cm)</h4>
+                       {renderMetric('Pescoço', assessment.pescoco, 'cm')}
+                       {renderMetric('Ombro', assessment.ombro, 'cm')}
                        {renderMetric('Tórax', assessment.torax, 'cm')}
                        {renderMetric('Cintura', assessment.cintura, 'cm')}
                        {renderMetric('Abdômen', assessment.abdomen, 'cm')}
                        {renderMetric('Quadril', assessment.quadril, 'cm')}
-                       {renderMetric('Coxa Pr. D/E', `${assessment.coxaProximalDireita}/${assessment.coxaProximalEsquerda}`, 'cm')}
-                       {renderMetric('Coxa Di. D/E', `${assessment.coxaDistalDireita}/${assessment.coxaDistalEsquerda}`, 'cm')}
-                       {renderMetric('Panturrilha D/E', `${assessment.panturrilhaDireita}/${assessment.panturrilhaEsquerda}`, 'cm')}
-                       {renderMetric('Braço D/E', `${assessment.bracoDireito}/${assessment.bracoEsquerdo}`, 'cm')}
-                       {renderMetric('Antebraço D/E', `${assessment.antebracoDireito}/${assessment.antebracoEsquerdo}`, 'cm')}
+                       {renderMetric('coxa proximal esquerda', assessment.coxaProximalEsquerda, 'cm')}
+                        {renderMetric('coxa proximal direita', assessment.coxaProximalDireita, 'cm')}
+                       {renderMetric('coxa distal direita', assessment.coxaDistalDireita, 'cm')}
+                        {renderMetric('coxa distal esquerda', assessment.coxaDistalEsquerda, 'cm')}
+                       {renderMetric('panturrilha esquerda', assessment.panturrilhaEsquerda, 'cm')}
+                        {renderMetric('panturrilha direita', assessment.panturrilhaDireita, 'cm')}
+                       {renderMetric('braço direito', assessment.bracoDireito, 'cm')}
+                        {renderMetric('braço esquerdo', assessment.bracoEsquerdo, 'cm')}
+                       {renderMetric('antebraço direito', assessment.antebracoDireito, 'cm')}
+                        {renderMetric('antebraço esquerdo', assessment.antebracoEsquerdo, 'cm')}
                     </div>
                     <div className="space-y-0 text-left">
                        <h4 className="text-[10px] font-black uppercase text-red-600 tracking-[0.3em] mt-4 mb-2 px-2">Dobras Cutâneas (mm)</h4>
                        {renderMetric('Subescapular', assessment.dobraSubescapular, 'mm')}
+                       {renderMetric('Peitoral', assessment.dobraPeitoral, 'mm')}
                        {renderMetric('Abdominal', assessment.dobraAbdominal, 'mm')}
                        {renderMetric('Coxa', assessment.dobraCoxa, 'mm')}
+                        {dobrasSoma > 0 && renderMetric('Soma das dobras', dobrasSoma.toFixed(1), 'mm')}
+                        {dobrasDensity > 0 && renderMetric('Densidade Corporal', dobrasDensity.toFixed(4), 'g/ml')}
+                        {dobrasBF > 0 && renderMetric('Gordura Corporal (Dobras)', dobrasBF.toFixed(1), '%')}
+                        {dobrasMMPercent > 0 && renderMetric('Massa Muscular (Dobras Est.)', dobrasMMPercent.toFixed(1), '%')}
                     </div>
                   </div>
                 </Card>
@@ -249,25 +412,138 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
 
         {tab === 'ANALISE' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <section>
-              <h3 className="text-lg font-black italic uppercase tracking-tighter mb-4 text-white">Análise da Composição Corporal</h3>
-              <Card className="p-5 bg-zinc-900/60 border-zinc-800 rounded-3xl space-y-5">
-                {[
-                  { label: 'Água', value: assessment.analiseComposicao?.agua, color: 'blue' },
-                  { label: 'Gordura', value: assessment.analiseComposicao?.gordura, color: 'red' },
-                  { label: 'Proteína', value: assessment.analiseComposicao?.proteina, color: 'green' },
-                  { label: 'Ossos', value: assessment.analiseComposicao?.ossos, color: 'green' }
-                ].map((item, idx) => (
-                  <div key={idx} className="space-y-3">
-                    <div className="flex justify-between items-center text-[10px] font-black italic uppercase tracking-widest px-1">
-                      <span className="text-zinc-400">{item.label}</span>
-                      <span className={`text-${item.color}-500`}>{item.value}</span>
+                        <section>
+              <h3 className="text-lg font-black italic uppercase tracking-tighter mb-4 text-white">Análise de Composição Corporal (Médias entre Métodos)</h3>
+              
+              <Card className="p-5 bg-zinc-900/60 border-zinc-800 rounded-3xl space-y-6">
+                {/* Gordura Corporal Section */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[10px] font-black italic uppercase tracking-widest px-1">
+                    <span className="text-zinc-400">Gordura Corporal</span>
+                    <span className="text-red-500 font-black">Média: {bfAverage > 0 ? `${bfAverage.toFixed(2)}%` : assessment.analiseComposicao?.gordura || '---'}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center text-[11px]">
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Balança</span>
+                      <span className="font-black italic text-zinc-300 text-base">{scaleBF > 0 ? `${scaleBF.toFixed(1)}%` : '---'}</span>
                     </div>
-                    <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
-                      <div className={`h-full bg-${item.color}-500 rounded-full`} style={{ width: item.value === 'Baixo' ? '30%' : item.value === 'Obeso' ? '90%' : '60%' }} />
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Relógio</span>
+                      <span className="font-black italic text-zinc-300 text-base">{watchBF > 0 ? `${watchBF.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Dobras</span>
+                      <span className="font-black italic text-zinc-300 text-base">{dobrasBF > 0 ? `${dobrasBF.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-red-500/10 border border-red-500/20 p-2 rounded-xl">
+                      <span className="text-red-400 block uppercase font-black tracking-widest text-[8px] italic">Resultado</span>
+                      <span className="font-black italic text-red-400 text-lg">{bfAverage > 0 ? `${bfAverage.toFixed(2)}%` : '---'}</span>
                     </div>
                   </div>
-                ))}
+                  <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-red-500 rounded-full" style={{ width: bfAverage > 0 ? `${Math.min(bfAverage, 50) * 2}%` : '50%' }} />
+                  </div>
+                  <div className="flex justify-between text-[8px] font-bold text-zinc-500 uppercase tracking-widest px-1">
+                    <span>Saudável (10-20%)</span>
+                    <span>Acima (20-25%)</span>
+                    <span>Obeso (&gt;25%)</span>
+                  </div>
+                </div>
+
+                {/* Massa Muscular Section */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800/60">
+                  <div className="flex justify-between items-center text-[10px] font-black italic uppercase tracking-widest px-1">
+                    <span className="text-zinc-400">Massa Muscular</span>
+                    <span className="text-green-500 font-black">Média: {mmPercentAverage > 0 ? `${mmPercentAverage.toFixed(2)}%` : '---'}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center text-[11px]">
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Balança</span>
+                      <span className="font-black italic text-zinc-300 text-base">{scaleMMPercent > 0 ? `${scaleMMPercent.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Relógio</span>
+                      <span className="font-black italic text-zinc-300 text-base">{watchMMPercent > 0 ? `${watchMMPercent.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Dobras</span>
+                      <span className="font-black italic text-zinc-300 text-base">{dobrasMMPercent > 0 ? `${dobrasMMPercent.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-green-500/10 border border-green-500/20 p-2 rounded-xl">
+                      <span className="text-green-400 block uppercase font-black tracking-widest text-[8px] italic">Resultado</span>
+                      <span className="font-black italic text-green-400 text-lg">{mmPercentAverage > 0 ? `${mmPercentAverage.toFixed(2)}%` : '---'}</span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-green-500 rounded-full" style={{ width: mmPercentAverage > 0 ? `${Math.min(mmPercentAverage, 60) * 1.6}%` : '50%' }} />
+                  </div>
+                  <div className="flex justify-between text-[8px] font-bold text-zinc-500 uppercase tracking-widest px-1">
+                    <span>Baixo (&lt;33%)</span>
+                    <span>Saudável (33-39%)</span>
+                    <span>Excelente (&gt;39%)</span>
+                  </div>
+                </div>
+
+                {/* Água Corporal Section */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800/60">
+                  <div className="flex justify-between items-center text-[10px] font-black italic uppercase tracking-widest px-1">
+                    <span className="text-zinc-400">Água Corporal</span>
+                    <span className="text-blue-500 font-black">Média: {waterAverage > 0 ? `${waterAverage.toFixed(2)}%` : assessment.analiseComposicao?.agua || '---'}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Balança</span>
+                      <span className="font-black italic text-zinc-300">{scaleWater > 0 ? `${scaleWater.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-zinc-950 p-2 rounded-xl">
+                      <span className="text-zinc-500 block uppercase font-black tracking-widest text-[8px]">Relógio</span>
+                      <span className="font-black italic text-zinc-300">{watchWater > 0 ? `${watchWater.toFixed(1)}%` : '---'}</span>
+                    </div>
+                    <div className="bg-zinc-950 p-2 rounded-xl col-span-2 flex items-center justify-center">
+                      <span className="text-zinc-600 block uppercase font-black tracking-widest text-[8px] italic">Dobras: N/A</span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: waterAverage > 0 ? `${Math.min(waterAverage, 100)}%` : '50%' }} />
+                  </div>
+                  <div className="flex justify-between text-[8px] font-bold text-zinc-500 uppercase tracking-widest px-1">
+                    <span>Mínimo (45%)</span>
+                    <span>Saudável (50-65%)</span>
+                    <span>Atleta (&gt;65%)</span>
+                  </div>
+                </div>
+
+                {/* Static Indicators like Proteina and Ossos */}
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-zinc-800/60">
+                  <div className="p-3 bg-zinc-950 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <span className="text-[8px] uppercase font-black text-zinc-500 tracking-wider">Proteína</span>
+                      <span className="text-xs font-black italic text-white block mt-0.5">
+                        {(() => {
+                          const val = assessment.proteina;
+                          if (!val) return assessment.analiseComposicao?.proteina || 'Excl.';
+                          const rawVal = typeof val === 'object' ? val.value : val;
+                          return typeof rawVal === 'number' ? `${rawVal}%` : String(rawVal);
+                        })()}
+                      </span>
+                    </div>
+                    <span className="text-[7px] font-black uppercase bg-green-500/10 border border-green-500/20 text-green-500 px-1.5 py-0.5 rounded">Saudável</span>
+                  </div>
+                  <div className="p-3 bg-zinc-950 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <span className="text-[8px] uppercase font-black text-zinc-500 tracking-wider">Ossos</span>
+                      <span className="text-xs font-black italic text-white block mt-0.5">
+                        {(() => {
+                          const val = assessment.ossos;
+                          if (!val) return assessment.analiseComposicao?.ossos || 'Excl.';
+                          const rawVal = typeof val === 'object' ? val.value : val;
+                          return typeof rawVal === 'number' ? `${rawVal}kg` : String(rawVal);
+                        })()}
+                      </span>
+                    </div>
+                    <span className="text-[7px] font-black uppercase bg-green-500/10 border border-green-500/20 text-green-500 px-1.5 py-0.5 rounded">Saudável</span>
+                  </div>
+                </div>
               </Card>
             </section>
 
@@ -338,6 +614,16 @@ export function BioimpedanceView({ assessment, allAssessments = [], onBack }: { 
                     {renderComparativeRow('Água', 'aguaPercentual', 'aguaPercentual', '%')}
                     {renderComparativeRow('Gordura Visceral', 'gorduraVisceral', 'gorduraVisceral', '')}
                     {renderComparativeRow('Metabolismo', 'metabolismo', 'metabolismo', 'kcal')}
+                     {renderComparativeRow('coxa proximal esquerda', 'coxaProximalEsquerda', 'coxaProximalEsquerda', 'cm')}
+                     {renderComparativeRow('coxa proximal direita', 'coxaProximalDireita', 'coxaProximalDireita', 'cm')}
+                     {renderComparativeRow('coxa distal direita', 'coxaDistalDireita', 'coxaDistalDireita', 'cm')}
+                     {renderComparativeRow('coxa distal esquerda', 'coxaDistalEsquerda', 'coxaDistalEsquerda', 'cm')}
+                     {renderComparativeRow('panturrilha esquerda', 'panturrilhaEsquerda', 'panturrilhaEsquerda', 'cm')}
+                     {renderComparativeRow('panturrilha direita', 'panturrilhaDireita', 'panturrilhaDireita', 'cm')}
+                     {renderComparativeRow('braço direito', 'bracoDireito', 'bracoDireito', 'cm')}
+                     {renderComparativeRow('braço esquerdo', 'bracoEsquerdo', 'bracoEsquerdo', 'cm')}
+                     {renderComparativeRow('antebraço direito', 'antebracoDireito', 'antebracoDireito', 'cm')}
+                     {renderComparativeRow('antebraço esquerdo', 'antebracoEsquerdo', 'antebracoEsquerdo', 'cm')}
                  </Card>
 
                  {assessment.veredictoPeriodizacao && (

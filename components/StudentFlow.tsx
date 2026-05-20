@@ -13,7 +13,7 @@ import {
 import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 import { PrescreveAI } from './PrescreveAI';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
-import { db, handleFirestoreError, OperationType, doc, getDoc, collection, query, onSnapshot } from '../services/firebase';
+import { db, handleFirestoreError, OperationType, doc, getDoc, collection, query, onSnapshot, setDoc } from '../services/firebase';
 
 const formatReps = (reps: any): string | null => {
   if (!reps) return null;
@@ -1146,6 +1146,52 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
   const [chartMetric, setChartMetric] = useState<'peso' | 'gordura' | 'massa'>('peso');
 
+  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Form fields state
+  const [pesoVal, setPesoVal] = useState<string>('');
+  const [alturaVal, setAlturaVal] = useState<string>(student.height ? String(student.height) : '180');
+  const [gorduraVal, setGorduraVal] = useState<string>('');
+  const [massaVal, setMassaVal] = useState<string>('');
+
+  // Optional and detailed fields helper
+  const [gorduraVisceralVal, setGorduraVisceralVal] = useState<string>('');
+  const [aguaVal, setAguaVal] = useState<string>('');
+  const [metabolismoVal, setMetabolismoVal] = useState<string>('');
+  const [ossosVal, setOssosVal] = useState<string>('2.8');
+  const [dataVal, setDataVal] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Dobras cutâneas values
+  const [dobraPeitoralVal, setDobraPeitoralVal] = useState<string>('');
+  const [dobraAbdominalVal, setDobraAbdominalVal] = useState<string>('');
+  const [dobraCoxaVal, setDobraCoxaVal] = useState<string>('');
+  const [dobraSubescapularVal, setDobraSubescapularVal] = useState<string>('');
+
+  // Circunferências values
+  const [pescocoVal, setPescocoVal] = useState<string>('');
+  const [ombroVal, setOmbroVal] = useState<string>('');
+  const [toraxVal, setToraxVal] = useState<string>('');
+  const [cinturaVal, setCinturaVal] = useState<string>('');
+  const [abdomenVal, setAbdomenVal] = useState<string>('');
+  const [quadrilVal, setQuadrilVal] = useState<string>('');
+  const [bracoEsquerdoVal, setBracoEsquerdoVal] = useState<string>('');
+  const [bracoDireitoVal, setBracoDireitoVal] = useState<string>('');
+  const [antebracoEsquerdoVal, setAntebracoEsquerdoVal] = useState<string>('');
+  const [antebracoDireitoVal, setAntebracoDireitoVal] = useState<string>('');
+  const [coxaProximalEsquerdaVal, setCoxaProximalEsquerdaVal] = useState<string>('');
+  const [coxaProximalDireitaVal, setCoxaProximalDireitaVal] = useState<string>('');
+  const [coxaDistalEsquerdaVal, setCoxaDistalEsquerdaVal] = useState<string>('');
+  const [coxaDistalDireitaVal, setCoxaDistalDireitaVal] = useState<string>('');
+  const [panturrilhaEsquerdaVal, setPanturrilhaEsquerdaVal] = useState<string>('');
+  const [panturrilhaDireitaVal, setPanturrilhaDireitaVal] = useState<string>('');
+
+  // IA Extraction States
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
+  const [extractedSuccess, setExtractedSuccess] = useState<boolean>(false);
+
   const sortedAssessments = useMemo(() => {
     if (!student.physicalAssessments) return [];
     return [...student.physicalAssessments].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
@@ -1164,26 +1210,699 @@ export function StudentAssessmentView({ student, onBack, onToggleMenu }: { stude
       }));
   }, [student.physicalAssessments]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+        setExtractedSuccess(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImageUrl(reader.result as string);
+          setExtractedSuccess(false);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  const triggerIAExtraction = async () => {
+    if (!imageUrl) return;
+    setIsExtracting(true);
+    setExtractedSuccess(false);
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gemini-2.5-flash-image',
+          prompt: 'Você é um detector inteligente da ABFIT. Leia o print de tela de bioimpedância anexado. Geralmente é do app Samsung Health no Galaxy Watch 7 ou de outra balança inteligente. Extraia os valores com a máxima correspondência aos nomes e retorne RIGOROSAMENTE apenas um objeto JSON com estes campos (com valores numéricos puros, por exemplo):\n- "gordura": o percentual de gordura corporal (% como float)\n- "massa": o percentual ou peso de massa muscular esquelética (% como float)\n- "gorduraVisceral": o índice de gordura visceral (inteiro)\n- "agua": o percentual de água corporal (% como float)\n- "metabolismo": a taxa metabólica basal em kcal (inteiro)\n\nRetorne apenas o JSON limpo, sem markdown:',
+          isImageAnalysis: true,
+          imageBase64: imageUrl,
+          responseMimeType: 'application/json'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha no upload do print');
+      }
+
+      const resData = await response.json();
+      let rawText = resData.text || '';
+      
+      // Clean up markdown block headers if any
+      rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(rawText);
+      
+      if (parsed) {
+        if (parsed.gordura !== undefined && parsed.gordura !== null) setGorduraVal(String(parsed.gordura));
+        if (parsed.massa !== undefined && parsed.massa !== null) setMassaVal(String(parsed.massa));
+        if (parsed.gorduraVisceral !== undefined && parsed.gorduraVisceral !== null) setGorduraVisceralVal(String(parsed.gorduraVisceral));
+        if (parsed.agua !== undefined && parsed.agua !== null) setAguaVal(String(parsed.agua));
+        if (parsed.metabolismo !== undefined && parsed.metabolismo !== null) setMetabolismoVal(String(parsed.metabolismo));
+        
+        setExtractedSuccess(true);
+      } else {
+        throw new Error('Parse falhou');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Não conseguimos ler os dados automaticamente do imagem. Por favor, ajuste ou insira as métricas de bioimpedância manualmente nos campos abaixo.');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setPesoVal('');
+    setGorduraVal('');
+    setMassaVal('');
+    setGorduraVisceralVal('');
+    setAguaVal('');
+    setMetabolismoVal('');
+    setDobraPeitoralVal('');
+    setDobraAbdominalVal('');
+    setDobraCoxaVal('');
+    setDobraSubescapularVal('');
+    setPescocoVal('');
+    setOmbroVal('');
+    setToraxVal('');
+    setCinturaVal('');
+    setAbdomenVal('');
+    setQuadrilVal('');
+    setBracoEsquerdoVal('');
+    setBracoDireitoVal('');
+    setAntebracoEsquerdoVal('');
+    setAntebracoDireitoVal('');
+    setCoxaProximalEsquerdaVal('');
+    setCoxaProximalDireitaVal('');
+    setCoxaDistalEsquerdaVal('');
+    setCoxaDistalDireitaVal('');
+    setPanturrilhaEsquerdaVal('');
+    setPanturrilhaDireitaVal('');
+    setImageFile(null);
+    setImageUrl('');
+    setExtractedSuccess(false);
+  };
+
+  const handleSaveAssessment = async () => {
+    if (!pesoVal) {
+      alert("Por favor, preencha pelo menos o Peso Corporal.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const pesoNum = parseFloat(pesoVal);
+      const alturaNum = parseFloat(alturaVal) || (student.height ? parseFloat(String(student.height)) : 175);
+      const gorduraNum = gorduraVal ? parseFloat(gorduraVal) : 18;
+      const massaNum = massaVal ? parseFloat(massaVal) : 38;
+
+      const heightInMeters = alturaNum / 100;
+      const imcVal = parseFloat((pesoNum / (heightInMeters * heightInMeters)).toFixed(1));
+
+      function getIMCStatus(imc: number) {
+        if (imc < 18.5) return 'Baixo';
+        if (imc < 25) return 'Saudável';
+        if (imc < 30) return 'Sobrepeso';
+        return 'Alto';
+      }
+
+      function getIMCColor(imc: number) {
+        if (imc < 18.5) return 'blue';
+        if (imc < 25) return 'green';
+        if (imc < 30) return 'yellow';
+        return 'red';
+      }
+
+      function getFatStatus(fat: number) {
+        if (fat < 15) return 'Baixo';
+        if (fat < 25) return 'Saudável';
+        if (fat < 32) return 'Sobrepeso';
+        return 'Obeso';
+      }
+
+      function getFatColor(fat: number) {
+        if (fat < 15) return 'blue';
+        if (fat < 25) return 'green';
+        if (fat < 32) return 'yellow';
+        return 'red';
+      }
+
+      const newAssessment = {
+        id: `bio-user-${Date.now()}`,
+        data: `${dataVal}T12:00:00Z`,
+        type: 'BIOIMPEDANCIA',
+        peso: pesoNum,
+        altura: alturaNum,
+        imc: { value: imcVal, status: getIMCStatus(imcVal), color: getIMCColor(imcVal) },
+        gordura: { value: gorduraNum, status: getFatStatus(gorduraNum), color: getFatColor(gorduraNum) },
+        bio_percentual_gordura: gorduraNum,
+        pesoGordura: { value: parseFloat((pesoNum * (gorduraNum / 100)).toFixed(1)), status: getFatStatus(gorduraNum), color: getFatColor(gorduraNum) },
+        percentualMassaMuscularEsqueletica: { value: massaNum, status: 'Saudável', color: 'green' },
+        pesoMassaMuscularEsqueletica: { value: parseFloat((pesoNum * (massaNum / 100)).toFixed(1)), status: 'Saudável', color: 'green' },
+        registroMassaMuscular: { value: massaNum, status: 'Excelente', color: 'green' },
+        pesoMassaMuscular: { value: parseFloat((pesoNum * (massaNum / 100)).toFixed(1)), status: 'Excelente', color: 'green' },
+        aguaPercentual: { value: parseFloat(aguaVal) || 52, status: 'Saudável', color: 'green' },
+        pesoAgua: { value: parseFloat((pesoNum * ((parseFloat(aguaVal) || 52) / 100)).toFixed(1)), status: 'Saudável', color: 'green' },
+        gorduraVisceral: { value: parseFloat(gorduraVisceralVal) || 5, status: 'Saudável', color: 'green' },
+        ossos: { value: parseFloat(ossosVal) || 2.8, status: 'Saudável', color: 'green' },
+        metabolismo: { value: parseFloat(metabolismoVal) || 1500, status: 'Saudável', color: 'green' },
+        proteina: { value: 16.5, status: 'Saudável', color: 'green' },
+        obesidade: { value: 5.0, status: 'Saudável', color: 'green' },
+        idadeMetabolica: student.age ? parseFloat(String(student.age)) - 2 : 30,
+        lbm: parseFloat((pesoNum * (1 - (gorduraNum / 100))).toFixed(2)),
+        idadeReal: student.age ? parseFloat(String(student.age)) : 32,
+        
+        // Mapped typed fields
+        pescoco: pescocoVal ? parseFloat(pescocoVal) : undefined,
+        ombro: ombroVal ? parseFloat(ombroVal) : undefined,
+        torax: toraxVal ? parseFloat(toraxVal) : undefined,
+        cintura: cinturaVal ? parseFloat(cinturaVal) : undefined,
+        abdomen: abdomenVal ? parseFloat(abdomenVal) : undefined,
+        quadril: quadrilVal ? parseFloat(quadrilVal) : undefined,
+        bracoEsquerdo: bracoEsquerdoVal ? parseFloat(bracoEsquerdoVal) : undefined,
+        bracoDireito: bracoDireitoVal ? parseFloat(bracoDireitoVal) : undefined,
+        antebracoEsquerdo: antebracoEsquerdoVal ? parseFloat(antebracoEsquerdoVal) : undefined,
+        antebracoDireito: antebracoDireitoVal ? parseFloat(antebracoDireitoVal) : undefined,
+        coxaProximalEsquerda: coxaProximalEsquerdaVal ? parseFloat(coxaProximalEsquerdaVal) : undefined,
+        coxaProximalDireita: coxaProximalDireitaVal ? parseFloat(coxaProximalDireitaVal) : undefined,
+        coxaDistalEsquerda: coxaDistalEsquerdaVal ? parseFloat(coxaDistalEsquerdaVal) : undefined,
+        coxaDistalDireita: coxaDistalDireitaVal ? parseFloat(coxaDistalDireitaVal) : undefined,
+        panturrilhaEsquerda: panturrilhaEsquerdaVal ? parseFloat(panturrilhaEsquerdaVal) : undefined,
+        panturrilhaDireita: panturrilhaDireitaVal ? parseFloat(panturrilhaDireitaVal) : undefined,
+
+        // Mapped dobras
+        dobraPeitoral: dobraPeitoralVal ? parseFloat(dobraPeitoralVal) : undefined,
+        dobraAbdominal: dobraAbdominalVal ? parseFloat(dobraAbdominalVal) : undefined,
+        dobraCoxa: dobraCoxaVal ? parseFloat(dobraCoxaVal) : undefined,
+        dobraSubescapular: dobraSubescapularVal ? parseFloat(dobraSubescapularVal) : undefined,
+
+        analiseComposicao: {
+          agua: 'Saudável',
+          gordura: getFatStatus(gorduraNum),
+          proteina: 'Saudável',
+          ossos: 'Excelente'
+        },
+        analiseTipoCorpo: {
+          tipo: 'Saudável',
+          descricao: 'Seu corpo está em excelente desenvolvimento muscular.'
+        },
+        dicasControlePeso: {
+          pesoIdeal: parseFloat((21.7 * heightInMeters * heightInMeters).toFixed(1)),
+          pesoDiff: parseFloat((pesoNum - (21.7 * heightInMeters * heightInMeters)).toFixed(1)),
+          massaMuscularDiff: 0,
+          gorduraDiff: 0
+        },
+        veredictoPeriodizacao: "Avaliação gerada pelo usuário via aplicativo. Excelente esforço em manter os dados atualizados de forma autônoma para análise de performance tensional."
+      };
+
+      const currentAssessments = student.physicalAssessments || [];
+      const updatedAssessments = [newAssessment, ...currentAssessments];
+
+      await setDoc(doc(db, 'alunos', student.id), {
+        physicalAssessments: updatedAssessments,
+        weight: pesoNum,
+        height: alturaNum
+      }, { merge: true });
+
+      setIsCreating(false);
+      resetForm();
+    } catch (e: any) {
+      console.error(e);
+      alert("Erro ao salvar avaliação física.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (selectedAssessment && (selectedAssessment.type === 'BIOIMPEDANCE' || selectedAssessment.type === 'BIOIMPEDANCIA')) {
     return <BioimpedanceView assessment={selectedAssessment} allAssessments={student.physicalAssessments} onBack={() => setSelectedAssessment(null)} />;
   }
 
+  if (isCreating) {
+    return (
+      <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-transparent relative animate-in fade-in">
+        <header className="flex items-center gap-4 mb-8 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+          <button onClick={() => { setIsCreating(false); resetForm(); }} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-zinc-800 transition-colors shadow-lg">
+            <ArrowLeft size={20}/>
+          </button>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+            <HeaderTitle text="Nova Avaliação" />
+          </h2>
+        </header>
+
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Card 1: Primitives (Peso e Data) */}
+          <Card className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-4">
+              <Activity size={22} className="text-red-500" />
+              <div>
+                <h3 className="text-sm font-black italic uppercase text-white leading-none">Dados Pessoais & Peso</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">Sua base de medição inicial</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest block mb-2">Peso Corporal (kg) *</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 82.5"
+                  value={pesoVal}
+                  required
+                  onChange={e => setPesoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl p-4 text-sm font-black text-white focus:border-red-600 focus:outline-none placeholder:text-zinc-700"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest block mb-2">Sua Altura (cm)</label>
+                <input 
+                  type="number"
+                  step="0.5"
+                  placeholder="Ex: 175"
+                  value={alturaVal}
+                  onChange={e => setAlturaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl p-4 text-sm font-black text-white focus:border-red-600 focus:outline-none placeholder:text-zinc-700"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-widest block mb-2">Data da Medição</label>
+                <input 
+                  type="date"
+                  value={dataVal}
+                  onChange={e => setDataVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl p-4 text-sm font-black text-white focus:border-red-600 focus:outline-none"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 2: Samsung Galaxy Watch 7 Bioimpedancia Extraction */}
+          <Card className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-4">
+              <Zap size={22} className="text-yellow-500" />
+              <div>
+                <h3 className="text-sm font-black italic uppercase text-white leading-none">Bioimpedância (Samsung Watch 7 ou Print)</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">Extraia gordura, músculo e metabolismo automaticamente por imagem</p>
+              </div>
+            </div>
+
+            {/* Drag and Drop Zone */}
+            {!imageUrl ? (
+              <div 
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="border-2 border-dashed border-zinc-800 bg-zinc-950/20 hover:bg-zinc-950/50 hover:border-zinc-700 rounded-2xl p-8 text-center cursor-pointer transition-all relative flex flex-col items-center justify-center group"
+              >
+                <input 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Camera size={36} className="text-zinc-500 group-hover:text-white transition-colors mb-2" />
+                <span className="text-xs font-black uppercase text-zinc-400 group-hover:text-white transition-colors">Arraste ou clique para enviar print da Bioimpedância</span>
+                <span className="text-[10px] text-zinc-600 font-bold mt-1 uppercase tracking-wider">Geralmente print do visor do Watch 7 ou do Samsung Health</span>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 bg-zinc-950 p-3 rounded-2xl border border-zinc-800/80">
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-900 flex-shrink-0 border border-zinc-800">
+                    <img src={imageUrl} alt="Print Upload" className="object-cover w-full h-full" />
+                    <button 
+                      onClick={() => { setImageUrl(''); setImageFile(null); setExtractedSuccess(false); }} 
+                      className="absolute top-1 right-1 p-0.5 bg-black/80 hover:bg-black rounded-full text-zinc-400 hover:text-white"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-black uppercase text-white">Screenshot Carregado</p>
+                    <p className="text-[10px] text-zinc-500 font-medium leading-none mt-1">Pronto para extração inteligente.</p>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={triggerIAExtraction}
+                      disabled={isExtracting}
+                      className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 text-black rounded-xl font-black italic uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-lg active:scale-95"
+                    >
+                      {isExtracting ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} />}
+                      {isExtracting ? 'Analisando...' : 'Extrair com IA'}
+                    </button>
+                  </div>
+                </div>
+
+                {extractedSuccess && (
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-2 text-green-500 text-xs font-black uppercase">
+                    <Check size={14} /> Dados extraídos com sucesso do print! Verifique abaixo.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Editable values extracted */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Gordura (%)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 18.5"
+                  value={gorduraVal}
+                  onChange={e => setGorduraVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Massa Músculo (%)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 38.2"
+                  value={massaVal}
+                  onChange={e => setMassaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Gordura Visceral</label>
+                <input 
+                  type="number"
+                  step="0.5"
+                  placeholder="Ex: 5"
+                  value={gorduraVisceralVal}
+                  onChange={e => setGorduraVisceralVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Água (%)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 52"
+                  value={aguaVal}
+                  onChange={e => setAguaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div className="col-span-2 md:col-span-1">
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Metabolismo</label>
+                <input 
+                  type="number"
+                  step="1"
+                  placeholder="Ex: 1550"
+                  value={metabolismoVal}
+                  onChange={e => setMetabolismoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 3: Dobras Cutâneas (Digitado) */}
+          <Card className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-4">
+              <Dumbbell size={22} className="text-red-500" />
+              <div>
+                <h3 className="text-sm font-black italic uppercase text-white leading-none">Dobras Cutâneas (mm)</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">Insira seus valores de plicômetro</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Peitoral (mm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 8.5"
+                  value={dobraPeitoralVal}
+                  onChange={e => setDobraPeitoralVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-black text-white focus:border-red-600 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Abdominal (mm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 15.0"
+                  value={dobraAbdominalVal}
+                  onChange={e => setDobraAbdominalVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-black text-white focus:border-red-600 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 font-black uppercase tracking-wider block mb-2">Coxa (mm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ex: 12.5"
+                  value={dobraCoxaVal}
+                  onChange={e => setDobraCoxaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-black text-white focus:border-red-600 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 4: Circunferências Corporais (Digitado) */}
+          <Card className="p-6 bg-zinc-900 border-zinc-800 rounded-3xl shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-4">
+              <Scan size={22} className="text-red-500" />
+              <div>
+                <h3 className="text-sm font-black italic uppercase text-white leading-none">Medidas de Circunferência (cm)</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">Insira suas fitas métricas</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Pescoço (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Pescoço"
+                  value={pescocoVal}
+                  onChange={e => setPescocoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Ombros (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Ombros"
+                  value={ombroVal}
+                  onChange={e => setOmbroVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Tórax (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Tórax"
+                  value={toraxVal}
+                  onChange={e => setToraxVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Cintura (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Cintura"
+                  value={cinturaVal}
+                  onChange={e => setCinturaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Abdômen (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Abdômen"
+                  value={abdomenVal}
+                  onChange={e => setAbdomenVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Quadril (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Quadril"
+                  value={quadrilVal}
+                  onChange={e => setQuadrilVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Braço Esquerdo (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Esquerdo"
+                  value={bracoEsquerdoVal}
+                  onChange={e => setBracoEsquerdoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Braço Direito (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Direito"
+                  value={bracoDireitoVal}
+                  onChange={e => setBracoDireitoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Antebraço Esq. (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Esquerdo"
+                  value={antebracoEsquerdoVal}
+                  onChange={e => setAntebracoEsquerdoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Antebraço Dir. (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Direito"
+                  value={antebracoDireitoVal}
+                  onChange={e => setAntebracoDireitoVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Coxa Esquerda (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Esquerda"
+                  value={coxaProximalEsquerdaVal}
+                  onChange={e => setCoxaProximalEsquerdaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Coxa Direita (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Direita"
+                  value={coxaProximalDireitaVal}
+                  onChange={e => setCoxaProximalDireitaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Panturrilha Esq. (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Esquerda"
+                  value={panturrilhaEsquerdaVal}
+                  onChange={e => setPanturrilhaEsquerdaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 font-black uppercase tracking-wider block mb-1">Panturrilha Dir. (cm)</label>
+                <input 
+                  type="number"
+                  step="0.1"
+                  placeholder="Direita"
+                  value={panturrilhaDireitaVal}
+                  onChange={e => setPanturrilhaDireitaVal(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs font-black text-white focus:border-red-650 focus:outline-none placeholder:text-zinc-800 text-center"
+                />
+              </div>
+            </div>
+          </Card>
+
+          <button 
+            type="button"
+            onClick={handleSaveAssessment}
+            disabled={loading}
+            className="w-full py-5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-2xl font-black italic uppercase text-[12px] tracking-widest shadow-xl flex items-center justify-center gap-2 transition-all mt-6 active:scale-[0.99]"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+            {loading ? 'Salvando Avaliação...' : 'Salvar Avaliação Física'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 pb-48 text-white overflow-y-auto h-screen text-left custom-scrollbar bg-transparent relative animate-in fade-in">
-      <header className="flex items-center gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
-        <div className="flex items-center gap-3">
-           {onToggleMenu && (
-             <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
-               <Menu size={20}/>
+      <header className="flex items-center justify-between gap-4 mb-10 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4 -mx-6 px-6 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+             {onToggleMenu && (
+               <button onClick={onToggleMenu} className="p-2 bg-zinc-900 rounded-full text-zinc-500 hover:text-white transition-colors shadow-lg">
+                 <Menu size={20}/>
+               </button>
+             )}
+             <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
+               <ArrowLeft size={20}/>
              </button>
-           )}
-           <button onClick={onBack} className="p-2 bg-zinc-900 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg shadow-xl">
-             <ArrowLeft size={20}/>
-           </button>
+          </div>
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+            <HeaderTitle text="AVALIAÇÃO FISICA" />
+          </h2>
         </div>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          <HeaderTitle text="AVALIAÇÃO FISICA" />
-        </h2>
+        <button 
+          onClick={() => {
+            setAlturaVal(student.height ? String(student.height) : '180');
+            setIsCreating(true);
+          }}
+          className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-full transition-all shadow-lg active:scale-95"
+        >
+          <Sparkles size={12} />
+          Nova Avaliação
+        </button>
       </header>
       
       <div className="space-y-6">
