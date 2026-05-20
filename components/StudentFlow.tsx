@@ -385,21 +385,26 @@ function ExerciseCard({ ex, dbExercise, lastLoad, idx, progress, onToggleFinish,
         </div>
 
         <div className="col-span-2 bg-background/20 border border-border/50 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-2">
             <input 
               type="number" 
               value={localLoad}
               placeholder="--"
               onChange={(e) => {
                 setLocalLoad(e.target.value);
-                onUpdateLoad(ex.id!, e.target.value, false);
               }}
               onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
               className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
             />
+            <button 
+              onClick={() => onUpdateLoad(ex.id!, localLoad, false)}
+              className="bg-red-600 rounded-full p-2 text-white hover:bg-red-700 transition-all"
+            >
+              <Check size={16} />
+            </button>
             <span className="text-[9px] font-black text-red-600 uppercase italic">KG</span>
           </div>
-          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual</p>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 italic">Carga Atual (Toque no ✅ para salvar)</p>
         </div>
         
         {onShowPrescreveAI && (
