@@ -392,7 +392,7 @@ function ExerciseCard({ ex, dbExercise, lastLoad, idx, progress, onToggleFinish,
               placeholder="--"
               onChange={(e) => {
                 setLocalLoad(e.target.value);
-                onUpdateLoad(ex.id!, e.target.value, true);
+                onUpdateLoad(ex.id!, e.target.value, false);
               }}
               onBlur={() => onUpdateLoad(ex.id!, localLoad, false)}
               className="bg-transparent border-none p-0 text-2xl font-black text-center text-foreground outline-none focus:ring-0 w-20 italic tracking-tighter placeholder:text-muted-foreground"
