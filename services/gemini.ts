@@ -1,72 +1,25 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { EXERCISE_CATALOG, FULL_EXERCISE_LIST } from "../src/constants/exerciseCatalog";
 
-const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'imagen-3.0-generate-002';
-
-let genAI: GoogleGenAI | null = null;
-
-function getAI() {
-  const key = process.env.GEMINI_API_KEY || "";
-  if (!genAI && key) {
-    genAI = new GoogleGenAI({ apiKey: key });
-  }
-  return genAI;
-}
+const MODEL_TEXT = 'gemini-1.5-flash';
+const MODEL_IMAGE = 'gemini-2.0-flash';
 
 export async function callAI(params: any) {
-  const { 
-    model: modelName, 
-    prompt, 
-    systemInstruction, 
-    responseMimeType, 
-    isImageGeneration,
-    isImageAnalysis,
-    imageBase64 
-  } = params;
-
-  if (isImageGeneration) {
-    const response = await fetch('/api/generateImage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, model: modelName || MODEL_IMAGE })
-    });
-    if (!response.ok) throw new Error("Erro ao gerar imagem no servidor");
-    return await response.json();
-  }
-
-  const aiInstance = getAI();
-  if (!aiInstance) {
-    console.error("GEMINI_API_KEY is not set in the environment.");
-    throw new Error("A chave da IA não foi configurada. Por favor, verifique as configurações.");
-  }
-
   try {
-    const model = modelName || MODEL_TEXT;
+    const response = await fetch('/api/ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
 
-    let contents: any;
-    if (isImageAnalysis && imageBase64) {
-      const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-      contents = {
-        parts: [
-          { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-          { text: prompt }
-        ]
-      };
-    } else {
-      contents = prompt;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
     }
 
-    const result = await aiInstance.models.generateContent({
-      model: model,
-      contents,
-      config: systemInstruction || responseMimeType ? { 
-        systemInstruction,
-        responseMimeType 
-      } : undefined,
-    });
-    
-    return { text: result.text };
+    return await response.json();
   } catch (e: any) {
     console.error("AI Error:", e);
     throw e;
@@ -105,9 +58,12 @@ export async function analyzeExerciseAndGenerateImage(exerciseName: string, stud
 }
 
 export async function generateWorkoutFromText(prompt: string): Promise<any[]> {
+  const catalogNames = FULL_EXERCISE_LIST.map(ex => ex.name).join(', ');
   const systemInstruction = `
     Você é o ABFIT AI, um treinador Mestre. 
     Gere uma lista de exercícios baseada no pedido do usuário.
+    IMPORTANTE: Sempre que possível, utilize os nomes exatos desta lista de exercícios: [${catalogNames}].
+    Se o exercício não estiver na lista, use um nome profissional e claro em Português.
     Retorne APENAS um JSON array.
     Estrutura: [{"name": "Nome", "sets": "3", "reps": "12", "rest": "60", "method": "Normal", "load": ""}]
   `;
@@ -186,10 +142,14 @@ export async function estimateFoodMacros(foodInput: string): Promise<any> {
 }
 
 export async function extractWorkoutFromImage(imageBase64: string): Promise<any[]> {
+  const catalogNames = FULL_EXERCISE_LIST.map(ex => ex.name).join(', ');
   const prompt = `
     Analyze the image which contains a list of gym exercises.
     Return a JSON ARRAY containing the exercises found.
     Translate exercise names to Portuguese (Brazil) if they are in English.
+    
+    CRITICAL: Always try to match the exercise names to the following official catalog: [${catalogNames}].
+    If a name is clearly a variation of one in the catalog, use the catalog name.
     
     Structure per item:
     {

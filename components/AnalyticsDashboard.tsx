@@ -84,7 +84,7 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
     const exercises: Record<string, any> = {};
     history.forEach(h => {
         if (h.exercises) {
-            h.exercises.forEach(ex => {
+            h.exercises.forEach((ex: any) => {
                 if (!exercises[ex.name]) exercises[ex.name] = { completed: 0, skipped: 0 };
                 exercises[ex.name].completed += 1;
             });
@@ -205,7 +205,7 @@ export function AnalyticsDashboard({ student, onBack, onToggleMenu }: AnalyticsP
     // Varre o histórico (do mais antigo para o mais novo para o gráfico)
     [...history].sort((a, b) => a.timestamp - b.timestamp).forEach(session => {
         if (session.exercises) {
-            session.exercises.forEach(ex => {
+            session.exercises.forEach((ex: any) => {
                 if (ex.load) {
                     const cleanLoad = parseFloat(ex.load.toString().replace(',', '.'));
                     if (!isNaN(cleanLoad)) {

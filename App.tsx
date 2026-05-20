@@ -192,6 +192,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
 
+  const studentForView = useMemo(() => {
+    if (!selectedStudent) return null;
+    if (isCoach) return selectedStudent;
+    // O aluno vê o que está selecionado (que vem do banco ou do merge)
+    return selectedStudent;
+  }, [selectedStudent, view, isCoach]);
+
   // Fetch running workouts
   useEffect(() => {
     const q = query(collection(db, `artifacts/runtrack-elite-v4/workouts`));
@@ -558,13 +565,13 @@ export default function App() {
               status: 'published',
               exercises: [
                 { id: 'l-a-1', name: 'LEG PRESS HORIZONTAL', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-2', name: 'LEG PRESS HORIZONTAL unilateral', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-3', name: 'sentar e levantar do banco reto com HBC', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-4', name: 'cadeira extensora', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-5', name: 'crucifixo aberto com HBC no banco reto', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-6', name: 'abdução de ombros em pé com HBC', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-7', name: 'triceps em pé no CROSS com barra reta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-a-8', name: 'abdominal supra no solo', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
+                { id: 'l-a-2', name: 'LEG PRESS HORIZONTAL UNILATERAL', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-3', name: 'AGACHAMENTO NO BANCO COM HALTER', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-4', name: 'CADEIRA EXTENSORA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-5', name: 'CRUCIFIXO ABERTO NO BANCO RETO COM HALTER', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-6', name: 'ABDUÇÃO DE OMBROS EM PÉ COM HALTER', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-7', name: 'TRÍCEPS EM PÉ NO CROSS COM BARRA RETA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-a-8', name: 'ABDOMINAL SUPRA NO SOLO', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
               ]
             },
             {
@@ -572,14 +579,14 @@ export default function App() {
               title: 'TREINO B - Musculação',
               status: 'published',
               exercises: [
-                { id: 'l-b-1', name: 'elevação do quadril no solo com sobrecarga', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-2', name: 'extensão de quadril em pé com caneleira', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-3', name: 'abdução de quadril em pé com caneleira', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-4', name: 'cadeira FLEXORA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-5', name: 'remada fechada SUPINADA com barra reta em pé no CROSS na polia média', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-6', name: 'extensão de ombros em pé no CROSS barra reta polia alta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-7', name: 'bíceps em pé no CROSS com barra reta', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
-                { id: 'l-b-8', name: 'flexão plantar em pé no solo livre', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
+                { id: 'l-b-1', name: 'ELEVAÇÃO DE QUADRIL NO SOLO', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-2', name: 'EXTENSÃO DE QUADRIL EM PÉ COM CANELEIRA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-3', name: 'ABDUÇÃO DE QUADRIL EM PÉ COM CANELEIRA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-4', name: 'CADEIRA FLEXORA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-5', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-7', name: 'BÍCEPS EM PÉ NO CROSS COM BARRA RETA', sets: '3', reps: '12', rest: '60s', executionType: 'Simples' },
+                { id: 'l-b-8', name: 'FLEXÃO PLANTAR EM PÉ', sets: '3', reps: '15', rest: '45s', executionType: 'Simples' }
               ]
             },
             {
@@ -814,6 +821,37 @@ export default function App() {
               idadeReal: 36,
             }
           ], 
+          workouts: [
+            {
+              id: 'treino-a-andre',
+              title: 'TREINO A - Musculação',
+              status: 'published',
+              exercises: [
+                { id: 'a-a-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-2', name: 'SUPINO ABERTO ALTERNADO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-3', name: 'CRUCIFIXO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-4', name: 'DESENVOLVIMENTO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-5', name: 'FLEXÃO DE OMBRO ALTERNADO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-6', name: 'ABDUÇÃO DE OMBROS EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+            {
+              id: 'treino-b-andre',
+              title: 'TREINO B - Musculação',
+              status: 'published',
+              exercises: [
+                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+              ]
+            },
+          ],
+ 
           workoutHistory: [
             {
               id: "hist-andre-run-20260428",
@@ -1110,13 +1148,13 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a-a-1', name: 'Supino aberto no banco reto com halter barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-2', name: 'Supino aberto alternado no banco 30 graus com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-3', name: 'Crucifixo aberto no banco reto com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-4', name: 'Desenvolvimento aberto no banco 75 graus com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-5', name: 'Flexão de ombro alternado no banco 75 graus com halter de barra curta pegada neutra', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-6', name: 'Abdução de ombros em pé com halter de barra curta pegada pronada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-a-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'a-a-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-2', name: 'SUPINO ABERTO ALTERNADO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-3', name: 'CRUCIFIXO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-4', name: 'DESENVOLVIMENTO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-5', name: 'FLEXÃO DE OMBRO ALTERNADO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-6', name: 'ABDUÇÃO DE OMBROS EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-a-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1126,13 +1164,13 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a-b-1', name: 'Remada aberta em pé no cross na polia média com barra romana', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-2', name: 'Remada neutra na máquina sentada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-3', name: 'Crucifixo inverso no banco 30 graus com halter de barra curta em decúbito ventral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-4', name: 'Puxada aberta no pulley alto com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-5', name: 'Puxada supinada no pulley alto', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-6', name: 'Extensão de ombros em pé no cross com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-b-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1142,13 +1180,13 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'a-c-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-1', name: 'AGACHAMENTO LIVRE COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'a-c-2', name: 'LEG PRESS HORIZONTAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-3', name: 'Cadeira extensora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-4', name: 'Agachamento sumô com halter de barra curta entre os quadris', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-5', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-6', name: 'Cadeira abdutora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'a-c-7', name: 'Abdominal supra no solo', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'a-c-3', name: 'CADEIRA EXTENSORA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-4', name: 'AGACHAMENTO SUMÔ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-5', name: 'STIFF EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-6', name: 'CADEIRA ABDUTORA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'a-c-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1399,12 +1437,12 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'm-a-1', name: 'Agachamento livre com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-2', name: 'Agachamento passada com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-3', name: 'Levantar e sentar no banco reto com HBC', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-1', name: 'AGACHAMENTO LIVRE COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-2', name: 'AGACHAMENTO PASSADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-3', name: 'AGACHAMENTO NO BANCO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
                 { id: 'm-a-4', name: 'LEG PRESS HORIZONTAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-5', name: 'LEG PRESS HORIZONTAL unilateral', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-a-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'm-a-5', name: 'LEG PRESS HORIZONTAL UNILATERAL', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-a-6', name: 'ABDOMINAL SUPRA NO SOLO', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1414,12 +1452,12 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'm-b-1', name: 'Agachamento sumô com halter de barra curta entre os quadris', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-2', name: 'Levantamento terra com halter de barra longa', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-3', name: 'Stiff em pé com halter de barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-4', name: 'Extensão de quadril e joelho no solo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-5', name: 'Cadeira flexora', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-b-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'm-b-1', name: 'AGACHAMENTO SUMÔ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-2', name: 'LEVANTAMENTO TERRA COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-3', name: 'STIFF EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-4', name: 'ELEVAÇÃO DE QUADRIL NO SOLO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-5', name: 'CADEIRA FLEXORA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-b-6', name: 'ABDOMINAL SUPRA NO SOLO', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             },
             {
@@ -1429,12 +1467,12 @@ export default function App() {
               frequencyWeekly: 2,
               status: 'published',
               exercises: [
-                { id: 'm-c-1', name: 'Supino aberto no banco reto com halter barra curta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-2', name: 'Desenvolvimento aberto em pé com halter de barra longa', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-3', name: 'Remada aberta em pé no cross na polia média com barra reta', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-4', name: 'Puxada neutra no pulley alto com triângulo', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-5', name: 'Tríceps em pé no cross com barra reta pegada supinada', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
-                { id: 'm-c-6', name: 'Abdominal supra no solo', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
+                { id: 'm-c-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-2', name: 'DESENVOLVIMENTO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-3', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-4', name: 'PUXADA NEUTRA NO PULLEY', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-5', name: 'TRÍCEPS EM PÉ NO CROSS COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                { id: 'm-c-6', name: 'ABDOMINAL SUPRA NO SOLO', sets: '5', reps: '20', rest: '40s', executionType: 'Simples' }
               ]
             }
           ]
@@ -1490,6 +1528,38 @@ export default function App() {
           }
           const updatedStudents = snapshot.docs.map(d => {
             const student = { id: d.id, ...d.data() } as Student;
+            if (student.id === 'fixed-andre' && (!student.workouts || student.workouts.length === 0)) {
+                student.workouts = [
+                    {
+                      id: 'treino-a-andre',
+                      title: 'TREINO A - Musculação',
+                      status: 'published',
+                      exercises: [
+                        { id: 'a-a-1', name: 'SUPINO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-2', name: 'SUPINO ABERTO ALTERNADO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-3', name: 'CRUCIFIXO ABERTO NO BANCO RETO COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-4', name: 'DESENVOLVIMENTO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-5', name: 'FLEXÃO DE OMBRO ALTERNADO NO BANCO 75 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-6', name: 'ABDUÇÃO DE OMBROS EM PÉ COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-a-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                      ]
+                    },
+                    {
+                      id: 'treino-b-andre',
+                      title: 'TREINO B - Musculação',
+                      status: 'published',
+                      exercises: [
+                        { id: 'a-b-1', name: 'REMADA ABERTA EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-2', name: 'REMADA NEUTRA NA MÁQUINA SENTADA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-3', name: 'CRUCIFIXO INVERSO NO BANCO 30 GRAUS COM HALTER', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-4', name: 'PUXADA ABERTA NO PULLEY ALTO COM BARRA RETA', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-5', name: 'PUXADA SUPINADA NO PULLEY ALTO', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-6', name: 'EXTENSÃO DE OMBROS EM PÉ NO CROSS', sets: '4', reps: '12', rest: '40s', executionType: 'Simples' },
+                        { id: 'a-b-7', name: 'ABDOMINAL SUPRA NO SOLO', sets: '6', reps: '20', rest: '40s', executionType: 'Simples' }
+                      ]
+                    },
+                ];
+            }
             if (student.nome?.includes('Marcelly') && student.workouts) {
               student.workouts = student.workouts.filter(w => !((w.title?.toUpperCase() === 'TREINO A') && (!w.exercises || w.exercises.length === 0)));
             }
@@ -1710,7 +1780,7 @@ export default function App() {
                         // Also sync to prescricoes subcollection for server-side endpoints
                         if (rawData.workouts && Array.isArray(rawData.workouts)) {
                             for (const w of rawData.workouts) {
-                                const pRef = doc(db, `alunos/${docId}/prescricoes`, w.id);
+                                const pRef = doc(db, `alunos/${targetId}/prescricoes`, w.id);
                                 await setDoc(pRef, {
                                     nome: w.title,
                                     totalSessoes: w.projectedSessions || 20,
@@ -1835,13 +1905,6 @@ export default function App() {
     // Ordenação alfabética
     return merged.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   }, [students, defaultStudentsData]);
-
-  const studentForView = useMemo(() => {
-    if (!selectedStudent) return null;
-    if (isCoach) return selectedStudent;
-    // O aluno vê o que está selecionado (que vem do banco ou do merge)
-    return selectedStudent;
-  }, [selectedStudent, view, isCoach]);
 
   useEffect(() => {
     if (studentForView) {
@@ -2027,7 +2090,7 @@ export default function App() {
     // Calculate stats for logsTreino
     const duracaoMinutos = post.duration ? parseInt(post.duration.split(':')[0]) * 60 + parseInt(post.duration.split(':')[1]) : 0;
     const calorias = Math.ceil(duracaoMinutos / 60) * 7;
-    const cargas = post.exercises.map(ex => ({
+    const cargas = (post.exercises || []).map(ex => ({
       exercicio: ex.name,
       carga: ex.load || '0',
       unidade: ex.loadUnit || 'Kg'

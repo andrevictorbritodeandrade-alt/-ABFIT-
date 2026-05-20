@@ -13,7 +13,7 @@ import {
 import { Card, AppFooter, HeaderTitle, BackgroundCarousel, FITNESS_IMAGES } from './Layout';
 import { PrescreveAI } from './PrescreveAI';
 import { Student, WorkoutHistoryEntry, Workout, AnalyticsData, Exercise } from '../types';
-import { db, handleFirestoreError, OperationType, doc, getDoc } from '../services/firebase';
+import { db, handleFirestoreError, OperationType, doc, getDoc, collection, query, onSnapshot } from '../services/firebase';
 
 const formatReps = (reps: any): string | null => {
   if (!reps) return null;

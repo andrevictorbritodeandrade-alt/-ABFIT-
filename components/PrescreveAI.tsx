@@ -6,51 +6,19 @@ import { callAI } from '../services/gemini';
 // ==========================================
 // CONSTANTES DE CONFIGURAÇÃO
 // ==========================================
-const MODEL_TEXT = 'gemini-3-flash-preview';
-const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
+import { EXERCISE_CATALOG, FULL_EXERCISE_LIST } from '../src/constants/exerciseCatalog';
+
+// ==========================================
+// CONSTANTES DE CONFIGURAÇÃO
+// ==========================================
+const MODEL_TEXT = 'gemini-1.5-flash'; // More stable model alias
+const MODEL_IMAGE = 'gemini-2.0-flash'; // More stable model alias for image generation or analysis
 const FILTROS_MUSCULARES = [
-  'TODOS', 'PEITORAL', 'DORSAIS', 'OMBROS', 'BÍCEPS', 'TRÍCEPS', 
-  'QUADRÍCEPS', 'POSTERIORES DE COXA', 'GLÚTEOS', 'ADUTORES', 
-  'PANTURRILHA', 'PARAVERTEBRAIS', 'ABDOMINAIS'
+  'TODOS', ...Object.keys(EXERCISE_CATALOG)
 ];
 
 const JERSEYS_DATA = {
   "ÁFRICA DO SUL 26": "Authentic South Africa 2026 jersey, vibrant green with darker green vertical textured stripes, white polo collar, yellow Adidas stripes on shoulders, vintage white Adidas Trefoil logo."
-};
-
-const EXERCISE_CATALOG = {
-  "PEITORAL": ["CRUCIFIXO ABERTO ALTERNADO NO BANCO 30 GRAUS NO CROSS", "CRUCIFIXO ABERTO NO BANCO RETO COM HALTER", "SUPINO ABERTO NO SMITH", "PULL UP NO CROSS", "EXTENSÃO DE COTOVELOS NO SOLO", "VOADOR PEITORAL", "SUPINO ABERTO COM HALTER", "CRUCIFIXO NO VOADOR PEITORAL", "SUPINO VERTICAL NA MÁQUINA"],
-  "OMBROS": ["ENCOLHIMENTO DE OMBROS NO CROSS", "ABDUÇÃO DE OMBROS ALTERNADO EM PÉ", "DESENVOLVIMENTO ARNOLD EM PÉ", "REMADA ALTA EM PÉ NO CROSS", "ROTAÇÃO EXTERNA DE OMBRO NO CROSS", "DESENVOLVIMENTO NO SMITH"],
-  "DORSAIS": ["ADUÇÃO DE OMBROS NO CROSS", "EXTENSÃO DE OMBROS NO CROSS", "PULL OVER COM HALTER", "PUXADA ABERTA NA BARRA FIXA", "REMADA CURVADA COM HALTER", "PUXADA NEUTRA NO PULLEY", "REMADA CAVALO NA MÁQUINA"],
-  "TRÍCEPS": ["SUPINO FECHADO NO BANCO RETO", "TRÍCEPS COICE NO CROSS", "TRÍCEPS FRANCÊS NO BANCO 75 GRAUS", "TRÍCEPS TESTA COM BARRA H", "TRÍCEPS NA PARALELA", "TRÍCEPS SUPERMAN NO CROSS"],
-  "BÍCEPS": ["BÍCEPS ALTERNADO NO BANCO 60 GRAUS", "BÍCEPS SCOTT NA MÁQUINA", "BÍCEPS CONCENTRADO", "BÍCEPS EM PÉ COM BARRA W", "BÍCEPS NO CROSS COM CORDA"],
-  "QUADRÍCEPS": ["AGACHAMENTO LIVRE", "AGACHAMENTO NO SMITH", "LEG PRESS 45 GRAUS", "CADEIRA EXTENSORA", "AGACHAMENTO PASSADA", "LEG PRESS 90 GRAUS", "AGACHAMENTO NO SISSY"],
-  "ADUTORES": ["ADUÇÃO DE QUADRIL NO CROSS", "CADEIRA ADUTORA", "ADUÇÃO COM CANELEIRA", "AGACHAMENTO SUMÔ COM ROTAÇÃO EXTERNA"],
-  "GLÚTEOS": ["AGACHAMENTO SUMÔ COM HALTER", "ELEVAÇÃO DE QUADRIL NO SMITH", "LEVANTAMENTO TERRA NO CROSS", "STIFF EM PÉ", "CADEIRA ABDUTORA", "EXTENSÃO DE QUADRIL NO GRAVITON"],
-  "POSTERIORES DE COXA": ["CADEIRA FLEXORA", "FLEXÃO DE JOELHO NÓRDICA", "MESA FLEXORA", "STIFF UNILATERAL", "FLEXÃO DE JOELHO NA BOLA"],
-  "PANTURRILHA": ["FLEXÃO PLANTAR NO LEG PRESS", "FLEXÃO PLANTAR EM PÉ", "FLEXÃO PLANTAR NO SMITH", "FLEXÃO PLANTAR NO DEGRAU"],
-  "PARAVERTEBRAIS": ["ELEVAÇÃO DE QUADRIL NO SOLO", "EXTENSÃO DE TRONCO NO APARELHO", "PERDIGUEIRO NO SOLO", "MATA-BORRÃO"],
-  "ABDOMINAIS": ["ABDOMINAL CRUNCH MÁQUINA", "ABDOMINAL INFRA PENDURADO", "PRANCHA VENTRAL", "ABDOMINAL SUPRA NA BOLA"]
-};
-
-// ==========================================
-// UTILS & API HELPERS
-// ==========================================
-const fetchWithRetry = async (url: string, options: any, retries = 5, delay = 1000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) return await response.json();
-      if (response.status === 429) {
-        await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-        continue;
-      }
-      throw new Error(`Erro API: ${response.status}`);
-    } catch (err) {
-      if (i === retries - 1) throw err;
-      await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-    }
-  }
 };
 
 export function PrescreveAI({ onBack, initialExerciseName }: { onBack?: () => void, initialExerciseName?: string }) {
@@ -79,27 +47,39 @@ export function PrescreveAI({ onBack, initialExerciseName }: { onBack?: () => vo
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fullExerciseList = useMemo(() => {
-    return Object.entries(EXERCISE_CATALOG).flatMap(([group, items]) => 
-      items.map(name => ({ group, name }))
-    );
-  }, []);
-
   useEffect(() => {
     if (initialExerciseName) {
-      const found = fullExerciseList.find(ex => ex.name.toLowerCase() === initialExerciseName.toLowerCase());
-      if (found) {
-        setSelectedExercise(found);
+      // 1. Try exact match
+      const exactMatch = FULL_EXERCISE_LIST.find(ex => ex.name.toLowerCase() === initialExerciseName.toLowerCase());
+      if (exactMatch) {
+        setSelectedExercise(exactMatch);
+        return;
+      }
+
+      // 2. Try fuzzy match (contains)
+      const fuzzyMatch = FULL_EXERCISE_LIST.find(ex => 
+        ex.name.toLowerCase().includes(initialExerciseName.toLowerCase()) || 
+        initialExerciseName.toLowerCase().includes(ex.name.toLowerCase())
+      );
+      if (fuzzyMatch) {
+        setSelectedExercise(fuzzyMatch);
+        setSearchTerm(fuzzyMatch.name);
       }
     }
-  }, [initialExerciseName, fullExerciseList]);
+  }, [initialExerciseName]);
 
   const filteredExercises = useMemo(() => {
-    let list = fullExerciseList;
+    let list = FULL_EXERCISE_LIST;
     if (activeFilter !== 'TODOS') list = list.filter(ex => ex.group === activeFilter);
-    if (searchTerm.trim()) list = list.filter(ex => ex.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      list = list.filter(ex => 
+        ex.name.toLowerCase().includes(lowerSearch) || 
+        ex.group.toLowerCase().includes(lowerSearch)
+      );
+    }
     return list.slice(0, 500); 
-  }, [searchTerm, activeFilter, fullExerciseList]);
+  }, [searchTerm, activeFilter]);
 
   const handleFilterClick = (tag: string) => {
     setActiveFilter(tag);
