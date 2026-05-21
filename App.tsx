@@ -1729,10 +1729,26 @@ export default function App() {
                           currentWorkouts.push(defWorkout);
                           workoutsModified = true;
                       } else {
-                          // Update exercises if different (useful if user changed Cadeira flexora for Marcelly B)
+                          // Deep merge exercises to update base descriptions but PRESERVE live loads (carga) and user configurations
                           const existingWorkout = currentWorkouts.find(w => w.id === defWorkout.id);
                           if (existingWorkout) {
-                              existingWorkout.exercises = defWorkout.exercises;
+                              const mergedExercises = defWorkout.exercises.map(defEx => {
+                                  const existingEx = existingWorkout.exercises?.find(e => e.id === defEx.id || e.name === defEx.name);
+                                  if (existingEx) {
+                                      return {
+                                          ...defEx,
+                                          ...existingEx, // keep existing load/loadUnit and other customizations
+                                          description: existingEx.description || defEx.description,
+                                          benefits: existingEx.benefits || defEx.benefits,
+                                      };
+                                  }
+                                  return defEx;
+                              });
+                              // Also carry-over any custom exercises added by the coach/athlete
+                              const extraExercises = (existingWorkout.exercises || []).filter(existingEx => 
+                                  !defWorkout.exercises.some(defEx => defEx.id === existingEx.id || defEx.name === existingEx.name)
+                              );
+                              existingWorkout.exercises = [...mergedExercises, ...extraExercises];
                               existingWorkout.title = defWorkout.title;
                               workoutsModified = true;
                           }
@@ -1935,7 +1951,26 @@ export default function App() {
                     currentWorkoutsForCoach.push(defWorkout);
                 } else {
                     const w = currentWorkoutsForCoach.find(w => w.id === defWorkout.id);
-                    if (w) { w.exercises = defWorkout.exercises; w.title = defWorkout.title; }
+                    if (w) {
+                        const mergedExercises = defWorkout.exercises.map(defEx => {
+                            const existingEx = w.exercises?.find(e => e.id === defEx.id || e.name === defEx.name);
+                            if (existingEx) {
+                                return {
+                                    ...defEx,
+                                    ...existingEx, // keep existing load/loadUnit and other customizations
+                                    description: existingEx.description || defEx.description,
+                                    benefits: existingEx.benefits || defEx.benefits,
+                                };
+                            }
+                            return defEx;
+                        });
+                        // Also carry-over any custom exercises added by the coach/athlete
+                        const extraExercises = (w.exercises || []).filter(existingEx => 
+                            !defWorkout.exercises.some(defEx => defEx.id === existingEx.id || defEx.name === existingEx.name)
+                        );
+                        w.exercises = [...mergedExercises, ...extraExercises];
+                        w.title = defWorkout.title;
+                    }
                 }
             });
             merged[existingIndex].workouts = currentWorkoutsForCoach;

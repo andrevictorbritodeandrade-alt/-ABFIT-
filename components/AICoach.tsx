@@ -111,9 +111,10 @@ const AICoach: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       // Extracting text output from GenerateContentResponse using the .text property
       const text = response.text || "Desculpe, tive um problema ao processar sua resposta.";
       setMessages(prev => [...prev, { role: 'model', text }]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Error:", err);
-      setMessages(prev => [...prev, { role: 'model', text: "Erro ao conectar com a IA. Verifique sua conexão ou API Key." }]);
+      const errMsg = err.message || "Erro ao conectar com a IA.";
+      setMessages(prev => [...prev, { role: 'model', text: `Desculpe, não consegui obter uma resposta dos servidores de IA devido à seguinte falha:\n\n💬 "${errMsg}"\n\n💡 Verifique suas chaves de API ('GEMINI_API_KEY') no painel Settings/Secrets se esta falha persistir.` }]);
     } finally {
       setLoading(false);
     }

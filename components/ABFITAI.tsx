@@ -64,6 +64,54 @@ const EXERCISE_CATALOG: Record<string, string[]> = {
   ]
 };
 
+const getFallbackImage = (muscle: string, exerciseName: string = "") => {
+  const m = (muscle || "").toUpperCase();
+  const ex = (exerciseName || "").toUpperCase();
+
+  if (ex.includes("SUPINO") || ex.includes("PECK DECK") || ex.includes("CRUCIFIXO")) {
+    return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (ex.includes("ELEVAÇÃO DE QUADRIL") || ex.includes("HIP THRUST") || ex.includes("PONTE")) {
+    return "https://images.unsplash.com/photo-1526506114642-54cb358634a5?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (ex.includes("AGACHAMENTO") || ex.includes("LEG PRESS") || ex.includes("HACK") || ex.includes("AFUNDO") || ex.includes("BÚLGARO") || ex.includes("PASSADA") || ex.includes("AVANÇO")) {
+    return "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (ex.includes("MESA FLEXORA") || ex.includes("CADEIRA EXTENSORA") || ex.includes("ABDUTORA") || ex.includes("STIFF")) {
+    return "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (ex.includes("ROSCA") || ex.includes("TRÍCEPS") || ex.includes("DESENVOLVIMENTO") || ex.includes("ELEVAÇÃO LATERAL") || ex.includes("OMBROS")) {
+    return "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (ex.includes("PUXADA") || ex.includes("REMADA") || ex.includes("BARRA FIXA") || ex.includes("PULL UP") || ex.includes("PULL DOWN")) {
+    return "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1200&auto=format&fit=crop";
+  }
+
+  if (m.includes("PEITORAL")) {
+    return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("GLÚTEOS")) {
+    return "https://images.unsplash.com/photo-1526506114642-54cb358634a5?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("QUADRÍCEPS") || m.includes("ISQUIOTIBIAIS") || m.includes("PERNAS")) {
+    return "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("OMBROS") || m.includes("BÍCEPS") || m.includes("TRÍCEPS")) {
+    return "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("COSTAS") || m.includes("DORSAL") || m.includes("PARAVERTEBRAIS")) {
+    return "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("PANTURRILHA")) {
+    return "https://images.unsplash.com/photo-1502224562085-639556652f33?q=80&w=1200&auto=format&fit=crop";
+  }
+  if (m.includes("ABDÔMEN") || m.includes("ABDOMINAIS")) {
+    return "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1200&auto=format&fit=crop";
+  }
+  
+  return "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1200&auto=format&fit=crop";
+};
+
 export const ABFITAIModule: React.FC<{ studentName?: string, onClose?: () => void }> = ({ studentName, onClose }) => {
   const [environment, setEnvironment] = useState('ACADEMIA');
   const [selectedModel, setSelectedModel] = useState('HOMEM');
@@ -144,7 +192,8 @@ REGRAS JSON:
 
       const textResponse = await callAI({
         model: MODEL_TEXT,
-        prompt: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}`,
+        prompt: `Modo: ${environment}. Exercício Base: ${selectedExercise.name}. Grupo: ${selectedExercise.group}. 
+Make sure that the "visualPrompt" includes extremely detailed step-by-step biomechanical descriptions of the start and finish states of the actual athletic movement of "${selectedExercise.name}" to avoid generic standing poses. Point out the exact correct alignment of the athlete's limbs, hips, feet, and hands under resistance.`,
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
       });
@@ -152,20 +201,29 @@ REGRAS JSON:
       const data = JSON.parse(textResponse.text || "{}");
 
       // Use gemini-2.5-flash-image for generation via backend
-      const imgResult = await callAI({
-        model: MODEL_IMAGE,
-        prompt: data.visualPrompt,
-        isImageGeneration: true
-      });
+      let imageUrl = "";
+      try {
+        const imgResult = await callAI({
+          model: MODEL_IMAGE,
+          prompt: data.visualPrompt,
+          isImageGeneration: true
+        });
+        imageUrl = imgResult.imageUrl || "";
+      } catch (imgErr: any) {
+        console.warn("Falha na geração da imagem IA no PrescreveAI, usando stock fallback:", imgErr);
+        imageUrl = getFallbackImage(selectedExercise.group, selectedExercise.name);
+        const errMsg = imgErr.message || String(imgErr);
+        if (errMsg.includes("chave") || errMsg.includes("Gemini") || errMsg.includes("cota") || errMsg.includes("Limite") || errMsg.includes("vazada") || errMsg.includes("API")) {
+          setError(errMsg);
+        }
+      }
 
-      if (!imgResult.imageUrl) throw new Error("Falha na geração da imagem");
-      
-      data.image = imgResult.imageUrl;
-
+      data.image = imageUrl || getFallbackImage(selectedExercise.group, selectedExercise.name);
       setGeneratedData(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Falha na renderização. Tente gerar novamente.");
+      const errMsg = err.message || "Falha na renderização. Tente gerar novamente.";
+      setError(errMsg);
     } finally {
       setIsGenerating(false);
     }

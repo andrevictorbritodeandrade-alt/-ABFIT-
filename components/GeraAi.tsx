@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Dumbbell, X, Zap, Menu, Image as ImageIcon } from 'lucide-react';
+import { Search, Dumbbell, X, Zap, Menu, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { EXERCISE_CATALOG, IMAGEN_MODEL, GEMINI_MODEL } from '../src/constants/exerciseCatalog';
 import { callAI } from '../services/gemini';
 import { BackgroundCarousel, FITNESS_IMAGES } from './Layout';
@@ -12,6 +12,60 @@ const MULTI_KEYWORDS = [
   "HIP THRUST", "PONTE", "BÚLGARO", "GOOD MORNING", "AVANÇO", "SISSY", 
   "MATA-BORRÃO", "PERDIGUEIRO"
 ];
+
+const getFallbackImage = (muscle: string, exerciseName: string = "") => {
+  const m = (muscle || "").toUpperCase();
+  const ex = (exerciseName || "").toUpperCase();
+
+  // 1. Specific exercise category checks to avoid wrong body posture fallbacks
+  if (ex.includes("SUPINO") || ex.includes("PECK DECK") || ex.includes("CRUCIFIXO")) {
+    return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop"; // Bench press setup in gym
+  }
+  if (ex.includes("ELEVAÇÃO DE QUADRIL") || ex.includes("HIP THRUST") || ex.includes("PONTE")) {
+    return "https://images.unsplash.com/photo-1526506114642-54cb358634a5?q=80&w=1200&auto=format&fit=crop"; // Barbell setup on rubber flooring
+  }
+  if (ex.includes("AGACHAMENTO") || ex.includes("LEG PRESS") || ex.includes("HACK") || ex.includes("AFUNDO") || ex.includes("BÚLGARO") || ex.includes("PASSADA") || ex.includes("AVANÇO")) {
+    return "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop"; // Premium heavy squat rack / leg zone
+  }
+  if (ex.includes("MESA FLEXORA") || ex.includes("CADEIRA EXTENSORA") || ex.includes("ABDUTORA") || ex.includes("STIFF")) {
+    return "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop"; // Clean gym plates / weights close-up
+  }
+  if (ex.includes("ROSCA") || ex.includes("TRÍCEPS") || ex.includes("DESENVOLVIMENTO") || ex.includes("ELEVAÇÃO LATERAL") || ex.includes("OMBROS")) {
+    return "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?q=80&w=1200&auto=format&fit=crop"; // Rows of steel dumbbells on racks
+  }
+  if (ex.includes("PUXADA") || ex.includes("REMADA") || ex.includes("BARRA FIXA") || ex.includes("PULL UP") || ex.includes("PULL DOWN")) {
+    return "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1200&auto=format&fit=crop"; // Cable lat pulldown handles & pull up bar environment
+  }
+
+  // 2. Fallbacks for general muscle group categories
+  if (m.includes("PEITORAL")) {
+    return "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop"; // Chest press station
+  }
+  if (m.includes("GLÚTEOS")) {
+    return "https://images.unsplash.com/photo-1526506114642-54cb358634a5?q=80&w=1200&auto=format&fit=crop"; // Barbell setup on rubber flooring
+  }
+  if (m.includes("QUADRÍCEPS") || m.includes("ISQUIOTIBIAIS")) {
+    return "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop"; // Leg squat platform
+  }
+  if (m.includes("OMBROS") || m.includes("BÍCEPS") || m.includes("TRÍCEPS")) {
+    return "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?q=80&w=1200&auto=format&fit=crop"; // Dumbbells
+  }
+  if (m.includes("COSTAS") || m.includes("DORSAL") || m.includes("PARAVERTEBRAIS")) {
+    return "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1200&auto=format&fit=crop"; // Cable station
+  }
+  if (m.includes("PANTURRILHA")) {
+    return "https://images.unsplash.com/photo-1502224562085-639556652f33?q=80&w=1200&auto=format&fit=crop"; // Ground training
+  }
+  if (m.includes("ABDÔMEN")) {
+    return "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1200&auto=format&fit=crop"; // Studio exercise mats
+  }
+  if (m.includes("CARDIO")) {
+    return "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1200&auto=format&fit=crop"; // Treadmills
+  }
+
+  // 3. Ultra-premium default gym background
+  return "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1200&auto=format&fit=crop";
+};
 
 const getExerciseCategory = (name: string) => {
   const upper = name.toUpperCase();
@@ -43,9 +97,11 @@ export default function GeraAi({ onBack, initialExerciseName }: { onBack?: () =>
   
   const [selectedExercise, setSelectedExercise] = useState<{name: string, muscle: string} | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [isImageFallback, setIsImageFallback] = useState(false);
   const [analysis, setAnalysis] = useState<{ tecnicaAplicada: string; impactoFisiologico: string[] } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [aiWarning, setAiWarning] = useState<string | null>(null);
 
   const muscleGroups = Object.keys(EXERCISE_CATALOG);
   
@@ -66,8 +122,10 @@ export default function GeraAi({ onBack, initialExerciseName }: { onBack?: () =>
   useEffect(() => {
     if (initialExerciseName) {
         for (const [muscle, exercises] of Object.entries(EXERCISE_CATALOG)) {
-            if (exercises.some(ex => ex.toLowerCase() === initialExerciseName.toLowerCase() || ex.toLowerCase().includes(initialExerciseName.toLowerCase()))) {
+            const matchedEx = exercises.find(ex => ex.toLowerCase() === initialExerciseName.toLowerCase() || ex.toLowerCase().includes(initialExerciseName.toLowerCase()));
+            if (matchedEx) {
                 setSelectedMuscle(muscle);
+                handleExerciseClick(matchedEx, muscle);
                 break;
             }
         }
@@ -78,63 +136,110 @@ export default function GeraAi({ onBack, initialExerciseName }: { onBack?: () =>
     setSelectedExercise({ name: exerciseName, muscle });
     setGeneratedImage(null);
     setAnalysis(null);
+    setAiWarning(null);
+    setIsImageFallback(false);
     setIsGenerating(true);
 
-    try {
-      let benchInstructions = "";
-      const upperName = exerciseName.toUpperCase();
-      if (upperName.includes("DECLINADO")) {
-        benchInstructions = "CRITICAL REQUIREMENT: This is a DECLINE bench press exercise (Supino Declinado). The bench MUST be visibly angled downwards towards the floor (angle -30 degrees). The athlete's head MUST be near the floor, pointing downwards. The athlete's hips and knees MUST be significantly higher than their head. Their legs MUST be securely hooked into the top padded rollers to avoid sliding down. DO NOT draw an incline or flat bench.";
-      } else if (upperName.includes("INCLINADO")) {
-        benchInstructions = "CRITICAL: This is an INCLINE bench exercise. The bench MUST be angled upwards (around 30 to 45 degrees). The athlete's head must be HIGHER than their hips.";
-      }
+    let positionInstructions = "";
+    const upperName = exerciseName.toUpperCase();
+    if (upperName.includes("DECLINADO")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a DECLINE bench press exercise (Supino Declinado). The gym bench MUST be visibly angled downwards towards the floor (angle -30 degrees). The athlete's head MUST be near the floor, pointing downwards. The athlete's hips and knees MUST be significantly higher than their head. Their legs/ankles MUST be securely locked under padded rollers at the top of the bench to avoid sliding down. They press the weight upwards from their lower chest. DO NOT draw an incline or flat bench.";
+    } else if (upperName.includes("INCLINADO")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is an INCLINE bench press exercise (Supino Inclinado). The gym bench MUST be angled upwards at 30 to 45 degrees. The athlete sits with their back flat against the incline, head significantly higher than hips, pressing the weight vertically upwards from their upper chest.";
+    } else if (upperName.includes("RETO") || upperName.includes("SUPINO RETO") || upperName.includes("SUPINO ABERTO NO BANCO RETO")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a flat chest press exercise (Supino Reto). The athlete is lying completely flat on their back on a horizontal flat gym bench, pressing the barbell or dumbbells straight up over their chest. Their feet are flat on the floor.";
+    } else if (upperName.includes("ELEVAÇÃO DE QUADRIL") || upperName.includes("HIP THRUST") || upperName.includes("PONTE")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a glute HIP THRUST / ELEVAÇÃO DE QUADRIL exercise! The athlete's body is in a horizontal bridge-like position. Their upper back and shoulder blades are resting securely across the side of a horizontal flat gym bench. Their feet are flat on the gym floor with knees bent at a 90-degree angle. A loaded barbell with round weight plates resides across the athlete's hips/lap, gripped and stabilized by both hands. Hips are raised in full extension parallel to the floor, squeezing the glutes. DO NOT draw a standing athlete! DO NOT draw a deadlift, overhead bar, or standard squat! The posture must show support from the shoulder blades on the bench, feet flat on the floor, and weight on the lap.";
+    } else if (upperName.includes("AGACHAMENTO") || upperName.includes("HACK") || upperName.includes("AFUNDO") || upperName.includes("BÚLGARO") || upperName.includes("PASSADA") || upperName.includes("AVANÇO") || upperName.includes("SQUAT") || upperName.includes("SISSY")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a lower body Squat/Agachamento or Lunge/Passada. The athlete's hips are lowered with knees bent at approximately 90 degrees in a powerful, stable stance. Torso is strong, upright, and feet are planted flat on the rubber gym flooring, showing perfect hip and knee flexion. For squats, a bar is placed on their upper back.";
+    } else if (upperName.includes("REMADA UNILATERAL") || upperName.includes("SERRUCHO") || upperName.includes("SERROTE")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a REMADA UNILATERAL (One-Arm Dumbbell Row) exercise. The athlete supports their horizontal torso on a flat gym bench with one knee and the hand of that same side resting flat on the bench. The other leg is standing on the ground to stabilize. With the free hand, they pull a dumbbell upward toward their hip in a rowing motion, keeping their flat back parallel to the floor.";
+    } else if (upperName.includes("REMADA") || upperName.includes("ROW")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a REMADA (Rowing) exercise. The athlete's torso is slightly bent at the hips with a flat, straight back, pulling a barbell, cable, or handles toward their midsection in a high-tension contraction.";
+    } else if (upperName.includes("ROSCA") || upperName.includes("CURL")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a bicep curl (Rosca) exercise. The athlete is standing upright with open chest, keeping elbows tucked close to their sides, flexing and curling a bar or dumbbells upward to activate and isolate the bicep muscles.";
+    } else if (upperName.includes("TRÍCEPS TESTA")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a skull crusher (Tríceps Testa) exercise. The athlete lies flat on their back on a gym bench, holding a bar with hands close together, bending only at the elbows to lower the bar towards their forehead, keeping upper arms fully vertical.";
+    } else if (upperName.includes("TRÍCEPS") || upperName.includes("COICE") || upperName.includes("PARALELA")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a triceps extension movement. The athlete extends their elbows against resistance, compressing the back of the arms in a focused lock-out with controlled form.";
+    } else if (upperName.includes("DESENVOLVIMENTO") || upperName.includes("SHOULDER PRESS") || upperName.includes("OVERHEAD PRESS")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is an overhead shoulder press (Desenvolvimento). The athlete is pushing dumbbells or a bar directly overhead to full vertical arm lock-out, showcasing defined deltoid muscles.";
+    } else if (upperName.includes("ELEVAÇÃO LATERAL")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a lateral raise (Elevação Lateral). The athlete stands upright, raising dumbbells out to their sides up to shoulder level, forming a broad 'T' shape with elbows slightly bent.";
+    } else if (upperName.includes("STIFF") || upperName.includes("TERRA") || upperName.includes("DEADLIFT")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a hip-hinge Stiff/Romanian Deadlift stretch. The athlete hinges at the hips, pushing their glutes back and keeping their flat torso straight as they lower the barbell down the front of their legs with nearly straight knees (only a micro-bend).";
+    } else if (upperName.includes("PUXADA") || upperName.includes("PULLDOWN") || upperName.includes("BARRA FIXA")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a lat pull-down/pull-up exercise. The athlete pulls the bar down toward their upper chest, keeping their shoulders pinned back, showing high muscular width and detail in the latissimus dorsi back muscles.";
+    } else if (upperName.includes("PRANCHA") || upperName.includes("PLANK")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a plank (Prancha) core exercise. The athlete's body is held in a straight horizontal line parallel to the ground, supported only on their forearms and toes on an exercise mat, squeezing their abs hard.";
+    } else if (upperName.includes("PANTURRILHA")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a calf raise (Panturrilha) movement. The athlete is elevated high on their tiptoes on a step edge, showcasing powerful defined gastrocnemius calf muscles.";
+    } else if (upperName.includes("PERDIGUEIRO")) {
+      positionInstructions = "CRITICAL POSTURE REQUIREMENT: This is a bird dog (Perdigueiro) exercise. The athlete is on all fours, extending one arm straight forward and the opposite leg straight backward, keeping their spine aligned and flat.";
+    }
 
-      const imgPrompt = `A highly detailed, professional fitness photography of a muscular Black athlete perfectly demonstrating the gym exercise: "${exerciseName}". 
+    const imgPrompt = `A highly detailed, professional fitness photography of a muscular Black athlete (either male or female, dark skin complexion) perfectly demonstrating the gym exercise: "${exerciseName}". 
 Target muscle group: ${muscle}. 
-The athlete is wearing a dark green South Africa national football team jersey with yellow trim, black Adidas workout training pants with white stripes on the sides, and white Adidas Superstar sneakers with black stripes. 
+The athlete is wearing the official South Africa national soccer team jersey for the World Cup, styled with a vibrant golden-yellow base, deep emerald-green sleeve cuffs and green neck collar, with dark green sublimated line patterns on the chest and body.
+The athlete is also wearing long black Adidas workout training pants with the signature three parallel white vertical stripes going down the sides, and clean white Adidas athletic superstar sneakers with three black stripes on the sides.
 Ensure the athlete's feet are positioned naturally and anatomically correctly, facing forward or slightly outward, flat on the ground or appropriately positioned on the machine, without any awkward twisting or backward rotation.
-${benchInstructions}
+${positionInstructions}
 The image should show peak muscle contraction with perfect biomechanical form. Professional modern gym environment, dramatic cinematic lighting, 8k resolution, ultra-realistic, photorealistic.`;
 
-      const textPrompt = `Atue como um especialista em biomecânica esportiva. Faça a análise biomecânica do exercício "${exerciseName}" focado no músculo "${muscle}". 
+    const textPrompt = `Atue como um especialista em biomecânica esportiva. Faça a análise biomecânica do exercício "${exerciseName}" focado no músculo "${muscle}". 
 Responda APENAS em JSON válido, sem formatação markdown ou texto adicional. Use este formato exato:
 {
   "tecnicaAplicada": "Descrição técnica e biomecânica de como realizar o movimento, em um parágrafo bem redigido.",
   "impactoFisiologico": ["Ponto 1 sobre os músculos e fisiologia", "Ponto 2", "Ponto 3"]
 }`;
 
-      const [imgRes, textRes] = await Promise.all([
-        callAI({
-          model: IMAGEN_MODEL,
-          prompt: imgPrompt,
-          isImageGeneration: true
-        }),
-        callAI({
-          model: GEMINI_MODEL,
-          prompt: textPrompt,
-          responseMimeType: "application/json"
-        })
-      ]);
+    // 1. Try Text Analysis API
+    try {
+      const textRes = await callAI({
+        model: GEMINI_MODEL,
+        prompt: textPrompt,
+        responseMimeType: "application/json"
+      });
+      const rawText = textRes.text || "{}";
+      const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(cleaned);
+      setAnalysis(parsedData);
+    } catch (err: any) {
+      console.error("Failed to fetch or parse analysis JSON:", err);
+      const errMsg = err.message || String(err);
+      if (errMsg.includes("chave") || errMsg.includes("Gemini") || errMsg.includes("cota") || errMsg.includes("Limite") || errMsg.includes("vazada") || errMsg.includes("API")) {
+        setAiWarning(errMsg);
+      }
+      setAnalysis({
+        tecnicaAplicada: `Para realizar o exercício ${exerciseName}, mantenha postura ereta, faça o movimento de forma controlada respeitando a cadência recomendada e garanta a correta ativação muscular do grupo ${muscle}.`,
+        impactoFisiologico: [
+          `Foco primário de ativação na região do(a) ${muscle}.`,
+          "Melhora da estabilidade articular e fortalecimento das estruturas motoras.",
+          "Estímulo metabólico direcionado com baixo estresse articular residual."
+        ]
+      });
+    }
 
+    // 2. Try Image Generation API
+    try {
+      const imgRes = await callAI({
+        model: IMAGEN_MODEL,
+        prompt: imgPrompt,
+        isImageGeneration: true
+      });
       if (imgRes && imgRes.imageUrl) {
         setGeneratedImage(imgRes.imageUrl);
+      } else {
+        throw new Error("No image URL returned");
       }
-
-      const rawText = textRes.text || "{}";
-      try {
-        const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsedData = JSON.parse(cleaned);
-        setAnalysis(parsedData);
-      } catch (err) {
-        console.error("Failed to parse analysis JSON:", err);
-        setAnalysis({
-          tecnicaAplicada: "A análise técnica detalhada não pode ser carregada no momento.",
-          impactoFisiologico: ["Benefício fisiológico principal.", "Foco muscular secundário."]
-        });
+    } catch (err: any) {
+      console.warn("Image generation failed or quota reached. Applying elegant Stock fallback:", err);
+      const errMsg = err.message || String(err);
+      if (!aiWarning && (errMsg.includes("chave") || errMsg.includes("Gemini") || errMsg.includes("cota") || errMsg.includes("Limite") || errMsg.includes("vazada") || errMsg.includes("API"))) {
+        setAiWarning(errMsg);
       }
-      
-    } catch (error) {
-      console.error("Generation error:", error);
+      setGeneratedImage(getFallbackImage(muscle, exerciseName));
+      setIsImageFallback(true);
     } finally {
       setIsGenerating(false);
     }
@@ -341,7 +446,7 @@ Responda APENAS em JSON válido, sem formatação markdown ou texto adicional. U
                 <>
                   <div className="relative w-full aspect-video sm:aspect-[21/9] bg-zinc-900 border-b border-white/5">
                     {generatedImage ? (
-                      <img src={generatedImage} alt={selectedExercise.name} className="w-full h-full object-cover" />
+                      <img src={generatedImage} alt={selectedExercise.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600">
                         <ImageIcon className="w-12 h-12 mb-4 opacity-50" />
@@ -368,6 +473,18 @@ Responda APENAS em JSON válido, sem formatação markdown ou texto adicional. U
                         </span>
                       </div>
                     </div>
+
+                    {aiWarning && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                        <div className="flex gap-3 items-start">
+                          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500">Fluxo de Contingência Ativo</h4>
+                            <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{aiWarning}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
                       <div className="flex flex-col gap-4">

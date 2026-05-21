@@ -285,9 +285,10 @@ export function CorreRJView({ onBack }: { onBack: () => void }) {
         systemInstruction: systemInstruction
       });
       setIaContent(response.text || "Sem resposta da IA.");
-    } catch (error) { 
+    } catch (error: any) { 
         console.error("AI Error:", error);
-        setIaContent("Erro ao carregar estratégia."); 
+        const errMsg = error.message || "Erro ao conectar com a IA.";
+        setIaContent(`Falha técnica na IA:\n\n💬 "${errMsg}"\n\n💡 Por favor, configure uma chave GEMINI_API_KEY válida nas configurações (Settings > Secrets) para reativar.`); 
     } finally { 
         setIaLoading(false); 
     }

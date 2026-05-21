@@ -14,17 +14,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = 3000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
-const genAI = GEMINI_API_KEY 
-  ? new GoogleGenAI({ 
-      apiKey: GEMINI_API_KEY,
+// Lazy loaded GoogleGenAI instance helper
+let cachedGenAI: GoogleGenAI | null = null;
+function getGenAI() {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || "";
+  
+  if (!apiKey) {
+    throw new Error("Gemini API Key não encontrada. Adicione seu token válido em Settings > Secrets (GEMINI_API_KEY).");
+  }
+  if (!cachedGenAI) {
+    cachedGenAI = new GoogleGenAI({ 
+      apiKey,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
         }
       }
-    }) 
-  : null;
+    });
+  }
+  return cachedGenAI;
+}
 
 // Read config once
 const firebaseConfig = JSON.parse(fs.readFileSync('./firebase-applet-config.json', 'utf8'));
@@ -37,19 +46,25 @@ async function startServer() {
 
   // API Proxy for Gemini
   app.post("/api/ai", async (req, res) => {
-    if (!genAI) {
-      return res.status(500).json({ error: "Gemini API Key não configurada no servidor." });
-    }
-
     const { model: modelName, prompt, systemInstruction, responseMimeType, isImageGeneration, isImageAnalysis, imageBase64, config } = req.body;
 
     try {
+      const activeGenAI = getGenAI();
       let resolvedModel = modelName || "gemini-3.5-flash";
-      if (resolvedModel === "gemini-1.5-flash" || resolvedModel === "gemini-1.5-pro") {
-        resolvedModel = "gemini-3.5-flash";
-      }
-      if (resolvedModel === "gemini-2.5-flash-image") {
-        // Keep it as is or resolve to latest if needed
+
+      // Map deprecated models based on skill guidelines
+      if (isImageGeneration) {
+        resolvedModel = "gemini-2.5-flash-image";
+      } else {
+        if (
+          resolvedModel === "gemini-1.5-flash" || 
+          resolvedModel === "gemini-1.5-pro" || 
+          resolvedModel === "gemini-2.0-flash" || 
+          resolvedModel === "gemini-2.0-pro-exp-02-05" ||
+          resolvedModel === "gemini-2.0-flash-lite-preview-02-05"
+        ) {
+          resolvedModel = "gemini-3.5-flash";
+        }
       }
 
       let contents: any;
@@ -69,14 +84,23 @@ async function startServer() {
         contents = { parts: [{ text: prompt }] };
       }
 
-      const result = await genAI.models.generateContent({
+      const mergedConfig: any = {
+        systemInstruction: systemInstruction || undefined,
+        responseMimeType: responseMimeType || undefined,
+        ...config
+      };
+
+      if (isImageGeneration) {
+        mergedConfig.imageConfig = {
+          aspectRatio: "16:9",
+          ...config?.imageConfig
+        };
+      }
+
+      const result = await activeGenAI.models.generateContent({
         model: resolvedModel,
         contents: [contents],
-        config: {
-          systemInstruction: systemInstruction || undefined,
-          responseMimeType: responseMimeType || undefined,
-          ...config
-        }
+        config: mergedConfig
       });
 
       if (isImageGeneration) {
@@ -94,13 +118,30 @@ async function startServer() {
       res.json({ text: result.text || "" });
     } catch (error: any) {
       console.error("Server-side AI Error:", error);
-      res.status(500).json({ error: error.message || "Erro desconhecido na IA." });
+      let errorMessage = error.message || "Erro desconhecido na IA.";
+      let statusCode = 500;
+      let errorType = "UNKNOWN_ERROR";
+
+      const errString = String(error.stack || error.message || error);
+      
+      if (errString.includes("leased") || errString.includes("leaked") || errString.includes("reported as leaked") || errString.includes("PERMISSION_DENIED") || errString.includes("403")) {
+        errorMessage = "A chave de API do Gemini (GEMINI_API_KEY) foi marcada como VAZADA ou REVOGADA de segurança pela Google. Por favor, remova a chave atual e adicione um token válido do Gemini API em Settings > Secrets.";
+        statusCode = 403;
+        errorType = "API_KEY_LEAKED";
+      } else if (errString.includes("quota") || errString.includes("RESOURCE_EXHAUSTED") || errString.includes("limit") || errString.includes("429")) {
+        errorMessage = "Limite de requisições excedido. A cota da sua chave de API do Gemini esgotou para este modelo. Aguarde um minuto ou mude para o fluxo de chave paga nas configurações do AI Studio.";
+        statusCode = 429;
+        errorType = "QUOTA_EXCEEDED";
+      }
+
+      res.status(statusCode).json({ error: errorMessage, type: errorType, raw: error.message });
     }
   });
 
   // Health check
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", aiConfigured: !!GEMINI_API_KEY });
+    const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || "";
+    res.json({ status: "ok", aiConfigured: !!key && key.startsWith("AIzaSy") });
   });
 
   // Finalizar Treino Endpoint
@@ -191,7 +232,8 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`AI Configuration: ${!!GEMINI_API_KEY ? "SUCCESS" : "MISSING KEY"}`);
+    const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || "";
+    console.log(`AI Configuration: ${!!key && key.startsWith("AIzaSy") ? "SUCCESS" : "MISSING KEY"}`);
   });
 }
 

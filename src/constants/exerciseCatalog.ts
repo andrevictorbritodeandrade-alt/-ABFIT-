@@ -3,10 +3,11 @@ export interface ExerciseDatabase {
   [key: string]: string[];
 }
 
-export const GEMINI_MODEL = "gemini-2.0-flash"; 
-export const GEMINI_PRO_MODEL = "gemini-2.0-pro-exp-02-05";
-export const GEMINI_FLASH_LITE_MODEL = "gemini-2.0-flash-lite-preview-02-05";
-export const IMAGEN_MODEL = "gemini-2.0-flash"; // For image generation logic
+export const GEMINI_MODEL = "gemini-3.5-flash"; 
+export const GEMINI_PRO_MODEL = "gemini-3.1-pro-preview";
+export const GEMINI_FLASH_LITE_MODEL = "gemini-3.1-flash-lite";
+export const IMAGEN_MODEL = "gemini-2.5-flash-image"; // For image generation logic
+export const SERIES_OPTIONS = ["A", "B", "C", "D", "E"];
 
 export const EXERCISE_CATALOG: Record<string, string[]> = {
   "PEITORAL": [
